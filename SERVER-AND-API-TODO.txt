@@ -1,0 +1,121 @@
+ERP (erpdev.jl-tech.be) - open server changes and API information
+=================================================================
+Last updated: 2026-10-08
+
+This file lists what still has to happen outside the application code:
+1. server changes (to be run by you as root),
+2. the information needed to connect Cebeo and Rexel for prices and images.
+
+
+1. SERVER CHANGES
+-----------------
+
+[DONE]  PHP-FPM write access for erp-app
+        /etc/systemd/system/php8.4-fpm.service.d/erp-app-writable.conf
+        allows storage/ and bootstrap/cache/ to be written. Nothing to do.
+
+[TODO]  PHP upload size - needed for project files (plans, PDFs, pictures)
+        PHP-FPM currently accepts uploads of max. 2 MB (upload_max_filesize = 2M,
+        post_max_size = 8M in /etc/php/8.4/fpm/php.ini). Larger files fail
+        before they reach the application. This also affects the incident and
+        idea box photos (max. 12 MB) and the other apps on this server.
+        nginx already allows 100 MB (client_max_body_size 100m).
+
+        Run as root:
+
+          printf 'upload_max_filesize = 100M\npost_max_size = 110M\n' > /etc/php/8.4/fpm/conf.d/99-uploads.ini
+          systemctl restart php8.4-fpm
+
+        Check:
+
+          php-fpm8.4 -i | grep -E 'upload_max_filesize|post_max_size'
+
+[TODO]  Scheduler (cron) - needed for the daily price update
+        The app runs "stock:update-prices" every day at 05:30, but only if
+        Laravel's scheduler is called every minute. There is no cron entry yet
+        (checked: "no crontab for www-data").
+
+        Run as root:
+
+          (crontab -u www-data -l 2>/dev/null; echo '* * * * * cd /usr/share/nginx/html/devops/erp-app && php8.4 artisan schedule:run >> /dev/null 2>&1') | crontab -u www-data -
+
+        Check:
+
+          crontab -u www-data -l
+          cd /usr/share/nginx/html/devops/erp-app && php8.4 artisan schedule:list
+
+        Note: until a distributor connection works (part 2), the price
+        update only reports that no connection is configured. It does no harm
+        to add the cron now.
+
+[TODO, later]  API addresses in .env
+        Once Cebeo and/or Rexel supply their API details, the base URL goes in
+        /usr/share/nginx/html/devops/erp-app/.env:
+
+          CEBEO_API_URL=https://...   (from the Cebeo documentation)
+          REXEL_API_URL=https://...   (from the Rexel documentation)
+
+        Then clear the config cache:
+
+          cd /usr/share/nginx/html/devops/erp-app && php8.4 artisan optimize:clear
+
+
+2. API INFORMATION NEEDED (CEBEO AND REXEL)
+-------------------------------------------
+
+Why: neither Cebeo nor Rexel publishes an open, public API. Prices are
+customer-specific, so both only give API access (and its documentation) to
+customers. The connection in the ERP is prepared; until the details below are
+known, it reports "not set up yet" and does not guess.
+
+What the ERP will do with it:
+  - fetch the current market price of an item (your net price) by distributor
+    reference, or by manufacturer reference if there is none,
+  - fetch a product image when the item has none,
+  - do this daily for all active items, and on demand with
+    "Update price from distributor" on the item page.
+
+Ask your account manager at each distributor for:
+
+  a) API access for our customer account
+     (Cebeo and Rexel may call it API, webservice, web services, EDI, B2B
+     connection or "punch-out").
+
+  b) The technical documentation, specifically:
+     - base URL (production, and a test/sandbox URL if available)
+     - how to log in: username + password, API key, OAuth client id/secret,
+       certificate…
+     - the call to look up an article by distributor reference
+       (Cebeo / Rexel article number)
+     - the call to look up an article by manufacturer reference or EAN
+     - which fields contain: net price (our price), list price, price unit
+       (per piece, per meter, per 100 m…), currency, product image URL,
+       description
+     - limits: maximum number of calls per minute/day, batch lookups
+     - data format (JSON, XML/SOAP…)
+
+  c) Our credentials for that API:
+     - customer number
+     - username / API key
+     - password / secret
+     (Not needed in this file or by e-mail to me: you can enter them yourself,
+     see below.)
+
+  d) If possible, two or three example article numbers with their expected
+     price, to check the connection against.
+
+Where the credentials go (you do this yourself, they are stored encrypted):
+  Admin side > Magazijn > Groothandels > Cebeo (or Rexel) > section
+  "Prijskoppeling": choose the connection, then fill in customer number,
+  username and password. Cebeo and Rexel are already set to their own
+  connection.
+
+What I need back from you to finish the connection:
+  - the documentation from point b) (PDF, link or e-mail),
+  - confirmation that the credentials are entered in the admin side,
+  - the base URL, or let me know and I add it to .env myself,
+  - the example article numbers from point d), if you have them.
+
+Until then: market prices can be entered by hand on each item, and images can
+be uploaded or copied from the Cebeo/Rexel web shop with
+"More > Image from web address" on the item page.
