@@ -1,6 +1,6 @@
 ERP (erpdev.jl-tech.be) - open server changes and API information
 =================================================================
-Last updated: 2026-10-08
+Last updated: 2026-10-09
 
 This file lists what still has to happen outside the application code:
 1. server changes (to be run by you as root),
@@ -119,3 +119,33 @@ What I need back from you to finish the connection:
 Until then: market prices can be entered by hand on each item, and images can
 be uploaded or copied from the Cebeo/Rexel web shop with
 "More > Image from web address" on the item page.
+
+
+3. PEPPOL (finance module)
+--------------------------
+
+[READY]  The ERP already produces and reads Peppol BIS Billing 3.0 (UBL) documents:
+         - every final invoice / credit note can be downloaded as UBL and is
+           attached as XML to the invoice e-mail;
+         - incoming UBL files can be imported under Finance > Incoming invoices,
+           or delivered automatically by the access point to the webhook shown
+           in Settings > Finance (POST, raw XML).
+
+[TODO]   To actually send and receive over the Peppol network you need an
+         access point provider. Belgian options include e.g. Billit, Banqup,
+         e-invoice.be, Peppyrus, Storecove (the free Hermes portal of the FPS
+         Finance is only for manual use). Choose one and send me:
+           - the API documentation (endpoint to send a UBL document);
+           - the API key / token;
+           - how they deliver received documents (webhook to our URL, or an
+             API we must poll).
+         Also check our registration on the Peppol directory with the company
+         enterprise number (0208:<KBO number>).
+
+         Settings > Finance: fill in company VAT, IBAN/BIC, then switch on
+         "Use Peppol" and paste the provider URL and key. The current sender is a
+         generic "POST UBL with Bearer token"; it will be adapted to the
+         chosen provider's API.
+
+[NOTE]   The automatic payment reminders (finance:send-reminders, every day
+         08:00) also need the scheduler cron from section 1.

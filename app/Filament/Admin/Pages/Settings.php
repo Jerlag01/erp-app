@@ -3,6 +3,9 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Enums\NavigationGroup;
+use App\Http\Controllers\PeppolInboundController;
+use App\Models\Client;
+use App\Models\Employee;
 use App\Support\Modules;
 use App\Support\Settings as SiteSettings;
 use BackedEnum;
@@ -11,6 +14,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -29,6 +33,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 use UnitEnum;
 
@@ -67,6 +72,7 @@ class Settings extends Page
     {
         $values = $settings->all();
         $values['mail']['password'] = null;
+        $values['finance']['peppol_api_key'] = null;
 
         $this->form->fill($values);
     }
@@ -91,6 +97,11 @@ class Settings extends Page
                         Tab::make(__('erp.settings.tabs.appearance'))
                             ->icon(Heroicon::OutlinedSwatch)
                             ->schema($this->appearanceFields()),
+                        // Only while the finance module is on.
+                        Tab::make(__('erp.settings.tabs.finance'))
+                            ->icon(Heroicon::OutlinedBanknotes)
+                            ->visible(fn (): bool => modules()->finance())
+                            ->schema($this->financeFields()),
                     ]),
             ]);
     }
@@ -129,6 +140,15 @@ class Settings extends Page
             }
         }
 
+        if (isset($data['finance'])) {
+            $data['finance']['peppol_api_key'] = filled($data['finance']['peppol_api_key'] ?? null)
+                ? Crypt::encryptString($data['finance']['peppol_api_key'])
+                : $settings->get('finance.peppol_api_key');
+            $data['finance']['peppol_inbound_secret'] = $settings->get('finance.peppol_inbound_secret') ?: Str::random(40);
+            $data['finance']['vat_number'] = Client::normaliseVat($data['finance']['vat_number'] ?? null);
+            $data['finance']['iban'] = filled($data['finance']['iban'] ?? null) ? strtoupper(preg_replace('/\s+/', '', $data['finance']['iban'])) : null;
+        }
+
         $data['modules'] = collect(Modules::ALL)
             ->mapWithKeys(fn (string $module): array => [$module => (bool) ($data['modules'][$module] ?? false)])
             ->all();
@@ -140,6 +160,7 @@ class Settings extends Page
         }
 
         $this->data['mail']['password'] = null;
+        $this->data['finance']['peppol_api_key'] = null;
 
         Notification::make()
             ->title(__('erp.settings.saved'))
@@ -246,6 +267,7 @@ class Settings extends Page
             Modules::KNOWLEDGE_BASE => Heroicon::OutlinedBookOpen,
             Modules::EMPLOYEES => Heroicon::OutlinedIdentification,
             Modules::WASTE => Heroicon::OutlinedTrash,
+            Modules::FINANCE => Heroicon::OutlinedBanknotes,
         ];
 
         return [
@@ -276,6 +298,91 @@ class Settings extends Page
     /**
      * @return array<Component|Field>
      */
+    /**
+     * Company details printed on invoices (and used for Peppol), numbering, payment reminders and
+     * the Peppol access point.
+     *
+     * @return array<Component|Field>
+     */
+    protected function financeFields(): array
+    {
+        return [
+            Section::make(__('erp.settings.sections.finance_company'))
+                ->description(__('erp.settings.help.finance_company'))
+                ->columns(6)
+                ->schema([
+                    TextInput::make('finance.company_name')->label(__('erp.settings.fields.legal_name'))->maxLength(255)->columnSpan(3),
+                    TextInput::make('finance.vat_number')
+                        ->label(__('erp.settings.fields.company_vat'))
+                        ->helperText(__('erp.settings.help.company_vat'))
+                        ->placeholder('BE0123.456.789')
+                        ->maxLength(20)
+                        ->rule(fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
+                            if (filled($value) && ! Client::isValidVat((string) $value)) {
+                                $fail(__('erp.finance.vat_invalid'));
+                            }
+                        })
+                        ->columnSpan(3),
+                    TextInput::make('finance.street')->label(__('erp.fields.street_only'))->maxLength(150)->columnSpan(4),
+                    TextInput::make('finance.house_number')->label(__('erp.fields.house_number'))->maxLength(20)->columnSpan(2),
+                    TextInput::make('finance.postal_code')->label(__('erp.fields.postal_code'))->maxLength(20)->columnSpan(2),
+                    TextInput::make('finance.city')->label(__('erp.fields.city'))->maxLength(100)->columnSpan(2),
+                    TextInput::make('finance.country_code')->label(__('erp.settings.fields.country_code'))->maxLength(2)->default('BE')->columnSpan(2),
+                    TextInput::make('finance.email')->label(__('erp.fields.email'))->email()->maxLength(255)->columnSpan(3),
+                    TextInput::make('finance.phone')->label(__('erp.fields.phone'))->maxLength(50)->columnSpan(3),
+                    TextInput::make('finance.iban')
+                        ->label('IBAN')
+                        ->placeholder('BE68 5390 0754 7034')
+                        ->rule(fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
+                            if (filled($value) && ! Employee::isValidIban((string) $value)) {
+                                $fail(__('erp.employees.bank_account_invalid'));
+                            }
+                        })
+                        ->columnSpan(3),
+                    TextInput::make('finance.bic')->label('BIC')->maxLength(11)->columnSpan(3),
+                    Textarea::make('finance.invoice_footer')->label(__('erp.settings.fields.invoice_footer'))->helperText(__('erp.settings.help.invoice_footer'))->rows(2)->maxLength(1000)->columnSpanFull(),
+                ]),
+            Section::make(__('erp.settings.sections.finance_numbering'))
+                ->columns(3)
+                ->schema([
+                    TextInput::make('finance.invoice_prefix')->label(__('erp.settings.fields.invoice_prefix'))->helperText(__('erp.settings.help.invoice_prefix'))->maxLength(10),
+                    TextInput::make('finance.credit_note_prefix')->label(__('erp.settings.fields.credit_note_prefix'))->maxLength(10),
+                    TextInput::make('finance.payment_term_days')->label(__('erp.settings.fields.payment_term'))->helperText(__('erp.settings.help.payment_term'))->integer()->minValue(0)->maxValue(365)->suffix(__('erp.vacations.days')),
+                ]),
+            Section::make(__('erp.settings.sections.finance_reminders'))
+                ->description(__('erp.settings.help.finance_reminders'))
+                ->columns(3)
+                ->schema([
+                    Toggle::make('finance.reminders_enabled')->label(__('erp.settings.fields.reminders_enabled'))->columnSpanFull(),
+                    TextInput::make('finance.reminder_1_days')->label(__('erp.settings.fields.reminder_days', ['level' => 1]))->integer()->minValue(1)->maxValue(365)->suffix(__('erp.vacations.days')),
+                    TextInput::make('finance.reminder_2_days')->label(__('erp.settings.fields.reminder_days', ['level' => 2]))->integer()->minValue(1)->maxValue(365)->suffix(__('erp.vacations.days')),
+                    TextInput::make('finance.reminder_3_days')->label(__('erp.settings.fields.reminder_days', ['level' => 3]))->integer()->minValue(1)->maxValue(365)->suffix(__('erp.vacations.days')),
+                ]),
+            Section::make('Peppol')
+                ->description(__('erp.settings.help.peppol'))
+                ->columns(2)
+                ->schema([
+                    Toggle::make('finance.peppol_enabled')->label(__('erp.settings.fields.peppol_enabled'))->live()->columnSpanFull(),
+                    TextInput::make('finance.peppol_id')
+                        ->label(__('erp.settings.fields.peppol_id'))
+                        ->helperText(__('erp.settings.help.peppol_id'))
+                        ->placeholder('0208:0123456789')
+                        ->regex('/^\d{4}:[A-Za-z0-9]+$/'),
+                    TextInput::make('finance.peppol_provider_url')
+                        ->label(__('erp.settings.fields.peppol_provider_url'))
+                        ->helperText(__('erp.settings.help.peppol_provider_url'))
+                        ->url(),
+                    TextInput::make('finance.peppol_api_key')
+                        ->label(__('erp.settings.fields.peppol_api_key'))
+                        ->helperText(__('erp.help.password_keep'))
+                        ->password()
+                        ->revealable(),
+                    Text::make(fn (): string => __('erp.settings.help.peppol_inbound', ['url' => PeppolInboundController::url() ?? __('erp.settings.help.peppol_inbound_after_save')]))
+                        ->columnSpanFull(),
+                ]),
+        ];
+    }
+
     protected function mailFields(): array
     {
         $usesSmtp = fn (Get $get): bool => $get('mail.mailer') === 'smtp';

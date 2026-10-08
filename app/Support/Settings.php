@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance'];
+    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -50,6 +50,7 @@ class Settings
                 Modules::KNOWLEDGE_BASE => true,
                 Modules::EMPLOYEES => true,
                 Modules::WASTE => true,
+                Modules::FINANCE => true,
             ],
             'mail' => [
                 'mailer' => null,
@@ -66,6 +67,33 @@ class Settings
                 'accent' => '#f7941d',
                 'logo' => null,
                 'favicon' => null,
+            ],
+            // Company details on invoices, numbering, reminders and Peppol (Settings > Finance).
+            'finance' => [
+                'company_name' => null,
+                'vat_number' => null,
+                'street' => null,
+                'house_number' => null,
+                'postal_code' => null,
+                'city' => null,
+                'country_code' => 'BE',
+                'email' => null,
+                'phone' => null,
+                'iban' => null,
+                'bic' => null,
+                'invoice_prefix' => '',
+                'credit_note_prefix' => 'CN',
+                'payment_term_days' => 30,
+                'invoice_footer' => null,
+                'reminders_enabled' => false,
+                'reminder_1_days' => 7,
+                'reminder_2_days' => 21,
+                'reminder_3_days' => 35,
+                'peppol_enabled' => false,
+                'peppol_id' => null,
+                'peppol_provider_url' => null,
+                'peppol_api_key' => null,
+                'peppol_inbound_secret' => null,
             ],
         ];
     }

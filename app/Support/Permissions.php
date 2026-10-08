@@ -8,6 +8,10 @@ namespace App\Support;
  * requesting your own vacation needs no permission. "stock.adjust" lets employees raise or lower
  * quantities (e.g. after scanning a QR code) at the locations of their teams. "stock_prices.view"
  * shows market prices and stock values, which hold the special prices agreed with distributors.
+ * The finance areas are not granted to any role by default: employees only see finance once
+ * given these rights. "credit_notes.override" allows changing what a credit note copied from
+ * its invoice (after switching that on per credit note); "expenses.validate" accepts or rejects
+ * incoming invoices. The client's internal memo is for administrators only.
  * "projects" only reaches the projects a user leads or one of their teams is assigned to;
  * "projects.files" and "projects.parts" allow uploading/replacing/removing files and editing the
  * part list. "project_finance" shows (view) or edits (manage) offers and invoices of those projects;
@@ -45,6 +49,12 @@ class Permissions
         'knowledge_base' => ['module' => Modules::KNOWLEDGE_BASE, 'abilities' => ['create', 'update', 'delete']],
         'waste' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete']],
         'waste_master_data' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'finance' => ['module' => Modules::FINANCE, 'abilities' => ['view']],
+        'clients' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'invoices' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send']],
+        'credit_notes' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send', 'override']],
+        'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate']],
+        'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];
 
     /**

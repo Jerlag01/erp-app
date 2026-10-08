@@ -112,8 +112,9 @@ class EmployeeTest extends TestCase
         $link = WelcomeEmployee::linkFor($user);
 
         $mail = (new WelcomeEmployee)->toMail($user);
-        $this->assertSame($link, $mail->actionUrl);
-        $this->assertStringContainsString('nieuw@example.com', implode(' ', $mail->introLines));
+        $this->assertStringContainsString(e($link), $mail->rendered['html']);
+        $this->assertStringContainsString('nieuw@example.com', $mail->rendered['html']);
+        $this->assertTrue($mail->hasTo('nieuw@example.com'));
 
         $this->get($link)->assertRedirectContains('password-reset');
 

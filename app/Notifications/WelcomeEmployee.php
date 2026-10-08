@@ -2,8 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Enums\MailTemplateKey;
+use App\Mail\SystemMail;
 use App\Models\User;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
@@ -40,18 +41,17 @@ class WelcomeEmployee extends Notification
         return substr(hash('sha256', (string) $user->getAuthPassword()), 0, 16);
     }
 
-    public function toMail(User $notifiable): MailMessage
+    /**
+     * Built from the editable "welcome employee" template, in the language of the account.
+     */
+    public function toMail(User $notifiable): SystemMail
     {
-        $site = settings()->siteName();
-
-        return (new MailMessage)
-            ->subject(__('erp.employees.welcome.subject', ['site' => $site]))
-            ->greeting(__('erp.employees.welcome.greeting', ['name' => $notifiable->name]))
-            ->line(__('erp.employees.welcome.intro', ['site' => $site]))
-            ->line(__('erp.employees.welcome.login_with', ['email' => $notifiable->email]))
-            ->action(__('erp.employees.welcome.button'), self::linkFor($notifiable))
-            ->line(__('erp.employees.welcome.steps', ['url' => url('/login')]))
-            ->line(__('erp.employees.welcome.expiry', ['days' => self::WELCOME_LINK_DAYS]))
-            ->salutation(__('erp.employees.welcome.salutation', ['site' => $site]));
+        return (new SystemMail(MailTemplateKey::WelcomeEmployee, $notifiable->preferredLocale() ?? config('app.locale'), [
+            'name' => $notifiable->name,
+            'email' => $notifiable->email,
+            'login_url' => url('/login'),
+            'password_link' => self::linkFor($notifiable),
+            'link_days' => self::WELCOME_LINK_DAYS,
+        ]))->to($notifiable->email);
     }
 }
