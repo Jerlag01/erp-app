@@ -13,9 +13,12 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -102,6 +105,11 @@ class Settings extends Page
                             ->icon(Heroicon::OutlinedBanknotes)
                             ->visible(fn (): bool => modules()->finance())
                             ->schema($this->financeFields()),
+                        // Only while the planning module is on.
+                        Tab::make(__('erp.settings.tabs.planning'))
+                            ->icon(Heroicon::OutlinedCalendarDays)
+                            ->visible(fn (): bool => modules()->planning())
+                            ->schema($this->planningFields()),
                     ]),
             ]);
     }
@@ -147,6 +155,15 @@ class Settings extends Page
             $data['finance']['peppol_inbound_secret'] = $settings->get('finance.peppol_inbound_secret') ?: Str::random(40);
             $data['finance']['vat_number'] = Client::normaliseVat($data['finance']['vat_number'] ?? null);
             $data['finance']['iban'] = filled($data['finance']['iban'] ?? null) ? strtoupper(preg_replace('/\s+/', '', $data['finance']['iban'])) : null;
+        }
+
+        if (isset($data['planning'])) {
+            $data['planning']['slots'] = array_values(array_map(fn (array $slot): array => [
+                'label' => $slot['label'],
+                'start' => substr((string) $slot['start'], 0, 5),
+                'end' => substr((string) $slot['end'], 0, 5),
+            ], $data['planning']['slots'] ?? []));
+            $data['planning']['notify_emails'] = array_values(array_unique(array_map('strtolower', $data['planning']['notify_emails'] ?? [])));
         }
 
         $data['modules'] = collect(Modules::ALL)
@@ -268,6 +285,7 @@ class Settings extends Page
             Modules::EMPLOYEES => Heroicon::OutlinedIdentification,
             Modules::WASTE => Heroicon::OutlinedTrash,
             Modules::FINANCE => Heroicon::OutlinedBanknotes,
+            Modules::PLANNING => Heroicon::OutlinedCalendarDays,
         ];
 
         return [
@@ -379,6 +397,44 @@ class Settings extends Page
                         ->revealable(),
                     Text::make(fn (): string => __('erp.settings.help.peppol_inbound', ['url' => PeppolInboundController::url() ?? __('erp.settings.help.peppol_inbound_after_save')]))
                         ->columnSpanFull(),
+                ]),
+        ];
+    }
+
+    /**
+     * @return array<Component>
+     */
+    protected function planningFields(): array
+    {
+        return [
+            Section::make(__('erp.settings.sections.planning_slots'))
+                ->description(__('erp.settings.help.planning_slots'))
+                ->schema([
+                    Repeater::make('planning.slots')
+                        ->hiddenLabel()
+                        ->table([
+                            Repeater\TableColumn::make(__('erp.fields.name')),
+                            Repeater\TableColumn::make(__('erp.planning.start')),
+                            Repeater\TableColumn::make(__('erp.planning.end')),
+                        ])
+                        ->schema([
+                            TextInput::make('label')->required()->maxLength(40),
+                            TimePicker::make('start')->seconds(false)->required(),
+                            TimePicker::make('end')->seconds(false)->required()->after('start'),
+                        ])
+                        ->reorderable()
+                        ->maxItems(12)
+                        ->addActionLabel(__('erp.settings.fields.add_slot')),
+                ]),
+            Section::make(__('erp.settings.sections.planning_mail'))
+                ->description(__('erp.settings.help.planning_mail'))
+                ->schema([
+                    Toggle::make('planning.mail_default')->label(__('erp.settings.fields.planning_mail_default')),
+                    TagsInput::make('planning.notify_emails')
+                        ->label(__('erp.settings.fields.planning_notify_emails'))
+                        ->helperText(__('erp.settings.help.planning_notify_emails'))
+                        ->placeholder('planning@example.com')
+                        ->nestedRecursiveRules(['email:rfc', 'max:255']),
                 ]),
         ];
     }

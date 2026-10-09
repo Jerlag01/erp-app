@@ -4,12 +4,14 @@ namespace App\Support;
 
 use App\Enums\MailTemplateKey;
 use App\Models\MailTemplate;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 /**
  * The system e-mails and their texts. Administrators edit them under System > E-mail templates;
  * the defaults below are used until then (and for "reset to default").
  * Bodies are Markdown; placeholders like {client_name} are replaced when the mail is sent.
+ * Values are escaped, except an HtmlString: Markdown the caller built (and escaped) itself, such as a list.
  */
 class MailTemplates
 {
@@ -38,7 +40,7 @@ class MailTemplates
     /**
      * The subject and HTML body for a mail, in the given language.
      *
-     * @param  array<string, scalar|null>  $values
+     * @param  array<string, scalar|HtmlString|null>  $values
      * @return array{subject: string, html: string}
      */
     public static function render(MailTemplateKey $key, string $locale, array $values): array
@@ -59,7 +61,7 @@ class MailTemplates
     }
 
     /**
-     * @param  array<string, scalar|null>  $values
+     * @param  array<string, scalar|HtmlString|null>  $values
      */
     public static function fill(string $text, array $values, bool $escapeMarkdown): string
     {
@@ -68,11 +70,23 @@ class MailTemplates
                 return $match[0];
             }
 
+            if ($values[$match[1]] instanceof HtmlString) {
+                return $escapeMarkdown ? $values[$match[1]]->toHtml() : strip_tags($values[$match[1]]->toHtml());
+            }
+
             $value = (string) $values[$match[1]];
 
             // Links stay usable inside Markdown links; other values cannot add formatting or HTML.
             return $escapeMarkdown && ! str_starts_with($value, 'http') ? addcslashes(e($value), '\\`*_[]#<>|') : $value;
         }, $text);
+    }
+
+    /**
+     * Escapes text for use inside Markdown built by the caller (see HtmlString values).
+     */
+    public static function escape(string $text): string
+    {
+        return addcslashes(e($text), '\\`*_[]#<>|');
     }
 
     /**
@@ -110,6 +124,21 @@ class MailTemplates
                 'nl' => ['subject' => 'Laatste herinnering: factuur {number}', 'body' => "Beste {client_name},\n\nFactuur **{number}** ({amount}) is {days_overdue} dagen vervallen en werd ondanks onze herinneringen nog niet betaald.\n\nDit is onze laatste herinnering. Zonder betaling binnen 8 dagen op {iban} (mededeling **{structured_reference}**) zijn wij genoodzaakt verdere stappen te ondernemen, zoals voorzien in onze algemene voorwaarden.\n\nMet vriendelijke groeten,\n{company_name}"],
                 'fr' => ['subject' => 'Dernier rappel : facture {number}', 'body' => "Madame, Monsieur,\n\nLa facture **{number}** ({amount}) est échue depuis {days_overdue} jours et reste impayée malgré nos rappels.\n\nCeci est notre dernier rappel. Sans paiement dans les 8 jours sur le compte {iban} (communication **{structured_reference}**), nous serons contraints d'entreprendre d'autres démarches, comme prévu dans nos conditions générales.\n\nCordialement,\n{company_name}"],
                 'en' => ['subject' => 'Final reminder: invoice {number}', 'body' => "Dear {client_name},\n\nInvoice **{number}** ({amount}) is {days_overdue} days overdue and has not been paid despite our reminders.\n\nThis is our final reminder. Without payment within 8 days to {iban} (reference **{structured_reference}**) we will have to take further steps, as set out in our terms and conditions.\n\nKind regards,\n{company_name}"],
+            ],
+            MailTemplateKey::PlanningCreated->value => [
+                'nl' => ['subject' => 'Nieuw in je planning', 'body' => "Hallo {name},\n\n{changed_by} heeft het volgende in je planning gezet:\n\n{items}\n\n[Bekijk je planning]({planning_url})\n\nMet vriendelijke groeten,\n{company_name}"],
+                'fr' => ['subject' => 'Nouveau dans votre planning', 'body' => "Bonjour {name},\n\n{changed_by} a ajouté ceci à votre planning :\n\n{items}\n\n[Voir votre planning]({planning_url})\n\nCordialement,\n{company_name}"],
+                'en' => ['subject' => 'New in your planning', 'body' => "Hello {name},\n\n{changed_by} added the following to your planning:\n\n{items}\n\n[View your planning]({planning_url})\n\nKind regards,\n{company_name}"],
+            ],
+            MailTemplateKey::PlanningUpdated->value => [
+                'nl' => ['subject' => 'Wijziging in je planning', 'body' => "Hallo {name},\n\n{changed_by} heeft je planning gewijzigd. Nieuw:\n\n{items}\n\nVoorheen:\n\n{previous}\n\n[Bekijk je planning]({planning_url})\n\nMet vriendelijke groeten,\n{company_name}"],
+                'fr' => ['subject' => 'Modification de votre planning', 'body' => "Bonjour {name},\n\n{changed_by} a modifié votre planning. Nouveau :\n\n{items}\n\nAuparavant :\n\n{previous}\n\n[Voir votre planning]({planning_url})\n\nCordialement,\n{company_name}"],
+                'en' => ['subject' => 'Change in your planning', 'body' => "Hello {name},\n\n{changed_by} changed your planning. New:\n\n{items}\n\nBefore:\n\n{previous}\n\n[View your planning]({planning_url})\n\nKind regards,\n{company_name}"],
+            ],
+            MailTemplateKey::PlanningDeleted->value => [
+                'nl' => ['subject' => 'Verwijderd uit je planning', 'body' => "Hallo {name},\n\n{changed_by} heeft het volgende uit je planning gehaald:\n\n{items}\n\n[Bekijk je planning]({planning_url})\n\nMet vriendelijke groeten,\n{company_name}"],
+                'fr' => ['subject' => 'Retiré de votre planning', 'body' => "Bonjour {name},\n\n{changed_by} a retiré ceci de votre planning :\n\n{items}\n\n[Voir votre planning]({planning_url})\n\nCordialement,\n{company_name}"],
+                'en' => ['subject' => 'Removed from your planning', 'body' => "Hello {name},\n\n{changed_by} removed the following from your planning:\n\n{items}\n\n[View your planning]({planning_url})\n\nKind regards,\n{company_name}"],
             ],
         ];
     }

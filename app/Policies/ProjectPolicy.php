@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * Projects follow the "projects" permissions, but only for projects the user can see: the ones
  * they lead or one of their teams is assigned to (administrators see all of them).
  * Project leaders may do everything on their own projects except deleting them.
- * Offers and invoices need "project_finance" (or being the project leader): teams don't see them.
+ * Employees planned on a project may view it. Offers and invoices need "project_finance" (or being the project leader): teams don't see them.
  */
 class ProjectPolicy extends AreaPolicy
 {
@@ -19,9 +19,17 @@ class ProjectPolicy extends AreaPolicy
         return 'projects';
     }
 
+    /**
+     * Employees in the planning for a project may open it from their planning, even without
+     * "projects.view" (offers and invoices still need the finance rights below).
+     */
     public function view(User $user, Model $project): bool
     {
-        return $this->allows($user, 'view') && $project->isVisibleTo($user);
+        if (! modules()->projects()) {
+            return false;
+        }
+
+        return ($this->allows($user, 'view') && $project->isVisibleTo($user)) || $project->isPlannedFor($user);
     }
 
     public function update(User $user, Model $project): bool

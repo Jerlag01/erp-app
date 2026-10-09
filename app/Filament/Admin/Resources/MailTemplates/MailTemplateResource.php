@@ -23,6 +23,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 /**
@@ -109,7 +110,7 @@ class MailTemplateResource extends Resource
                     ->modalContent(fn (MailTemplate $record) => view('mail.preview', MailTemplates::render(
                         $record->key,
                         $record->locale,
-                        array_fill_keys($record->key->placeholders(), '…') + self::sampleValues(),
+                        self::sampleValues() + array_fill_keys($record->key->placeholders(), '…'),
                     ))),
             ]);
     }
@@ -117,7 +118,7 @@ class MailTemplateResource extends Resource
     /**
      * Example values for the preview.
      *
-     * @return array<string, string>
+     * @return array<string, string|HtmlString>
      */
     protected static function sampleValues(): array
     {
@@ -126,6 +127,9 @@ class MailTemplateResource extends Resource
             'client_name' => 'Voorbeeld NV', 'number' => now()->year.'-0042', 'amount' => '€ 1.210,00', 'issue_date' => today()->format('d/m/Y'),
             'due_date' => today()->addDays(30)->format('d/m/Y'), 'days_overdue' => '14', 'structured_reference' => '+++126/0000/04277+++',
             'iban' => 'BE68 5390 0754 7034', 'subject' => 'Elektriciteitswerken',
+            'changed_by' => 'Jan Janssens', 'planning_url' => url('/planning'),
+            'items' => new HtmlString('- **'.today()->addDay()->format('d/m/Y').' 07:30–16:00** · 604-001-02GAM'),
+            'previous' => new HtmlString('- **'.today()->format('d/m/Y').' 07:30–12:00** · 604-001-02GAM'),
         ];
     }
 

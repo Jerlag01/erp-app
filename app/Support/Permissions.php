@@ -16,6 +16,9 @@ namespace App\Support;
  * "projects.files" and "projects.parts" allow uploading/replacing/removing files and editing the
  * part list. "project_finance" shows (view) or edits (manage) offers and invoices of those projects;
  * project leaders always have it for their own projects.
+ * "planning.plan" fills in everyone's planning (open projects and warehouse jobs) and so also sees
+ * everyone's; "planning.view_all" only sees everyone's; "planning.other" adds items that are not a
+ * project or warehouse job. Project leaders plan their own open projects without any of these.
  * A role stores them as {"vehicles": ["view", "update"], "assets": ["view"], ...}.
  * Administrator roles are granted everything and may also use the admin panel.
  */
@@ -55,6 +58,7 @@ class Permissions
         'credit_notes' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send', 'override']],
         'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate']],
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other']],
     ];
 
     /**

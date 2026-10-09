@@ -95,6 +95,24 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         return $this->hasMany(VacationRequest::class);
     }
 
+    /**
+     * Colleagues this user shared their planning with (on top of their team members).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function planningViewers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'planning_shares', 'user_id', 'viewer_id')->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<PlanningItem, $this>
+     */
+    public function planningItems(): HasMany
+    {
+        return $this->hasMany(PlanningItem::class);
+    }
+
     public function isAdmin(): bool
     {
         return (bool) $this->role?->is_admin;

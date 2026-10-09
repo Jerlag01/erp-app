@@ -167,15 +167,34 @@ class Project extends Model
     }
 
     /**
-     * Non-administrators only see projects they lead or that one of their teams is assigned to.
-     * Like everywhere else in the ERP this rule only applies while the teams module is on.
+     * @return HasMany<PlanningItem, $this>
+     */
+    public function planningItems(): HasMany
+    {
+        return $this->hasMany(PlanningItem::class);
+    }
+
+    /**
+     * Whether the user is in the planning for this project (while the planning module is on),
+     * so they can open it from their planning.
+     */
+    public function isPlannedFor(User $user): bool
+    {
+        return modules()->planning() && $this->planningItems()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Non-administrators only see projects they lead, that one of their teams is assigned to or
+     * that they are in the planning for. Like everywhere else in the ERP this rule only applies
+     * while the teams module is on.
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
         if ($user->seesOnlyOwnTeams()) {
             $query->where(fn (Builder $query) => $query
                 ->whereHas('leaders', fn (Builder $query) => $query->whereKey($user->id))
-                ->orWhereHas('teams', fn (Builder $query) => $query->whereKey($user->teamIds())));
+                ->orWhereHas('teams', fn (Builder $query) => $query->whereKey($user->teamIds()))
+                ->when(modules()->planning(), fn (Builder $query) => $query->orWhereHas('planningItems', fn (Builder $query) => $query->where('user_id', $user->id))));
         }
     }
 

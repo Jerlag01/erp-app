@@ -21,6 +21,12 @@ enum MailTemplateKey: string implements HasLabel
 
     case PaymentReminder3 = 'payment_reminder_3';
 
+    case PlanningCreated = 'planning_created';
+
+    case PlanningUpdated = 'planning_updated';
+
+    case PlanningDeleted = 'planning_deleted';
+
     public function getLabel(): string
     {
         return __('erp.enums.mail_template.'.$this->value);
@@ -39,6 +45,8 @@ enum MailTemplateKey: string implements HasLabel
             self::WelcomeEmployee => [...$company, 'name', 'email', 'login_url', 'password_link', 'link_days'],
             self::InvoiceSent, self::CreditNoteSent => [...$company, 'client_name', 'number', 'amount', 'issue_date', 'due_date', 'structured_reference', 'iban', 'subject'],
             self::PaymentReminder1, self::PaymentReminder2, self::PaymentReminder3 => [...$company, 'client_name', 'number', 'amount', 'issue_date', 'due_date', 'days_overdue', 'structured_reference', 'iban'],
+            self::PlanningCreated, self::PlanningDeleted => [...$company, 'name', 'changed_by', 'items', 'planning_url'],
+            self::PlanningUpdated => [...$company, 'name', 'changed_by', 'items', 'previous', 'planning_url'],
         };
     }
 

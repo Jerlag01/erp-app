@@ -40,7 +40,9 @@ class Modules
 
     public const FINANCE = 'finance';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE];
+    public const PLANNING = 'planning';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING];
 
     public function __construct(protected Settings $settings) {}
 
@@ -146,5 +148,10 @@ class Modules
     public function finance(): bool
     {
         return $this->enabled(self::FINANCE);
+    }
+
+    public function planning(): bool
+    {
+        return $this->enabled(self::PLANNING);
     }
 }

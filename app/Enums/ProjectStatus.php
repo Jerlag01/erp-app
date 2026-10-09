@@ -31,6 +31,22 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
         return __('erp.enums.project_status.'.$this->value);
     }
 
+    /**
+     * Open projects can be put in the planning: planned, to be executed or in progress.
+     */
+    public function isOpen(): bool
+    {
+        return in_array($this, self::open(), true);
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function open(): array
+    {
+        return [self::Planned, self::ToBeExecuted, self::InProgress];
+    }
+
     public function getColor(): string
     {
         return match ($this) {

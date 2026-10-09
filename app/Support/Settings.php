@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Site-wide settings managed from the admin panel, stored per group
- * (general, modules, mail, appearance) in the settings table.
+ * (general, modules, mail, appearance, finance, planning) in the settings table.
  */
 class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance'];
+    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -51,6 +51,7 @@ class Settings
                 Modules::EMPLOYEES => true,
                 Modules::WASTE => true,
                 Modules::FINANCE => true,
+                Modules::PLANNING => true,
             ],
             'mail' => [
                 'mailer' => null,
@@ -94,6 +95,16 @@ class Settings
                 'peppol_provider_url' => null,
                 'peppol_api_key' => null,
                 'peppol_inbound_secret' => null,
+            ],
+            // Preset timeslots and who gets a copy of planning mails (Settings > Planning).
+            'planning' => [
+                'slots' => [
+                    ['label' => 'Volledige dag', 'start' => '07:30', 'end' => '16:00'],
+                    ['label' => 'Voormiddag', 'start' => '07:30', 'end' => '12:00'],
+                    ['label' => 'Namiddag', 'start' => '12:30', 'end' => '16:00'],
+                ],
+                'mail_default' => true,
+                'notify_emails' => [],
             ],
         ];
     }

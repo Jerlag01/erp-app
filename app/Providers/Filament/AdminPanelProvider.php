@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\FinanceOverview;
 use App\Filament\Pages\FinanceStatistics;
+use App\Filament\Pages\Planning;
 use App\Filament\Pages\VacationCalendar;
 use App\Filament\Pages\WasteTotalsOverview;
 use App\Filament\Widgets\ControlsDue;
@@ -36,6 +37,7 @@ class AdminPanelProvider extends PanelProvider
                 WasteTotalsOverview::class,
                 FinanceOverview::class,
                 FinanceStatistics::class,
+                Planning::class,
             ])
             ->widgets([
                 ErpStats::class,

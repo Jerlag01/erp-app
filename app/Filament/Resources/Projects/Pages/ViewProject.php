@@ -17,6 +17,15 @@ class ViewProject extends ViewRecord
 {
     protected static string $resource = ProjectResource::class;
 
+    /**
+     * Employees in the planning for a project open it from their planning without access to the
+     * project list ("projects.view"), so only the record itself is checked (ProjectPolicy::view).
+     */
+    public static function authorizeResourceAccess(): void
+    {
+        abort_unless(modules()->projects(), 403);
+    }
+
     public function getTitle(): string
     {
         return $this->getRecord()->reference;
