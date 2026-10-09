@@ -44,7 +44,9 @@ class Modules
 
     public const INTERVENTIONS = 'interventions';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS];
+    public const BATTERIES = 'batteries';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES];
 
     public function __construct(protected Settings $settings) {}
 
@@ -155,6 +157,14 @@ class Modules
     public function planning(): bool
     {
         return $this->enabled(self::PLANNING);
+    }
+
+    /**
+     * Battery dossiers belong to 604 projects, so both modules must be on.
+     */
+    public function batteries(): bool
+    {
+        return $this->enabled(self::BATTERIES) && $this->projects();
     }
 
     /**

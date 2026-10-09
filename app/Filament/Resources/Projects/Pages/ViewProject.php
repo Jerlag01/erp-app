@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Projects\Pages;
 
 use App\Enums\ProjectStatus;
+use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Models\BatteryDossier;
 use App\Models\Project;
 use App\Support\Interventions;
 use Filament\Actions\Action;
@@ -38,6 +40,11 @@ class ViewProject extends ViewRecord
         return $this->getRecord()->subtitle();
     }
 
+    protected function batteryDossier(Project $project): ?BatteryDossier
+    {
+        return BatteryDossier::query()->where('project_id', $project->id)->latest('id')->first();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -48,6 +55,16 @@ class ViewProject extends ViewRecord
                 ->color('gray')
                 ->url(fn (Project $record): ?string => $record->interventionReport ? route('interventions.pdf', $record->interventionReport) : null, shouldOpenInNewTab: true)
                 ->visible(fn (Project $record): bool => $record->interventionReport !== null && app(Interventions::class)->canDownloadPdf(auth()->user(), $record)),
+            Action::make('batteryDossier')
+                ->label(__('erp.batteries.dossier_button'))
+                ->icon(Heroicon::OutlinedBattery100)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => modules()->batteries()
+                    && $record->category?->code === settings()->get('batteries.project_category')
+                    && ($this->batteryDossier($record) ? Gate::allows('view', $this->batteryDossier($record)) : Gate::allows('create', BatteryDossier::class)))
+                ->url(fn (Project $record): string => ($dossier = $this->batteryDossier($record))
+                    ? BatteryDossierResource::getUrl('edit', ['record' => $dossier])
+                    : BatteryDossierResource::getUrl('create', ['project' => $record->id])),
             Action::make('changeStatus')
                 ->label(__('erp.projects.change_status'))
                 ->icon(Heroicon::OutlinedArrowPath)

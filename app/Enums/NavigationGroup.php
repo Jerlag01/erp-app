@@ -16,6 +16,7 @@ enum NavigationGroup implements HasLabel
     case WorkSites;
     case Projects;
     case Interventions;
+    case Batteries;
     case Planning;
     case KnowledgeBase;
     case Waste;

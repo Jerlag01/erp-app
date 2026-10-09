@@ -19,6 +19,8 @@ namespace App\Support;
  * "planning.plan" fills in everyone's planning (open projects and warehouse jobs) and so also sees
  * everyone's; "planning.view_all" only sees everyone's; "planning.other" adds items that are not a
  * project or warehouse job. Project leaders plan their own open projects without any of these.
+ * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
+ * and edits prices and the invoice request.
  * A role stores them as {"vehicles": ["view", "update"], "assets": ["view"], ...}.
  * Administrator roles are granted everything and may also use the admin panel.
  */
@@ -59,6 +61,8 @@ class Permissions
         'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate']],
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
         'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other']],
+        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'prices']],
+        'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];
 
     /**

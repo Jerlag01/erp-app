@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning'];
+    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -53,6 +53,7 @@ class Settings
                 Modules::FINANCE => true,
                 Modules::PLANNING => true,
                 Modules::INTERVENTIONS => true,
+                Modules::BATTERIES => true,
             ],
             'mail' => [
                 'mailer' => null,
@@ -107,6 +108,52 @@ class Settings
                 'mail_default' => true,
                 'notify_emails' => [],
             ],
+            // Battery dossiers: templates, client, prices and the fixed texts of the shipping note (Settings > Batteries).
+            'batteries' => [
+                'background' => null,
+                'inspection_header' => null,
+                'project_category' => '604',
+                'client_name' => 'Proximus NV',
+                'client_short' => 'Proximus',
+                'client_vat' => '202 239 951',
+                'framework_contract' => '4600001931',
+                'brand' => 'BAE',
+                'supplier_location' => 'Power Installation NV',
+                'contacts' => ['Kevin Cnop', 'Bavo Bonte', 'Pascal Callebaut', 'Patrick Aneca', 'Timon Bouttelgier', 'Gérald Faway', 'Didier Noël'],
+                'waste_types' => [
+                    'UN2794, AFVAL, BATTERIJEN (ACCUMULATOREN), NAT, GEVULD MET ZURE ELEKTROLYT, 8, (E)',
+                    'UN2800, AFVAL, BATTERIJEN (ACCUMULATOREN), NAT, VAN HET GESLOTEN TYPE, 8, (E)',
+                ],
+                'hourly_rate' => 64.68,
+                'vertical_transport_price' => 3.55,
+                'ppe_set_price' => 154,
+                'maintenance_set_price' => 16,
+                'load_plate_price' => 10.7,
+                'lug_price' => 5.24,
+                'tray_price' => 88.77,
+                'doc_holder_price' => 10.5,
+                'picto_price' => 10,
+                'removal_base_opzv' => 300,
+                'removal_base_other' => 371,
+                'removal_factor_opzv' => 1.3,
+                'removal_factor_other' => 2.1,
+                'company_block' => "Power Installation nv\nDrukpersstraat 4\n1000  Brussel\nBTW 462 401 968",
+                'seat_block' => "Exploitatiezetel: Power Installation NV\nGalileilaan 92 B19\n2845  Niel",
+                'shipping_carrier' => 'MCR  Brandekensweg 54 2627 Schelle',
+                'shipping_collector' => '10695',
+                'shipping_sender' => "Romeinse Steenweg Paleis 5\n1020 Brussel",
+                'shipping_transporter' => "Power Installation nv\nDrukpersstraat 4\n1000  Brussel",
+                'shipping_transporter_signature' => "Power Installation nv\nGalileilaan 92 B19\n2845 Niel",
+                'shipping_registrations' => "SPW | DSD/POWERINRB1/21/10643/T/DD | Wallonië\nBIM | AGR/CNC-DD/001486370 | Brussel\nOVAM | 38089/R/12351 | Vlaanderen",
+                'shipping_destination' => "MCR bvba\nBrandekensweg 54\n2627 Schelle",
+                'shipping_destination_registration' => 'B-10695/1',
+                'shipping_description' => 'Loodbatterijen',
+                'shipping_physical_state' => 'Vaste stof',
+                'shipping_packaging' => 'Accuboxen',
+                'shipping_adr' => 'Vervoer volgens 1.1.3.4.1 van het ADR: niet onderworpen aan de voorschriften van het ADR gelet op de bijzondere bepaling 598',
+                'shipping_eural' => '16 06 01*',
+                'shipping_rd_code' => 'R13',
+            ],
         ];
     }
 
@@ -115,17 +162,18 @@ class Settings
      */
     public function all(): array
     {
-        return $this->values ??= Cache::rememberForever(self::CACHE_KEY, function (): array {
+        // Only the stored values are cached; defaults are merged on top, so new groups and keys work at once.
+        $stored = Cache::rememberForever(self::CACHE_KEY, function (): array {
             try {
-                $stored = Setting::query()->pluck('value', 'key')->all();
+                return Setting::query()->pluck('value', 'key')->all();
             } catch (QueryException) {
-                $stored = [];
+                return [];
             }
-
-            return collect(static::defaults())
-                ->map(fn (array $defaults, string $group): array => [...$defaults, ...($stored[$group] ?? [])])
-                ->all();
         });
+
+        return $this->values ??= collect(static::defaults())
+            ->map(fn (array $defaults, string $group): array => [...$defaults, ...((array) ($stored[$group] ?? []))])
+            ->all();
     }
 
     public function get(string $key, mixed $default = null): mixed
