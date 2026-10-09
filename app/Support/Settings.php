@@ -52,6 +52,7 @@ class Settings
                 Modules::WASTE => true,
                 Modules::FINANCE => true,
                 Modules::PLANNING => true,
+                Modules::INTERVENTIONS => true,
             ],
             'mail' => [
                 'mailer' => null,

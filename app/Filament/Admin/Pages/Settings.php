@@ -286,6 +286,7 @@ class Settings extends Page
             Modules::WASTE => Heroicon::OutlinedTrash,
             Modules::FINANCE => Heroicon::OutlinedBanknotes,
             Modules::PLANNING => Heroicon::OutlinedCalendarDays,
+            Modules::INTERVENTIONS => Heroicon::OutlinedWrench,
         ];
 
         return [

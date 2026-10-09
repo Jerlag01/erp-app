@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,7 +20,8 @@ use Illuminate\Support\Facades\DB;
  * teams assigned to it can see it (while the teams module is on).
  */
 #[Fillable([
-    'project_category_id', 'number', 'work_site_id', 'short_description', 'status',
+    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'short_description', 'status',
+    'intervention_subcategory_id', 'intervention_phase', 'intervention_tags',
     'client_name', 'client_company', 'client_email', 'client_phone',
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by',
 ])]
@@ -167,6 +169,56 @@ class Project extends Model
     }
 
     /**
+     * Intervention categories (PREPARE, CONNECT, DECONNECT, …) of an intervention.
+     *
+     * @return BelongsToMany<InterventionCategory, $this>
+     */
+    public function interventionCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(InterventionCategory::class)->orderBy('sort')->orderBy('name');
+    }
+
+    /**
+     * @return BelongsTo<InterventionCategory, $this>
+     */
+    public function interventionSubcategory(): BelongsTo
+    {
+        return $this->belongsTo(InterventionCategory::class, 'intervention_subcategory_id');
+    }
+
+    /**
+     * @return HasOne<InterventionReport, $this>
+     */
+    public function interventionReport(): HasOne
+    {
+        return $this->hasOne(InterventionReport::class);
+    }
+
+    /**
+     * A project in an intervention category (600), whether or not the interventions module is on.
+     */
+    public function isIntervention(): bool
+    {
+        return (bool) $this->category?->numbering->isIntervention();
+    }
+
+    /**
+     * "COLIBRI · PHASE 1 · FRM220UB, FRM220 FIRE".
+     */
+    public function interventionSubcategoryLabel(): ?string
+    {
+        if (! $this->interventionSubcategory) {
+            return null;
+        }
+
+        return implode(' · ', array_filter([
+            $this->interventionSubcategory->name,
+            $this->intervention_phase,
+            implode(', ', (array) $this->intervention_tags),
+        ]));
+    }
+
+    /**
      * @return HasMany<PlanningItem, $this>
      */
     public function planningItems(): HasMany
@@ -227,6 +279,10 @@ class Project extends Model
      */
     public function subtitle(): ?string
     {
+        if ($this->isIntervention()) {
+            return trim(implode(' · ', array_filter([filled($this->work_order_number) ? 'WO '.$this->work_order_number : null, $this->short_description]))) ?: null;
+        }
+
         return $this->category?->numbering->hasClient()
             ? (trim(implode(' · ', array_filter([$this->client_name, $this->client_company]))) ?: null)
             : $this->short_description;
@@ -278,6 +334,7 @@ class Project extends Model
         return [
             'number' => 'integer',
             'status' => ProjectStatus::class,
+            'intervention_tags' => 'array',
         ];
     }
 }

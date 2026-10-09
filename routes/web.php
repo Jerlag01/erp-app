@@ -5,6 +5,7 @@ use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
 use App\Http\Controllers\IncidentPdfController;
 use App\Http\Controllers\IncidentPhotoController;
+use App\Http\Controllers\InterventionPdfController;
 use App\Http\Controllers\ItAssetLabelController;
 use App\Http\Controllers\ItAssetQrController;
 use App\Http\Controllers\KbDownloadController;
@@ -32,6 +33,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/idea-box/{suggestion}/photos/{index}', SuggestionPhotoController::class)->whereNumber('index')->name('suggestions.photo');
     Route::get('/idea-box-pdf', SuggestionPdfController::class)->name('suggestions.pdf');
     Route::get('/projects/{project}/files/{file}/{version?}', ProjectFileController::class)->whereNumber(['project', 'file', 'version'])->name('projects.file');
+    Route::get('/interventions/{report}/pdf', InterventionPdfController::class)->whereNumber('report')->name('interventions.pdf');
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');

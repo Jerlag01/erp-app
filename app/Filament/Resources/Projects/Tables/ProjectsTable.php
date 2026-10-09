@@ -30,7 +30,7 @@ class ProjectsTable
                     ->fontFamily(FontFamily::Mono)
                     ->weight(FontWeight::Bold)
                     ->description(fn (Project $record): ?string => $record->subtitle())
-                    ->searchable(['reference', 'short_description', 'client_name', 'client_company'])
+                    ->searchable(['reference', 'work_order_number', 'short_description', 'client_name', 'client_company'])
                     ->sortable()
                     ->copyable(),
                 TextColumn::make('category.code')

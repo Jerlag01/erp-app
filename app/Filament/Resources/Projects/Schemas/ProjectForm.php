@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use App\Enums\InterventionCategoryKind;
 use App\Enums\ProjectStatus;
 use App\Filament\Admin\Resources\ProjectCategories\ProjectCategoryResource;
 use App\Models\Country;
+use App\Models\InterventionCategory;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectPoNumber;
 use App\Models\WorkSite;
+use Closure;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -16,6 +19,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
@@ -26,6 +30,9 @@ class ProjectForm
     {
         $category = fn (Get $get): ?ProjectCategory => self::category($get('project_category_id'));
         $usesWorkSite = fn (Get $get): bool => (bool) $category($get)?->numbering->usesWorkSite();
+        $isIntervention = fn (Get $get): bool => (bool) $category($get)?->numbering->isIntervention();
+        $interventionFields = fn (Get $get): bool => $isIntervention($get) && modules()->interventions();
+        $subcategory = fn (Get $get): ?InterventionCategory => filled($get('intervention_subcategory_id')) ? InterventionCategory::find($get('intervention_subcategory_id')) : null;
 
         return $schema
             ->components([
@@ -48,8 +55,30 @@ class ProjectForm
                                         : null)
                                     ->required()
                                     ->live()
+                                    // Interventions start as "to be executed", so they can be planned straight away.
+                                    ->afterStateUpdated(function (mixed $state, Set $set): void {
+                                        if (self::category($state)?->numbering->isIntervention()) {
+                                            $set('status', ProjectStatus::ToBeExecuted->value);
+                                        }
+                                    })
                                     ->disabledOn('edit')
                                     ->columnSpanFull(),
+                                TextInput::make('work_order_number')
+                                    ->label(__('erp.interventions.wo_number'))
+                                    ->helperText(__('erp.interventions.wo_number_help'))
+                                    ->prefix('WO')
+                                    ->required($isIntervention)
+                                    ->maxLength(30)
+                                    ->regex('/^(WO\s*)?[A-Za-z0-9\/._-]+$/i')
+                                    // Unique as stored: "WO 123456" and "123456" are the same work order.
+                                    ->rule(fn (?Project $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                        if (Project::query()->where('work_order_number', self::workOrderNumber($value))->when($record, fn (Builder $query) => $query->whereKeyNot($record->id))->exists()) {
+                                            $fail(__('validation.unique', ['attribute' => __('erp.interventions.wo_number')]));
+                                        }
+                                    })
+                                    ->dehydrateStateUsing(fn (?string $state): ?string => self::workOrderNumber($state))
+                                    ->visible($isIntervention)
+                                    ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
                                 TextInput::make('number')
                                     ->label(__('erp.projects.number'))
                                     ->helperText(__('erp.projects.number_help'))
@@ -106,10 +135,43 @@ class ProjectForm
                                     ->visible(fn (): bool => modules()->teams()),
                             ]),
                     ]),
+                Section::make(__('erp.interventions.title'))
+                    ->description(__('erp.interventions.form_help'))
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->visible($interventionFields)
+                    ->schema([
+                        Select::make('interventionCategories')
+                            ->label(__('erp.interventions.categories'))
+                            ->relationship('interventionCategories', 'name', fn (Builder $query, ?Project $record) => $query
+                                ->where('kind', InterventionCategoryKind::Category->value)
+                                ->where(fn (Builder $query) => $query->where('is_active', true)->orWhereIn('intervention_categories.id', $record?->interventionCategories()->pluck('intervention_categories.id')->all() ?: [0])))
+                            ->multiple()
+                            ->preload()
+                            ->columnSpanFull(),
+                        Select::make('intervention_subcategory_id')
+                            ->label(__('erp.interventions.subcategory'))
+                            ->options(fn (?Project $record): array => InterventionCategory::options(InterventionCategoryKind::Subcategory, array_filter([$record?->intervention_subcategory_id])))
+                            ->live()
+                            ->afterStateUpdated(function (Set $set): void {
+                                $set('intervention_phase', null);
+                                $set('intervention_tags', []);
+                            }),
+                        Select::make('intervention_phase')
+                            ->label(__('erp.interventions.phase'))
+                            ->options(fn (Get $get): array => collect($subcategory($get)?->phaseList() ?? [])->mapWithKeys(fn (string $phase): array => [$phase => $phase])->all())
+                            ->visible(fn (Get $get): bool => (bool) $subcategory($get)?->phaseList()),
+                        Select::make('intervention_tags')
+                            ->label(__('erp.interventions.tags'))
+                            ->multiple()
+                            ->options(fn (Get $get): array => collect($subcategory($get)?->tagList() ?? [])->mapWithKeys(fn (string $tag): array => [$tag => $tag])->all())
+                            ->visible(fn (Get $get): bool => (bool) $subcategory($get)?->tagList()),
+                    ]),
+                // Interventions get their PO number when an administrator approves them.
                 Section::make(__('erp.projects.po_numbers'))
                     ->description(__('erp.projects.po_numbers_help'))
                     ->columnSpanFull()
-                    ->visible(fn (Get $get): bool => (bool) $category($get)?->numbering->hasPoNumbers())
+                    ->visible(fn (Get $get): bool => (bool) $category($get)?->numbering->hasPoNumbers() && ! $interventionFields($get))
                     ->schema([
                         Repeater::make('poNumbers')
                             ->hiddenLabel()
@@ -184,6 +246,14 @@ class ProjectForm
     }
 
     /**
+     * "wo 123456" → "123456".
+     */
+    public static function workOrderNumber(mixed $value): ?string
+    {
+        return filled($value) ? strtoupper(trim((string) preg_replace('/^WO\s*/i', '', trim((string) $value)))) : null;
+    }
+
+    /**
      * Categories are looked up once per request, as many fields depend on the selected one.
      */
     public static function category(mixed $id): ?ProjectCategory
@@ -206,6 +276,19 @@ class ProjectForm
     public static function clean(array $data, ?Project $project = null): array
     {
         $category = self::category($data['project_category_id'] ?? $project?->project_category_id);
+
+        if ($category && ! $category->numbering->isIntervention()) {
+            $data['work_order_number'] = null;
+            $data['intervention_subcategory_id'] = null;
+            $data['intervention_phase'] = null;
+            $data['intervention_tags'] = null;
+        }
+
+        if (filled($data['intervention_phase'] ?? null) || filled($data['intervention_tags'] ?? null)) {
+            $subcategory = InterventionCategory::query()->find($data['intervention_subcategory_id'] ?? null);
+            $data['intervention_phase'] = in_array($data['intervention_phase'] ?? null, $subcategory?->phaseList() ?? [], true) ? $data['intervention_phase'] : null;
+            $data['intervention_tags'] = array_values(array_intersect((array) ($data['intervention_tags'] ?? []), $subcategory?->tagList() ?? [])) ?: null;
+        }
 
         if ($category && ! $category->numbering->hasClient()) {
             foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {

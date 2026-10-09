@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Project;
+use App\Support\Interventions;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -11,6 +12,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 
 class ProjectInfolist
@@ -47,6 +49,14 @@ class ProjectInfolist
                                     ->url(fn (Project $record): ?string => $record->workSite && modules()->workSites() && Gate::allows('view', $record->workSite) ? WorkSiteResource::getUrl('view', ['record' => $record->workSite]) : null)
                                     ->placeholder('—')
                                     ->hidden($isPrivate),
+                                TextEntry::make('work_order_number')
+                                    ->label(__('erp.interventions.wo_number'))
+                                    ->prefix('WO ')
+                                    ->fontFamily(FontFamily::Mono)
+                                    ->weight(FontWeight::Bold)
+                                    ->copyable()
+                                    ->placeholder('—')
+                                    ->visible(fn (Project $record): bool => $record->isIntervention()),
                                 TextEntry::make('short_description')
                                     ->label(__('erp.projects.short_description'))
                                     ->visible(fn (Project $record): bool => $record->category->has_short_description)
@@ -84,6 +94,34 @@ class ProjectInfolist
                                     ->label(__('erp.projects.created'))
                                     ->state(fn (Project $record): string => $record->created_at->format('d/m/Y H:i').($record->creator ? ' · '.$record->creator->name : '')),
                             ]),
+                    ]),
+                Section::make(__('erp.interventions.title'))
+                    ->icon(Heroicon::OutlinedWrench)
+                    ->columnSpanFull()
+                    ->columns(4)
+                    ->visible(fn (Project $record): bool => app(Interventions::class)->appliesTo($record))
+                    ->schema([
+                        TextEntry::make('interventionCategories.name')
+                            ->label(__('erp.interventions.categories'))
+                            ->badge()
+                            ->placeholder('—'),
+                        TextEntry::make('intervention_subcategory')
+                            ->label(__('erp.interventions.subcategory'))
+                            ->state(fn (Project $record): ?string => $record->interventionSubcategoryLabel())
+                            ->placeholder('—'),
+                        TextEntry::make('interventionReport.status')
+                            ->label(__('erp.interventions.review_status'))
+                            ->badge()
+                            ->placeholder(__('erp.interventions.not_closed')),
+                        TextEntry::make('interventionReport.executed_at')
+                            ->label(__('erp.interventions.executed_at'))
+                            ->dateTime('d/m/Y H:i')
+                            ->helperText(fn (Project $record): ?string => $record->interventionReport ? implode(', ', $record->interventionReport->workerNames()) : null)
+                            ->placeholder('—'),
+                        TextEntry::make('interventionReport.review_note')
+                            ->label(__('erp.interventions.review_note'))
+                            ->visible(fn (Project $record): bool => filled($record->interventionReport?->review_note))
+                            ->columnSpanFull(),
                     ]),
                 Section::make(__('erp.projects.client'))
                     ->columnSpanFull()

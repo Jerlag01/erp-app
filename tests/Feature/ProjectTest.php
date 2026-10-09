@@ -47,9 +47,9 @@ class ProjectTest extends TestCase
     }
 
     #[Test]
-    public function the_ten_main_categories_exist_with_their_numbering(): void
+    public function the_main_categories_exist_with_their_numbering(): void
     {
-        $this->assertSame(['604', '605', '606', '607', '608', '610', '620', '630', '640', '650'], ProjectCategory::query()->orderBy('code')->pluck('code')->all());
+        $this->assertSame(['600', '604', '605', '606', '607', '608', '610', '620', '630', '640', '650'], ProjectCategory::query()->orderBy('code')->pluck('code')->all());
         $this->assertTrue(ProjectCategory::where('code', '607')->value('has_short_description'));
         $this->assertFalse(ProjectCategory::where('code', '604')->value('has_short_description'));
     }

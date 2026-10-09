@@ -42,7 +42,9 @@ class Modules
 
     public const PLANNING = 'planning';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING];
+    public const INTERVENTIONS = 'interventions';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS];
 
     public function __construct(protected Settings $settings) {}
 
@@ -153,5 +155,13 @@ class Modules
     public function planning(): bool
     {
         return $this->enabled(self::PLANNING);
+    }
+
+    /**
+     * Interventions build on projects (category 600), so both modules must be on.
+     */
+    public function interventions(): bool
+    {
+        return $this->enabled(self::INTERVENTIONS) && $this->projects();
     }
 }
