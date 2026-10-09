@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbsenceDocumentController;
+use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/idea-box/{suggestion}/photos/{index}', SuggestionPhotoController::class)->whereNumber('index')->name('suggestions.photo');
     Route::get('/idea-box-pdf', SuggestionPdfController::class)->name('suggestions.pdf');
     Route::get('/projects/{project}/files/{file}/{version?}', ProjectFileController::class)->whereNumber(['project', 'file', 'version'])->name('projects.file');
+    Route::get('/battery-deliveries-pdf', BatteryDeliveriesPdfController::class)->name('batteries.deliveries-pdf');
     Route::get('/battery-dossiers/{dossier}/documents/{document}', BatteryDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('batteries.document');
     Route::get('/interventions/{report}/pdf', InterventionPdfController::class)->whereNumber('report')->name('interventions.pdf');
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');

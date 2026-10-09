@@ -113,6 +113,8 @@ class Settings
                 'background' => null,
                 'inspection_header' => null,
                 'project_category' => '604',
+                // Status of the 604 project once its batteries are delivered ("ready to plan").
+                'delivered_project_status' => 'to_be_executed',
                 'client_name' => 'Proximus NV',
                 'client_short' => 'Proximus',
                 'client_vat' => '202 239 951',

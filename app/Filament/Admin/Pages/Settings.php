@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Enums\NavigationGroup;
+use App\Enums\ProjectStatus;
 use App\Http\Controllers\PeppolInboundController;
 use App\Models\Client;
 use App\Models\Employee;
@@ -33,6 +34,7 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -105,6 +107,11 @@ class Settings extends Page
                             ->icon(Heroicon::OutlinedBanknotes)
                             ->visible(fn (): bool => modules()->finance())
                             ->schema($this->financeFields()),
+                        // Only while the batteries module is on.
+                        Tab::make(__('erp.settings.tabs.batteries'))
+                            ->icon(Heroicon::OutlinedBattery100)
+                            ->visible(fn (): bool => modules()->batteries())
+                            ->schema($this->batteryFields()),
                         // Only while the planning module is on.
                         Tab::make(__('erp.settings.tabs.planning'))
                             ->icon(Heroicon::OutlinedCalendarDays)
@@ -140,10 +147,10 @@ class Settings extends Page
             ? Crypt::encryptString($data['mail']['password'])
             : $settings->get('mail.password');
 
-        foreach (['logo', 'favicon'] as $image) {
-            $old = $settings->get("appearance.{$image}");
+        foreach (['appearance.logo', 'appearance.favicon', 'batteries.background', 'batteries.inspection_header'] as $image) {
+            $old = $settings->get($image);
 
-            if (filled($old) && $old !== ($data['appearance'][$image] ?? null)) {
+            if (filled($old) && Arr::has($data, $image) && $old !== Arr::get($data, $image)) {
                 Storage::disk('public')->delete($old);
             }
         }
@@ -399,6 +406,96 @@ class Settings extends Page
                         ->revealable(),
                     Text::make(fn (): string => __('erp.settings.help.peppol_inbound', ['url' => PeppolInboundController::url() ?? __('erp.settings.help.peppol_inbound_after_save')]))
                         ->columnSpanFull(),
+                ]),
+        ];
+    }
+
+    /**
+     * @return array<Component>
+     */
+    protected function batteryFields(): array
+    {
+        $template = fn (string $key): FileUpload => FileUpload::make("batteries.{$key}")
+            ->label(__("erp.settings.fields.battery_{$key}"))
+            ->helperText(__("erp.settings.help.battery_{$key}"))
+            ->image()
+            ->acceptedFileTypes(['image/png', 'image/jpeg'])
+            ->maxSize(8192)
+            ->disk('public')
+            ->directory('battery-templates')
+            ->visibility('public')
+            ->imagePreviewHeight('160');
+        $money = fn (string $key): TextInput => TextInput::make("batteries.{$key}")
+            ->label(__("erp.settings.fields.battery_{$key}"))
+            ->numeric()
+            ->minValue(0)
+            ->step('any')
+            ->prefix('€')
+            ->required();
+        $text = fn (string $key): TextInput => TextInput::make("batteries.{$key}")->label(__("erp.settings.fields.battery_{$key}"))->maxLength(255);
+        $lines = fn (string $key, int $rows = 3): Textarea => Textarea::make("batteries.{$key}")->label(__("erp.settings.fields.battery_{$key}"))->rows($rows)->maxLength(2000);
+
+        return [
+            Section::make(__('erp.settings.sections.battery_templates'))
+                ->description(__('erp.settings.help.battery_templates'))
+                ->columns(2)
+                ->schema([
+                    $template('background'),
+                    $template('inspection_header'),
+                ]),
+            Section::make(__('erp.settings.sections.battery_client'))
+                ->columns(3)
+                ->schema([
+                    $text('client_name')->required(),
+                    $text('client_short')->required(),
+                    $text('client_vat'),
+                    $text('framework_contract'),
+                    $text('brand'),
+                    $text('supplier_location'),
+                    TextInput::make('batteries.project_category')
+                        ->label(__('erp.settings.fields.battery_project_category'))
+                        ->helperText(__('erp.settings.help.battery_project_category'))
+                        ->required()
+                        ->maxLength(6),
+                    Select::make('batteries.delivered_project_status')
+                        ->label(__('erp.settings.fields.battery_delivered_project_status'))
+                        ->helperText(__('erp.settings.help.battery_delivered_project_status'))
+                        ->options(ProjectStatus::class)
+                        ->placeholder(__('erp.settings.fields.battery_status_unchanged')),
+                    TagsInput::make('batteries.contacts')->label(__('erp.settings.fields.battery_contacts')),
+                    TagsInput::make('batteries.waste_types')->label(__('erp.settings.fields.battery_waste_types'))->columnSpanFull(),
+                ]),
+            Section::make(__('erp.settings.sections.battery_prices'))
+                ->description(__('erp.settings.help.battery_prices'))
+                ->columns(4)
+                ->schema([
+                    $money('hourly_rate'), $money('vertical_transport_price'), $money('ppe_set_price'), $money('maintenance_set_price'),
+                    $money('load_plate_price'), $money('lug_price'), $money('tray_price'), $money('doc_holder_price'), $money('picto_price'),
+                    $money('removal_base_opzv'), $money('removal_base_other'),
+                    TextInput::make('batteries.removal_factor_opzv')->label(__('erp.settings.fields.battery_removal_factor_opzv'))->numeric()->step('any')->required(),
+                    TextInput::make('batteries.removal_factor_other')->label(__('erp.settings.fields.battery_removal_factor_other'))->numeric()->step('any')->required(),
+                ]),
+            Section::make(__('erp.settings.sections.battery_documents'))
+                ->columns(2)
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    $lines('company_block', 4),
+                    $lines('seat_block', 4),
+                    $text('shipping_carrier'),
+                    $text('shipping_collector'),
+                    $lines('shipping_sender'),
+                    $lines('shipping_transporter'),
+                    $lines('shipping_transporter_signature'),
+                    $lines('shipping_registrations')->helperText(__('erp.settings.help.battery_shipping_registrations')),
+                    $lines('shipping_destination'),
+                    $text('shipping_destination_registration'),
+                    $text('shipping_description'),
+                    $text('shipping_physical_state'),
+                    $text('shipping_packaging'),
+                    $text('shipping_eural'),
+                    $text('shipping_rd_code'),
+                    $lines('shipping_adr', 2)->columnSpanFull(),
                 ]),
         ];
     }
