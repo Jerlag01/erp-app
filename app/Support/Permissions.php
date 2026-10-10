@@ -21,6 +21,8 @@ namespace App\Support;
  * project or warehouse job. Project leaders plan their own open projects without any of these.
  * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
  * and edits prices and the invoice request.
+ * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
+ * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
  * A role stores them as {"vehicles": ["view", "update"], "assets": ["view"], ...}.
  * Administrator roles are granted everything and may also use the admin panel.
  */
@@ -60,7 +62,8 @@ class Permissions
         'credit_notes' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send', 'override']],
         'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate']],
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other']],
+        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other', 'trainings']],
+        'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send']],
         'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'prices']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];

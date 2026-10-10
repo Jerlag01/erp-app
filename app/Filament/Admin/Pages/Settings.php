@@ -107,6 +107,11 @@ class Settings extends Page
                             ->icon(Heroicon::OutlinedBanknotes)
                             ->visible(fn (): bool => modules()->finance())
                             ->schema($this->financeFields()),
+                        // Only while the prestations module is on.
+                        Tab::make(__('erp.settings.tabs.timesheets'))
+                            ->icon(Heroicon::OutlinedClock)
+                            ->visible(fn (): bool => modules()->timesheets())
+                            ->schema($this->timesheetFields()),
                         // Only while the batteries module is on.
                         Tab::make(__('erp.settings.tabs.batteries'))
                             ->icon(Heroicon::OutlinedBattery100)
@@ -162,6 +167,12 @@ class Settings extends Page
             $data['finance']['peppol_inbound_secret'] = $settings->get('finance.peppol_inbound_secret') ?: Str::random(40);
             $data['finance']['vat_number'] = Client::normaliseVat($data['finance']['vat_number'] ?? null);
             $data['finance']['iban'] = filled($data['finance']['iban'] ?? null) ? strtoupper(preg_replace('/\s+/', '', $data['finance']['iban'])) : null;
+        }
+
+        if (isset($data['timesheets'])) {
+            $data['timesheets']['send_day'] = (int) $data['timesheets']['send_day'];
+            $data['timesheets']['send_time'] = substr((string) $data['timesheets']['send_time'], 0, 5);
+            $data['timesheets']['recipients'] = array_values(array_unique(array_map('strtolower', $data['timesheets']['recipients'] ?? [])));
         }
 
         if (isset($data['planning'])) {
@@ -295,6 +306,7 @@ class Settings extends Page
             Modules::PLANNING => Heroicon::OutlinedCalendarDays,
             Modules::INTERVENTIONS => Heroicon::OutlinedWrench,
             Modules::BATTERIES => Heroicon::OutlinedBattery100,
+            Modules::TIMESHEETS => Heroicon::OutlinedClock,
         ];
 
         return [
@@ -405,6 +417,37 @@ class Settings extends Page
                         ->password()
                         ->revealable(),
                     Text::make(fn (): string => __('erp.settings.help.peppol_inbound', ['url' => PeppolInboundController::url() ?? __('erp.settings.help.peppol_inbound_after_save')]))
+                        ->columnSpanFull(),
+                ]),
+        ];
+    }
+
+    /**
+     * @return array<Component>
+     */
+    protected function timesheetFields(): array
+    {
+        $days = collect(range(1, 7))->mapWithKeys(fn (int $day): array => [$day => now()->startOfWeek()->addDays($day - 1)->locale(app()->getLocale())->translatedFormat('l')])->all();
+
+        return [
+            Section::make(__('erp.settings.sections.timesheet_hours'))
+                ->columns(3)
+                ->schema([
+                    TextInput::make('timesheets.expected_hours')->label(__('erp.settings.fields.timesheet_expected_hours'))->numeric()->minValue(0)->maxValue(80)->step('any')->suffix('u')->required(),
+                    TextInput::make('timesheets.day_hours')->label(__('erp.settings.fields.timesheet_day_hours'))->helperText(__('erp.settings.help.timesheet_day_hours'))->numeric()->minValue(0)->maxValue(24)->step('any')->suffix('u')->required(),
+                    TextInput::make('timesheets.lunch_hours')->label(__('erp.settings.fields.timesheet_lunch_hours'))->numeric()->minValue(0)->maxValue(4)->step('any')->suffix('u')->required(),
+                ]),
+            Section::make(__('erp.settings.sections.timesheet_mail'))
+                ->description(__('erp.settings.help.timesheet_mail'))
+                ->columns(3)
+                ->schema([
+                    Toggle::make('timesheets.auto_send')->label(__('erp.settings.fields.timesheet_auto_send'))->columnSpanFull(),
+                    Select::make('timesheets.send_day')->label(__('erp.settings.fields.timesheet_send_day'))->options($days)->required(),
+                    TextInput::make('timesheets.send_time')->label(__('erp.settings.fields.timesheet_send_time'))->type('time')->required(),
+                    TagsInput::make('timesheets.recipients')
+                        ->label(__('erp.settings.fields.timesheet_recipients'))
+                        ->placeholder('payroll@example.com')
+                        ->nestedRecursiveRules(['email:rfc', 'max:255'])
                         ->columnSpanFull(),
                 ]),
         ];

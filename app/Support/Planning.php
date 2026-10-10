@@ -8,6 +8,7 @@ use App\Enums\VacationStatus;
 use App\Models\Absence;
 use App\Models\PlanningItem;
 use App\Models\Project;
+use App\Models\Training;
 use App\Models\User;
 use App\Models\VacationRequest;
 use Carbon\CarbonImmutable;
@@ -25,7 +26,8 @@ use Illuminate\Support\Facades\DB;
  * their projects.
  * Planning: administrators and "planning.plan" plan open projects and warehouse jobs; project
  * leaders plan their own open projects. Anything else needs "planning.other".
- * Blocked: days with approved vacation or an absence (medical, overtime as leave, family leave).
+ * Blocked: days with approved vacation, an absence (medical, overtime as leave, family leave) or a training.
+ * Trainings are planned by administrators and "planning.trainings".
  */
 class Planning
 {
@@ -66,6 +68,11 @@ class Planning
     public function isPlanner(User $user): bool
     {
         return $user->isAdmin() || $user->hasPermission('planning.plan');
+    }
+
+    public function canPlanTrainings(User $user): bool
+    {
+        return $this->enabled() && ($user->isAdmin() || $user->hasPermission('planning.trainings'));
     }
 
     public function canPlanOther(User $user): bool
@@ -150,10 +157,6 @@ class Planning
      */
     public function blockedDays(?array $userIds, CarbonInterface $from, CarbonInterface $until, User $viewer): array
     {
-        if (! modules()->vacations()) {
-            return [];
-        }
-
         $blocked = [];
         $mark = function (int $userId, CarbonInterface $start, CarbonInterface $end, string $label) use (&$blocked, $from, $until): void {
             $start = CarbonImmutable::instance($start)->max($from);
@@ -164,19 +167,31 @@ class Planning
             }
         };
 
-        Absence::query()
-            ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
-            ->overlapping($from->toDateString(), $until->toDateString())
-            ->get()
-            ->each(fn (Absence $absence) => $mark($absence->user_id, $absence->start_date, $absence->end_date, $absence->labelFor($viewer)));
+        if (modules()->vacations()) {
+            Absence::query()
+                ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
+                ->overlapping($from->toDateString(), $until->toDateString())
+                ->get()
+                ->each(fn (Absence $absence) => $mark($absence->user_id, $absence->start_date, $absence->end_date, $absence->labelFor($viewer)));
+        }
 
-        VacationRequest::query()
-            ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
-            ->where('status', VacationStatus::Approved)
-            ->whereDate('start_date', '<=', $until->toDateString())
-            ->whereDate('end_date', '>=', $from->toDateString())
+        // Trainings block the day like vacation (they belong to the planning module itself).
+        Training::query()
+            ->overlapping($from, $until)
+            ->when($userIds !== null, fn (Builder $query) => $query->whereHas('participants', fn (Builder $query) => $query->whereKey($userIds)))
+            ->with(['participants' => fn ($query) => $query->when($userIds !== null, fn ($query) => $query->whereKey($userIds))])
             ->get()
-            ->each(fn (VacationRequest $request) => $mark($request->user_id, $request->start_date, $request->end_date, __('erp.planning.blocked_vacation')));
+            ->each(fn (Training $training) => $training->participants->each(fn (User $participant) => $mark($participant->id, $training->start_date, $training->end_date, $training->note())));
+
+        if (modules()->vacations()) {
+            VacationRequest::query()
+                ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
+                ->where('status', VacationStatus::Approved)
+                ->whereDate('start_date', '<=', $until->toDateString())
+                ->whereDate('end_date', '>=', $from->toDateString())
+                ->get()
+                ->each(fn (VacationRequest $request) => $mark($request->user_id, $request->start_date, $request->end_date, __('erp.planning.blocked_vacation')));
+        }
 
         return $blocked;
     }

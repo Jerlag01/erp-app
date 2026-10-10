@@ -27,6 +27,8 @@ enum MailTemplateKey: string implements HasLabel
 
     case PlanningDeleted = 'planning_deleted';
 
+    case TimesheetWeek = 'timesheet_week';
+
     public function getLabel(): string
     {
         return __('erp.enums.mail_template.'.$this->value);
@@ -47,6 +49,7 @@ enum MailTemplateKey: string implements HasLabel
             self::PaymentReminder1, self::PaymentReminder2, self::PaymentReminder3 => [...$company, 'client_name', 'number', 'amount', 'issue_date', 'due_date', 'days_overdue', 'structured_reference', 'iban'],
             self::PlanningCreated, self::PlanningDeleted => [...$company, 'name', 'changed_by', 'items', 'planning_url'],
             self::PlanningUpdated => [...$company, 'name', 'changed_by', 'items', 'previous', 'planning_url'],
+            self::TimesheetWeek => [...$company, 'week', 'from', 'until', 'count', 'summary'],
         };
     }
 

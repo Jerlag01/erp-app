@@ -125,6 +125,11 @@ class MailTemplates
                 'fr' => ['subject' => 'Dernier rappel : facture {number}', 'body' => "Madame, Monsieur,\n\nLa facture **{number}** ({amount}) est échue depuis {days_overdue} jours et reste impayée malgré nos rappels.\n\nCeci est notre dernier rappel. Sans paiement dans les 8 jours sur le compte {iban} (communication **{structured_reference}**), nous serons contraints d'entreprendre d'autres démarches, comme prévu dans nos conditions générales.\n\nCordialement,\n{company_name}"],
                 'en' => ['subject' => 'Final reminder: invoice {number}', 'body' => "Dear {client_name},\n\nInvoice **{number}** ({amount}) is {days_overdue} days overdue and has not been paid despite our reminders.\n\nThis is our final reminder. Without payment within 8 days to {iban} (reference **{structured_reference}**) we will have to take further steps, as set out in our terms and conditions.\n\nKind regards,\n{company_name}"],
             ],
+            MailTemplateKey::TimesheetWeek->value => [
+                'nl' => ['subject' => 'Prestatiefiches week {week} ({from} – {until})', 'body' => "Goedendag,\n\nIn bijlage de prestatiefiches van week {week} ({from} tot {until}) van {count} werknemer(s):\n\n{summary}\n\nMet vriendelijke groeten,\n{company_name}"],
+                'fr' => ['subject' => 'Fiches de prestations semaine {week} ({from} – {until})', 'body' => "Bonjour,\n\nVeuillez trouver ci-joint les fiches de prestations de la semaine {week} ({from} au {until}) de {count} employé(s) :\n\n{summary}\n\nCordialement,\n{company_name}"],
+                'en' => ['subject' => 'Timesheets week {week} ({from} – {until})', 'body' => "Hello,\n\nAttached are the timesheets of week {week} ({from} to {until}) of {count} employee(s):\n\n{summary}\n\nKind regards,\n{company_name}"],
+            ],
             MailTemplateKey::PlanningCreated->value => [
                 'nl' => ['subject' => 'Nieuw in je planning', 'body' => "Hallo {name},\n\n{changed_by} heeft het volgende in je planning gezet:\n\n{items}\n\n[Bekijk je planning]({planning_url})\n\nMet vriendelijke groeten,\n{company_name}"],
                 'fr' => ['subject' => 'Nouveau dans votre planning', 'body' => "Bonjour {name},\n\n{changed_by} a ajouté ceci à votre planning :\n\n{items}\n\n[Voir votre planning]({planning_url})\n\nCordialement,\n{company_name}"],

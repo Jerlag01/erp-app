@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries'];
+    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -54,6 +54,7 @@ class Settings
                 Modules::PLANNING => true,
                 Modules::INTERVENTIONS => true,
                 Modules::BATTERIES => true,
+                Modules::TIMESHEETS => true,
             ],
             'mail' => [
                 'mailer' => null,
@@ -107,6 +108,16 @@ class Settings
                 ],
                 'mail_default' => true,
                 'notify_emails' => [],
+            ],
+            // Prestation sheets: hours and who receives the weekly PDFs (Settings > Prestations).
+            'timesheets' => [
+                'expected_hours' => 40,
+                'day_hours' => 8,
+                'lunch_hours' => 0.5,
+                'auto_send' => true,
+                'send_day' => 5,
+                'send_time' => '18:00',
+                'recipients' => [],
             ],
             // Battery dossiers: templates, client, prices and the fixed texts of the shipping note (Settings > Batteries).
             'batteries' => [
