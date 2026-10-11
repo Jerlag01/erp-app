@@ -25,8 +25,10 @@ use App\Models\VacationRequest;
 use App\Models\Vehicle;
 use App\Models\WorkSite;
 use App\Support\Planning;
+use App\Support\TimesheetReport;
 use App\Support\Timesheets;
 use Carbon\CarbonImmutable;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -274,5 +276,70 @@ class TimesheetTest extends TestCase
 
         $this->setModules(['timesheets' => false]);
         $this->actingAs($admin)->get('/timesheet')->assertForbidden();
+    }
+
+    #[Test]
+    public function employees_add_extra_sites_that_stay_before_the_end_of_the_day(): void
+    {
+        $this->travelTo(self::MONDAY.' 17:00');
+        $user = User::factory()->inTeam()->create();
+        $this->actingAs($user);
+
+        $page = Livewire::test(Timesheet::class)
+            ->callAction(TestAction::make('add')->schemaComponent('rows'));
+
+        $rows = array_values($page->get('data.rows'));
+        $this->assertCount(7, $rows);
+        $this->assertSame(['start', 'site', 'extra', 'extra', 'extra', 'extra', 'end'], array_column($rows, 'kind'));
+
+        // Five extra sites: none of them count, and the PDF keeps the six lines of the Excel.
+        $state = $this->exampleRows();
+        $extras = array_map(fn (int $number): array => [...$state[2], 'imputation' => '604-'.(100 + $number), 'description' => "0{$number}ABC"], range(1, 5));
+        $page->set('data.rows', [$state[0], $state[1], ...$extras, $state[5]])->call('save')->assertHasNoErrors();
+
+        $saved = Timesheets::normaliseRows(TimesheetDay::sole()->rows);
+        $this->assertCount(8, $saved);
+        $this->assertSame('end', $saved[7]['kind']);
+        $this->assertSame(8.0, app(Timesheets::class)->week($user, self::MONDAY)['days'][0]['total']);
+
+        $six = TimesheetPdf::sixRows($saved);
+        $this->assertCount(6, $six);
+        $this->assertSame('604-103 / 604-104 / 604-105', $six[4]['imputation']);
+        $this->assertSame('03ABC / 04ABC / 05ABC', $six[4]['description']);
+        $this->assertSame('end', $six[5]['kind']);
+    }
+
+    #[Test]
+    public function the_monthly_overview_shows_everyone_like_the_excel(): void
+    {
+        $user = User::factory()->create(['name' => 'APRIL Joran']);
+        $this->day($user, '2026-10-05');
+        VacationRequest::factory()->for($user)->create(['start_date' => '2026-10-06', 'end_date' => '2026-10-07', 'status' => VacationStatus::Approved]);
+        Absence::factory()->for($user)->create(['type' => AbsenceType::Medical, 'start_date' => '2026-10-08', 'end_date' => '2026-10-08']);
+
+        $report = app(TimesheetReport::class)->build(TimesheetReport::months(CarbonImmutable::parse('2026-10-01'), '1'));
+        $row = collect($report['months'][0]['employees'])->firstWhere('user.id', $user->id);
+
+        $this->assertSame(['8', 'V', 'V', 'Z'], [$row['days'][5]['value'], $row['days'][6]['value'], $row['days'][7]['value'], $row['days'][8]['value']]);
+        $this->assertTrue($row['days'][3]['weekend']);
+        $this->assertSame(85, $row['km']);
+        $this->assertSame(16.4, $row['mobility'], '85 km × € 0,1929');
+        $this->assertSame(['V' => 2.0, 'IR' => 0.0, 'Z' => 1.0, 'OP' => 0.0], $row['year']);
+        $this->assertSame(8.0, $row['hours']);
+        $this->assertSame(32.0, $row['total']);
+
+        $this->assertCount(2, TimesheetReport::months(CarbonImmutable::parse('2026-12-01'), '2'));
+        $this->assertSame('2027-01', TimesheetReport::months(CarbonImmutable::parse('2026-12-01'), '2')[1]->format('Y-m'));
+        $this->assertSame('2026-01', TimesheetReport::months(CarbonImmutable::parse('2026-10-01'), 'year')[0]->format('Y-m'));
+
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->get('/admin/timesheet-report?month=2026-10')->assertOk()->assertSee('APRIL Joran')->assertSee('OKTOBER 2026');
+
+        foreach (['1', '2', 'year'] as $span) {
+            $this->get(route('timesheets.report-pdf', ['month' => '2026-10', 'span' => $span]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        }
+
+        $this->actingAs(User::factory()->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertForbidden();
+        $this->actingAs(User::factory()->withPermissions(['timesheets' => ['see_all']])->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertOk();
     }
 }

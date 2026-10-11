@@ -181,9 +181,26 @@ class Timesheet extends Page implements HasSchemas
             ->components([
                 Repeater::make('rows')
                     ->hiddenLabel()
-                    ->addable(false)
-                    ->deletable(false)
                     ->reorderable(false)
+                    ->addActionLabel(__('erp.timesheets.add_extra'))
+                    // A new extra site goes just before the end of the day.
+                    ->addAction(fn (Action $action): Action => $action
+                        ->visible(fn (Repeater $component): bool => $this->canEdit() && collect($component->getRawState())->where('kind', 'extra')->count() < Timesheets::MAX_EXTRA)
+                        ->action(function (Repeater $component): void {
+                            $items = $component->getRawState();
+                            $endKey = array_key_last($items);
+                            $newKey = $component->generateUuid() ?? (string) str()->uuid();
+                            $end = $items[$endKey];
+                            unset($items[$endKey]);
+                            $items[$newKey] = ['kind' => 'extra'];
+                            $items[$endKey] = $end;
+
+                            $component->rawState($items);
+                            $component->getChildSchema($newKey)->fill(['kind' => 'extra']);
+                            $component->callAfterStateUpdated();
+                        }))
+                    // Only extra sites can be removed.
+                    ->deleteAction(fn (Action $action): Action => $action->hidden(fn (array $arguments, Repeater $component): bool => ($component->getRawState()[$arguments['item'] ?? '']['kind'] ?? null) !== 'extra'))
                     ->table([
                         Repeater\TableColumn::make(''),
                         Repeater\TableColumn::make(__('erp.timesheets.km_departure')),
@@ -318,8 +335,7 @@ class Timesheet extends Page implements HasSchemas
         $rows = Timesheets::normaliseRows((array) ($this->data['rows'] ?? []));
         $lunch = (bool) ($this->data['lunch_break'] ?? true);
         $status = $this->status();
-        $worked = array_sum(array_map(fn (int $index): float => Timesheets::hours($rows[$index]['arrival'], $rows[$index]['departure']) ?? 0.0, Timesheets::COUNTED));
-        $worked = $worked > 0 && $lunch ? max(0, $worked - $timesheets->lunchHours()) : $worked;
+        $worked = $timesheets->workedHours($rows, $lunch);
 
         return [
             'employeeName' => $this->employeeUser()->name,
@@ -329,7 +345,7 @@ class Timesheet extends Page implements HasSchemas
             'rowKm' => array_map(fn (array $row): ?int => Timesheets::rowKm($row), $rows),
             'dayWorked' => round($worked, 2),
             'dayTotal' => round($worked + (float) ($status['credit'] ?? 0), 2),
-            'dayKm' => array_sum(array_map(fn (int $index): int => Timesheets::rowKm($rows[$index]) ?? 0, Timesheets::COUNTED)),
+            'dayKm' => Timesheets::km($rows),
             'employees' => $this->employeeOptions(),
             'canEdit' => $this->canEdit(),
             'sent' => $week['record']?->isSent(),
@@ -351,15 +367,19 @@ class Timesheet extends Page implements HasSchemas
                 ->modalDescription(__('erp.timesheets.prefill_help'))
                 ->action(function (): void {
                     $planned = app(Timesheets::class)->prefillRows($this->employeeUser(), $this->day());
-                    $rows = array_values((array) ($this->data['rows'] ?? []));
+                    $rows = Timesheets::normaliseRows((array) ($this->data['rows'] ?? []));
+                    $end = array_pop($rows);
+                    array_pop($planned);
 
+                    // Projects go on the site row and the extra rows, by position; extra rows are added when needed.
                     foreach ($planned as $index => $row) {
                         if ($row['project_id']) {
-                            $rows[$index] = [...($rows[$index] ?? []), 'project_id' => $row['project_id'], 'imputation' => $row['imputation'], 'description' => $row['description']];
+                            $rows[$index] = [...($rows[$index] ?? [...$row, 'arrival' => null, 'departure' => null, 'km_departure' => null, 'km_arrival' => null]),
+                                'project_id' => $row['project_id'], 'imputation' => $row['imputation'], 'description' => $row['description']];
                         }
                     }
 
-                    $this->form->fill([...$this->data, 'rows' => $rows]);
+                    $this->form->fill([...$this->data, 'rows' => [...$rows, $end]]);
                 }),
             Action::make('weekSettings')
                 ->label(__('erp.timesheets.week_settings'))

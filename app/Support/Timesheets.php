@@ -20,8 +20,8 @@ use Carbon\CarbonPeriod;
 
 /**
  * The prestation sheet ("Prestatiefiche") rules, as in the Excel:
- * - Per working day six rows: start at the warehouse, the COW site, three extra sites and the end at
- *   the warehouse. Hours (and kilometres) of the day count the start, site and end rows only; the
+ * - Per working day: start at the warehouse, the COW site, any number of extra sites (three by default,
+ *   the employee adds more) and the end at the warehouse. Hours (and kilometres) of the day count the start, site and end rows only; the
  *   extra sites in between are listed but not counted. With the lunch break on, 0.5 h is deducted.
  * - Vacation, medical leave, training and public holidays count as a full day (8 h; half a day 4 h),
  *   family leave and overtime recuperation as 0 h: a short day then comes out of the overtime balance.
@@ -37,9 +37,14 @@ class Timesheets
     public const KINDS = ['start', 'site', 'extra', 'extra', 'extra', 'end'];
 
     /**
-     * Rows that count for the day totals: start at the warehouse, the site and the end.
+     * Kinds of rows that count for the day totals: start at the warehouse, the site and the end.
      */
-    public const COUNTED = [0, 1, 5];
+    public const COUNTED = ['start', 'site', 'end'];
+
+    /**
+     * Most extra sites a day can have.
+     */
+    public const MAX_EXTRA = 15;
 
     public const DAYS = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag'];
 
@@ -111,21 +116,60 @@ class Timesheets
      */
     public static function normaliseRows(array $rows): array
     {
-        $rows = array_values($rows);
+        $rows = array_values(array_filter($rows, 'is_array'));
         $km = fn (mixed $value): ?int => is_numeric($value) && $value >= 0 && $value < 10_000_000 ? (int) round((float) $value) : null;
         $time = fn (mixed $value): ?string => is_string($value) && preg_match('/^([01]?\d|2[0-3]):([0-5]\d)/', $value, $m) ? sprintf('%02d:%02d', $m[1], $m[2]) : null;
         $text = fn (mixed $value, int $max): ?string => filled($value) ? mb_substr(trim((string) $value), 0, $max) : null;
-
-        return array_map(fn (int $index, string $kind): array => [
+        $clean = fn (array $row, string $kind): array => [
             'kind' => $kind,
-            'km_departure' => $km($rows[$index]['km_departure'] ?? null),
-            'km_arrival' => $km($rows[$index]['km_arrival'] ?? null),
-            'arrival' => $time($rows[$index]['arrival'] ?? null),
-            'departure' => $time($rows[$index]['departure'] ?? null),
-            'project_id' => is_numeric($rows[$index]['project_id'] ?? null) ? (int) $rows[$index]['project_id'] : null,
-            'imputation' => $text($rows[$index]['imputation'] ?? null, 30),
-            'description' => $text($rows[$index]['description'] ?? null, 255),
-        ], array_keys(self::KINDS), self::KINDS);
+            'km_departure' => $km($row['km_departure'] ?? null),
+            'km_arrival' => $km($row['km_arrival'] ?? null),
+            'arrival' => $time($row['arrival'] ?? null),
+            'departure' => $time($row['departure'] ?? null),
+            'project_id' => is_numeric($row['project_id'] ?? null) ? (int) $row['project_id'] : null,
+            'imputation' => $text($row['imputation'] ?? null, 30),
+            'description' => $text($row['description'] ?? null, 255),
+        ];
+
+        // Rows without a kind (older data, six fixed rows) get it from their position.
+        $kindOf = fn (array $row, int $index, int $count): string => in_array($row['kind'] ?? null, ['start', 'site', 'extra', 'end'], true)
+            ? $row['kind']
+            : ($index === 0 ? 'start' : ($index === 1 ? 'site' : ($index === $count - 1 ? 'end' : 'extra')));
+        $byKind = ['start' => [], 'site' => [], 'extra' => [], 'end' => []];
+
+        foreach ($rows as $index => $row) {
+            $byKind[$kindOf($row, $index, count($rows))][] = $row;
+        }
+
+        // Always one start, one site and one end row; the extra sites in between, in their order.
+        return [
+            $clean($byKind['start'][0] ?? [], 'start'),
+            $clean($byKind['site'][0] ?? [], 'site'),
+            ...array_map(fn (array $row): array => $clean($row, 'extra'), array_slice($byKind['extra'], 0, self::MAX_EXTRA)),
+            $clean($byKind['end'][0] ?? [], 'end'),
+        ];
+    }
+
+    /**
+     * Hours worked from the counted rows, minus the lunch break when anything was worked.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    public function workedHours(array $rows, bool $lunch): float
+    {
+        $worked = array_sum(array_map(fn (array $row): float => in_array($row['kind'], self::COUNTED, true) ? (self::hours($row['arrival'], $row['departure']) ?? 0.0) : 0.0, $rows));
+
+        return round($worked > 0 && $lunch ? max(0, $worked - $this->lunchHours()) : $worked, 2);
+    }
+
+    /**
+     * Kilometres of the counted rows.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    public static function km(array $rows): int
+    {
+        return (int) array_sum(array_map(fn (array $row): int => in_array($row['kind'], self::COUNTED, true) ? (self::rowKm($row) ?? 0) : 0, $rows));
     }
 
     /**
@@ -216,13 +260,16 @@ class Timesheets
             ->unique('id')
             ->values();
 
-        foreach ([1, 2, 3, 4] as $offset => $index) {
-            if ($project = $projects[$offset] ?? null) {
-                $rows[$index] = [...$rows[$index], 'project_id' => $project->id, 'imputation' => self::imputation($project), 'description' => $project->workSite?->cow_code ?? $project->cow_code];
-            }
+        // The site row, then the extra rows (more are added when the planning has more projects).
+        $end = array_pop($rows);
+
+        foreach ($projects as $offset => $project) {
+            $index = $offset + 1;
+            $rows[$index] = [...($rows[$index] ?? [...$end, 'kind' => 'extra', 'km_departure' => null, 'km_arrival' => null, 'arrival' => null, 'departure' => null]),
+                'project_id' => $project->id, 'imputation' => self::imputation($project), 'description' => $project->workSite?->cow_code ?? $project->cow_code];
         }
 
-        return $rows;
+        return [...array_slice($rows, 0, 1 + self::MAX_EXTRA + 1), $end];
     }
 
     /**
@@ -252,8 +299,7 @@ class Timesheets
             $status = $statuses[$key] ?? null;
             $rows = $record ? self::normaliseRows((array) $record->rows) : self::emptyRows();
             $lunch = ($status['lunch_locked'] ?? false) || ($record?->lunch_break ?? true);
-            $worked = array_sum(array_map(fn (int $index): float => self::hours($rows[$index]['arrival'], $rows[$index]['departure']) ?? 0.0, self::COUNTED));
-            $worked = $worked > 0 && $lunch ? max(0, $worked - $this->lunchHours()) : $worked;
+            $worked = $this->workedHours($rows, $lunch);
             $credit = (float) ($status['credit'] ?? 0);
 
             $days[$key] = [
@@ -265,7 +311,7 @@ class Timesheets
                 'worked' => round($worked, 2),
                 'credit' => $credit,
                 'total' => round($worked + $credit, 2),
-                'km' => (int) array_sum(array_map(fn (int $index): int => self::rowKm($rows[$index]) ?? 0, self::COUNTED)),
+                'km' => self::km($rows),
                 'remarks' => $record?->remarks,
             ];
         }

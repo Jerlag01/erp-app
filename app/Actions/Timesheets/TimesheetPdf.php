@@ -159,6 +159,33 @@ class TimesheetPdf
     }
 
     /**
+     * The Excel has six lines per day: start, site, three extra sites and the end. More extra sites
+     * share the third extra line (imputations and descriptions joined; their km and hours are not
+     * counted anyway).
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    public static function sixRows(array $rows): array
+    {
+        $start = $rows[0];
+        $end = $rows[count($rows) - 1];
+        $extras = array_slice($rows, 2, count($rows) - 3);
+        $empty = ['kind' => 'extra', 'km_departure' => null, 'km_arrival' => null, 'arrival' => null, 'departure' => null, 'project_id' => null, 'imputation' => null, 'description' => null];
+
+        if (count($extras) > 3) {
+            $rest = array_slice($extras, 2);
+            $extras = [$extras[0], $extras[1], [
+                ...$empty,
+                'imputation' => implode(' / ', array_filter(array_column($rest, 'imputation'))) ?: null,
+                'description' => implode(' / ', array_filter(array_column($rest, 'description'))) ?: null,
+            ]];
+        }
+
+        return [$start, $rows[1], ...array_pad($extras, 3, $empty), $end];
+    }
+
+    /**
      * The text of every cell, by row and column, as the Excel shows it.
      *
      * @param  array<string, mixed>  $week
@@ -180,7 +207,7 @@ class TimesheetPdf
         foreach ($week['days'] as $index => $day) {
             $first = 7 + $index * 7;
 
-            foreach ($day['rows'] as $offset => $row) {
+            foreach (self::sixRows($day['rows']) as $offset => $row) {
                 $hoursOfRow = Timesheets::hours($row['arrival'], $row['departure']);
                 $cells[$first + $offset] = [
                     'B' => $row['km_departure'] !== null ? $km($row['km_departure']) : '',

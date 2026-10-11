@@ -265,4 +265,15 @@ class BatteryDossierTest extends TestCase
         $this->get("/projects/{$dossier->project_id}")->assertOk()->assertSee(BatteryDossierResource::getUrl('edit', ['record' => $dossier]), false);
         $this->get('/battery-dossiers/create?project='.$dossier->project_id)->assertOk();
     }
+
+    #[Test]
+    public function the_shipping_note_sender_is_the_address_of_the_cow_site(): void
+    {
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id]);
+
+        $this->assertSame(['Stationsstraat 12', '9000 Gent'], $dossier->fresh()->senderAddressLines());
+
+        $siteless = BatteryDossier::factory()->create(['project_id' => Project::factory()->inCategory('604')->create(['work_site_id' => null])->id]);
+        $this->assertSame(['Romeinse Steenweg Paleis 5', '1020 Brussel'], $siteless->fresh()->senderAddressLines(), 'Without a site address the settings are used.');
+    }
 }

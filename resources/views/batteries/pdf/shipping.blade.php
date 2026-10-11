@@ -26,7 +26,7 @@
         <tr><td class="k">Ref klant <i>/ client</i></td><td>{{ $client }} PO N°: {{ $dossier->po_number }}</td></tr>
         <tr><td class="k">Datum ophaling<br><i>Prise en charge le</i></td><td>{{ $dossier->execution_date?->format('d/m/Y') }}</td></tr>
         <tr><td class="k">Overbrenger<br><i>Collecteur</i></td><td>{{ $s('shipping_carrier') }}<br>{{ $s('shipping_collector') }}</td></tr>
-        <tr><td class="k">Producent <i>/ Producteur</i><br>Verzender <i>/ Expéditeur</i></td><td>{{ $client }}: {{ $dossier->cowCode() }}<br>{!! implode('<br>', array_map('e', $lines('shipping_sender'))) !!}</td></tr>
+        <tr><td class="k">Producent <i>/ Producteur</i><br>Verzender <i>/ Expéditeur</i></td><td>{{ $client }}: {{ $dossier->cowCode() }}<br>{!! implode('<br>', array_map('e', $dossier->senderAddressLines())) !!}</td></tr>
         <tr><td class="k">Vervoerder <i>/ Transporteur</i></td><td>{!! implode('<br>', array_map('e', $lines('shipping_transporter'))) !!}</td></tr>
         <tr>
             <td class="k">Registratienr <i>/ Nr Enregistrement</i></td>
@@ -53,7 +53,7 @@
 
     <table class="w nobreak" style="margin-top: 12px;">
         <tr>
-            <td style="width: 33%; padding-right: 6px;"><span class="label">Verzender / Expéditeur</span><div class="box" style="height: 70px;">{{ $client }}: {{ $dossier->cowCode() }}<br>{!! implode('<br>', array_map('e', $lines('shipping_sender'))) !!}</div></td>
+            <td style="width: 33%; padding-right: 6px;"><span class="label">Verzender / Expéditeur</span><div class="box" style="height: 70px;">{{ $client }}: {{ $dossier->cowCode() }}<br>{!! implode('<br>', array_map('e', $dossier->senderAddressLines())) !!}</div></td>
             <td style="width: 33%; padding-right: 6px;"><span class="label">Vervoerder / Transporteur</span><div class="box" style="height: 70px;">{!! implode('<br>', array_map('e', $lines('shipping_transporter_signature'))) !!}</div></td>
             <td style="width: 34%;"><span class="label">Bestemming / Destination</span><div class="box" style="height: 70px;">{!! implode('<br>', array_map('e', $lines('shipping_destination'))) !!}</div></td>
         </tr>

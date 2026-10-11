@@ -6,6 +6,7 @@ use App\Enums\BatteryDeliveryMode;
 use App\Enums\BatteryInvoiceKind;
 use App\Enums\BatteryMounting;
 use App\Enums\BatteryTechnology;
+use App\Support\BatteryTemplates;
 use Database\Factories\BatteryDossierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -122,6 +123,23 @@ class BatteryDossier extends Model
     public function cowCode(): ?string
     {
         return $this->project?->workSite?->cow_code ?? $this->project?->cow_code;
+    }
+
+    /**
+     * The sender on the shipping note: the address of the project's COW site, or the address of
+     * Settings > Batteries when the site has none.
+     *
+     * @return list<string>
+     */
+    public function senderAddressLines(): array
+    {
+        $site = $this->project?->workSite;
+        $lines = array_values(array_filter([
+            trim(implode(' ', array_filter([$site?->street, $site?->house_number, $site?->addition]))),
+            trim(implode(' ', array_filter([$site?->postal_code, $site?->city]))),
+        ]));
+
+        return $lines !== [] ? $lines : BatteryTemplates::lines(settings()->get('batteries.shipping_sender'));
     }
 
     public function cellsTotal(): int

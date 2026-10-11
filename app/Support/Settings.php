@@ -114,6 +114,8 @@ class Settings
                 'expected_hours' => 40,
                 'day_hours' => 8,
                 'lunch_hours' => 0.5,
+                // Mobility allowance per km in the monthly overview.
+                'mobility_rate' => 0.1929,
                 'auto_send' => true,
                 'send_day' => 5,
                 'send_time' => '18:00',

@@ -171,6 +171,7 @@ class Settings extends Page
 
         if (isset($data['timesheets'])) {
             $data['timesheets']['send_day'] = (int) $data['timesheets']['send_day'];
+            $data['timesheets']['mobility_rate'] = (float) $data['timesheets']['mobility_rate'];
             $data['timesheets']['send_time'] = substr((string) $data['timesheets']['send_time'], 0, 5);
             $data['timesheets']['recipients'] = array_values(array_unique(array_map('strtolower', $data['timesheets']['recipients'] ?? [])));
         }
@@ -436,6 +437,7 @@ class Settings extends Page
                     TextInput::make('timesheets.expected_hours')->label(__('erp.settings.fields.timesheet_expected_hours'))->numeric()->minValue(0)->maxValue(80)->step('any')->suffix('u')->required(),
                     TextInput::make('timesheets.day_hours')->label(__('erp.settings.fields.timesheet_day_hours'))->helperText(__('erp.settings.help.timesheet_day_hours'))->numeric()->minValue(0)->maxValue(24)->step('any')->suffix('u')->required(),
                     TextInput::make('timesheets.lunch_hours')->label(__('erp.settings.fields.timesheet_lunch_hours'))->numeric()->minValue(0)->maxValue(4)->step('any')->suffix('u')->required(),
+                    TextInput::make('timesheets.mobility_rate')->label(__('erp.settings.fields.timesheet_mobility_rate'))->helperText(__('erp.settings.help.timesheet_mobility_rate'))->numeric()->minValue(0)->maxValue(5)->step('any')->prefix('€')->suffix('/ km')->required(),
                 ]),
             Section::make(__('erp.settings.sections.timesheet_mail'))
                 ->description(__('erp.settings.help.timesheet_mail'))
@@ -527,7 +529,7 @@ class Settings extends Page
                     $lines('seat_block', 4),
                     $text('shipping_carrier'),
                     $text('shipping_collector'),
-                    $lines('shipping_sender'),
+                    $lines('shipping_sender')->helperText(__('erp.settings.help.battery_shipping_sender')),
                     $lines('shipping_transporter'),
                     $lines('shipping_transporter_signature'),
                     $lines('shipping_registrations')->helperText(__('erp.settings.help.battery_shipping_registrations')),
