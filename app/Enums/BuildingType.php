@@ -18,7 +18,14 @@ enum BuildingType: string implements HasColor, HasLabel
 
     case Colibri = 'colibri';
 
+    case Atropos = 'atropos';
+
+    case Contropos = 'contropos';
+
     case Decommissioned = 'decommissioned';
+
+    /** The type is not known yet (for example after an import). */
+    case Unknown = 'unknown';
 
     public function getLabel(): string
     {
@@ -32,7 +39,10 @@ enum BuildingType: string implements HasColor, HasLabel
             self::Ldc => 'primary',
             self::Ec => 'success',
             self::Colibri => 'warning',
+            self::Atropos => 'primary',
+            self::Contropos => 'info',
             self::Decommissioned => 'danger',
+            self::Unknown => 'gray',
         };
     }
 }

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[Fillable([
     'cow_code', 'building_type', 'country_id', 'street', 'house_number', 'addition', 'postal_code', 'city', 'state',
-    'work_site_area_id', 'work_site_contact_id', 'images',
+    'work_site_area_id', 'work_site_contact_id', 'images', 'rooms',
 ])]
 class WorkSite extends Model
 {
@@ -28,9 +28,26 @@ class WorkSite extends Model
     use HasFactory;
 
     /**
-     * Two digits followed by three letters, e.g. "02GAM".
+     * Two digits followed by three letters or digits, e.g. "02GAM" or "02E23".
      */
-    public const COW_CODE_PATTERN = '/^\d{2}[A-Za-z]{3}$/';
+    public const COW_CODE_PATTERN = '/^\d{2}[A-Za-z0-9]{3}$/';
+
+    /**
+     * Building types that have rooms (lokalen) to record.
+     *
+     * @return list<BuildingType>
+     */
+    public static function typesWithRooms(): array
+    {
+        return [BuildingType::Ec, BuildingType::Ldc, BuildingType::Colibri];
+    }
+
+    public static function hasRooms(BuildingType|string|null $type): bool
+    {
+        $type = $type instanceof BuildingType ? $type : BuildingType::tryFrom((string) $type);
+
+        return $type !== null && in_array($type, self::typesWithRooms(), true);
+    }
 
     public function storedFiles(): array
     {
@@ -166,6 +183,7 @@ class WorkSite extends Model
     protected function casts(): array
     {
         return [
+            'rooms' => 'array',
             'building_type' => BuildingType::class,
             'images' => 'array',
         ];

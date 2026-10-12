@@ -52,6 +52,13 @@ class WorkSitesTable
                     ->label(__('erp.fields.building_type'))
                     ->badge()
                     ->sortable(),
+                TextColumn::make('rooms')
+                    ->label(__('erp.fields.rooms'))
+                    ->badge()
+                    ->color('gray')
+                    ->limitList(3)
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('city')
                     ->label(__('erp.fields.address'))
                     ->state(fn (WorkSite $record): ?string => trim(implode(' ', array_filter([$record->street, $record->house_number, $record->addition]))) ?: null)

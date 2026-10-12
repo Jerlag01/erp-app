@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WorkSites\Pages;
 
+use App\Filament\Resources\WorkSites\Actions\ImportWorkSitesAction;
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -13,6 +14,7 @@ class ListWorkSites extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ImportWorkSitesAction::make(),
             CreateAction::make(),
         ];
     }

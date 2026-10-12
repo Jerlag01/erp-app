@@ -8,9 +8,11 @@ use App\Models\WorkSite;
 use App\Models\WorkSiteContact;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class WorkSiteForm
@@ -38,7 +40,7 @@ class WorkSiteForm
                                     ->helperText(__('erp.help.cow_code'))
                                     ->placeholder('02GAM')
                                     ->required()
-                                    ->maxLength(5)
+                                    ->length(5)
                                     ->regex(WorkSite::COW_CODE_PATTERN)
                                     ->validationMessages(['regex' => __('erp.help.cow_code_invalid')])
                                     ->unique(ignoreRecord: true)
@@ -49,7 +51,15 @@ class WorkSiteForm
                                     ->label(__('erp.fields.building_type'))
                                     ->options(BuildingType::class)
                                     ->required()
+                                    ->live()
                                     ->visibleOn('create'),
+                                // Only for EC, LDC and Colibri sites.
+                                TagsInput::make('rooms')
+                                    ->label(__('erp.fields.rooms'))
+                                    ->helperText(__('erp.help.rooms'))
+                                    ->placeholder('A00A007')
+                                    ->nestedRecursiveRules(['max:50'])
+                                    ->visible(fn (Get $get, ?WorkSite $record): bool => WorkSite::hasRooms($record?->building_type ?? $get('building_type'))),
                                 Select::make('work_site_area_id')
                                     ->label(__('erp.resources.work_site_area.singular'))
                                     ->relationship('area', 'name')

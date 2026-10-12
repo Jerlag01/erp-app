@@ -141,7 +141,8 @@ php8.4 artisan vendor:publish --tag=livewire:assets --force
 php8.4 artisan filament:assets
 
 # Tables and the standard data: project categories (600–650), waste codes, battery models and
-# cables, intervention categories, standard invoice lines…
+# cables, intervention categories, standard invoice lines, and the 1974 COW sites with their
+# areas (database/data/work_sites.json; only missing COW codes are added)…
 php8.4 artisan migrate --force
 
 php8.4 artisan storage:link

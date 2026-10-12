@@ -38,6 +38,12 @@ class WorkSiteInfolist
                                 TextEntry::make('building_type')
                                     ->label(__('erp.fields.building_type'))
                                     ->badge(),
+                                TextEntry::make('rooms')
+                                    ->label(__('erp.fields.rooms'))
+                                    ->badge()
+                                    ->color('gray')
+                                    ->placeholder('—')
+                                    ->visible(fn (WorkSite $record): bool => WorkSite::hasRooms($record->building_type)),
                                 TextEntry::make('area.name')
                                     ->label(__('erp.resources.work_site_area.singular'))
                                     ->placeholder('—'),
