@@ -182,6 +182,10 @@ class Settings
      */
     public function all(): array
     {
+        if ($this->values !== null) {
+            return $this->values;
+        }
+
         // Only the stored values are cached; defaults are merged on top, so new groups and keys work at once.
         // Before the first migrate (no cache or settings table yet, e.g. during "composer install") or
         // without a database, the defaults are used and nothing is cached.
@@ -191,7 +195,7 @@ class Settings
             $stored = [];
         }
 
-        return $this->values ??= collect(static::defaults())
+        return $this->values = collect(static::defaults())
             ->map(fn (array $defaults, string $group): array => [...$defaults, ...((array) ($stored[$group] ?? []))])
             ->all();
     }
