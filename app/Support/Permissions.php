@@ -38,7 +38,7 @@ class Permissions
     public const AREAS = [
         'teams' => ['module' => Modules::TEAMS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'vehicles' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'assets' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'assets' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete', 'control']],
         'asset_logs' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve']],
         'order_references' => ['module' => Modules::ORDERS, 'abilities' => ['view', 'create', 'update', 'delete']],
