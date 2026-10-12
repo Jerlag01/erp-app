@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AssetChecks\RelationManagers;
 
 use App\Enums\AssetCheckResult;
+use App\Filament\Resources\AssetChecks\Actions\ProposeAssetAction;
 use App\Filament\Resources\Assets\AssetResource;
 use App\Models\Asset;
 use App\Models\AssetCheck;
@@ -47,6 +48,25 @@ class ItemsRelationManager extends RelationManager
         return Gate::allows('fill', $check);
     }
 
+    /**
+     * Model / serial number: shown from the equipment, editable by the team where it was empty.
+     */
+    protected static function completableColumn(string $field, string $label, \Closure $canFill): TextInputColumn
+    {
+        return TextInputColumn::make("complete_{$field}")
+            ->label($label)
+            ->getStateUsing(fn (AssetCheckItem $record): ?string => $record->asset?->{$field})
+            ->placeholder(__('erp.asset_checks.fill_in'))
+            ->rules(['nullable', 'string', 'max:100'])
+            ->disabled(fn (AssetCheckItem $record): bool => ! $canFill() || ! $record->canComplete($field))
+            ->updateStateUsing(function (?string $state, AssetCheckItem $record) use ($canFill, $field): ?string {
+                abort_unless($canFill() && $record->canComplete($field), 403);
+                $record->complete($field, $state);
+
+                return $state;
+            });
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -68,6 +88,8 @@ class ItemsRelationManager extends RelationManager
                     ->description(fn (AssetCheckItem $record): ?string => collect([$record->asset?->category?->name, $record->asset?->vehicle?->plate_number])->filter()->implode(' · ') ?: null)
                     ->searchable()
                     ->wrap(),
+                self::completableColumn('model', __('erp.fields.model'), fn (): bool => $this->canFill()),
+                self::completableColumn('serial_number', __('erp.fields.serial_number'), fn (): bool => $this->canFill()),
                 TextColumn::make('asset.inspection_date')
                     ->label(__('erp.asset_checks.control_date'))
                     ->date('d/m/Y')
@@ -95,6 +117,9 @@ class ItemsRelationManager extends RelationManager
                     ->dateTime('d/m/Y H:i')
                     ->description(fn (AssetCheckItem $record): ?string => $record->checker?->name)
                     ->placeholder('—'),
+            ])
+            ->headerActions([
+                ProposeAssetAction::make()->visible(fn (): bool => $this->canFill()),
             ])
             ->filters([
                 SelectFilter::make('result')

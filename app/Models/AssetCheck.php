@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * The yearly equipment control of one team: the team's equipment (directly or on a team vehicle),
  * each marked OK / not OK by the team. The team only sees the list while it is open.
  */
-#[Fillable(['team_id', 'year', 'opened_at', 'opened_by', 'closed_at', 'closed_by'])]
+#[Fillable(['team_id', 'year', 'remarks', 'remarks_by', 'remarks_at', 'opened_at', 'opened_by', 'closed_at', 'closed_by'])]
 class AssetCheck extends Model
 {
     /**
@@ -31,6 +31,24 @@ class AssetCheck extends Model
     public function opener(): BelongsTo
     {
         return $this->belongsTo(User::class, 'opened_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function remarksAuthor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'remarks_by');
+    }
+
+    /**
+     * Equipment the team added that was not on the list.
+     *
+     * @return HasMany<AssetProposal, $this>
+     */
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(AssetProposal::class);
     }
 
     /**
@@ -94,6 +112,7 @@ class AssetCheck extends Model
             'year' => 'integer',
             'opened_at' => 'datetime',
             'closed_at' => 'datetime',
+            'remarks_at' => 'datetime',
         ];
     }
 }

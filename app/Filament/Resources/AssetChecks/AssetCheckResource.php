@@ -6,6 +6,7 @@ use App\Enums\NavigationGroup;
 use App\Filament\Resources\AssetChecks\Pages\ManageAssetChecks;
 use App\Filament\Resources\AssetChecks\Pages\ViewAssetCheck;
 use App\Filament\Resources\AssetChecks\RelationManagers\ItemsRelationManager;
+use App\Filament\Resources\AssetChecks\RelationManagers\ProposalsRelationManager;
 use App\Models\AssetCheck;
 use App\Models\User;
 use App\Policies\AssetCheckPolicy;
@@ -109,6 +110,12 @@ class AssetCheckResource extends Resource
                 TextEntry::make('progress')
                     ->label(__('erp.asset_checks.progress'))
                     ->state(fn (AssetCheck $record): string => self::progress($record)),
+                TextEntry::make('remarks')
+                    ->label(__('erp.asset_checks.remarks'))
+                    ->placeholder(__('erp.asset_checks.no_remarks'))
+                    ->helperText(fn (AssetCheck $record): ?string => $record->remarks_at ? __('erp.asset_checks.remarks_by', ['name' => $record->remarksAuthor?->name ?? '—', 'date' => $record->remarks_at->format('d/m/Y H:i')]) : null)
+                    ->prose()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -136,6 +143,12 @@ class AssetCheckResource extends Resource
                     ->state(fn (AssetCheck $record): int => $record->notOkCount())
                     ->badge()
                     ->color(fn (int $state): string => $state > 0 ? 'danger' : 'gray'),
+                TextColumn::make('remarks')
+                    ->label(__('erp.asset_checks.remarks'))
+                    ->limit(60)
+                    ->tooltip(fn (AssetCheck $record): ?string => $record->remarks)
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('opened_at')
                     ->label(__('erp.asset_checks.opened_at'))
                     ->dateTime('d/m/Y H:i')
@@ -188,6 +201,7 @@ class AssetCheckResource extends Resource
     {
         return [
             ItemsRelationManager::class,
+            ProposalsRelationManager::class,
         ];
     }
 

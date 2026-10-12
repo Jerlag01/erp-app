@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One piece of equipment on a yearly control list.
  */
-#[Fillable(['asset_check_id', 'asset_id', 'result', 'remark', 'checked_at', 'checked_by'])]
+#[Fillable(['asset_check_id', 'asset_id', 'result', 'remark', 'model', 'serial_number', 'checked_at', 'checked_by'])]
 class AssetCheckItem extends Model
 {
     /**
@@ -57,6 +57,27 @@ class AssetCheckItem extends Model
                 'next_inspection_date' => today()->addMonths($months),
             ]);
         }
+    }
+
+    /**
+     * Fills in the model or serial number of equipment that had none (field: model|serial_number).
+     * Kept on the item too, so the team can still correct what they typed.
+     */
+    public function complete(string $field, ?string $value): void
+    {
+        abort_unless(in_array($field, ['model', 'serial_number'], true), 422);
+
+        $value = filled($value) ? mb_substr(trim($value), 0, 100) : null;
+        $this->update([$field => $value]);
+        $this->asset?->update([$field => $value]);
+    }
+
+    /**
+     * The team may fill in the model / serial number when the equipment had none, or correct their own.
+     */
+    public function canComplete(string $field): bool
+    {
+        return blank($this->asset?->{$field}) || filled($this->{$field});
     }
 
     /**
