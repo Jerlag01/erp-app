@@ -9,6 +9,7 @@ use App\Filament\Admin\Resources\Employees\Pages\ViewEmployee;
 use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\MedicalChecksRelationManager;
 use App\Filament\Admin\Resources\Users\Pages\CreateUser;
+use App\Filament\Admin\Resources\Users\Pages\ListUsers;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Team;
@@ -194,6 +195,46 @@ class EmployeeTest extends TestCase
 
         $this->assertTrue(User::where('email', 'tijdelijk@example.com')->exists());
         $this->get('/admin/employees')->assertForbidden();
+    }
+
+    #[Test]
+    public function an_account_made_in_users_gets_the_welcome_mail_too(): void
+    {
+        Notification::fake();
+        $this->setModules(['employees' => false]);
+        $this->admin();
+        $role = Role::factory()->create();
+
+        // Without a password: the user chooses one through the welcome link.
+        Livewire::test(CreateUser::class)
+            ->fillForm(['name' => 'Nieuwe collega', 'email' => 'nieuw@example.com', 'role_id' => $role->id, 'locale' => 'fr', 'vacation_days' => 20])
+            ->assertFormSet(['send_welcome_mail' => true])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $user = User::query()->where('email', 'nieuw@example.com')->sole();
+        Notification::assertSentTo($user, WelcomeEmployee::class);
+        $this->assertNotNull($user->welcome_sent_at);
+        $this->get(WelcomeEmployee::linkFor($user))->assertRedirect();
+
+        // Switched off: a password is required and no mail goes out.
+        Livewire::test(CreateUser::class)
+            ->fillForm(['name' => 'Zonder mail', 'email' => 'zonder@example.com', 'role_id' => $role->id, 'locale' => 'nl', 'vacation_days' => 20, 'send_welcome_mail' => false])
+            ->call('create')
+            ->assertHasFormErrors(['password' => 'required']);
+
+        Livewire::test(CreateUser::class)
+            ->fillForm(['name' => 'Zonder mail', 'email' => 'zonder@example.com', 'password' => 'Een-sterk-wachtwoord-1', 'role_id' => $role->id, 'locale' => 'nl', 'vacation_days' => 20, 'send_welcome_mail' => false])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $silent = User::query()->where('email', 'zonder@example.com')->sole();
+        Notification::assertNotSentTo($silent, WelcomeEmployee::class);
+        $this->assertNull($silent->welcome_sent_at);
+
+        // Sent later from the users list.
+        Livewire::test(ListUsers::class)->callAction(TestAction::make('sendWelcomeMail')->table($silent));
+        Notification::assertSentTo($silent, WelcomeEmployee::class);
     }
 
     #[Test]

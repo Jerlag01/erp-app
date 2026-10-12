@@ -2201,4 +2201,15 @@ return [
         'export_with_secrets_help' => 'Conservez ce fichier en sécurité. Les fichiers VPN ne sont jamais exportés.',
         'export_count' => '{1} :count ligne|[0,*] :count lignes',
     ],
+    'users' => [
+        'send_welcome_mail' => 'Envoyer le mail de bienvenue',
+        'send_welcome_mail_help' => 'L\'utilisateur reçoit un e-mail indiquant où se connecter et un lien pour choisir son mot de passe (valable 7 jours).',
+        'password_optional' => 'Facultatif : sans mot de passe, l\'utilisateur en choisit un via le mail de bienvenue.',
+        'welcome_sent' => 'Mail de bienvenue envoyé à :email',
+        'welcome_failed' => 'Le mail de bienvenue n\'a pas pu être envoyé',
+        'welcome_failed_body' => 'Vérifiez Paramètres > E-mail, puis renvoyez-le depuis la liste des utilisateurs.',
+        'welcome_sent_at' => 'Mail de bienvenue',
+        'resend_welcome' => 'Envoyer le mail de bienvenue',
+        'resend_welcome_help' => 'Envoie le mail de bienvenue avec un nouveau lien pour choisir un mot de passe à :email.',
+    ],
 ];

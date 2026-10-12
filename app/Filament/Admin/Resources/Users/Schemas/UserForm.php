@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Validation\Rules\Password;
 
@@ -52,15 +53,28 @@ class UserForm
                             ->default(config('app.locale'))
                             ->required()
                             ->selectablePlaceholder(false),
+                        // New accounts get a welcome mail by default; the user then chooses their own password.
+                        Toggle::make('send_welcome_mail')
+                            ->label(__('erp.users.send_welcome_mail'))
+                            ->helperText(__('erp.users.send_welcome_mail_help'))
+                            ->default(true)
+                            ->live()
+                            ->dehydrated(false)
+                            ->visibleOn('create')
+                            ->columnSpanFull(),
                         TextInput::make('password')
                             ->label(__('erp.fields.password'))
                             ->password()
                             ->revealable()
                             ->autocomplete('new-password')
                             ->rule(Password::defaults())
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->required(fn (string $operation, Get $get): bool => $operation === 'create' && ! $get('send_welcome_mail'))
                             ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->helperText(fn (string $operation): ?string => $operation === 'edit' ? __('erp.help.password_keep') : null),
+                            ->helperText(fn (string $operation, Get $get): ?string => match (true) {
+                                $operation === 'edit' => __('erp.help.password_keep'),
+                                (bool) $get('send_welcome_mail') => __('erp.users.password_optional'),
+                                default => null,
+                            }),
                     ]),
                 Section::make(__('erp.sections.access'))
                     ->columns(2)

@@ -2,10 +2,14 @@
 
 namespace App\Filament\Admin\Resources\Users\Tables;
 
+use App\Actions\Employees\SendWelcomeMail;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\FontFamily;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -64,6 +68,11 @@ class UsersTable
                 IconColumn::make('is_active')
                     ->label(__('erp.fields.is_active'))
                     ->boolean(),
+                TextColumn::make('welcome_sent_at')
+                    ->label(__('erp.users.welcome_sent_at'))
+                    ->since()
+                    ->placeholder('—')
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('role')
@@ -79,6 +88,18 @@ class UsersTable
                     ->label(__('erp.fields.is_active')),
             ])
             ->recordActions([
+                Action::make('sendWelcomeMail')
+                    ->label(__('erp.users.resend_welcome'))
+                    ->icon(Heroicon::OutlinedEnvelope)
+                    ->color('gray')
+                    ->visible(fn (User $record): bool => $record->is_active)
+                    ->requiresConfirmation()
+                    ->modalDescription(fn (User $record): string => __('erp.users.resend_welcome_help', ['email' => $record->email]))
+                    ->action(function (User $record): void {
+                        app(SendWelcomeMail::class)->toUser($record)
+                            ? Notification::make()->title(__('erp.users.welcome_sent', ['email' => $record->email]))->success()->send()
+                            : Notification::make()->title(__('erp.users.welcome_failed'))->body(__('erp.users.welcome_failed_body'))->warning()->send();
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

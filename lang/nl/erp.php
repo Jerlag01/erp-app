@@ -2201,4 +2201,15 @@ return [
         'export_with_secrets_help' => 'Bewaar zo\'n bestand veilig. VPN-bestanden worden nooit geëxporteerd.',
         'export_count' => '{1} :count lijn|[0,*] :count lijnen',
     ],
+    'users' => [
+        'send_welcome_mail' => 'Welkomstmail sturen',
+        'send_welcome_mail_help' => 'De gebruiker krijgt een e-mail met waar hij inlogt en een link om zelf een wachtwoord te kiezen (7 dagen geldig).',
+        'password_optional' => 'Optioneel: zonder wachtwoord kiest de gebruiker er zelf een via de welkomstmail.',
+        'welcome_sent' => 'Welkomstmail verstuurd naar :email',
+        'welcome_failed' => 'De welkomstmail kon niet verstuurd worden',
+        'welcome_failed_body' => 'Controleer Instellingen > E-mail en stuur hem daarna opnieuw vanuit de gebruikerslijst.',
+        'welcome_sent_at' => 'Welkomstmail',
+        'resend_welcome' => 'Welkomstmail sturen',
+        'resend_welcome_help' => 'Stuurt de welkomstmail met een nieuwe link om een wachtwoord te kiezen naar :email.',
+    ],
 ];

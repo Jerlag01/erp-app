@@ -2201,4 +2201,15 @@ return [
         'export_with_secrets_help' => 'Keep such a file safe. VPN files are never exported.',
         'export_count' => '{1} :count line|[0,*] :count lines',
     ],
+    'users' => [
+        'send_welcome_mail' => 'Send welcome mail',
+        'send_welcome_mail_help' => 'The user gets an e-mail with where to log in and a link to choose a password (valid for 7 days).',
+        'password_optional' => 'Optional: without a password the user chooses one through the welcome mail.',
+        'welcome_sent' => 'Welcome mail sent to :email',
+        'welcome_failed' => 'The welcome mail could not be sent',
+        'welcome_failed_body' => 'Check Settings > Email, then resend it from the users list.',
+        'welcome_sent_at' => 'Welcome mail',
+        'resend_welcome' => 'Send welcome mail',
+        'resend_welcome_help' => 'Sends the welcome mail with a new link to choose a password to :email.',
+    ],
 ];
