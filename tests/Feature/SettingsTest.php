@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Filament\Admin\Pages\Settings;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -69,5 +71,17 @@ class SettingsTest extends TestCase
         $this->assertSame('smtp', config('mail.default'));
         $this->assertSame('mail.jl-tech.be', config('mail.mailers.smtp.host'));
         $this->assertSame('erp@jl-tech.be', config('mail.from.address'));
+    }
+
+    #[Test]
+    public function the_defaults_are_used_before_the_first_migrate(): void
+    {
+        // A fresh install has no cache or settings table yet (e.g. "composer install" running artisan).
+        Cache::shouldReceive('rememberForever')->once()->andThrow(new QueryException('mysql', 'select * from `cache`', [], new \PDOException('Table cache does not exist')));
+
+        $settings = new \App\Support\Settings;
+
+        $this->assertSame(5, $settings->get('timesheets.send_day'));
+        $this->assertSame('ERP', $settings->siteName());
     }
 }
