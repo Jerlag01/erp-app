@@ -801,6 +801,7 @@ return [
             'safety_harness' => 'Werken met veiligheidsharnas',
             'aerial_work_platform' => 'Hoogwerker',
             'first_aid' => 'EHBO',
+            'school_degree' => 'Schooldiploma',
         ],
         'medical_result' => [
             'fit' => 'Geschikt',
@@ -1396,6 +1397,10 @@ return [
         'remarks' => 'Opmerkingen',
         'remarks_help' => 'Noteer de beperkingen die de arts opgaf.',
         'medical_pdf' => 'Formulier gezondheidsbeoordeling (PDF)',
+        'medical_files' => 'Bestanden',
+        'medical_files_help' => 'Het formulier gezondheidsbeoordeling en andere documenten (PDF, JPG of PNG). Er kunnen meerdere bestanden toegevoegd worden.',
+        'degree' => 'Diploma / studierichting',
+        'degree_placeholder' => 'bv. Bachelor elektromechanica',
         'add_medical' => 'Onderzoek toevoegen',
         'no_medical' => 'Nog geen onderzoeken geregistreerd',
         'no_medical_help' => 'Elke medewerker gaat één keer per jaar naar de arbeidsgeneesheer.',

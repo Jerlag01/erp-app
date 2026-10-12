@@ -58,7 +58,9 @@ class CertificatesRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        $isDrivingLicence = fn (Get $get): bool => ($get('type') instanceof CertificateType ? $get('type') : CertificateType::tryFrom((string) $get('type'))) === CertificateType::DrivingLicence;
+        $type = fn (Get $get): ?CertificateType => $get('type') instanceof CertificateType ? $get('type') : CertificateType::tryFrom((string) $get('type'));
+        $isDrivingLicence = fn (Get $get): bool => $type($get) === CertificateType::DrivingLicence;
+        $isSchoolDegree = fn (Get $get): bool => $type($get) === CertificateType::SchoolDegree;
 
         return $schema
             ->columns(2)
@@ -94,7 +96,8 @@ class CertificatesRelationManager extends RelationManager
                     ->helperText(__('erp.employees.expires_on_help'))
                     ->native(false)
                     ->displayFormat('d/m/Y')
-                    ->afterOrEqual('obtained_on'),
+                    ->afterOrEqual('obtained_on')
+                    ->visible(fn (Get $get): bool => $type($get)?->canExpire() ?? true),
                 FileUpload::make('document')
                     ->label(__('erp.employees.certificate_pdf'))
                     ->disk(Employee::DISK)
@@ -105,7 +108,9 @@ class CertificatesRelationManager extends RelationManager
                     ->storeFileNamesIn('document_name')
                     ->columnSpanFull(),
                 TextInput::make('notes')
-                    ->label(__('erp.fields.notes'))
+                    ->label(fn (Get $get): string => $isSchoolDegree($get) ? __('erp.employees.degree') : __('erp.fields.notes'))
+                    ->placeholder(fn (Get $get): ?string => $isSchoolDegree($get) ? __('erp.employees.degree_placeholder') : null)
+                    ->required($isSchoolDegree)
                     ->maxLength(255)
                     ->columnSpanFull(),
             ]);

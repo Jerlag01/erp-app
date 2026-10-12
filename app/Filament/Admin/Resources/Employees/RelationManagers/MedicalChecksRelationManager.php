@@ -5,7 +5,6 @@ namespace App\Filament\Admin\Resources\Employees\RelationManagers;
 use App\Enums\MedicalResult;
 use App\Models\Employee;
 use App\Models\EmployeeMedicalCheck;
-use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -23,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 
 /**
  * Medical follow-up: the yearly evaluation by the occupational (company) doctor.
@@ -93,14 +93,18 @@ class MedicalChecksRelationManager extends RelationManager
                     ->rows(3)
                     ->maxLength(2000)
                     ->columnSpanFull(),
-                FileUpload::make('document')
-                    ->label(__('erp.employees.medical_pdf'))
+                FileUpload::make('documents')
+                    ->label(__('erp.employees.medical_files'))
+                    ->helperText(__('erp.employees.medical_files_help'))
+                    ->multiple()
+                    ->maxFiles(20)
+                    ->appendFiles()
                     ->disk(Employee::DISK)
                     ->directory(fn (): string => 'employees/'.$this->getOwnerRecord()->getKey().'/medical')
                     ->visibility('private')
-                    ->acceptedFileTypes(['application/pdf'])
+                    ->acceptedFileTypes(EmployeeMedicalCheck::FILE_TYPES)
                     ->maxSize(20480)
-                    ->storeFileNamesIn('document_name')
+                    ->storeFileNamesIn('document_names')
                     ->columnSpanFull(),
             ]);
     }
@@ -126,6 +130,15 @@ class MedicalChecksRelationManager extends RelationManager
                     ->label(__('erp.employees.next_due_on'))
                     ->date('d/m/Y')
                     ->placeholder('—'),
+                TextColumn::make('documents')
+                    ->label(__('erp.employees.medical_files'))
+                    ->listWithLineBreaks()
+                    ->formatStateUsing(fn (string $state, EmployeeMedicalCheck $record): HtmlString => new HtmlString(sprintf(
+                        '<a href="%s" target="_blank" class="text-primary-600 hover:underline dark:text-primary-400">%s</a>',
+                        e(route('employees.document', ['employee' => $record->employee_id, 'kind' => 'medical', 'id' => $record->id, 'file' => (int) array_search($state, $record->documents ?? [], true)])),
+                        e($record->documentName($state)),
+                    )))
+                    ->placeholder('—'),
             ])
             ->headerActions([
                 CreateAction::make()
@@ -133,12 +146,6 @@ class MedicalChecksRelationManager extends RelationManager
                     ->icon(Heroicon::OutlinedPlus),
             ])
             ->recordActions([
-                Action::make('pdf')
-                    ->label(__('erp.employees.pdf'))
-                    ->icon(Heroicon::OutlinedDocumentText)
-                    ->color('gray')
-                    ->visible(fn (EmployeeMedicalCheck $record): bool => filled($record->document))
-                    ->url(fn (EmployeeMedicalCheck $record): string => route('employees.document', ['employee' => $record->employee_id, 'kind' => 'medical', 'id' => $record->id]), shouldOpenInNewTab: true),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

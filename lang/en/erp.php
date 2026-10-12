@@ -801,6 +801,7 @@ return [
             'safety_harness' => 'Working with safety harness',
             'aerial_work_platform' => 'Aerial work platform / cherry picker',
             'first_aid' => 'First aid (EHBO)',
+            'school_degree' => 'School degree',
         ],
         'medical_result' => [
             'fit' => 'Fit',
@@ -1396,6 +1397,10 @@ return [
         'remarks' => 'Remarks',
         'remarks_help' => 'Note the restrictions given by the doctor.',
         'medical_pdf' => 'Evaluation form (PDF)',
+        'medical_files' => 'Files',
+        'medical_files_help' => 'The evaluation form and other documents (PDF, JPG or PNG). Several files can be added.',
+        'degree' => 'Degree / course of study',
+        'degree_placeholder' => 'e.g. Bachelor electromechanics',
         'add_medical' => 'Add check-up',
         'no_medical' => 'No check-ups recorded',
         'no_medical_help' => 'Every employee goes to the occupational doctor once a year.',

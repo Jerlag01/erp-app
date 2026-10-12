@@ -50,13 +50,21 @@ class EmployeeCertificate extends Model
     {
         $label = $this->type->getLabel();
 
-        return $this->type === CertificateType::DrivingLicence && filled($this->categories)
-            ? $label.' '.implode(', ', $this->categories)
-            : $label;
+        return match (true) {
+            $this->type === CertificateType::DrivingLicence && filled($this->categories) => $label.' '.implode(', ', $this->categories),
+            $this->type === CertificateType::SchoolDegree && filled($this->notes) => $label.': '.$this->notes,
+            default => $label,
+        };
     }
 
     protected static function booted(): void
     {
+        static::saving(function (self $certificate): void {
+            if ($certificate->type && ! $certificate->type->canExpire()) {
+                $certificate->expires_on = null;
+            }
+        });
+
         static::updated(function (self $certificate): void {
             if ($certificate->wasChanged('document') && filled($old = $certificate->getOriginal('document'))) {
                 Storage::disk(Employee::DISK)->delete($old);

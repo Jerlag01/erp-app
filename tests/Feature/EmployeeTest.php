@@ -317,6 +317,74 @@ class EmployeeTest extends TestCase
     }
 
     #[Test]
+    public function a_medical_check_up_holds_several_files(): void
+    {
+        Storage::fake('local');
+        $this->admin();
+        $employee = Employee::factory()->create();
+
+        Livewire::test(MedicalChecksRelationManager::class, ['ownerRecord' => $employee, 'pageClass' => ViewEmployee::class])
+            ->callAction(TestAction::make('create')->table(), [
+                'checked_on' => today()->toDateString(),
+                'result' => MedicalResult::Fit->value,
+                'documents' => [
+                    UploadedFile::fake()->create('evaluatie.pdf', 30, 'application/pdf'),
+                    UploadedFile::fake()->image('attest.jpg'),
+                ],
+            ])
+            ->assertHasNoFormErrors();
+
+        $check = $employee->medicalChecks()->sole();
+        $this->assertCount(2, $check->documents);
+        $this->assertSame(['evaluatie.pdf', 'attest.jpg'], array_map($check->documentName(...), $check->documents));
+
+        $url = fn (int $file): string => route('employees.document', ['employee' => $employee, 'kind' => 'medical', 'id' => $check->id, 'file' => $file]);
+        $this->get($url(0))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get($url(1))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+        $this->get($url(2))->assertNotFound();
+
+        Livewire::test(MedicalChecksRelationManager::class, ['ownerRecord' => $employee, 'pageClass' => ViewEmployee::class])
+            ->assertSee('evaluatie.pdf')
+            ->assertSee('attest.jpg');
+
+        // Removing one file deletes it from the disk, deleting the check-up deletes the rest.
+        [$first, $second] = $check->documents;
+        $check->update(['documents' => [$second]]);
+        Storage::disk('local')->assertMissing($first);
+        Storage::disk('local')->assertExists($second);
+
+        $check->delete();
+        Storage::disk('local')->assertMissing($second);
+        $this->actingAs(User::factory()->inTeam()->create())->get($url(0))->assertForbidden();
+    }
+
+    #[Test]
+    public function a_school_degree_names_the_study_and_never_expires(): void
+    {
+        $this->admin();
+        $employee = Employee::factory()->create();
+
+        Livewire::test(CertificatesRelationManager::class, ['ownerRecord' => $employee, 'pageClass' => ViewEmployee::class])
+            ->mountAction(TestAction::make('create')->table())
+            ->fillForm(['type' => CertificateType::SchoolDegree->value])
+            ->assertFormFieldHidden('expires_on')
+            ->fillForm(['notes' => null])
+            ->callMountedAction()
+            ->assertHasFormErrors(['notes' => 'required'])
+            ->fillForm(['notes' => 'Bachelor elektromechanica', 'obtained_on' => '2015-06-30'])
+            ->callMountedAction()
+            ->assertHasNoFormErrors();
+
+        $degree = $employee->certificates()->sole();
+        $this->assertSame(CertificateType::SchoolDegree, $degree->type);
+        $this->assertSame('Schooldiploma: Bachelor elektromechanica', $degree->label());
+
+        $degree->update(['expires_on' => today()]);
+        $this->assertNull($degree->fresh()->expires_on);
+        $this->assertFalse($degree->fresh()->expiresSoon());
+    }
+
+    #[Test]
     public function the_register_is_for_administrators_only_and_can_be_switched_off(): void
     {
         $employee = Employee::factory()->create();

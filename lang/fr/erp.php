@@ -801,6 +801,7 @@ return [
             'safety_harness' => 'Travail avec harnais de sécurité',
             'aerial_work_platform' => 'Nacelle élévatrice',
             'first_aid' => 'Premiers secours (EHBO)',
+            'school_degree' => 'Diplôme scolaire',
         ],
         'medical_result' => [
             'fit' => 'Apte',
@@ -1396,6 +1397,10 @@ return [
         'remarks' => 'Remarques',
         'remarks_help' => 'Notez les restrictions données par le médecin.',
         'medical_pdf' => 'Formulaire d\'évaluation de santé (PDF)',
+        'medical_files' => 'Fichiers',
+        'medical_files_help' => 'Le formulaire d\'évaluation de santé et d\'autres documents (PDF, JPG ou PNG). Plusieurs fichiers peuvent être ajoutés.',
+        'degree' => 'Diplôme / orientation',
+        'degree_placeholder' => 'p.ex. Bachelier en électromécanique',
         'add_medical' => 'Ajouter un examen',
         'no_medical' => 'Aucun examen enregistré',
         'no_medical_help' => 'Chaque collaborateur voit le médecin du travail une fois par an.',

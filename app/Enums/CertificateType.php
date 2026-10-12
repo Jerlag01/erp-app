@@ -35,10 +35,20 @@ enum CertificateType: string implements HasLabel
 
     case FirstAid = 'first_aid';
 
+    case SchoolDegree = 'school_degree';
+
     /**
      * Belgian driving licence categories.
      */
     public const DRIVING_LICENCE_CATEGORIES = ['AM', 'A1', 'A2', 'A', 'B', 'BE', 'C1', 'C1E', 'C', 'CE', 'D1', 'D1E', 'D', 'DE', 'G'];
+
+    /**
+     * Whether it can expire (a school degree never does).
+     */
+    public function canExpire(): bool
+    {
+        return $this !== self::SchoolDegree;
+    }
 
     public function getLabel(): string
     {
