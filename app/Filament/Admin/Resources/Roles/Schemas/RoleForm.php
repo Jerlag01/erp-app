@@ -57,6 +57,22 @@ class RoleForm
                                 ->all()
                         ),
                     ]),
+                // Administrators get everything except these: they are granted per role.
+                Section::make(__('erp.roles.explicit_permissions'))
+                    ->description(__('erp.roles.explicit_permissions_help'))
+                    ->visible(fn (Get $get, ?Role $record): bool => (bool) $get('is_admin') && ! $record?->is_guest)
+                    ->schema([
+                        Grid::make(['md' => 2, 'xl' => 4])->schema(
+                            collect(Permissions::explicit())
+                                ->map(fn (array $abilities, string $area) => CheckboxList::make("permissions.{$area}")
+                                    ->label(__("erp.permissions.areas.{$area}"))
+                                    ->options(collect($abilities)->mapWithKeys(fn (string $ability): array => [
+                                        $ability => __("erp.permissions.abilities.{$ability}"),
+                                    ])->all()))
+                                ->values()
+                                ->all()
+                        ),
+                    ]),
             ]);
     }
 }

@@ -23,8 +23,10 @@ namespace App\Support;
  * and edits prices and the invoice request.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
- * "charging" covers charging stations and 4G routers; "charging.secrets" shows passwords, recovery codes and
- * the VPN files (nobody else sees or downloads them).
+ * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
+ * "routers" covers the 4G routers, "routers.secrets" shows their login credentials and VPN files. The latter is
+ * one of the EXPLICIT permissions: administrator roles do not get it automatically, it has to be ticked
+ * on the role (also on an administrator role).
  * A role stores them as {"vehicles": ["view", "update"], "assets": ["view"], ...}.
  * Administrator roles are granted everything and may also use the admin panel.
  */
@@ -67,9 +69,39 @@ class Permissions
         'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other', 'trainings']],
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets']],
+        'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets']],
         'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'prices']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];
+
+    /**
+     * Permissions an administrator role is not granted automatically: they must be ticked on the role.
+     *
+     * @var list<string>
+     */
+    public const EXPLICIT = ['routers.secrets'];
+
+    public static function isExplicit(string $permission): bool
+    {
+        return in_array($permission, self::EXPLICIT, true);
+    }
+
+    /**
+     * The explicit permissions per area, e.g. ['routers' => ['secrets']].
+     *
+     * @return array<string, list<string>>
+     */
+    public static function explicit(): array
+    {
+        $areas = [];
+
+        foreach (self::EXPLICIT as $permission) {
+            [$area, $ability] = explode('.', $permission, 2);
+            $areas[$area][] = $ability;
+        }
+
+        return $areas;
+    }
 
     /**
      * Every permission, e.g. ['vehicles' => ['view', 'create', ...], ...].
@@ -88,16 +120,16 @@ class Permissions
 
     /**
      * Keep only known areas and abilities, so a crafted request cannot store
-     * permissions that do not exist.
+     * permissions that do not exist. Administrator roles only store the explicit ones.
      *
      * @param  array<string, mixed>  $permissions
      * @return array<string, list<string>>
      */
-    public static function sanitize(array $permissions): array
+    public static function sanitize(array $permissions, bool $explicitOnly = false): array
     {
         $clean = [];
 
-        foreach (self::all() as $area => $abilities) {
+        foreach ($explicitOnly ? self::explicit() : self::all() as $area => $abilities) {
             $granted = array_values(array_intersect($abilities, (array) ($permissions[$area] ?? [])));
 
             if ($granted !== []) {

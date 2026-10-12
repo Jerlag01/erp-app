@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * "Export" for the lists of charging stations and 4G routers: the records shown (with the active
- * search and filters) as Excel or PDF. Users with "charging.secrets" can include the passwords.
+ * search and filters) as Excel or PDF. Users with "charging.secrets" (stations) or "routers.secrets" (routers) can include the passwords.
  */
 trait ExportsChargingList
 {

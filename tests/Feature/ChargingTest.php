@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ChargingConnectivity;
 use App\Enums\ChargingStationType;
+use App\Filament\Admin\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\ChargingStations\Pages\CreateChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\EditChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\ListChargingStations;
@@ -11,6 +12,7 @@ use App\Filament\Resources\Routers\Pages\CreateRouter;
 use App\Filament\Resources\Routers\Pages\ListRouters;
 use App\Models\ChargingStation;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Router;
 use App\Models\User;
 use App\Models\WorkSite;
@@ -39,7 +41,9 @@ class ChargingTest extends TestCase
 
     protected function user(bool $secrets): User
     {
-        return User::factory()->withPermissions(['charging' => ['view', 'create', 'update', 'delete', ...($secrets ? ['secrets'] : [])]])->inTeam()->create();
+        $abilities = ['view', 'create', 'update', 'delete', ...($secrets ? ['secrets'] : [])];
+
+        return User::factory()->withPermissions(['charging' => $abilities, 'routers' => $abilities])->inTeam()->create();
     }
 
     protected function site(): WorkSite
@@ -181,5 +185,59 @@ class ChargingTest extends TestCase
         $this->get('/charging-stations')->assertForbidden();
         $this->get('/routers')->assertForbidden();
         $this->assertNotNull($station->fresh());
+    }
+
+    #[Test]
+    public function stations_and_routers_have_their_own_permissions(): void
+    {
+        $site = $this->site();
+        $station = ChargingStation::factory()->for($site)->create(['password' => 'Station-Secret']);
+        $router = Router::factory()->for($site)->create(['password' => 'Router-Secret']);
+
+        $stationsOnly = User::factory()->withPermissions(['charging' => ['view', 'secrets']])->inTeam()->create();
+        $this->actingAs($stationsOnly);
+        $this->get("/charging-stations/{$station->id}")->assertOk()->assertSee('Station-Secret');
+        $this->get('/routers')->assertForbidden();
+
+        $routersOnly = User::factory()->withPermissions(['routers' => ['view']])->inTeam()->create();
+        $this->actingAs($routersOnly);
+        $this->get('/charging-stations')->assertForbidden();
+        $this->get("/routers/{$router->id}")->assertOk()->assertDontSee('Router-Secret');
+    }
+
+    #[Test]
+    public function administrators_only_see_router_credentials_when_it_is_ticked_on_their_role(): void
+    {
+        Storage::disk('local')->put('routers/02GAM.ovpn', 'client');
+        $site = $this->site();
+        ChargingStation::factory()->for($site)->create(['password' => 'Station-Secret']);
+        $router = Router::factory()->for($site)->create(['password' => 'Router-Secret', 'vpn_file' => 'routers/02GAM.ovpn', 'vpn_file_name' => '02GAM.ovpn']);
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+
+        // Charging station secrets: administrators have every normal permission.
+        $this->get('/charging-stations/'.ChargingStation::sole()->id)->assertOk()->assertSee('Station-Secret');
+
+        $this->get("/routers/{$router->id}")->assertOk()->assertDontSee('Router-Secret')->assertDontSee('02GAM.ovpn');
+        $this->get(route('routers.vpn', $router))->assertForbidden();
+        $this->assertFalse($admin->hasPermission('routers.secrets'));
+        $this->assertTrue($admin->hasPermission('routers.update'));
+
+        Filament::setCurrentPanel('admin');
+        Livewire::test(EditRole::class, ['record' => $admin->role->getRouteKey()])
+            ->assertSee(__('erp.roles.explicit_permissions'))
+            ->fillForm(['permissions' => ['routers' => ['secrets']]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(['routers' => ['secrets']], $admin->role->fresh()->permissions);
+        Filament::setCurrentPanel('app');
+        $admin->refresh();
+        $this->get("/routers/{$router->id}")->assertOk()->assertSee('Router-Secret');
+        $this->get(route('routers.vpn', $router))->assertOk()->assertDownload('02GAM.ovpn');
+
+        // Only the explicit permissions are stored on an administrator role.
+        $role = Role::factory()->create(['is_admin' => true, 'permissions' => ['vehicles' => ['view'], 'routers' => ['view', 'secrets']]]);
+        $this->assertSame(['routers' => ['secrets']], $role->permissions);
     }
 }

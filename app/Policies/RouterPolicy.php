@@ -5,14 +5,14 @@ namespace App\Policies;
 use App\Models\User;
 
 /**
- * Charging stations and 4G routers follow the "charging" permissions. Passwords, recovery codes and
- * VPN files need "charging.secrets".
+ * 4G routers follow the "routers" permissions. Login credentials and VPN files need "routers.secrets",
+ * which administrators only have when it is ticked on their role.
  */
 class RouterPolicy extends AreaPolicy
 {
     protected function area(): string
     {
-        return 'charging';
+        return 'routers';
     }
 
     public function viewSecrets(User $user): bool

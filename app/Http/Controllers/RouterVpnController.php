@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Downloads the VPN file of a 4G router; only for users with "charging.secrets".
+ * Downloads the VPN file of a 4G router; only for users with "routers.secrets".
  */
 class RouterVpnController extends Controller
 {

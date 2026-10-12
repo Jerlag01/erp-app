@@ -5,8 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 
 /**
- * Charging stations and 4G routers follow the "charging" permissions. Passwords, recovery codes and
- * VPN files need "charging.secrets".
+ * Charging stations follow the "charging" permissions. Passwords and recovery codes need "charging.secrets".
  */
 class ChargingStationPolicy extends AreaPolicy
 {

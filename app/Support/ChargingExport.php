@@ -14,7 +14,7 @@ use OpenSpout\Writer\XLSX\Writer;
 /**
  * Exports of the charging stations and 4G routers (Excel and PDF), with the columns of the Excel
  * "Overzicht Laadpalen". Passwords and recovery codes are only included when asked for by a user
- * with "charging.secrets"; VPN files never are.
+ * with "charging.secrets" / "routers.secrets"; VPN files never are.
  */
 class ChargingExport
 {

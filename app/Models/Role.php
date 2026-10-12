@@ -25,11 +25,12 @@ class Role extends Model
 
     /**
      * Whether this role grants a permission such as "vehicles.update".
-     * Administrator roles are granted everything.
+     * Administrator roles are granted everything except the explicit permissions (Permissions::EXPLICIT),
+     * which have to be ticked on the role.
      */
     public function allows(string $permission): bool
     {
-        if ($this->is_admin) {
+        if ($this->is_admin && ! Permissions::isExplicit($permission)) {
             return true;
         }
 
@@ -52,14 +53,18 @@ class Role extends Model
     protected static function booted(): void
     {
         static::saving(function (self $role): void {
-            $role->permissions = $role->is_admin || $role->is_guest ? [] : Permissions::sanitize($role->permissions ?? []);
+            $role->permissions = match (true) {
+                (bool) $role->is_guest => [],
+                (bool) $role->is_admin => Permissions::sanitize($role->permissions ?? [], explicitOnly: true),
+                default => Permissions::sanitize($role->permissions ?? []),
+            };
         });
     }
 
     public function permissionCount(): int
     {
         return $this->is_admin
-            ? collect(Permissions::all())->flatten()->count()
+            ? collect(Permissions::all())->flatten()->count() - count(Permissions::EXPLICIT) + collect($this->permissions ?? [])->flatten()->count()
             : collect($this->permissions ?? [])->flatten()->count();
     }
 

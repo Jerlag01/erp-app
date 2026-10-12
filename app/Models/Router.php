@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * A 4G router at a COW site. The password (encrypted) and the VPN file (private disk) are only
- * shown to users with "charging.secrets".
+ * shown to users with "routers.secrets".
  */
 #[Fillable(['work_site_id', 'type', 'serial_number', 'sim_ean', 'sim_ssn', 'username', 'password', 'vpn_file', 'vpn_file_name', 'notes'])]
 #[Hidden(['password'])]
