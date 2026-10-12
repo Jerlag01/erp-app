@@ -48,7 +48,9 @@ class Modules
 
     public const TIMESHEETS = 'timesheets';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS];
+    public const CHARGING = 'charging';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING];
 
     public function __construct(protected Settings $settings) {}
 
@@ -159,6 +161,14 @@ class Modules
     public function planning(): bool
     {
         return $this->enabled(self::PLANNING);
+    }
+
+    /**
+     * Charging stations and 4G routers belong to the 608 projects, so both modules must be on.
+     */
+    public function charging(): bool
+    {
+        return $this->enabled(self::CHARGING) && $this->projects();
     }
 
     public function timesheets(): bool

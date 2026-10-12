@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets'];
+    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -55,6 +55,7 @@ class Settings
                 Modules::INTERVENTIONS => true,
                 Modules::BATTERIES => true,
                 Modules::TIMESHEETS => true,
+                Modules::CHARGING => true,
             ],
             'mail' => [
                 'mailer' => null,
@@ -108,6 +109,10 @@ class Settings
                 ],
                 'mail_default' => true,
                 'notify_emails' => [],
+            ],
+            // Charging stations and 4G routers belong to the projects of this category.
+            'charging' => [
+                'project_category' => '608',
             ],
             // Prestation sheets: hours and who receives the weekly PDFs (Settings > Prestations).
             'timesheets' => [

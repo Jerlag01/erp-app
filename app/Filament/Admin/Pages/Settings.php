@@ -308,6 +308,7 @@ class Settings extends Page
             Modules::INTERVENTIONS => Heroicon::OutlinedWrench,
             Modules::BATTERIES => Heroicon::OutlinedBattery100,
             Modules::TIMESHEETS => Heroicon::OutlinedClock,
+            Modules::CHARGING => Heroicon::OutlinedBolt,
         ];
 
         return [

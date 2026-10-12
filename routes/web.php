@@ -13,6 +13,7 @@ use App\Http\Controllers\ItAssetQrController;
 use App\Http\Controllers\KbDownloadController;
 use App\Http\Controllers\PeppolInboundController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\RouterVpnController;
 use App\Http\Controllers\StockLabelController;
 use App\Http\Controllers\StockQrController;
 use App\Http\Controllers\SuggestionPdfController;
@@ -37,6 +38,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/idea-box/{suggestion}/photos/{index}', SuggestionPhotoController::class)->whereNumber('index')->name('suggestions.photo');
     Route::get('/idea-box-pdf', SuggestionPdfController::class)->name('suggestions.pdf');
     Route::get('/projects/{project}/files/{file}/{version?}', ProjectFileController::class)->whereNumber(['project', 'file', 'version'])->name('projects.file');
+    Route::get('/routers/{router}/vpn', RouterVpnController::class)->whereNumber('router')->name('routers.vpn');
     Route::get('/timesheet-report-pdf', TimesheetReportPdfController::class)->name('timesheets.report-pdf');
     Route::get('/timesheet-pdf/{user}/{week}', TimesheetPdfController::class)->whereNumber('user')->where('week', '\d{4}-\d{2}-\d{2}')->name('timesheets.pdf');
     Route::get('/battery-deliveries-pdf', BatteryDeliveriesPdfController::class)->name('batteries.deliveries-pdf');

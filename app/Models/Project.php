@@ -219,6 +219,16 @@ class Project extends Model
     }
 
     /**
+     * Charging stations of a 608 project.
+     *
+     * @return HasMany<ChargingStation, $this>
+     */
+    public function chargingStations(): HasMany
+    {
+        return $this->hasMany(ChargingStation::class);
+    }
+
+    /**
      * @return HasMany<PlanningItem, $this>
      */
     public function planningItems(): HasMany

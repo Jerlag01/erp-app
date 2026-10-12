@@ -8,6 +8,7 @@ use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ExtraFilesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ImagesRelationManager;
@@ -91,6 +92,7 @@ class ProjectResource extends Resource
     {
         return [
             PartsRelationManager::class,
+            ChargingStationsRelationManager::class,
             DocumentsRelationManager::class,
             ImagesRelationManager::class,
             PlansRelationManager::class,
