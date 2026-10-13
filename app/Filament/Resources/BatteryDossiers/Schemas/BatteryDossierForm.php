@@ -17,6 +17,7 @@ use App\Models\Project;
 use App\Support\BatteryInspection;
 use App\Support\BatterySingleLine;
 use App\Support\PdfAccess;
+use App\Support\PrivatePhotos;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -65,6 +66,9 @@ class BatteryDossierForm
                     Tab::make(__('erp.batteries.tabs.invoice_request'))->icon(Heroicon::OutlinedCurrencyEuro)->visibleOn('edit')
                         ->visible(fn (?BatteryDossier $record): bool => $record !== null && Gate::allows('viewPrices', $record))
                         ->schema(self::invoiceTab()),
+                    Tab::make(__('erp.batteries.tabs.photos'))->icon(Heroicon::OutlinedCamera)->visibleOn('edit')
+                        ->badge(fn (?BatteryDossier $record): ?string => count((array) $record?->photos) ?: null)
+                        ->schema(self::photosTab()),
                 ]),
         ]);
     }
@@ -138,7 +142,7 @@ class BatteryDossierForm
                         ->label(__('erp.batteries.signature.sign'))
                         ->icon(Heroicon::OutlinedPencilSquare)
                         ->color('primary')
-                        ->visible(fn (?BatteryDossier $record): bool => $record !== null && ! $record->isSigned($document) && Gate::allows('update', $record))
+                        ->visible(fn (?BatteryDossier $record): bool => $record !== null && ! $record->isSigned($document) && Gate::allows('update', $record) && $record->isEditableBy(auth()->user()))
                         ->modalHeading(__('erp.batteries.signature.sign_heading', ['document' => __('erp.batteries.documents.'.$document)]))
                         ->modalDescription(__('erp.batteries.signature.sign_help'))
                         ->schema([
@@ -150,7 +154,7 @@ class BatteryDossierForm
                             SignaturePad::make('signature')->label(__('erp.batteries.signature.title'))->required(),
                         ])
                         ->action(function (array $data, BatteryDossier $record, EditBatteryDossier $livewire) use ($document): void {
-                            abort_unless(Gate::allows('update', $record), 403);
+                            abort_unless(Gate::allows('update', $record) && $record->isEditableBy(auth()->user()), 403);
 
                             // Sign what is on screen: save the dossier first.
                             $livewire->save(shouldRedirect: false, shouldSendSavedNotification: false);
@@ -164,7 +168,7 @@ class BatteryDossierForm
                         ->color('danger')
                         ->requiresConfirmation()
                         ->modalDescription(__('erp.batteries.signature.remove_help'))
-                        ->visible(fn (?BatteryDossier $record): bool => (bool) $record?->isSigned($document) && (bool) auth()->user()?->isAdmin())
+                        ->visible(fn (?BatteryDossier $record): bool => (bool) $record?->isSigned($document) && (bool) auth()->user()?->isAdmin() && $record->isEditableBy(auth()->user()))
                         ->action(function (BatteryDossier $record) use ($document): void {
                             abort_unless((bool) auth()->user()?->isAdmin(), 403);
                             $record->signature($document)?->delete();
@@ -411,6 +415,29 @@ class BatteryDossierForm
             ]),
             self::signatureSection('inspection'),
             self::download('inspection'),
+        ];
+    }
+
+    /**
+     * The last step: photos of the completed works.
+     *
+     * @return array<Component>
+     */
+    protected static function photosTab(): array
+    {
+        return [
+            Section::make(__('erp.batteries.photos.title'))
+                ->description(__('erp.batteries.photos.help'))
+                ->schema([
+                    PrivatePhotos::upload('photos', 'batteries')
+                        ->directory(fn (?BatteryDossier $record): string => 'batteries/'.$record?->id.'/photos')
+                        ->maxFiles(BatteryDossier::MAX_PHOTOS)
+                        ->appendFiles()
+                        ->reorderable()
+                        ->openable()
+                        ->hiddenLabel(),
+                    Textarea::make('photos_remark')->label(__('erp.batteries.photos.remark'))->rows(3)->maxLength(5000),
+                ]),
         ];
     }
 

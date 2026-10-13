@@ -41,7 +41,10 @@ class UsersTable
                 TextColumn::make('role.name')
                     ->label(__('erp.resources.role.singular'))
                     ->state(fn (User $record): ?string => $record->effectiveRole()?->name)
-                    ->description(fn (User $record): ?string => $record->isGuest() && ! $record->role?->is_guest ? __('erp.roles.no_team', ['role' => $record->role?->name]) : null)
+                    ->description(fn (User $record): ?string => collect([
+                        $record->isGuest() && ! $record->role?->is_guest ? __('erp.roles.no_team', ['role' => $record->role?->name]) : null,
+                        $record->hasOwnPermissions() ? __('erp.users.has_own_permissions') : null,
+                    ])->filter()->implode(' · ') ?: null)
                     ->badge()
                     ->color(fn (User $record): string => match (true) {
                         $record->isAdmin() => 'primary',

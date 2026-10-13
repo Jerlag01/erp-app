@@ -77,6 +77,12 @@ class BatteryDossierResource extends Resource
                     ->description(fn (BatteryDossier $record): string => $record->new_count.' × '.$record->cells_per_battery.' '.__('erp.batteries.cells'))
                     ->placeholder('—'),
                 TextColumn::make('execution_date')->label(__('erp.batteries.execution_date'))->date('d/m/Y')->sortable()->placeholder('—'),
+                TextColumn::make('finished_at')
+                    ->label(__('erp.batteries.finish.status'))
+                    ->state(fn (BatteryDossier $record): string => $record->isFinished() ? __('erp.batteries.finish.finished') : __('erp.batteries.finish.open'))
+                    ->badge()
+                    ->color(fn (BatteryDossier $record): string => $record->isFinished() ? 'success' : 'gray')
+                    ->icon(fn (BatteryDossier $record): ?Heroicon => $record->isFinished() ? Heroicon::OutlinedLockClosed : null),
                 TextColumn::make('updated_at')->label(__('erp.projects.updated'))->since()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->recordActions([

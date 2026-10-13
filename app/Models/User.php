@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\VacationStatus;
+use App\Support\Permissions;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -20,7 +21,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'initials', 'email', 'password', 'role_id', 'job_title', 'phone', 'locale', 'is_active', 'vacation_days'])]
+#[Fillable(['name', 'initials', 'email', 'password', 'role_id', 'permissions', 'job_title', 'phone', 'locale', 'is_active', 'vacation_days'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasLocalePreference
 {
@@ -144,16 +145,37 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
-     * Whether the user's role grants a permission such as "vehicles.update".
-     * Guests have no permissions at all.
+     * Whether the user has a permission such as "vehicles.update":
+     * - an administrator role grants everything except the explicit permissions (Permissions::EXPLICIT);
+     * - otherwise the user's own permissions for that area overrule the role's (also to take rights away);
+     * - otherwise the role's; guests (no team) have none.
      */
     public function hasPermission(string $permission): bool
     {
+        if ($this->isAdmin() && ! Permissions::isExplicit($permission)) {
+            return true;
+        }
+
+        [$area, $ability] = array_pad(explode('.', $permission, 2), 2, null);
+        $own = $this->permissions;
+
+        if (is_array($own) && array_key_exists($area, $own)) {
+            return in_array($ability, (array) $own[$area], true);
+        }
+
         if ($this->isGuest()) {
             return false;
         }
 
         return $this->role?->allows($permission) ?? false;
+    }
+
+    /**
+     * Whether the user has permissions of their own (that differ from their role).
+     */
+    public function hasOwnPermissions(): bool
+    {
+        return is_array($this->permissions) && $this->permissions !== [];
     }
 
     /**
@@ -296,6 +318,18 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
+     * Only known permissions are stored, whatever the form sends.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $user): void {
+            if ($user->isDirty('permissions')) {
+                $user->permissions = is_array($user->permissions) && $user->permissions !== [] ? Permissions::sanitizeOverrides($user->permissions) : null;
+            }
+        });
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -306,6 +340,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             'password' => 'hashed',
             'is_active' => 'boolean',
             'vacation_days' => 'decimal:1',
+            'permissions' => 'array',
         ];
     }
 }

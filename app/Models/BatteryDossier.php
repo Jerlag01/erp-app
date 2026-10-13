@@ -6,6 +6,7 @@ use App\Enums\BatteryDeliveryMode;
 use App\Enums\BatteryInvoiceKind;
 use App\Enums\BatteryMounting;
 use App\Enums\BatteryTechnology;
+use App\Enums\ProjectStatus;
 use App\Support\BatteryTemplates;
 use Database\Factories\BatteryDossierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -31,7 +33,7 @@ use Illuminate\Support\Str;
     'fuse_count', 'fuse_amperage', 'fuse_type', 'tray_length_m', 'tray_type', 'picto_plates', 'doc_holders',
     'battery_total_price', 'hourly_rate', 'fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price',
     'invoice_kind', 'invoice_percentage', 'measured_on', 'average_temperature', 'inspection', 'inspection_remarks',
-    'floor_plan', 'floor_plan_png', 'acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
+    'floor_plan', 'floor_plan_png', 'photos', 'photos_remark', 'finished_at', 'finished_by', 'acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
 ])]
 class BatteryDossier extends Model
 {
@@ -39,6 +41,11 @@ class BatteryDossier extends Model
     use HasFactory;
 
     public const DISK = 'local';
+
+    /**
+     * Most photos of the completed works per dossier.
+     */
+    public const MAX_PHOTOS = 40;
 
     /**
      * Documents that get a written signature. Once signed, their fields are locked for everyone but
@@ -92,6 +99,52 @@ class BatteryDossier extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function finisher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'finished_by');
+    }
+
+    public function isFinished(): bool
+    {
+        return $this->finished_at !== null;
+    }
+
+    /**
+     * A finished dossier is locked: only administrators and "batteries.edit_finished" (for the invoicing)
+     * still change it.
+     */
+    public function isEditableBy(?User $user): bool
+    {
+        return ! $this->isFinished() || (bool) $user?->hasPermission('batteries.edit_finished');
+    }
+
+    /**
+     * The technician finishes the works (the photos are required): the dossier is locked and the 604
+     * project goes to "invoicing to do".
+     */
+    public function finish(User $by): void
+    {
+        if (count((array) $this->photos) === 0) {
+            throw new \DomainException('A battery dossier needs photos of the completed works before it is finished.');
+        }
+
+        DB::transaction(function () use ($by): void {
+            $this->update(['finished_at' => now(), 'finished_by' => $by->id]);
+            $this->project?->update(['status' => ProjectStatus::InvoicingToDo]);
+        });
+    }
+
+    /**
+     * Opens a finished dossier again; the project keeps its status.
+     */
+    public function reopen(): void
+    {
+        $this->update(['finished_at' => null, 'finished_by' => null]);
     }
 
     /**
@@ -372,10 +425,20 @@ class BatteryDossier extends Model
 
         static::deleting(fn (self $dossier) => $dossier->signatures->each->delete());
 
+        // Photos taken out of the dossier are removed from the disk.
+        static::updated(function (self $dossier): void {
+            if ($dossier->wasChanged('photos')) {
+                $removed = array_diff((array) json_decode((string) $dossier->getRawOriginal('photos'), true), (array) $dossier->photos);
+                Storage::disk(self::DISK)->delete(array_values($removed));
+            }
+        });
+
         static::deleted(function (self $dossier): void {
             if (filled($dossier->floor_plan_png)) {
                 Storage::disk(self::DISK)->delete($dossier->floor_plan_png);
             }
+
+            Storage::disk(self::DISK)->delete(array_values((array) $dossier->photos));
         });
     }
 
@@ -400,6 +463,8 @@ class BatteryDossier extends Model
             'volts_per_cell' => 'decimal:2',
             'inspection' => 'array',
             'floor_plan' => 'array',
+            'photos' => 'array',
+            'finished_at' => 'datetime',
             'battery_total_price' => 'decimal:2',
             'invoice_percentage' => 'decimal:2',
         ];

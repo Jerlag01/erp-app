@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Validation\Rules\Password;
 
@@ -85,6 +86,8 @@ class UserForm
                             ->default(fn (): ?int => Role::guest()?->id)
                             ->preload()
                             ->required()
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set, Get $get, mixed $old, mixed $state) => UserPermissions::switchRole($set, $get, $old, $state))
                             // Administrators cannot demote themselves and lock themselves out.
                             ->disabled($isSelf)
                             ->dehydrated(fn (?User $record): bool => ! $isSelf($record)),
@@ -104,6 +107,7 @@ class UserForm
                             ->visible(fn (): bool => modules()->teams())
                             ->columnSpanFull(),
                     ]),
+                UserPermissions::section(),
                 Section::make(__('erp.sections.vacation'))
                     ->visible(fn (): bool => modules()->vacations())
                     ->schema([

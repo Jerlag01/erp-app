@@ -11,7 +11,9 @@ use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +38,32 @@ class EditBatteryDossier extends EditRecord
 
     public function getSubheading(): ?string
     {
+        if ($this->record->isFinished()) {
+            return $this->record->description().' — '.__('erp.batteries.finish.finished_on', [
+                'date' => $this->record->finished_at->format('d/m/Y H:i'),
+                'user' => $this->record->finisher?->name ?? '—',
+            ]);
+        }
+
         return $this->record->description();
+    }
+
+    /**
+     * Whether the signed-in user may still change the dossier (it is locked once finished).
+     */
+    public function canModify(): bool
+    {
+        return $this->record->isEditableBy(auth()->user());
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return parent::form($schema)->disabled(fn (): bool => ! $this->canModify());
+    }
+
+    protected function getSaveFormAction(): Action
+    {
+        return parent::getSaveFormAction()->visible(fn (): bool => $this->canModify());
     }
 
     protected function getHeaderActions(): array
@@ -60,7 +87,45 @@ class EditBatteryDossier extends EditRecord
                 ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'batteries'))
                 ->button()
                 ->color('gray'),
-            DeleteAction::make(),
+            Action::make('finish')
+                ->label(__('erp.batteries.finish.button'))
+                ->icon(Heroicon::OutlinedFlag)
+                ->color('success')
+                ->visible(fn (): bool => ! $this->record->isFinished() && Gate::allows('update', $this->record))
+                ->requiresConfirmation()
+                ->modalHeading(__('erp.batteries.finish.heading'))
+                ->modalDescription(__('erp.batteries.finish.help'))
+                ->modalSubmitActionLabel(__('erp.batteries.finish.button'))
+                ->action(function (): void {
+                    abort_unless(Gate::allows('update', $this->record), 403);
+
+                    // Finish what is on screen: save first (also the photos just uploaded).
+                    $this->save(shouldRedirect: false, shouldSendSavedNotification: false);
+                    $this->record->refresh();
+
+                    if (count((array) $this->record->photos) === 0) {
+                        Notification::make()->title(__('erp.batteries.finish.photos_required'))->body(__('erp.batteries.finish.photos_required_help'))->danger()->persistent()->send();
+
+                        return;
+                    }
+
+                    $this->record->finish(auth()->user());
+                    $this->fillForm();
+                    Notification::make()->title(__('erp.batteries.finish.done'))->body(__('erp.batteries.finish.done_help'))->success()->send();
+                }),
+            Action::make('reopen')
+                ->label(__('erp.batteries.finish.reopen'))
+                ->icon(Heroicon::OutlinedLockOpen)
+                ->color('warning')
+                ->visible(fn (): bool => $this->record->isFinished() && auth()->user()?->hasPermission('batteries.edit_finished'))
+                ->requiresConfirmation()
+                ->modalDescription(__('erp.batteries.finish.reopen_help'))
+                ->action(function (): void {
+                    abort_unless((bool) auth()->user()?->hasPermission('batteries.edit_finished'), 403);
+                    $this->record->reopen();
+                    Notification::make()->title(__('erp.batteries.finish.reopened'))->success()->send();
+                }),
+            DeleteAction::make()->visible(fn (): bool => $this->canModify()),
         ];
     }
 
@@ -91,6 +156,9 @@ class EditBatteryDossier extends EditRecord
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        // A finished dossier is locked, whatever is sent.
+        abort_unless($this->canModify(), 403);
+
         $this->strings = (array) ($data['strings'] ?? []);
 
         // Signed documents are locked: whatever was sent for them is ignored (administrators excepted).

@@ -3,7 +3,9 @@
 namespace App\Filament\Admin\Resources\Users\Pages;
 
 use App\Actions\Employees\SendWelcomeMail;
+use App\Filament\Admin\Resources\Users\Schemas\UserPermissions;
 use App\Filament\Admin\Resources\Users\UserResource;
+use App\Models\Role;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -24,8 +26,18 @@ class CreateUser extends CreateRecord
     {
         // An unknown random password until the user chooses one through the welcome link.
         $data['password'] ??= Str::password(40);
+        $data['permissions'] = UserPermissions::overrides((array) ($data[UserPermissions::STATE] ?? []), Role::find($data['role_id'] ?? null));
+        unset($data[UserPermissions::STATE]);
 
         return $data;
+    }
+
+    /**
+     * Start with the permissions of the default role ticked.
+     */
+    protected function afterFill(): void
+    {
+        $this->data[UserPermissions::STATE] = UserPermissions::state(Role::find($this->data['role_id'] ?? null), null);
     }
 
     protected function afterCreate(): void

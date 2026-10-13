@@ -20,7 +20,8 @@ namespace App\Support;
  * everyone's; "planning.view_all" only sees everyone's; "planning.other" adds items that are not a
  * project or warehouse job. Project leaders plan their own open projects without any of these.
  * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
- * and edits prices and the invoice request.
+ * and edits prices and the invoice request; "batteries.edit_finished" changes (and reopens) dossiers the
+ * technician finished, e.g. for the invoicing.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
  * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
@@ -30,6 +31,9 @@ namespace App\Support;
  * "generate_pdf" makes PDFs from the data of a module (documents, reports, overviews, exports) and
  * "download_pdf" downloads the PDF files stored in it (uploads, attachments); see PdfAccess. Employees
  * need them explicitly, no role gets them by default.
+ * Users can have their own permissions per area; they overrule the role's for that area (also to take
+ * rights away, and also for explicit permissions such as "routers.secrets"). Only an administrator role
+ * overrules everything (except the explicit permissions).
  * A role stores them as {"vehicles": ["view", "update"], "assets": ["view"], ...}.
  * Administrator roles are granted everything and may also use the admin panel.
  */
@@ -73,7 +77,7 @@ class Permissions
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
-        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'prices', 'generate_pdf']],
+        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'prices', 'generate_pdf', 'edit_finished']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];
 
@@ -114,6 +118,26 @@ class Permissions
     public static function all(): array
     {
         return array_map(fn (array $area): array => $area['abilities'], self::AREAS);
+    }
+
+    /**
+     * A user's own permissions: per known area the known abilities. Unlike a role, an area with an
+     * empty list is kept: it takes away what the role grants in that area.
+     *
+     * @param  array<string, mixed>  $permissions
+     * @return array<string, list<string>>
+     */
+    public static function sanitizeOverrides(array $permissions): array
+    {
+        $clean = [];
+
+        foreach (self::all() as $area => $abilities) {
+            if (array_key_exists($area, $permissions)) {
+                $clean[$area] = array_values(array_intersect($abilities, (array) $permissions[$area]));
+            }
+        }
+
+        return $clean;
     }
 
     public static function moduleOf(string $area): ?string

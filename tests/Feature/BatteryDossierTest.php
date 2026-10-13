@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Batteries\BatteryDocument;
 use App\Enums\BatteryDeliveryMode;
 use App\Enums\BatteryTechnology;
+use App\Enums\ProjectStatus;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\BatteryDossiers\Pages\CreateBatteryDossier;
 use App\Filament\Resources\BatteryDossiers\Pages\EditBatteryDossier;
@@ -19,6 +20,7 @@ use App\Support\BatteryTemplates;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -360,5 +362,83 @@ class BatteryDossierTest extends TestCase
         $pdf = app(BatteryDocument::class)->render($dossier, 'shipping');
 
         $this->assertSame(1, preg_match_all('/\/Type\s*\/Page[^s]/', $pdf));
+    }
+
+    #[Test]
+    public function photos_of_the_completed_works_are_attached_as_last_step(): void
+    {
+        $this->actingAs($this->technician());
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id]);
+
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertSee(__('erp.batteries.photos.title'))
+            ->fillForm([
+                'photos' => [UploadedFile::fake()->image('batterijen.jpg'), UploadedFile::fake()->image('bekabeling.png')],
+                'photos_remark' => 'Oude batterijen afgevoerd',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $dossier->refresh();
+        $this->assertCount(2, $dossier->photos);
+        $this->assertSame('Oude batterijen afgevoerd', $dossier->photos_remark);
+        [$first, $second] = $dossier->photos;
+        Storage::disk('local')->assertExists($first);
+        $this->assertStringStartsWith("batteries/{$dossier->id}/photos/", $first);
+
+        // Removing a photo deletes the file; deleting the dossier deletes the rest.
+        $dossier->update(['photos' => [$second]]);
+        Storage::disk('local')->assertMissing($first);
+
+        $dossier->delete();
+        Storage::disk('local')->assertMissing($second);
+    }
+
+    #[Test]
+    public function finishing_needs_photos_puts_the_project_on_invoicing_and_locks_the_dossier(): void
+    {
+        $technician = $this->technician();
+        $this->actingAs($technician);
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id]);
+
+        // Without photos it cannot be finished.
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->callAction('finish')
+            ->assertNotified(__('erp.batteries.finish.photos_required'));
+        $this->assertFalse($dossier->fresh()->isFinished());
+
+        // The photos uploaded on screen are saved first.
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->fillForm(['photos' => [UploadedFile::fake()->image('klaar.jpg')], 'man_hours' => 5])
+            ->callAction('finish');
+
+        $dossier->refresh();
+        $this->assertTrue($dossier->isFinished());
+        $this->assertSame($technician->id, $dossier->finished_by);
+        $this->assertSame(ProjectStatus::InvoicingToDo, $dossier->project->status);
+        $this->assertSame('5.00', (string) $dossier->man_hours);
+
+        // Locked for the technician: read-only, no save, no reopen.
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertOk()
+            ->assertFormFieldDisabled('man_hours')
+            ->assertActionHidden('finish')
+            ->assertActionHidden('reopen')
+            ->set('data.man_hours', 9)
+            ->call('save')
+            ->assertForbidden();
+        $this->assertSame('5.00', (string) $dossier->fresh()->man_hours);
+
+        // "batteries.edit_finished" (and administrators) still change it, e.g. for the invoicing.
+        $this->actingAs($this->technician(['view', 'update', 'edit_finished']));
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertFormFieldEnabled('man_hours')
+            ->fillForm(['man_hours' => 6])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->callAction('reopen');
+
+        $this->assertSame('6.00', (string) $dossier->fresh()->man_hours);
+        $this->assertFalse($dossier->fresh()->isFinished());
     }
 }
