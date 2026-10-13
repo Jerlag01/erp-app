@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BatteryDeliveries\Pages;
 
 use App\Filament\Resources\BatteryDeliveries\BatteryDeliveryResource;
 use App\Filament\Resources\BatteryDossiers\Schemas\BatteryDossierForm;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -23,6 +24,7 @@ class ManageBatteryDeliveries extends ManageRecords
                 ->label(__('erp.batteries.print_overview'))
                 ->icon(Heroicon::OutlinedPrinter)
                 ->color('gray')
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'batteries'))
                 ->url(fn (): string => route('batteries.deliveries-pdf', ['tab' => $this->activeTab]), shouldOpenInNewTab: true),
             CreateAction::make()
                 ->mutateDataUsing(function (array $data): array {

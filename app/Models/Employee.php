@@ -78,6 +78,26 @@ class Employee extends Model
     }
 
     /**
+     * Changes the employee made to their own details.
+     *
+     * @return HasMany<EmployeeChangeRequest, $this>
+     */
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(EmployeeChangeRequest::class);
+    }
+
+    /**
+     * Certificates the employee added themselves.
+     *
+     * @return HasMany<EmployeeCertificateRequest, $this>
+     */
+    public function certificateRequests(): HasMany
+    {
+        return $this->hasMany(EmployeeCertificateRequest::class);
+    }
+
+    /**
      * @return HasMany<EmployeeMedicalCheck, $this>
      */
     public function medicalChecks(): HasMany
@@ -226,6 +246,7 @@ class Employee extends Model
         // Delete through the models, so their PDFs are removed from the disk too.
         static::deleting(function (self $employee): void {
             $employee->certificates->each->delete();
+            $employee->certificateRequests->each->delete();
             $employee->medicalChecks->each->delete();
         });
 

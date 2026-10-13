@@ -33,7 +33,7 @@ class BatteryDocument
     {
         [$view, $background, $landscape] = self::DOCUMENTS[$document];
 
-        $dossier->loadMissing(['project.workSite', 'project.category', 'batteryModel.racks', 'cable', 'batteries']);
+        $dossier->loadMissing(['project.workSite', 'project.category', 'batteryModel.racks', 'cable', 'batteries', 'signatures']);
 
         return Pdf::loadView($view, [
             'dossier' => $dossier,

@@ -95,7 +95,8 @@ class KnowledgeBaseTest extends TestCase
         $url = route('kb.download', ['article' => $article, 'index' => 0]);
         auth()->logout();
         $this->get($url)->assertRedirect();
-        $this->actingAs(User::factory()->create())->get($url)->assertOk()->assertDownload('reglement.pdf');
+        $this->actingAs(User::factory()->withPermissions([])->inTeam()->create())->get($url)->assertForbidden();
+        $this->actingAs(User::factory()->withPermissions(['knowledge_base' => ['download_pdf']])->inTeam()->create())->get($url)->assertOk()->assertDownload('reglement.pdf');
     }
 
     #[Test]

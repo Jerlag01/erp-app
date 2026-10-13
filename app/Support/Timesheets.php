@@ -23,7 +23,7 @@ use Carbon\CarbonPeriod;
  * - Per working day: start at the warehouse, the COW site, any number of extra sites (three by default,
  *   the employee adds more) and the end at the warehouse. Hours (and kilometres) of the day count the start, site and end rows only; the
  *   extra sites in between are listed but not counted. With the lunch break on, 0.5 h is deducted.
- * - Vacation, medical leave, training and public holidays count as a full day (8 h; half a day 4 h),
+ * - Vacation, medical leave, training, public holidays and company IR days (inhaalrust) count as a full day (8 h; half a day 4 h),
  *   family leave and overtime recuperation as 0 h: a short day then comes out of the overtime balance.
  *   The lunch break is always on for vacation, medical leave, training and holidays.
  * - Per week: total versus the expected hours (40) gives the overtime of the week; the overtime and
@@ -424,7 +424,9 @@ class Timesheets
 
         // In order of priority: the first one found for a date wins.
         Holiday::query()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get()
-            ->each(fn (Holiday $holiday) => $set($holiday->date, $holiday->date, 'holiday', 'Feestdag: '.$holiday->name, $day, true));
+            ->each(fn (Holiday $holiday) => $holiday->isRecuperation()
+                ? $set($holiday->date, $holiday->date, 'recuperation', str_starts_with(mb_strtolower($holiday->name), 'inhaalrust') ? $holiday->name : trim('Inhaalrust: '.$holiday->name, ': '), $day, true)
+                : $set($holiday->date, $holiday->date, 'holiday', 'Feestdag: '.$holiday->name, $day, true));
 
         if (modules()->vacations()) {
             $absences = Absence::query()->where('user_id', $user->id)->overlapping($from->toDateString(), $until->toDateString())->get();

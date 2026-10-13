@@ -32,6 +32,11 @@ class ListChargingStations extends ListRecords
         return __('erp.charging.stations_export_title');
     }
 
+    protected function permissionArea(): string
+    {
+        return 'charging';
+    }
+
     protected function canExportSecrets(): bool
     {
         return ChargingStationResource::canSeeSecrets();

@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Project;
+use App\Support\PdfAccess;
 use BackedEnum;
 use Closure;
 use Filament\Actions\Action;
@@ -147,7 +148,9 @@ class ExpenseResource extends Resource
                 TextEntry::make('description')->label(__('erp.fields.description'))->placeholder('—')->columnSpanFull(),
                 TextEntry::make('document_name')
                     ->label(__('erp.finance.expenses.document'))
-                    ->url(fn (Expense $record): ?string => $record->document ? route('finance.expense-document', ['expense' => $record, 'kind' => 'document']) : null, shouldOpenInNewTab: true)
+                    ->url(fn (Expense $record): ?string => $record->document && (! PdfAccess::isPdf($record->document_name ?: $record->document) || PdfAccess::canDownload(auth()->user(), 'expenses'))
+                        ? route('finance.expense-document', ['expense' => $record, 'kind' => 'document'])
+                        : null, shouldOpenInNewTab: true)
                     ->placeholder('—'),
                 TextEntry::make('source')
                     ->label(__('erp.finance.expenses.source'))

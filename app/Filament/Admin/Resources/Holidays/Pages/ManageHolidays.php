@@ -35,7 +35,7 @@ class ManageHolidays extends ManageRecords
                     $added = 0;
 
                     foreach (BelgianHolidays::forYear((int) $data['year']) as $date => $name) {
-                        $added += Holiday::firstOrCreate(['date' => $date], ['name' => $name])->wasRecentlyCreated ? 1 : 0;
+                        $added += Holiday::firstOrCreate(['date' => $date], ['name' => $name, 'type' => Holiday::HOLIDAY])->wasRecentlyCreated ? 1 : 0;
                     }
 
                     Notification::make()
@@ -43,7 +43,7 @@ class ManageHolidays extends ManageRecords
                         ->success()
                         ->send();
                 }),
-            CreateAction::make(),
+            CreateAction::make()->mutateDataUsing(fn (array $data): array => [...$data, 'type' => Holiday::HOLIDAY]),
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Interventions\InterventionPdf;
 use App\Models\InterventionReport;
 use App\Support\Interventions;
+use App\Support\PdfAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,7 @@ class InterventionPdfController extends Controller
 {
     public function __invoke(Request $request, InterventionReport $report, Interventions $interventions, InterventionPdf $pdf): Response
     {
-        abort_unless($interventions->canDownloadPdf($request->user(), $report->project), 403);
+        abort_unless($interventions->canDownloadPdf($request->user(), $report->project) && PdfAccess::canGenerate($request->user(), 'projects'), 403);
 
         $disk = Storage::disk(InterventionReport::DISK);
 

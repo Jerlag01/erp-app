@@ -72,7 +72,9 @@ abstract class ProjectFilesRelationManager extends RelationManager
     {
         $section = static::section();
         $canManage = fn (): bool => $this->canManage();
-        $downloadUrl = fn (ProjectFile $record): string => route('projects.file', ['project' => $record->project_id, 'file' => $record]);
+        $downloadUrl = fn (ProjectFile $record): ?string => ProjectFile::mayDownload($record->name)
+            ? route('projects.file', ['project' => $record->project_id, 'file' => $record])
+            : null;
 
         return $table
             ->recordTitleAttribute('name')
@@ -135,6 +137,7 @@ abstract class ProjectFilesRelationManager extends RelationManager
                     ->label(__('erp.projects.files.download'))
                     ->icon(Heroicon::OutlinedArrowDownTray)
                     ->color('gray')
+                    ->visible(fn (ProjectFile $record): bool => ProjectFile::mayDownload($record->name))
                     ->url($downloadUrl, shouldOpenInNewTab: true),
                 Action::make('newVersion')
                     ->label(__('erp.projects.files.new_version'))

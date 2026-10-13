@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\TimesheetDay;
 use App\Models\TimesheetWeek;
 use App\Models\User;
+use App\Support\PdfAccess;
 use App\Support\Timesheets;
 use BackedEnum;
 use Carbon\CarbonImmutable;
@@ -404,6 +405,7 @@ class Timesheet extends Page implements HasSchemas
                 ->label(__('erp.timesheets.week_pdf'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'timesheets'))
                 ->url(fn (): string => route('timesheets.pdf', ['user' => $this->employeeUser()->id, 'week' => Timesheets::monday($this->day())->toDateString()]), shouldOpenInNewTab: true),
             Action::make('send')
                 ->label(__('erp.timesheets.send_week'))

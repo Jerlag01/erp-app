@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BatteryDelivery;
+use App\Support\PdfAccess;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class BatteryDeliveriesPdfController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        abort_unless(Gate::allows('viewAny', BatteryDelivery::class), 403);
+        abort_unless(Gate::allows('viewAny', BatteryDelivery::class) && PdfAccess::canGenerate($request->user(), 'batteries'), 403);
 
         $tab = (string) $request->query('tab', 'to_deliver');
         $deliveries = BatteryDelivery::query()

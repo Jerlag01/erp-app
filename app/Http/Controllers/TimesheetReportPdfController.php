@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Filament\Admin\Pages\TimesheetMonthlyOverview;
+use App\Support\PdfAccess;
 use App\Support\TimesheetReport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
@@ -19,7 +20,7 @@ class TimesheetReportPdfController extends Controller
     public function __invoke(Request $request, TimesheetReport $report): Response
     {
         $user = $request->user();
-        abort_unless(modules()->timesheets() && ($user->isAdmin() || $user->hasPermission('timesheets.see_all')), 403);
+        abort_unless(modules()->timesheets() && ($user->isAdmin() || $user->hasPermission('timesheets.see_all')) && PdfAccess::canGenerate($user, 'timesheets'), 403);
 
         $validated = $request->validate([
             'month' => ['required', 'date_format:Y-m'],

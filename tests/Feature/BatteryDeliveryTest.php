@@ -139,7 +139,10 @@ class BatteryDeliveryTest extends TestCase
     {
         BatteryDelivery::factory()->create(['project_id' => $this->project()->id]);
         $this->actingAs($this->user());
+        $this->get(route('batteries.deliveries-pdf', ['tab' => 'all']))->assertForbidden();
+        Livewire::test(ManageBatteryDeliveries::class)->assertActionHidden('print');
 
+        $this->actingAs($this->user(['view', 'generate_pdf']));
         $this->get(route('batteries.deliveries-pdf', ['tab' => 'all']))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         Livewire::test(ManageBatteryDeliveries::class)->assertActionVisible('print');
     }

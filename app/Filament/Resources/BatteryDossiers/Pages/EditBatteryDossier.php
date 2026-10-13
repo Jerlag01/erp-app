@@ -7,6 +7,7 @@ use App\Filament\Forms\FloorPlanEditor;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Models\BatteryDossier;
 use App\Models\BatteryDossierBattery;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -56,6 +57,7 @@ class EditBatteryDossier extends EditRecord
             ])
                 ->label(__('erp.batteries.pdf'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'batteries'))
                 ->button()
                 ->color('gray'),
             DeleteAction::make(),
@@ -90,6 +92,14 @@ class EditBatteryDossier extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->strings = (array) ($data['strings'] ?? []);
+
+        // Signed documents are locked: whatever was sent for them is ignored (administrators excepted).
+        foreach (BatteryDossier::SIGNED_FIELDS as $document => $fields) {
+            if ($this->record->isLockedFor($document, auth()->user())) {
+                $data = array_diff_key($data, array_flip($fields));
+            }
+        }
+
         $png = $data['floor_plan_png'] ?? null;
         $data['floor_plan'] = FloorPlanEditor::sanitize($data['floor_plan'] ?? []);
 
@@ -121,7 +131,13 @@ class EditBatteryDossier extends EditRecord
                 continue;
             }
 
+            $measurementLocked = $this->record->isLockedFor('measurement', auth()->user());
+
             $battery->update([
+                ...($measurementLocked ? [] : [
+                    'cell_voltages' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_voltages'] ?? []))[$index] ?? null), range(0, $cells - 1)),
+                    'cell_densities' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_densities'] ?? []))[$index] ?? null), range(0, $cells - 1)),
+                ]),
                 'id_number' => filled($row['id_number'] ?? null) ? trim((string) $row['id_number']) : $battery->id_number,
                 'cable_type' => $row['cable_type'] ?? null,
                 'cable_length_m' => $number($row['cable_length_m'] ?? null),
@@ -130,8 +146,6 @@ class EditBatteryDossier extends EditRecord
                 'cable_section' => $row['cable_section'] ?? null,
                 'fuse_amperage' => $row['fuse_amperage'] ?? null,
                 'fuse_type' => filled($row['fuse_type'] ?? null) ? $row['fuse_type'] : BatteryDossierBattery::DEFAULT_FUSE_TYPE,
-                'cell_voltages' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_voltages'] ?? []))[$index] ?? null), range(0, $cells - 1)),
-                'cell_densities' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_densities'] ?? []))[$index] ?? null), range(0, $cells - 1)),
             ]);
         }
 

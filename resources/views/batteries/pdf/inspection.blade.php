@@ -67,7 +67,7 @@
 
         <table class="w" style="margin-top: 10px;">
             <tr>
-                <td style="width: 50%; padding-right: 10px;">Voor de aannemer,<br><span class="label">Datum:</span> {{ $dossier->execution_date?->format('d/m/Y') }}<br><span class="label">Naam + handtekening:</span><div class="box"></div></td>
+                <td style="width: 50%; padding-right: 10px;">Voor de aannemer,<br><span class="label">Datum:</span> {{ $dossier->execution_date?->format('d/m/Y') }}<br><span class="label">Naam + handtekening:</span><div class="box">@include('batteries.pdf.signature', ['document' => 'inspection'])</div></td>
                 <td>Voor {{ settings()->get('batteries.client_short') }},<br><span class="label">Datum:</span><br><span class="label">Naam + handtekening:</span><div class="box"></div></td>
             </tr>
         </table>

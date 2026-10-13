@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Enums\NavigationGroup;
+use App\Support\PdfAccess;
 use App\Support\TimesheetReport;
 use BackedEnum;
 use Carbon\CarbonImmutable;
@@ -122,6 +123,7 @@ class TimesheetMonthlyOverview extends Page
         $pdf = fn (string $span, string $label): Action => Action::make('pdf_'.$span)
             ->label($label)
             ->icon(Heroicon::OutlinedDocumentArrowDown)
+            ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'timesheets'))
             ->url(fn (): string => route('timesheets.report-pdf', ['month' => $this->month, 'span' => $span]), shouldOpenInNewTab: true);
 
         return [

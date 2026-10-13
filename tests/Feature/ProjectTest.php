@@ -178,7 +178,7 @@ class ProjectTest extends TestCase
         Storage::fake('local');
         $team = Team::factory()->create();
         $member = $this->employee($team);
-        $leader = $this->employee();
+        $leader = $this->employee(extra: ['projects' => ['view', 'download_pdf']]);
         $project = Project::factory()->create();
         $project->teams()->attach($team);
         $project->leaders()->attach($leader);

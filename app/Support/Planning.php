@@ -6,6 +6,7 @@ use App\Enums\PlanningKind;
 use App\Enums\ProjectStatus;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
+use App\Models\Holiday;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\Training;
@@ -182,6 +183,14 @@ class Planning
             ->with(['participants' => fn ($query) => $query->when($userIds !== null, fn ($query) => $query->whereKey($userIds))])
             ->get()
             ->each(fn (Training $training) => $training->participants->each(fn (User $participant) => $mark($participant->id, $training->start_date, $training->end_date, $training->note())));
+
+        // Company IR days (inhaalrust) are days off for everybody.
+        $recuperationDays = Holiday::query()->recuperationDays()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get();
+
+        if ($recuperationDays->isNotEmpty()) {
+            $ids = $userIds ?? User::query()->where('is_active', true)->pluck('id')->all();
+            $recuperationDays->each(fn (Holiday $day) => array_map(fn (int $userId) => $mark($userId, $day->date, $day->date, $day->label()), $ids));
+        }
 
         if (modules()->vacations()) {
             VacationRequest::query()

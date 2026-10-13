@@ -55,7 +55,7 @@
         <table class="w nobreak" style="margin-top: 10px;">
             <tr>
                 <td style="width: 48%; padding-right: 10px;"><span class="label">Meting uitgevoerd op :</span><div class="box" style="height: 34px;">{{ $date?->format('d/m/Y') }}</div></td>
-                <td><span class="label">Voor {{ $dossier->supplier_location }}</span><div class="box" style="height: 34px;"></div></td>
+                <td><span class="label">Voor {{ $dossier->supplier_location }}</span><div class="box" style="height: auto; min-height: 34px;">@include('batteries.pdf.signature', ['document' => 'measurement', 'height' => 30])</div></td>
             </tr>
         </table>
 

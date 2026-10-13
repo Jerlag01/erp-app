@@ -66,7 +66,7 @@ class EmployeeForm
     /**
      * @return list<mixed>
      */
-    protected static function personal(): array
+    public static function personal(): array
     {
         return [
             TextInput::make('first_name')
@@ -203,7 +203,7 @@ class EmployeeForm
      * The first emergency contact is required; the second only becomes required once any
      * of its fields is filled in, so it is complete or empty.
      */
-    protected static function emergencyContact(int $number, bool $required): Section
+    public static function emergencyContact(int $number, bool $required): Section
     {
         $fields = ['first_name', 'last_name', 'phone', 'relation'];
         $isRequired = fn (Get $get): bool => $required || collect($fields)->contains(fn (string $field): bool => filled($get("emergency{$number}_{$field}")));
@@ -240,7 +240,7 @@ class EmployeeForm
     /**
      * @return list<mixed>
      */
-    protected static function clothing(): array
+    public static function clothing(): array
     {
         $sizes = fn (array $values): array => array_combine($values, $values);
 

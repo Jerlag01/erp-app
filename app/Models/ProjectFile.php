@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProjectFileSection;
+use App\Support\PdfAccess;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -108,5 +109,13 @@ class ProjectFile extends Model
         static::deleting(function (self $file): void {
             Storage::disk(self::DISK)->delete($file->versions()->pluck('path')->all());
         });
+    }
+
+    /**
+     * PDF files need "projects.download_pdf"; other files only the right to see the project.
+     */
+    public static function mayDownload(?string $name): bool
+    {
+        return ! PdfAccess::isPdf($name) || PdfAccess::canDownload(auth()->user(), 'projects');
     }
 }

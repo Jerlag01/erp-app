@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\KbArticle;
+use App\Support\PdfAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -18,6 +19,7 @@ class KbDownloadController
 
         $path = array_values((array) $article->attachments)[$index] ?? null;
         abort_if($path === null || ! Storage::disk(KbArticle::FILE_DISK)->exists($path), 404);
+        abort_if(PdfAccess::isPdf($article->attachment_names[$path] ?? $path) && ! PdfAccess::canDownload($request->user(), 'knowledge_base'), 403);
 
         return Storage::disk(KbArticle::FILE_DISK)->download($path, $article->attachment_names[$path] ?? basename($path), [
             'X-Content-Type-Options' => 'nosniff',

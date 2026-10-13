@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\Finance\InvoicePdf;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Policies\InvoicePolicy;
 use App\Services\Peppol\PeppolGateway;
+use App\Support\PdfAccess;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,6 +31,8 @@ class FinanceDocumentController
             ]);
         }
 
+        abort_unless(PdfAccess::canGenerate(auth()->user(), InvoicePolicy::area($invoice->type)), 403);
+
         return response($pdf->render($invoice), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.InvoicePdf::filename($invoice).'"',
@@ -47,6 +51,7 @@ class FinanceDocumentController
         };
 
         abort_if(blank($path) || ! Storage::disk(Expense::DISK)->exists($path), 404);
+        abort_if($kind === 'document' && PdfAccess::isPdf($expense->document_name ?: $path) && ! PdfAccess::canDownload(auth()->user(), 'expenses'), 403);
 
         $mime = Storage::disk(Expense::DISK)->mimeType($path) ?: 'application/octet-stream';
         $inline = in_array($mime, ['application/pdf', 'image/png', 'image/jpeg', 'image/gif', 'image/webp'], true);

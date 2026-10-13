@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Batteries\BatteryDocument;
 use App\Enums\BatteryDeliveryMode;
 use App\Enums\BatteryTechnology;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
@@ -15,6 +16,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
 use App\Support\BatteryTemplates;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -38,7 +40,7 @@ class BatteryDossierTest extends TestCase
         $this->team = Team::factory()->create();
     }
 
-    protected function technician(array $battery = ['view', 'create', 'update', 'delete']): User
+    protected function technician(array $battery = ['view', 'create', 'update', 'delete', 'generate_pdf']): User
     {
         return User::factory()->withPermissions(['projects' => ['view'], 'batteries' => $battery])->inTeam($this->team)->create();
     }
@@ -202,6 +204,9 @@ class BatteryDossierTest extends TestCase
     {
         $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id, 'new_technology' => BatteryTechnology::OPzS]);
         $this->actingAs($this->technician(['view']));
+        $this->get(route('batteries.document', [$dossier, 'delivery']))->assertForbidden();
+
+        $this->actingAs($this->technician(['view', 'generate_pdf']));
 
         foreach (['delivery', 'measurement', 'inspection', 'floor_plan', 'single_line', 'shipping'] as $document) {
             $this->get(route('batteries.document', [$dossier, $document]))
@@ -213,12 +218,12 @@ class BatteryDossierTest extends TestCase
         $this->get(route('batteries.document', [$dossier, 'nonsense']))->assertNotFound();
         $this->get(route('batteries.document', [$dossier, 'all']))->assertOk()->assertDownload();
 
-        $this->actingAs($this->technician(['view', 'prices']))
+        $this->actingAs($this->technician(['view', 'prices', 'generate_pdf']))
             ->get(route('batteries.document', [$dossier, 'invoice_request']))
             ->assertOk();
 
         // Someone outside the project's teams.
-        $this->actingAs(User::factory()->withPermissions(['projects' => ['view'], 'batteries' => ['view']])->inTeam()->create())
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view'], 'batteries' => ['view', 'generate_pdf']])->inTeam()->create())
             ->get(route('batteries.document', [$dossier, 'delivery']))
             ->assertForbidden();
     }
@@ -275,5 +280,85 @@ class BatteryDossierTest extends TestCase
 
         $siteless = BatteryDossier::factory()->create(['project_id' => Project::factory()->inCategory('604')->create(['work_site_id' => null])->id]);
         $this->assertSame(['Romeinse Steenweg Paleis 5', '1020 Brussel'], $siteless->fresh()->senderAddressLines(), 'Without a site address the settings are used.');
+    }
+
+    protected function signature(): string
+    {
+        return 'data:image/png;base64,'.base64_encode(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='));
+    }
+
+    #[Test]
+    public function a_signed_document_is_locked_except_for_administrators(): void
+    {
+        $technician = $this->technician();
+        $this->actingAs($technician);
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id, 'new_count' => 1, 'cells_per_battery' => 2]);
+
+        // Signing saves what is on screen first.
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->fillForm(['man_hours' => 6, 'inspection_remarks' => 'Alles in orde', 'average_temperature' => 20, 'strings' => [1 => ['cell_voltages' => [2.2, 2.21]]]])
+            ->callAction(TestAction::make('sign_delivery')->schemaComponent('signature_actions_delivery', schema: 'form'), ['signer_name' => 'Jan Peeters', 'signature' => $this->signature()])
+            ->assertHasNoActionErrors();
+
+        $dossier->refresh();
+        $signature = $dossier->signature('delivery');
+        $this->assertSame(['Jan Peeters', $technician->id], [$signature->signer_name, $signature->signed_by]);
+        Storage::disk('local')->assertExists($signature->path);
+        $this->assertSame('6.00', (string) $dossier->man_hours);
+
+        $dossier->sign('measurement', 'Jan Peeters', $this->signature(), $technician);
+        $this->assertTrue($dossier->isLockedFor('delivery', $technician));
+        $this->assertFalse($dossier->isLockedFor('inspection', $technician));
+
+        // The technician can no longer change the signed documents, only the others.
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertFormFieldDisabled('man_hours')
+            ->assertFormFieldDisabled('average_temperature')
+            ->assertFormFieldEnabled('inspection_remarks')
+            ->set('data.man_hours', 99)
+            ->set('data.average_temperature', 35)
+            ->set('data.strings.1.cell_voltages.0', 1.5)
+            ->fillForm(['inspection_remarks' => 'Kleine opmerking'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $dossier->refresh();
+        $this->assertSame(['6.00', 'Kleine opmerking'], [(string) $dossier->man_hours, $dossier->inspection_remarks]);
+        $this->assertEqualsWithDelta(20.0, (float) $dossier->average_temperature, 0.001);
+        $this->assertEqualsWithDelta(2.2, $dossier->batteries[0]->cell_voltages[0], 0.001);
+
+        // The signature is on the PDF.
+        $this->get(route('batteries.document', [$dossier, 'delivery']))->assertOk();
+
+        // An administrator can still change it and remove the signature.
+        $this->actingAs(User::factory()->admin()->create());
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertFormFieldEnabled('man_hours')
+            ->fillForm(['man_hours' => 7])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->callAction(TestAction::make('unsign_delivery')->schemaComponent('signature_actions_delivery', schema: 'form'));
+
+        $dossier->refresh();
+        $this->assertSame('7.00', (string) $dossier->man_hours);
+        $this->assertFalse($dossier->isSigned('delivery'));
+        Storage::disk('local')->assertMissing($signature->path);
+        $this->assertFalse($dossier->isLockedFor('delivery', $technician));
+
+        // Only administrators remove a signature.
+        $this->actingAs($technician);
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertSee(__('erp.batteries.signature.locked'))
+            ->assertDontSee(__('erp.batteries.signature.remove'));
+    }
+
+    #[Test]
+    public function the_shipping_note_fits_on_one_page(): void
+    {
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id, 'acid_boxes' => 3, 'packages' => 2, 'weight_kg' => 950, 'po_number' => '4500012345', 'waste_type' => 'Lood']);
+
+        $pdf = app(BatteryDocument::class)->render($dossier, 'shipping');
+
+        $this->assertSame(1, preg_match_all('/\/Type\s*\/Page[^s]/', $pdf));
     }
 }

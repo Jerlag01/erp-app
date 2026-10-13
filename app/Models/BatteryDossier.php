@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * A battery replacement dossier on a 604 project: the Excel "Online Dossier BAE NL" as a record.
@@ -38,6 +39,23 @@ class BatteryDossier extends Model
     use HasFactory;
 
     public const DISK = 'local';
+
+    /**
+     * Documents that get a written signature. Once signed, their fields are locked for everyone but
+     * administrators.
+     *
+     * @var array<string, list<string>>
+     */
+    public const SIGNED_FIELDS = [
+        'delivery' => [
+            'vertical_install_m', 'vertical_removal_m', 'ppe_sets', 'maintenance_sets', 'load_plates', 'man_hours',
+            'picto_plates', 'doc_holders', 'powerflex_length_m', 'powerflex_section', 'battery_cable_id', 'frotek_count',
+            'lug_count', 'lug_section', 'tray_length_m', 'tray_type', 'fuse_count', 'fuse_amperage', 'fuse_type',
+            'fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price',
+        ],
+        'measurement' => ['measured_on', 'average_temperature'],
+        'inspection' => ['inspection', 'inspection_remarks'],
+    ];
 
     /**
      * Most batteries in one dossier (the Excel had room for 6).
@@ -74,6 +92,61 @@ class BatteryDossier extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return HasMany<BatteryDossierSignature, $this>
+     */
+    public function signatures(): HasMany
+    {
+        return $this->hasMany(BatteryDossierSignature::class);
+    }
+
+    public function signature(string $document): ?BatteryDossierSignature
+    {
+        return $this->signatures->firstWhere('document', $document);
+    }
+
+    public function isSigned(string $document): bool
+    {
+        return $this->signature($document) !== null;
+    }
+
+    /**
+     * Signed documents can no longer be changed, except by administrators.
+     */
+    public function isLockedFor(string $document, ?User $user): bool
+    {
+        return $this->isSigned($document) && ! $user?->isAdmin();
+    }
+
+    /**
+     * Puts the written signature on a document (PNG data URL from the signature pad).
+     */
+    public function sign(string $document, string $name, string $dataUrl, User $by): BatteryDossierSignature
+    {
+        abort_unless(array_key_exists($document, self::SIGNED_FIELDS), 404);
+
+        $png = str_starts_with($dataUrl, 'data:image/png;base64,') ? base64_decode(substr($dataUrl, strlen('data:image/png;base64,')), true) : false;
+
+        if ($png === false || ! str_starts_with($png, "\x89PNG")) {
+            throw new \InvalidArgumentException('The signature is not a valid PNG image.');
+        }
+
+        $path = "batteries/{$this->id}/signature-{$document}-".Str::random(12).'.png';
+        Storage::disk(self::DISK)->put($path, $png);
+
+        $this->signature($document)?->delete();
+        $signature = $this->signatures()->create([
+            'document' => $document,
+            'signer_name' => mb_substr(trim($name), 0, 150),
+            'path' => $path,
+            'signed_by' => $by->id,
+            'signed_at' => now(),
+        ]);
+        $this->unsetRelation('signatures');
+
+        return $signature;
     }
 
     /**
@@ -296,6 +369,8 @@ class BatteryDossier extends Model
     protected static function booted(): void
     {
         static::saved(fn (self $dossier) => $dossier->wasChanged(['new_count', 'first_id_number']) || $dossier->wasRecentlyCreated ? $dossier->syncBatteries() : null);
+
+        static::deleting(fn (self $dossier) => $dossier->signatures->each->delete());
 
         static::deleted(function (self $dossier): void {
             if (filled($dossier->floor_plan_png)) {

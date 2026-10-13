@@ -8,7 +8,9 @@ use App\Actions\Finance\SendPaymentReminder;
 use App\Enums\InvoiceStatus;
 use App\Filament\Resources\CreditNotes\CreditNoteResource;
 use App\Models\Invoice;
+use App\Policies\InvoicePolicy;
 use App\Services\Peppol\PeppolGateway;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -123,6 +125,7 @@ class InvoiceActions
                 Action::make('pdf')
                     ->label('PDF')
                     ->icon(Heroicon::OutlinedDocumentArrowDown)
+                    ->visible(fn (Invoice $record): bool => PdfAccess::canGenerate(auth()->user(), InvoicePolicy::area($record->type)))
                     ->url(fn (Invoice $record): string => route('finance.invoice-document', ['invoice' => $record, 'format' => 'pdf']), shouldOpenInNewTab: true),
                 Action::make('ubl')
                     ->label(__('erp.finance.invoices.download_ubl'))

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\WasteRegion;
 use App\Models\WasteEntry;
+use App\Support\PdfAccess;
 use App\Support\WasteTotals;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -40,7 +41,7 @@ class WastePdfController
 
     public function list(Request $request, string $token): Response
     {
-        abort_unless(Gate::allows('viewAny', WasteEntry::class), 403);
+        abort_unless(Gate::allows('viewAny', WasteEntry::class) && PdfAccess::canGenerate($request->user(), 'waste'), 403);
 
         $export = Cache::get("waste-pdf:{$token}");
         abort_if($export === null || $export['user'] !== $request->user()->id, 404);
@@ -65,7 +66,7 @@ class WastePdfController
 
     public function totals(Request $request): Response
     {
-        abort_unless(Gate::allows('viewAny', WasteEntry::class), 403);
+        abort_unless(Gate::allows('viewAny', WasteEntry::class) && PdfAccess::canGenerate($request->user(), 'waste'), 403);
 
         $period = $request->validate([
             'from' => ['nullable', 'date'],

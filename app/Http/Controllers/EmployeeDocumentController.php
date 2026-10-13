@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Certificate PDFs and medical check-up files from the employee register, for administrators only.
+ * Certificate PDFs (also of certificates employees submitted) and medical check-up files from the
+ * employee register, for administrators only.
  * A medical check-up holds several files; $file is the position in its list.
  */
 class EmployeeDocumentController
@@ -17,8 +18,8 @@ class EmployeeDocumentController
     {
         abort_unless(Gate::allows('view', $employee), 403);
 
-        if ($kind === 'certificate') {
-            $record = $employee->certificates()->find($id);
+        if ($kind === 'certificate' || $kind === 'request') {
+            $record = $kind === 'certificate' ? $employee->certificates()->find($id) : $employee->certificateRequests()->find($id);
             $path = $record?->document;
             $name = $record?->document_name;
         } else {

@@ -5,17 +5,52 @@ namespace App\Models;
 use App\Support\WorkingDays;
 use Database\Factories\HolidayFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * A public holiday: not a working day, so it never counts as a vacation day.
+ * A company-wide day off: a public holiday or an "inhaalrust" (IR) day, the same for all employees.
+ * Neither is a working day, so they never count as vacation days and nothing can be planned on them.
  */
-#[Fillable(['date', 'name'])]
+#[Fillable(['date', 'type', 'name'])]
 class Holiday extends Model
 {
     /** @use HasFactory<HolidayFactory> */
     use HasFactory;
+
+    public const HOLIDAY = 'holiday';
+
+    public const RECUPERATION = 'recuperation';
+
+    public function isRecuperation(): bool
+    {
+        return $this->type === self::RECUPERATION;
+    }
+
+    /**
+     * The name as shown in calendars, e.g. "IR · Brugdag".
+     */
+    public function label(): string
+    {
+        return $this->isRecuperation() ? trim('IR · '.$this->name, ' ·') : $this->name;
+    }
+
+    /**
+     * @param  Builder<Holiday>  $query
+     */
+    public function scopePublicHolidays(Builder $query): void
+    {
+        $query->where('type', self::HOLIDAY);
+    }
+
+    /**
+     * @param  Builder<Holiday>  $query
+     */
+    public function scopeRecuperationDays(Builder $query): void
+    {
+        $query->where('type', self::RECUPERATION);
+    }
 
     /**
      * Adding, moving or removing a holiday changes how many days the requests around it take.

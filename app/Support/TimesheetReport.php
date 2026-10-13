@@ -20,7 +20,7 @@ class TimesheetReport
     /**
      * Absence code per type of day, as in the Excel legend.
      */
-    public const CODES = ['vacation' => 'V', 'medical' => 'Z', 'overtime' => 'IR', 'family' => 'FV', 'training' => 'OP', 'holiday' => 'F'];
+    public const CODES = ['vacation' => 'V', 'medical' => 'Z', 'overtime' => 'IR', 'recuperation' => 'IR', 'family' => 'FV', 'training' => 'OP', 'holiday' => 'F'];
 
     /**
      * Codes counted in the left columns (year so far).

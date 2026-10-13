@@ -12,6 +12,7 @@ use App\Models\InterventionReport;
 use App\Models\InterventionReportMaterial;
 use App\Models\InterventionReportPosition;
 use App\Models\ProjectPoNumber;
+use App\Support\PdfAccess;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
@@ -156,6 +157,7 @@ class InterventionReportResource extends Resource
             ->label('PDF')
             ->icon(Heroicon::OutlinedDocumentArrowDown)
             ->color('gray')
+            ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'projects'))
             ->url(fn (InterventionReport $record): string => route('interventions.pdf', $record), shouldOpenInNewTab: true);
     }
 

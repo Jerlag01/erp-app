@@ -16,6 +16,7 @@ use App\Models\Absence;
 use App\Models\Holiday;
 use App\Models\PlanningItem;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Team;
 use App\Models\TimesheetDay;
 use App\Models\TimesheetWeek;
@@ -215,7 +216,11 @@ class TimesheetTest extends TestCase
         $user = User::factory()->create(['name' => 'Jeroen Lagaet']);
         $this->day($user, self::MONDAY);
 
-        $this->actingAs($user)->get(route('timesheets.pdf', ['user' => $user->id, 'week' => self::MONDAY]))
+        $this->actingAs($user)->get(route('timesheets.pdf', ['user' => $user->id, 'week' => self::MONDAY]))->assertForbidden();
+
+        $user->update(['role_id' => Role::factory()->create(['permissions' => ['timesheets' => ['generate_pdf']]])->id]);
+        $user->teams()->attach(Team::factory()->create());
+        $this->actingAs($user->fresh())->get(route('timesheets.pdf', ['user' => $user->id, 'week' => self::MONDAY]))
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
 
         $cells = app(TimesheetPdf::class)->cells($user, app(Timesheets::class)->week($user, self::MONDAY));
@@ -340,6 +345,7 @@ class TimesheetTest extends TestCase
         }
 
         $this->actingAs(User::factory()->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertForbidden();
-        $this->actingAs(User::factory()->withPermissions(['timesheets' => ['see_all']])->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertOk();
+        $this->actingAs(User::factory()->withPermissions(['timesheets' => ['see_all']])->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertForbidden();
+        $this->actingAs(User::factory()->withPermissions(['timesheets' => ['see_all', 'generate_pdf']])->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertOk();
     }
 }

@@ -213,7 +213,7 @@ class Planning extends Page
         $people = $people->union($items->pluck('user')->keyBy('id'))->sortBy(fn (User $user): string => ($user->id === $viewer->id ? '0' : '1').mb_strtolower($user->name));
         $blocked = $this->rules()->blockedDays($people->keys()->all(), $gridFrom, $gridUntil, $viewer);
         $holidays = Holiday::query()->whereBetween('date', [$gridFrom->toDateString(), $gridUntil->toDateString()])->get()
-            ->mapWithKeys(fn (Holiday $holiday): array => [$holiday->date->toDateString() => $holiday->name]);
+            ->mapWithKeys(fn (Holiday $holiday): array => [$holiday->date->toDateString() => $holiday->label()]);
 
         $days = collect(CarbonPeriod::create($gridFrom, $gridUntil))->map(fn ($day): CarbonImmutable => CarbonImmutable::instance($day))->values();
         $entries = $items->map(fn (PlanningItem $item): array => $this->entry($item, $viewer, $blocked));

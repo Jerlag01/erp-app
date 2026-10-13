@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectFile;
+use App\Support\PdfAccess;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,6 +27,7 @@ class ProjectFileController
             : $file->versions()->where('version', $version)->first();
 
         abort_if($stored === null || ! Storage::disk(ProjectFile::DISK)->exists($stored->path), 404);
+        abort_if(PdfAccess::isPdf($stored->original_name) && ! PdfAccess::canDownload(auth()->user(), 'projects'), 403);
 
         return Storage::disk(ProjectFile::DISK)->response(
             $stored->path,

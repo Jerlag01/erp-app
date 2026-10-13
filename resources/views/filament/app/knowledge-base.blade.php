@@ -44,9 +44,13 @@
                         <ul class="erp-kb-list">
                             @foreach ($downloads as $download)
                                 <li>
-                                    <x-filament::link :href="route('kb.download', ['article' => $current, 'index' => $download['index']])" icon="heroicon-o-arrow-down-tray">
-                                        {{ $download['name'] }}
-                                    </x-filament::link>
+                                    @if (\App\Support\PdfAccess::isPdf($download['name']) && ! \App\Support\PdfAccess::canDownload(auth()->user(), 'knowledge_base'))
+                                        <span>{{ $download['name'] }}</span> <span class="erp-kb-muted">({{ __('erp.pdf.no_download_right') }})</span>
+                                    @else
+                                        <x-filament::link :href="route('kb.download', ['article' => $current, 'index' => $download['index']])" icon="heroicon-o-arrow-down-tray">
+                                            {{ $download['name'] }}
+                                        </x-filament::link>
+                                    @endif
                                     <span class="erp-kb-muted">· {{ $download['size'] }}</span>
                                 </li>
                             @endforeach

@@ -9,6 +9,7 @@ use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\BatteryDossier;
 use App\Models\Project;
 use App\Support\Interventions;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -54,7 +55,7 @@ class ViewProject extends ViewRecord
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
                 ->url(fn (Project $record): ?string => $record->interventionReport ? route('interventions.pdf', $record->interventionReport) : null, shouldOpenInNewTab: true)
-                ->visible(fn (Project $record): bool => $record->interventionReport !== null && app(Interventions::class)->canDownloadPdf(auth()->user(), $record)),
+                ->visible(fn (Project $record): bool => $record->interventionReport !== null && app(Interventions::class)->canDownloadPdf(auth()->user(), $record) && PdfAccess::canGenerate(auth()->user(), 'projects')),
             Action::make('batteryDossier')
                 ->label(__('erp.batteries.dossier_button'))
                 ->icon(Heroicon::OutlinedBattery100)

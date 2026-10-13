@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\NavigationGroup;
 use App\Models\WasteEntry;
+use App\Support\PdfAccess;
 use App\Support\WasteTotals;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -99,6 +100,7 @@ class WasteTotalsOverview extends Page
                 ->label(__('erp.waste.export_pdf'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'waste'))
                 ->url(fn (): string => route('waste.totals-pdf', array_filter(['from' => $this->validDate($this->from), 'until' => $this->validDate($this->until)])), shouldOpenInNewTab: true),
         ];
     }

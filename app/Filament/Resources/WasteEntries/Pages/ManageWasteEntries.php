@@ -6,6 +6,7 @@ use App\Enums\WasteRegion;
 use App\Filament\Resources\WasteEntries\WasteEntryResource;
 use App\Http\Controllers\WastePdfController;
 use App\Models\WasteEntry;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -25,7 +26,8 @@ class ManageWasteEntries extends ManageRecords
                 ->label(__('erp.waste.export_pdf'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
-                ->authorize(fn (): bool => auth()->user()->can('viewAny', WasteEntry::class))
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'waste'))
+                ->authorize(fn (): bool => auth()->user()->can('viewAny', WasteEntry::class) && PdfAccess::canGenerate(auth()->user(), 'waste'))
                 ->action(fn () => $this->js('window.open('.json_encode(WastePdfController::urlFor(
                     (string) $this->activeTab,
                     $this->getFilteredSortedTableQuery()->pluck('waste_entries.id')->all(),

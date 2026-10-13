@@ -46,7 +46,7 @@ class VacationCalendar
         $holidays = Holiday::query()
             ->whereBetween('date', [$gridStart->toDateString(), $gridEnd->toDateString()])
             ->get()
-            ->mapWithKeys(fn (Holiday $holiday): array => [$holiday->date->toDateString() => $holiday->name]);
+            ->mapWithKeys(fn (Holiday $holiday): array => [$holiday->date->toDateString() => $holiday->label()]);
 
         $requests = $this->requests($viewer, $gridStart, $gridEnd, $teamId);
         $absences = modules()->vacations() ? $this->absences($viewer, $gridStart, $gridEnd, $teamId) : collect();

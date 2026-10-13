@@ -32,6 +32,11 @@ class ListRouters extends ListRecords
         return __('erp.charging.routers_export_title');
     }
 
+    protected function permissionArea(): string
+    {
+        return 'routers';
+    }
+
     protected function canExportSecrets(): bool
     {
         return RouterResource::canSeeSecrets();

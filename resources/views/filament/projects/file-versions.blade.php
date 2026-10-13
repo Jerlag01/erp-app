@@ -13,7 +13,9 @@
                     {{ $version->original_name }} · {{ $version->humanSize() }} · {{ $version->created_at?->format('d/m/Y H:i') }}@if ($version->user) · {{ $version->user->name }}@endif
                 </div>
             </div>
-            <a href="{{ route('projects.file', ['project' => $file->project_id, 'file' => $file, 'version' => $version->version]) }}" target="_blank" rel="noopener" style="flex-shrink: 0; text-decoration: underline; font-size: .875rem;">{{ __('erp.projects.files.download') }}</a>
+            @if (\App\Models\ProjectFile::mayDownload($version->original_name))
+                <a href="{{ route('projects.file', ['project' => $file->project_id, 'file' => $file, 'version' => $version->version]) }}" target="_blank" rel="noopener" style="flex-shrink: 0; text-decoration: underline; font-size: .875rem;">{{ __('erp.projects.files.download') }}</a>
+            @endif
         </li>
     @endforeach
 </ul>

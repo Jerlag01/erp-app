@@ -72,7 +72,7 @@
     <table class="w nobreak" style="margin-top: 16px;">
         <tr>
             <td style="width: 48%; padding-right: 10px;"><span class="label">Datum</span><div class="box">{{ $date($dossier->execution_date) }}</div></td>
-            <td style="width: 52%;"><span class="label">Handtekening &amp; Naam</span><div class="box"></div></td>
+            <td style="width: 52%;"><span class="label">Handtekening &amp; Naam</span><div class="box">@include('batteries.pdf.signature', ['document' => 'delivery'])</div></td>
         </tr>
     </table>
 @endsection

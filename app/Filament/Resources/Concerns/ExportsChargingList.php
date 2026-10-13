@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Concerns;
 
 use App\Support\ChargingExport;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Toggle;
@@ -24,6 +25,11 @@ trait ExportsChargingList
 
     abstract protected function canExportSecrets(): bool;
 
+    /**
+     * The permission area of the list ("charging" or "routers"); the PDF needs its "generate_pdf".
+     */
+    abstract protected function permissionArea(): string;
+
     protected function exportAction(): ActionGroup
     {
         $make = fn (string $format, string $label, Heroicon $icon): Action => Action::make('export_'.$format)
@@ -38,6 +44,7 @@ trait ExportsChargingList
                     ->helperText(__('erp.charging.export_with_secrets_help'))
                     ->visible(fn (): bool => $this->canExportSecrets()),
             ])
+            ->visible(fn (): bool => $format !== 'pdf' || PdfAccess::canGenerate(auth()->user(), $this->permissionArea()))
             ->action(fn (array $data): Response => $this->export($format, $this->canExportSecrets() && (bool) ($data['with_secrets'] ?? false)));
 
         return ActionGroup::make([
@@ -58,6 +65,8 @@ trait ExportsChargingList
         $exporter = app(ChargingExport::class);
 
         if ($format === 'pdf') {
+            abort_unless(PdfAccess::canGenerate(auth()->user(), $this->permissionArea()), 403);
+
             $pdf = $exporter->pdf($title, $columns, $records);
 
             return response()->streamDownload(fn () => print ($pdf), ChargingExport::filename($title, 'pdf'), ['Content-Type' => 'application/pdf']);

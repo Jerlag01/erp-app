@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Batteries\BatteryDocument;
 use App\Models\BatteryDossier;
+use App\Support\PdfAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -17,7 +18,7 @@ class BatteryDocumentController extends Controller
 {
     public function __invoke(Request $request, BatteryDossier $dossier, string $document, BatteryDocument $documents): Response
     {
-        abort_unless(Gate::allows('view', $dossier), 403);
+        abort_unless(Gate::allows('view', $dossier) && PdfAccess::canGenerate($request->user(), 'batteries'), 403);
 
         if ($document === 'all') {
             $list = array_values(array_filter(array_keys(BatteryDocument::DOCUMENTS), fn (string $name): bool => $name !== 'invoice_request' || Gate::allows('viewPrices', $dossier)));

@@ -41,7 +41,7 @@ class ChargingTest extends TestCase
 
     protected function user(bool $secrets): User
     {
-        $abilities = ['view', 'create', 'update', 'delete', ...($secrets ? ['secrets'] : [])];
+        $abilities = ['view', 'create', 'update', 'delete', 'generate_pdf', ...($secrets ? ['secrets'] : [])];
 
         return User::factory()->withPermissions(['charging' => $abilities, 'routers' => $abilities])->inTeam()->create();
     }
@@ -166,6 +166,11 @@ class ChargingTest extends TestCase
         Livewire::test(ListChargingStations::class)->callAction('export_pdf')->assertFileDownloaded();
         Livewire::test(ListRouters::class)->callAction('export_xlsx')->assertFileDownloaded();
         Livewire::test(ListRouters::class)->callAction('export_pdf')->assertFileDownloaded();
+
+        // Without "generate_pdf" only the Excel export is left.
+        $this->actingAs(User::factory()->withPermissions(['charging' => ['view'], 'routers' => ['view']])->inTeam()->create());
+        Livewire::test(ListChargingStations::class)->assertActionVisible('export_xlsx')->assertActionHidden('export_pdf');
+        Livewire::test(ListRouters::class)->assertActionHidden('export_pdf');
     }
 
     #[Test]

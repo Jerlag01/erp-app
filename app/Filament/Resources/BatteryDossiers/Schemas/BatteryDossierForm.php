@@ -7,6 +7,8 @@ use App\Enums\BatteryInvoiceKind;
 use App\Enums\BatteryMounting;
 use App\Enums\BatteryTechnology;
 use App\Filament\Forms\FloorPlanEditor;
+use App\Filament\Forms\SignaturePad;
+use App\Filament\Resources\BatteryDossiers\Pages\EditBatteryDossier;
 use App\Models\BatteryCable;
 use App\Models\BatteryDossier;
 use App\Models\BatteryDossierBattery;
@@ -14,6 +16,7 @@ use App\Models\BatteryModel;
 use App\Models\Project;
 use App\Support\BatteryInspection;
 use App\Support\BatterySingleLine;
+use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -22,9 +25,11 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -85,8 +90,90 @@ class BatteryDossierForm
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
                 ->tooltip(__('erp.batteries.save_first'))
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'batteries'))
                 ->url(fn (?BatteryDossier $record): ?string => $record ? route('batteries.document', [$record, $document]) : null, shouldOpenInNewTab: true),
         ]);
+    }
+
+    /**
+     * The fields of a document that has a written signature: locked once signed (except for administrators).
+     *
+     * @param  array<Component>  $components
+     */
+    protected static function lockable(string $document, array $components): Group
+    {
+        return Group::make($components)
+            ->disabled(fn (?BatteryDossier $record): bool => (bool) $record?->isLockedFor($document, auth()->user()));
+    }
+
+    /**
+     * "Signature": draw it to sign the document (the dossier is saved first), after which it is locked.
+     * Administrators can remove a signature again.
+     */
+    protected static function signatureSection(string $document): Section
+    {
+        return Section::make(__('erp.batteries.signature.title'))
+            ->icon(Heroicon::OutlinedPencil)
+            ->compact()
+            ->description(fn (?BatteryDossier $record): string => $record?->isSigned($document)
+                ? ($record->isLockedFor($document, auth()->user()) ? __('erp.batteries.signature.locked') : __('erp.batteries.signature.admin_unlocked'))
+                : __('erp.batteries.signature.help'))
+            ->schema([
+                Text::make(function (?BatteryDossier $record) use ($document): ?HtmlString {
+                    $signature = $record?->signature($document);
+
+                    if (! $signature) {
+                        return null;
+                    }
+
+                    return new HtmlString(sprintf(
+                        '<div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;"><img src="%s" alt="" style="max-height:90px;background:#fff;border:1px solid rgb(203 213 225);border-radius:.375rem;padding:.25rem;"><div><strong>%s</strong><br><span style="opacity:.75;">%s</span></div></div>',
+                        e((string) $signature->dataUri()),
+                        e($signature->signer_name),
+                        e(__('erp.batteries.signature.signed_at', ['date' => $signature->signed_at->format('d/m/Y H:i'), 'user' => $signature->signer?->name ?? '—'])),
+                    ));
+                })->visible(fn (?BatteryDossier $record): bool => (bool) $record?->isSigned($document)),
+                Actions::make([
+                    Action::make('sign_'.$document)
+                        ->label(__('erp.batteries.signature.sign'))
+                        ->icon(Heroicon::OutlinedPencilSquare)
+                        ->color('primary')
+                        ->visible(fn (?BatteryDossier $record): bool => $record !== null && ! $record->isSigned($document) && Gate::allows('update', $record))
+                        ->modalHeading(__('erp.batteries.signature.sign_heading', ['document' => __('erp.batteries.documents.'.$document)]))
+                        ->modalDescription(__('erp.batteries.signature.sign_help'))
+                        ->schema([
+                            TextInput::make('signer_name')
+                                ->label(__('erp.batteries.signature.name'))
+                                ->default(fn (): ?string => auth()->user()?->name)
+                                ->required()
+                                ->maxLength(150),
+                            SignaturePad::make('signature')->label(__('erp.batteries.signature.title'))->required(),
+                        ])
+                        ->action(function (array $data, BatteryDossier $record, EditBatteryDossier $livewire) use ($document): void {
+                            abort_unless(Gate::allows('update', $record), 403);
+
+                            // Sign what is on screen: save the dossier first.
+                            $livewire->save(shouldRedirect: false, shouldSendSavedNotification: false);
+                            $record->sign($document, $data['signer_name'], $data['signature'], auth()->user());
+
+                            Notification::make()->title(__('erp.batteries.signature.signed'))->success()->send();
+                        }),
+                    Action::make('unsign_'.$document)
+                        ->label(__('erp.batteries.signature.remove'))
+                        ->icon(Heroicon::OutlinedLockOpen)
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalDescription(__('erp.batteries.signature.remove_help'))
+                        ->visible(fn (?BatteryDossier $record): bool => (bool) $record?->isSigned($document) && (bool) auth()->user()?->isAdmin())
+                        ->action(function (BatteryDossier $record) use ($document): void {
+                            abort_unless((bool) auth()->user()?->isAdmin(), 403);
+                            $record->signature($document)?->delete();
+                            $record->unsetRelation('signatures');
+
+                            Notification::make()->title(__('erp.batteries.signature.removed'))->success()->send();
+                        }),
+                ])->key('signature_actions_'.$document),
+            ]);
     }
 
     /**
@@ -214,41 +301,44 @@ class BatteryDossierForm
         $number = fn (string $name, string $suffix): TextInput => TextInput::make($name)->label(__("erp.batteries.fields.{$name}"))->numeric()->minValue(0)->step('any')->default(0)->suffix($suffix);
 
         return [
-            Section::make(__('erp.batteries.sections.delivery'))
-                ->description(__('erp.batteries.sections.delivery_help'))
-                ->columns(4)
-                ->schema([
-                    $number('vertical_install_m', 'm'),
-                    $number('vertical_removal_m', 'm'),
-                    $number('ppe_sets', 'st'),
-                    $number('maintenance_sets', 'st'),
-                    $number('load_plates', 'st'),
-                    $number('man_hours', 'u'),
-                    $number('picto_plates', 'st'),
-                    $number('doc_holders', 'st'),
-                ]),
-            Section::make(__('erp.batteries.sections.cabling'))
-                ->columns(4)
-                ->schema([
-                    $number('powerflex_length_m', 'm'),
-                    TextInput::make('powerflex_section')->label(__('erp.batteries.fields.powerflex_section'))->suffix('mm²')->maxLength(20),
-                    Select::make('battery_cable_id')
-                        ->label(__('erp.batteries.fields.battery_cable_id'))
-                        ->options(fn (): array => BatteryCable::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all()),
-                    $number('frotek_count', 'st'),
-                    $number('lug_count', 'st'),
-                    TextInput::make('lug_section')->label(__('erp.batteries.fields.lug_section'))->suffix('mm²')->maxLength(20),
-                    $number('tray_length_m', 'm'),
-                    TextInput::make('tray_type')->label(__('erp.batteries.fields.tray_type'))->maxLength(50),
-                    $number('fuse_count', 'st'),
-                    TextInput::make('fuse_amperage')->label(__('erp.batteries.fields.fuse_amperage'))->suffix('A')->maxLength(20),
-                    TextInput::make('fuse_type')->label(__('erp.batteries.fields.fuse_type'))->placeholder('gG')->maxLength(30),
-                ]),
-            Section::make(__('erp.batteries.sections.material_prices'))
-                ->visible(fn (?BatteryDossier $record): bool => Gate::allows('viewPrices', $record ?? BatteryDossier::class))
-                ->columns(4)
-                ->schema(array_map(fn (string $field): TextInput => TextInput::make($field)->label(__("erp.batteries.fields.{$field}"))->numeric()->minValue(0)->step('any')->prefix('€'),
-                    ['fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price'])),
+            self::lockable('delivery', [
+                Section::make(__('erp.batteries.sections.delivery'))
+                    ->description(__('erp.batteries.sections.delivery_help'))
+                    ->columns(4)
+                    ->schema([
+                        $number('vertical_install_m', 'm'),
+                        $number('vertical_removal_m', 'm'),
+                        $number('ppe_sets', 'st'),
+                        $number('maintenance_sets', 'st'),
+                        $number('load_plates', 'st'),
+                        $number('man_hours', 'u'),
+                        $number('picto_plates', 'st'),
+                        $number('doc_holders', 'st'),
+                    ]),
+                Section::make(__('erp.batteries.sections.cabling'))
+                    ->columns(4)
+                    ->schema([
+                        $number('powerflex_length_m', 'm'),
+                        TextInput::make('powerflex_section')->label(__('erp.batteries.fields.powerflex_section'))->suffix('mm²')->maxLength(20),
+                        Select::make('battery_cable_id')
+                            ->label(__('erp.batteries.fields.battery_cable_id'))
+                            ->options(fn (): array => BatteryCable::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all()),
+                        $number('frotek_count', 'st'),
+                        $number('lug_count', 'st'),
+                        TextInput::make('lug_section')->label(__('erp.batteries.fields.lug_section'))->suffix('mm²')->maxLength(20),
+                        $number('tray_length_m', 'm'),
+                        TextInput::make('tray_type')->label(__('erp.batteries.fields.tray_type'))->maxLength(50),
+                        $number('fuse_count', 'st'),
+                        TextInput::make('fuse_amperage')->label(__('erp.batteries.fields.fuse_amperage'))->suffix('A')->maxLength(20),
+                        TextInput::make('fuse_type')->label(__('erp.batteries.fields.fuse_type'))->placeholder('gG')->maxLength(30),
+                    ]),
+                Section::make(__('erp.batteries.sections.material_prices'))
+                    ->visible(fn (?BatteryDossier $record): bool => Gate::allows('viewPrices', $record ?? BatteryDossier::class))
+                    ->columns(4)
+                    ->schema(array_map(fn (string $field): TextInput => TextInput::make($field)->label(__("erp.batteries.fields.{$field}"))->numeric()->minValue(0)->step('any')->prefix('€'),
+                        ['fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price'])),
+            ]),
+            self::signatureSection('delivery'),
             self::download('delivery'),
         ];
     }
@@ -261,32 +351,35 @@ class BatteryDossierForm
         $density = fn (Get $get): bool => (bool) BatteryTechnology::tryFrom((string) ($get('new_technology') instanceof BatteryTechnology ? $get('new_technology')->value : $get('new_technology')))?->hasDensity();
 
         return [
-            Section::make()
-                ->columns(3)
-                ->schema([
-                    DatePicker::make('measured_on')->label(__('erp.batteries.measured_on'))->helperText(__('erp.batteries.measured_on_help')),
-                    TextInput::make('average_temperature')->label(__('erp.batteries.average_temperature'))->numeric()->step('any')->suffix('°C'),
-                    Text::make(fn (Get $get): string => __('erp.batteries.measurement_help', ['cells' => (int) $get('cells_per_battery'), 'count' => (int) $get('new_count')])),
-                ]),
-            Grid::make(['default' => 1, 'xl' => 2])
-                ->schema(fn (Get $get): array => array_map(fn (int $position): Section => Section::make('Batt '.$position)
-                    ->description(function (Get $get) use ($position): string {
-                        $values = array_filter((array) $get("strings.{$position}.cell_voltages"), 'is_numeric');
+            self::lockable('measurement', [
+                Section::make()
+                    ->columns(3)
+                    ->schema([
+                        DatePicker::make('measured_on')->label(__('erp.batteries.measured_on'))->helperText(__('erp.batteries.measured_on_help')),
+                        TextInput::make('average_temperature')->label(__('erp.batteries.average_temperature'))->numeric()->step('any')->suffix('°C'),
+                        Text::make(fn (Get $get): string => __('erp.batteries.measurement_help', ['cells' => (int) $get('cells_per_battery'), 'count' => (int) $get('new_count')])),
+                    ]),
+                Grid::make(['default' => 1, 'xl' => 2])
+                    ->schema(fn (Get $get): array => array_map(fn (int $position): Section => Section::make('Batt '.$position)
+                        ->description(function (Get $get) use ($position): string {
+                            $values = array_filter((array) $get("strings.{$position}.cell_voltages"), 'is_numeric');
 
-                        return __('erp.batteries.end_voltage', ['volts' => $values ? number_format(array_sum($values), 2, ',', '') : '—']);
-                    })
-                    ->compact()
-                    ->columns(['default' => 4, 'md' => 6])
-                    ->schema(array_merge(...array_map(fn (int $cell): array => array_values(array_filter([
-                        TextInput::make("strings.{$position}.cell_voltages.".($cell - 1))
-                            ->hiddenLabel()
-                            ->prefix((string) $cell)
-                            ->placeholder('V')
-                            ->numeric()
-                            ->step('any')
-                            ->live(onBlur: true),
-                        $density($get) ? TextInput::make("strings.{$position}.cell_densities.".($cell - 1))->hiddenLabel()->prefix('d')->placeholder('kg/l')->numeric()->step('any') : null,
-                    ])), range(1, max(1, min(60, (int) $get('cells_per_battery'))))))), self::positions($get))),
+                            return __('erp.batteries.end_voltage', ['volts' => $values ? number_format(array_sum($values), 2, ',', '') : '—']);
+                        })
+                        ->compact()
+                        ->columns(['default' => 4, 'md' => 6])
+                        ->schema(array_merge(...array_map(fn (int $cell): array => array_values(array_filter([
+                            TextInput::make("strings.{$position}.cell_voltages.".($cell - 1))
+                                ->hiddenLabel()
+                                ->prefix((string) $cell)
+                                ->placeholder('V')
+                                ->numeric()
+                                ->step('any')
+                                ->live(onBlur: true),
+                            $density($get) ? TextInput::make("strings.{$position}.cell_densities.".($cell - 1))->hiddenLabel()->prefix('d')->placeholder('kg/l')->numeric()->step('any') : null,
+                        ])), range(1, max(1, min(60, (int) $get('cells_per_battery'))))))), self::positions($get))),
+            ]),
+            self::signatureSection('measurement'),
             self::download('measurement'),
         ];
     }
@@ -312,8 +405,11 @@ class BatteryDossierForm
         }
 
         return [
-            ...$sections,
-            Textarea::make('inspection_remarks')->label(__('erp.batteries.inspection_remarks'))->rows(3)->maxLength(5000),
+            self::lockable('inspection', [
+                ...$sections,
+                Textarea::make('inspection_remarks')->label(__('erp.batteries.inspection_remarks'))->rows(3)->maxLength(5000),
+            ]),
+            self::signatureSection('inspection'),
             self::download('inspection'),
         ];
     }

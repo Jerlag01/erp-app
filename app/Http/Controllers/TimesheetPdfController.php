@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Timesheets\TimesheetPdf;
 use App\Models\User;
+use App\Support\PdfAccess;
 use App\Support\Timesheets;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class TimesheetPdfController extends Controller
 {
     public function __invoke(Request $request, User $user, string $week, Timesheets $timesheets, TimesheetPdf $pdf): Response
     {
-        abort_unless($timesheets->canView($request->user(), $user), 403);
+        abort_unless($timesheets->canView($request->user(), $user) && PdfAccess::canGenerate($request->user(), 'timesheets'), 403);
 
         $monday = Timesheets::monday(rescue(fn () => CarbonImmutable::parse($week), null, false) ?? abort(404));
 

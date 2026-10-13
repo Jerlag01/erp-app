@@ -27,7 +27,7 @@ class WasteTest extends TestCase
 
     protected function registrar(): User
     {
-        $user = User::factory()->withPermissions(['waste' => ['view', 'create', 'update', 'delete']])->inTeam()->create();
+        $user = User::factory()->withPermissions(['waste' => ['view', 'create', 'update', 'delete', 'generate_pdf']])->inTeam()->create();
         $this->actingAs($user);
         Filament::setCurrentPanel('app');
 
@@ -136,7 +136,9 @@ class WasteTest extends TestCase
         $this->assertStringContainsString('brussel', (string) $response->headers->get('Content-Disposition'));
 
         // The token belongs to the user who made it.
-        $this->actingAs(User::factory()->withPermissions(['waste' => ['view']])->inTeam()->create())->get($url)->assertNotFound();
+        $this->actingAs(User::factory()->withPermissions(['waste' => ['view', 'generate_pdf']])->inTeam()->create())->get($url)->assertNotFound();
+        // Without "generate_pdf" no PDF at all.
+        $this->actingAs(User::factory()->withPermissions(['waste' => ['view']])->inTeam()->create())->get($url)->assertForbidden();
         $this->actingAs($user);
 
         Livewire::test(ManageWasteEntries::class)->set('activeTab', 'brussels')->callAction('exportPdf')->assertHasNoActionErrors();

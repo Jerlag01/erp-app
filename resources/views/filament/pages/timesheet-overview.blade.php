@@ -41,8 +41,10 @@
                             <td style="padding: .5rem;">{{ $row['sent_at'] ? \Illuminate\Support\Carbon::parse($row['sent_at'])->format('d/m H:i') : '—' }}</td>
                             <td style="padding: .5rem; white-space: nowrap;">
                                 <x-filament::link :href="\App\Filament\Pages\Timesheet::getUrl(['employee' => $row['user']->id, 'date' => $monday->toDateString()])" icon="heroicon-m-pencil-square">{{ __('erp.timesheets.open') }}</x-filament::link>
-                                &nbsp;
-                                <x-filament::link :href="route('timesheets.pdf', ['user' => $row['user']->id, 'week' => $monday->toDateString()])" target="_blank" icon="heroicon-m-document-arrow-down">PDF</x-filament::link>
+                                @if (\App\Support\PdfAccess::canGenerate(auth()->user(), 'timesheets'))
+                                    &nbsp;
+                                    <x-filament::link :href="route('timesheets.pdf', ['user' => $row['user']->id, 'week' => $monday->toDateString()])" target="_blank" icon="heroicon-m-document-arrow-down">PDF</x-filament::link>
+                                @endif
                             </td>
                         </tr>
                     @empty

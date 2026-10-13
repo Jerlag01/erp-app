@@ -45,6 +45,14 @@ class HolidayResource extends Resource
         return __('erp.resources.holiday.plural');
     }
 
+    /**
+     * @return Builder<Holiday>
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->publicHolidays();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -54,7 +62,8 @@ class HolidayResource extends Resource
                     ->native(false)
                     ->displayFormat('d/m/Y')
                     ->required()
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    ->validationMessages(['unique' => __('erp.holidays.date_taken')]),
                 TextInput::make('name')
                     ->label(__('erp.fields.name'))
                     ->required()
