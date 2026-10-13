@@ -1,7 +1,7 @@
 {{-- The prestation overview of a month, two months or a year as PDF (A4 landscape, one month per page). --}}
 @php
     $dec = fn (float $value) => \App\Support\TimesheetReport::number($value);
-    $legend = ['V' => 'Verlof', 'Z' => 'Ziekte', 'IR' => 'Recuperatie overuren', 'FV' => 'Familiaal verlof', 'OP' => 'Opleiding', 'F' => 'Feestdag'];
+    $legend = ['V' => 'Verlof', 'Z' => 'Ziekte', 'R' => 'Recuperatie overuren', 'IR' => 'Inhaalrust', 'FV' => 'Familiaal verlof', 'OP' => 'Opleiding', 'F' => 'Feestdag'];
 @endphp
 <!doctype html>
 <html lang="nl">

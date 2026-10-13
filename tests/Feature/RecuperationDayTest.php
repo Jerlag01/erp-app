@@ -80,6 +80,7 @@ class RecuperationDayTest extends TestCase
         $status = app(Timesheets::class)->statuses($employee, $monday, $monday->addDays(4))['2026-11-02'];
         $this->assertSame(['recuperation', 'Inhaalrust', 8.0, true], [$status['type'], $status['note'], $status['credit'], $status['lunch_locked']]);
         $this->assertSame('IR', TimesheetReport::CODES[$status['type']]);
+        $this->assertSame('R', TimesheetReport::CODES['overtime'], 'Overtime taken as time off is R.');
     }
 
     #[Test]

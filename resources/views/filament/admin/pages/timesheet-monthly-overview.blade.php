@@ -25,7 +25,7 @@
     @endforeach
 
     <p style="font-size: .75rem; opacity: .75;">
-        <strong>V</strong> Verlof · <strong>Z</strong> Ziekte · <strong>IR</strong> Recuperatie overuren · <strong>FV</strong> Familiaal verlof · <strong>OP</strong> Opleiding · <strong>F</strong> Feestdag —
+        <strong>V</strong> Verlof · <strong>Z</strong> Ziekte · <strong>R</strong> Recuperatie overuren · <strong>IR</strong> Inhaalrust · <strong>FV</strong> Familiaal verlof · <strong>OP</strong> Opleiding · <strong>F</strong> Feestdag —
         {{ __('erp.timesheets.report_mobility', ['rate' => number_format($rate, 4, ',', '')]) }}
     </p>
 </x-filament-panels::page>

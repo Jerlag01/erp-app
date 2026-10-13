@@ -329,7 +329,7 @@ class TimesheetTest extends TestCase
         $this->assertTrue($row['days'][3]['weekend']);
         $this->assertSame(85, $row['km']);
         $this->assertSame(16.4, $row['mobility'], '85 km × € 0,1929');
-        $this->assertSame(['V' => 2.0, 'IR' => 0.0, 'Z' => 1.0, 'OP' => 0.0], $row['year']);
+        $this->assertSame(['V' => 2.0, 'R' => 0.0, 'IR' => 0.0, 'Z' => 1.0, 'OP' => 0.0], $row['year']);
         $this->assertSame(8.0, $row['hours']);
         $this->assertSame(32.0, $row['total']);
 
