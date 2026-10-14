@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\Tables;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Support\ProjectProgress;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -12,6 +13,7 @@ use Filament\Actions\ViewAction;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +23,7 @@ class ProjectsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers'])->withCount('steps'))
             ->defaultSort('created_at', 'desc')
             ->searchPlaceholder(__('erp.projects.search'))
             ->columns([
@@ -48,6 +50,16 @@ class ProjectsTable
                     ->label(__('erp.fields.status'))
                     ->badge()
                     ->sortable(),
+                // Progress bar of the 610–650 projects; only on the tabs where such projects can be.
+                ViewColumn::make('progress')
+                    ->label(__('erp.project_progress.title'))
+                    ->view('filament.projects.progress-column')
+                    ->state(fn (Project $record): ?array => ProjectProgress::appliesTo($record) ? [
+                        'done' => (int) $record->steps_count,
+                        'total' => count(ProjectProgress::STEPS),
+                    ] : null)
+                    ->visible(fn ($livewire): bool => ! property_exists($livewire, 'activeTab') || in_array($livewire->activeTab, [null, '', 'all', 'archived', ...ProjectProgress::CATEGORIES], true))
+                    ->toggleable(),
                 TextColumn::make('poNumbers.number')
                     ->label(__('erp.projects.po_numbers'))
                     ->fontFamily(FontFamily::Mono)

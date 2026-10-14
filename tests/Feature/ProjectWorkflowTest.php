@@ -197,4 +197,22 @@ class ProjectWorkflowTest extends TestCase
         $this->get('/admin/employees')->assertOk()->assertSee(__('erp.employees.interim'));
         $this->get("/admin/employees/{$employee->id}")->assertOk()->assertSee('Randstad');
     }
+
+    #[Test]
+    public function the_project_list_shows_the_progress_of_610_to_650_projects(): void
+    {
+        $this->actingAs($this->employee());
+        $proximus = $this->project('620');
+        $proximus->poNumbers()->create(['number' => 'PO-620']);
+        $other = $this->project('607');
+
+        Livewire::test(ListProjects::class)
+            ->assertTableColumnVisible('progress')
+            ->assertTableColumnStateSet('progress', ['done' => 1, 'total' => 14], $proximus)
+            ->assertTableColumnStateSet('progress', null, $other)
+            ->assertSee('1/14');
+
+        Livewire::test(ListProjects::class)->set('activeTab', '620')->assertTableColumnVisible('progress');
+        Livewire::test(ListProjects::class)->set('activeTab', '607')->assertTableColumnHidden('progress');
+    }
 }
