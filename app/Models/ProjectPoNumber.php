@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ProjectProgress;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,5 +32,13 @@ class ProjectPoNumber extends Model
     public function invoices(): BelongsToMany
     {
         return $this->belongsToMany(Invoice::class, 'invoice_po_numbers')->withTimestamps();
+    }
+
+    /**
+     * A PO number or an offer can complete steps of the progress bar.
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (self $record) => $record->project && ProjectProgress::sync($record->project));
     }
 }

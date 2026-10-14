@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FinanceOverview;
 use App\Filament\Pages\FinanceStatistics;
 use App\Filament\Pages\Planning;
@@ -10,13 +11,13 @@ use App\Filament\Pages\TimesheetOverview;
 use App\Filament\Pages\VacationCalendar;
 use App\Filament\Pages\WasteTotalsOverview;
 use App\Filament\Widgets\ControlsDue;
+use App\Filament\Widgets\DashboardCountersWidget;
 use App\Filament\Widgets\ErpStats;
 use App\Filament\Widgets\InspectionsDue;
 use App\Filament\Widgets\ItOverview;
 use App\Filament\Widgets\LowStock;
 use App\Filament\Widgets\OpenDamages;
 use App\Providers\Filament\Concerns\ConfiguresErpPanel;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 
@@ -44,6 +45,7 @@ class AdminPanelProvider extends PanelProvider
                 TimesheetOverview::class,
             ])
             ->widgets([
+                DashboardCountersWidget::class,
                 ErpStats::class,
                 ControlsDue::class,
                 InspectionsDue::class,

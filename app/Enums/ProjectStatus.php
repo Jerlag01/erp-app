@@ -26,6 +26,11 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
 
     case Invoiced = 'invoiced';
 
+    /**
+     * Finished for good: the project is archived with a ZIP of all its files.
+     */
+    case Closed = 'closed';
+
     public function getLabel(): string
     {
         return __('erp.enums.project_status.'.$this->value);
@@ -57,6 +62,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
             self::Executed => 'success',
             self::InvoicingToDo => 'danger',
             self::Invoiced => 'success',
+            self::Closed => 'gray',
         };
     }
 
@@ -70,6 +76,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
             self::Executed => Heroicon::OutlinedCheckCircle,
             self::InvoicingToDo => Heroicon::OutlinedCurrencyEuro,
             self::Invoiced => Heroicon::OutlinedBanknotes,
+            self::Closed => Heroicon::OutlinedArchiveBox,
         };
     }
 }

@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id',
     'private_email', 'private_phone', 'national_number', 'bank_account',
     'place_of_birth', 'date_of_birth', 'employment_date', 'mother_tongue',
-    'employment_category', 'contract_term', 'education_level',
+    'employment_category', 'contract_term', 'is_mentor', 'is_interim', 'interim_agency', 'education_level',
     'size_pants', 'size_shirt', 'size_sweater', 'size_shoes',
     'emergency1_first_name', 'emergency1_last_name', 'emergency1_phone', 'emergency1_relation',
     'emergency2_first_name', 'emergency2_last_name', 'emergency2_phone', 'emergency2_relation',
@@ -276,6 +276,8 @@ class Employee extends Model
             'employment_category' => EmploymentCategory::class,
             'contract_term' => ContractTerm::class,
             'education_level' => EducationLevel::class,
+            'is_mentor' => 'boolean',
+            'is_interim' => 'boolean',
         ];
     }
 }

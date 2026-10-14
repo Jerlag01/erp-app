@@ -8,6 +8,7 @@ use App\Filament\Resources\Interventions\InterventionResource;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\ProjectCategory;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Icons\Heroicon;
@@ -19,14 +20,29 @@ class ListInterventions extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        $category = ProjectCategory::query()->where('numbering', ProjectNumbering::Intervention->value)->where('is_active', true)->orderBy('code')->first();
+        // 600 (interventions) and 608.1 (interventions on charging stations) follow the same workflow.
+        $categories = ProjectCategory::query()->where('numbering', ProjectNumbering::Intervention->value)->where('is_active', true)->orderBy('code')->get();
+
+        if ($categories->count() <= 1) {
+            $category = $categories->first();
+
+            return [
+                Action::make('create')
+                    ->label(__('erp.interventions.new'))
+                    ->icon(Heroicon::OutlinedPlus)
+                    ->url($category ? ProjectResource::getUrl('create', ['category' => $category->id]) : null)
+                    ->visible(fn (): bool => $category !== null && InterventionResource::canCreate()),
+            ];
+        }
 
         return [
-            Action::make('create')
+            ActionGroup::make($categories->map(fn (ProjectCategory $category): Action => Action::make('create_'.$category->id)
+                ->label($category->label())
+                ->url(ProjectResource::getUrl('create', ['category' => $category->id])))->all())
                 ->label(__('erp.interventions.new'))
                 ->icon(Heroicon::OutlinedPlus)
-                ->url($category ? ProjectResource::getUrl('create', ['category' => $category->id]) : null)
-                ->visible(fn (): bool => $category !== null && InterventionResource::canCreate()),
+                ->button()
+                ->visible(fn (): bool => InterventionResource::canCreate()),
         ];
     }
 

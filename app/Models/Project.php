@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Actions\Projects\CloseProject;
+use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
+use App\Support\ProjectProgress;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,7 +26,7 @@ use Illuminate\Support\Facades\DB;
     'project_category_id', 'number', 'work_order_number', 'work_site_id', 'short_description', 'status',
     'intervention_subcategory_id', 'intervention_phase', 'intervention_tags',
     'client_name', 'client_company', 'client_email', 'client_phone',
-    'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by',
+    'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by', 'source_project_id',
 ])]
 class Project extends Model
 {
@@ -197,6 +200,31 @@ class Project extends Model
     /**
      * A project in an intervention category (600), whether or not the interventions module is on.
      */
+    /**
+     * Ticked steps of the progress bar (610–650 projects).
+     *
+     * @return HasMany<ProjectStep, $this>
+     */
+    public function steps(): HasMany
+    {
+        return $this->hasMany(ProjectStep::class);
+    }
+
+    /**
+     * The project this one was copied from, or the 604 project a 605 follows up.
+     *
+     * @return BelongsTo<Project, $this>
+     */
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'source_project_id');
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
     public function isIntervention(): bool
     {
         return (bool) $this->category?->numbering->isIntervention();
@@ -334,6 +362,28 @@ class Project extends Model
 
             $project->reference = $project->buildReference();
         });
+
+        static::created(function (self $project): void {
+            ProjectProgress::sync($project);
+            app(CreateFollowUpProject::class)->handle($project);
+        });
+
+        // Status changes: closing (and "invoiced" on 610–650 projects) archives the project; an executed
+        // 604 in Flanders or Brussels gets its 605.
+        static::updated(function (self $project): void {
+            if (! $project->wasChanged('status')) {
+                return;
+            }
+
+            if ($project->status === ProjectStatus::Closed || ($project->status === ProjectStatus::Invoiced && ProjectProgress::appliesTo($project))) {
+                app(CloseProject::class)->handle($project);
+
+                return;
+            }
+
+            ProjectProgress::sync($project);
+            app(CreateFollowUpProject::class)->handle($project);
+        });
     }
 
     /**
@@ -345,6 +395,7 @@ class Project extends Model
             'number' => 'integer',
             'status' => ProjectStatus::class,
             'intervention_tags' => 'array',
+            'archived_at' => 'datetime',
         ];
     }
 }

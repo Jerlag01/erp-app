@@ -62,7 +62,7 @@ class Permissions
         'it_master_data' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete']],
         'work_sites' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete', 'change_type', 'remarks']],
         'work_site_master_data' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf']],
+        'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf', 'copy']],
         'project_finance' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'manage']],
         'knowledge_base' => ['module' => Modules::KNOWLEDGE_BASE, 'abilities' => ['create', 'update', 'delete', 'download_pdf']],
         'waste' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],

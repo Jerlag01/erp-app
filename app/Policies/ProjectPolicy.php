@@ -32,24 +32,48 @@ class ProjectPolicy extends AreaPolicy
         return ($this->allows($user, 'view') && $project->isVisibleTo($user)) || $project->isPlannedFor($user);
     }
 
+    /**
+     * Archived (closed) projects are read-only, except for administrators.
+     */
+    protected function editable(User $user, Model $project): bool
+    {
+        return ! $project->isArchived() || $user->isAdmin();
+    }
+
     public function update(User $user, Model $project): bool
     {
-        return $this->view($user, $project) && ($this->allows($user, 'update') || $project->isLedBy($user));
+        return $this->view($user, $project) && $this->editable($user, $project) && ($this->allows($user, 'update') || $project->isLedBy($user));
     }
 
     public function delete(User $user, Model $project): bool
     {
-        return $this->view($user, $project) && $this->allows($user, 'delete');
+        return $this->view($user, $project) && $this->editable($user, $project) && $this->allows($user, 'delete');
     }
 
     public function manageFiles(User $user, Project $project): bool
     {
-        return $this->view($user, $project) && ($this->allows($user, 'files') || $project->isLedBy($user));
+        return $this->view($user, $project) && $this->editable($user, $project) && ($this->allows($user, 'files') || $project->isLedBy($user));
     }
 
     public function manageParts(User $user, Project $project): bool
     {
-        return $this->view($user, $project) && ($this->allows($user, 'parts') || $project->isLedBy($user));
+        return $this->view($user, $project) && $this->editable($user, $project) && ($this->allows($user, 'parts') || $project->isLedBy($user));
+    }
+
+    /**
+     * Start a new project from this one (also from an archived one): "projects.copy".
+     */
+    public function copy(User $user, Project $project): bool
+    {
+        return $this->view($user, $project) && $this->allows($user, 'copy') && $this->allows($user, 'create');
+    }
+
+    /**
+     * The ZIP of a closed project.
+     */
+    public function downloadArchive(User $user, Project $project): bool
+    {
+        return $project->isArchived() && filled($project->archive_path) && $this->view($user, $project) && $user->hasPermission('projects.download_pdf');
     }
 
     public function viewFinance(User $user, Project $project): bool

@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Employees\Schemas;
 
 use App\Models\Employee;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -79,6 +80,15 @@ class EmployeeInfolist
                                 TextEntry::make('contract_term')
                                     ->label(__('erp.employees.contract_term'))
                                     ->placeholder('—'),
+                                TextEntry::make('interim')
+                                    ->label(__('erp.employees.interim'))
+                                    ->state(fn (Employee $record): ?string => $record->is_interim ? trim(__('erp.employees.interim').($record->interim_agency ? ' · '.$record->interim_agency : '')) : null)
+                                    ->badge()
+                                    ->color('warning')
+                                    ->visible(fn (Employee $record): bool => $record->is_interim),
+                                IconEntry::make('is_mentor')
+                                    ->label(__('erp.employees.is_mentor'))
+                                    ->boolean(),
                                 TextEntry::make('user.email')
                                     ->label(__('erp.employees.login_email'))
                                     ->helperText(fn (Employee $record): ?string => match (true) {

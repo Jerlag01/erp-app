@@ -53,6 +53,8 @@ trait ConfiguresErpPanel
             ->maxContentWidth('full')
             ->navigationGroups(NavigationGroup::navigationGroups())
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
+            // The language switch, next to the user menu.
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.language-switch'))
             ->userMenuItems([
                 Action::make('employeePanel')
                     ->label(fn (): string => __('erp.panels.app'))

@@ -35,6 +35,22 @@ enum CertificateType: string implements HasLabel
 
     case FirstAid = 'first_aid';
 
+    case FirstAidFire = 'first_aid_fire';
+
+    case Nuclear = 'nuclear';
+
+    case Proximus = 'proximus';
+
+    case ChargingStations = 'charging_stations';
+
+    case ScissorLift = 'scissor_lift';
+
+    case Ladders = 'ladders';
+
+    case LoaderCrane = 'loader_crane';
+
+    case DriverCode95 = 'driver_code_95';
+
     case SchoolDegree = 'school_degree';
 
     /**

@@ -64,8 +64,8 @@ class ProjectCategoryResource extends Resource
                     ->helperText(fn (?ProjectCategory $record): ?string => $locked($record) ? __('erp.projects.category_locked') : null)
                     ->placeholder('609')
                     ->required()
-                    ->regex('/^\d{3,6}$/')
-                    ->maxLength(6)
+                    ->regex('/^\d{3,6}(\.\d{1,2})?$/')
+                    ->maxLength(10)
                     ->unique(ignoreRecord: true)
                     ->disabled($locked)
                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono); font-weight: 700;']),

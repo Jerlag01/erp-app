@@ -341,6 +341,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             'is_active' => 'boolean',
             'vacation_days' => 'decimal:1',
             'permissions' => 'array',
+            'dashboard' => 'array',
         ];
     }
 }

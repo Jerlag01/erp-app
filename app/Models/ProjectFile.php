@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProjectFileSection;
 use App\Support\PdfAccess;
+use App\Support\ProjectProgress;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -106,6 +107,7 @@ class ProjectFile extends Model
 
     protected static function booted(): void
     {
+        static::created(fn (self $record) => $record->project && ProjectProgress::sync($record->project));
         static::deleting(function (self $file): void {
             Storage::disk(self::DISK)->delete($file->versions()->pluck('path')->all());
         });

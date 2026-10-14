@@ -11,7 +11,9 @@ use App\Http\Controllers\InterventionPdfController;
 use App\Http\Controllers\ItAssetLabelController;
 use App\Http\Controllers\ItAssetQrController;
 use App\Http\Controllers\KbDownloadController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PeppolInboundController;
+use App\Http\Controllers\ProjectArchiveController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\RouterVpnController;
 use App\Http\Controllers\StockLabelController;
@@ -31,6 +33,8 @@ Route::get('/q/{item}', StockQrController::class)->name('stock.qr');
 Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
 
 Route::middleware('auth')->group(function (): void {
+    Route::post('/locale', LocaleController::class)->name('locale.update');
+    Route::get('/projects/{project}/archive', ProjectArchiveController::class)->whereNumber('project')->name('projects.archive');
     Route::get('/stock/labels', StockLabelController::class)->name('stock.labels');
     Route::get('/it-labels', ItAssetLabelController::class)->name('it.labels');
     Route::get('/incidents/{incident}/photos/{index}', IncidentPhotoController::class)->whereNumber('index')->name('incidents.photo');

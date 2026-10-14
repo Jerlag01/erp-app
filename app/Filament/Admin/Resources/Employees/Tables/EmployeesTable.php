@@ -10,6 +10,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -34,6 +35,13 @@ class EmployeesTable
                     ->description(fn (Employee $record): ?string => $record->user?->email)
                     ->searchable(['first_name', 'last_name', 'private_email'])
                     ->sortable(['last_name', 'first_name']),
+                TextColumn::make('is_interim')
+                    ->label(__('erp.employees.interim'))
+                    ->state(fn (Employee $record): ?string => $record->is_interim ? __('erp.employees.interim') : null)
+                    ->tooltip(fn (Employee $record): ?string => $record->interim_agency)
+                    ->badge()
+                    ->color('warning')
+                    ->placeholder(''),
                 TextColumn::make('employment_category')
                     ->label(__('erp.employees.employment_category'))
                     ->badge()
@@ -63,6 +71,8 @@ class EmployeesTable
                     ->color(fn (Employee $record): string => $record->isEmployed() ? 'success' : 'gray'),
             ])
             ->filters([
+                TernaryFilter::make('is_interim')
+                    ->label(__('erp.employees.interim')),
                 SelectFilter::make('employment_category')
                     ->label(__('erp.employees.employment_category'))
                     ->options(EmploymentCategory::class),

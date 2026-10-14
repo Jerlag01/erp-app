@@ -187,6 +187,20 @@ class EmployeeForm
                 ->label(__('erp.employees.contract_term'))
                 ->options(ContractTerm::class)
                 ->required(),
+            Toggle::make('is_interim')
+                ->label(__('erp.employees.is_interim'))
+                ->helperText(__('erp.employees.is_interim_help'))
+                ->live()
+                ->inline(false),
+            TextInput::make('interim_agency')
+                ->label(__('erp.employees.interim_agency'))
+                ->placeholder('Randstad, Adecco, Start People…')
+                ->maxLength(150)
+                ->visible(fn (Get $get): bool => (bool) $get('is_interim')),
+            Toggle::make('is_mentor')
+                ->label(__('erp.employees.is_mentor'))
+                ->helperText(__('erp.employees.is_mentor_help'))
+                ->inline(false),
             TextInput::make('job_title')
                 ->label(__('erp.fields.job_title'))
                 ->maxLength(100)

@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Projects\Schemas;
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Project;
 use App\Support\Interventions;
+use App\Support\ProjectProgress;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -23,6 +25,34 @@ class ProjectInfolist
 
         return $schema
             ->components([
+                // The progress bar of the 610–650 projects.
+                Section::make(__('erp.project_progress.title'))
+                    ->icon(Heroicon::OutlinedListBullet)
+                    ->compact()
+                    ->columnSpanFull()
+                    ->description(fn (Project $record): string => __('erp.project_progress.done', ['percentage' => ProjectProgress::percentage($record)]))
+                    ->visible(fn (Project $record): bool => ProjectProgress::appliesTo($record))
+                    ->schema([
+                        ViewEntry::make('progress')
+                            ->hiddenLabel()
+                            ->view('filament.projects.progress')
+                            ->state(fn (Project $record): array => [
+                                'steps' => ProjectProgress::steps($record),
+                                'percentage' => ProjectProgress::percentage($record),
+                                'editable' => Gate::allows('update', $record),
+                            ]),
+                    ]),
+                Section::make()
+                    ->columnSpanFull()
+                    ->compact()
+                    ->visible(fn (Project $record): bool => $record->isArchived())
+                    ->schema([
+                        TextEntry::make('archived_at')
+                            ->hiddenLabel()
+                            ->icon(Heroicon::OutlinedArchiveBox)
+                            ->color('gray')
+                            ->formatStateUsing(fn (Project $record): string => __('erp.projects.archive.archived_on', ['date' => $record->archived_at->format('d/m/Y H:i')])),
+                    ]),
                 Grid::make(['default' => 1, 'lg' => 3])
                     ->columnSpanFull()
                     ->schema([
