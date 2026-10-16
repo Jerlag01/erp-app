@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MobileKeyRevokeReason;
 use App\Enums\VacationStatus;
 use App\Support\Permissions;
 use Database\Factories\UserFactory;
@@ -207,6 +208,16 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
+     * Keys of the mobile app, one per device the user signed in on.
+     *
+     * @return HasMany<MobileKey, $this>
+     */
+    public function mobileKeys(): HasMany
+    {
+        return $this->hasMany(MobileKey::class);
+    }
+
+    /**
      * Whether visible records must be limited to the user's own teams.
      * Administrators see everything; without the teams module there is nothing to limit by.
      */
@@ -325,6 +336,13 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         static::saving(function (self $user): void {
             if ($user->isDirty('permissions')) {
                 $user->permissions = is_array($user->permissions) && $user->permissions !== [] ? Permissions::sanitizeOverrides($user->permissions) : null;
+            }
+        });
+
+        // A login that is switched off (e.g. the employee left) loses its mobile app keys right away.
+        static::saved(function (self $user): void {
+            if ($user->wasChanged('is_active') && ! $user->is_active) {
+                MobileKey::revokeAllFor($user, MobileKeyRevokeReason::UserInactive);
             }
         });
     }
