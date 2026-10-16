@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\Timesheets\SaveTimesheetDay;
 use App\Actions\Timesheets\SendWeeklyTimesheets;
 use App\Enums\NavigationGroup;
 use App\Models\Project;
@@ -28,7 +29,6 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Url;
 use UnitEnum;
 
@@ -262,29 +262,7 @@ class Timesheet extends Page implements HasSchemas
         $day = $this->day();
         abort_if($day->isWeekend(), 422);
 
-        $rows = Timesheets::normaliseRows((array) ($state['rows'] ?? []));
-
-        // Imputation and description follow the chosen project.
-        foreach ($rows as $index => $row) {
-            if ($row['project_id'] && ($project = Project::query()->with(['category', 'workSite'])->find($row['project_id']))) {
-                $rows[$index]['imputation'] = Timesheets::imputation($project);
-                $rows[$index]['description'] ??= $project->workSite?->cow_code ?? $project->cow_code;
-            } else {
-                $rows[$index]['project_id'] = null;
-            }
-        }
-
-        TimesheetDay::query()->updateOrCreate(['user_id' => $user->id, 'date' => $day->toDateString()], [
-            'rows' => $rows,
-            'lunch_break' => ($this->status()['lunch_locked'] ?? false) || (bool) ($state['lunch_break'] ?? true),
-            'remarks' => $state['remarks'] ?? null,
-            'updated_by' => auth()->id(),
-        ]);
-
-        TimesheetWeek::query()->firstOrCreate(
-            ['user_id' => $user->id, 'week_start' => Timesheets::monday($day)->toDateString()],
-            ['plate_number' => app(Timesheets::class)->plateFor($user)],
-        );
+        app(SaveTimesheetDay::class)->handle($user, $day, $state, auth()->user());
 
         Notification::make()->title(__('erp.timesheets.saved'))->success()->send();
     }
@@ -296,14 +274,7 @@ class Timesheet extends Page implements HasSchemas
      */
     protected function plannedProjectOptions(): array
     {
-        if (! modules()->planning()) {
-            return [];
-        }
-
-        return Project::query()
-            ->whereHas('planningItems', fn (Builder $query) => $query->where('user_id', $this->employeeUser()->id)->whereDate('date', $this->day()->toDateString()))
-            ->with('category')
-            ->get()
+        return app(Timesheets::class)->plannedProjects($this->employeeUser(), $this->day())
             ->mapWithKeys(fn (Project $project): array => [$project->id => Timesheets::imputation($project).($project->subtitle() ? ' — '.$project->subtitle() : '')])
             ->all();
     }
@@ -313,15 +284,7 @@ class Timesheet extends Page implements HasSchemas
      */
     protected function projectSearch(string $search): array
     {
-        $term = '%'.addcslashes(trim($search), '%_\\').'%';
-
-        return Project::query()
-            ->visibleTo($this->employeeUser())
-            ->where(fn (Builder $query) => $query->where('reference', 'like', $term)->orWhere('short_description', 'like', $term)->orWhere('cow_code', 'like', $term)->orWhere('number', 'like', $term))
-            ->with('category')
-            ->orderByDesc('id')
-            ->limit(50)
-            ->get()
+        return app(Timesheets::class)->searchProjects($this->employeeUser(), $search)
             ->mapWithKeys(fn (Project $project): array => [$project->id => Timesheets::imputation($project).' · '.$project->reference.($project->subtitle() ? ' — '.$project->subtitle() : '')])
             ->all();
     }

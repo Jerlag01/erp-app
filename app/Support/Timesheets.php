@@ -17,6 +17,8 @@ use App\Models\Vehicle;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * The prestation sheet ("Prestatiefiche") rules, as in the Excel:
@@ -220,6 +222,50 @@ class Timesheets
         return $project->category
             ? $project->category->code.'-'.$project->category->numbering->formatNumber((int) $project->number)
             : (string) $project->reference;
+    }
+
+    /**
+     * Projects in the employee's planning that day (offered first for the imputation).
+     *
+     * @return Collection<int, Project>
+     */
+    public function plannedProjects(User $user, CarbonInterface $date): Collection
+    {
+        if (! modules()->planning()) {
+            return new Collection;
+        }
+
+        return Project::query()
+            ->whereHas('planningItems', fn (Builder $query) => $query->where('user_id', $user->id)->whereDate('date', $date->toDateString()))
+            ->with(['category', 'workSite'])
+            ->get();
+    }
+
+    /**
+     * Projects the employee can see, by reference, number, COW code or description.
+     *
+     * @return Collection<int, Project>
+     */
+    public function searchProjects(User $user, string $search, int $limit = 50): Collection
+    {
+        $term = '%'.addcslashes(trim($search), '%_\\').'%';
+
+        return Project::query()
+            ->visibleTo($user)
+            ->where(fn (Builder $query) => $query->where('reference', 'like', $term)->orWhere('short_description', 'like', $term)->orWhere('cow_code', 'like', $term)->orWhere('number', 'like', $term))
+            ->with(['category', 'workSite'])
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Whether the employee may book on a project: one they can see or that is in their planning.
+     */
+    public function mayBookOn(User $user, Project $project): bool
+    {
+        return Project::query()->visibleTo($user)->whereKey($project->id)->exists()
+            || (modules()->planning() && $project->planningItems()->where('user_id', $user->id)->exists());
     }
 
     /**

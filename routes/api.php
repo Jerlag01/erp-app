@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\MobileAuthController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\TimesheetController;
 use App\Http\Middleware\AuthenticateMobileKey;
 use Illuminate\Support\Facades\Route;
 
@@ -14,5 +15,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::middleware([AuthenticateMobileKey::class, 'throttle:120,1'])->group(function (): void {
         Route::post('/auth/logout', [MobileAuthController::class, 'logout'])->name('auth.logout');
         Route::get('/me', ProfileController::class)->name('me');
+
+        // The employee's own prestation sheet.
+        Route::get('/timesheet/week', [TimesheetController::class, 'week'])->name('timesheet.week');
+        Route::get('/timesheet/projects', [TimesheetController::class, 'projects'])->name('timesheet.projects');
+        Route::get('/timesheet/days/{date}', [TimesheetController::class, 'show'])->where('date', '\d{4}-\d{2}-\d{2}')->name('timesheet.day');
+        Route::put('/timesheet/days/{date}', [TimesheetController::class, 'update'])->where('date', '\d{4}-\d{2}-\d{2}')->name('timesheet.save');
     });
 });

@@ -2714,6 +2714,11 @@ return [
         'revoked' => 'Accès révoqué',
         'logged_out' => 'Déconnecté.',
         'errors' => [
+            'module_off' => 'Les prestations ne sont pas activées dans l\'ERP.',
+            'week_locked' => 'Cette semaine a été envoyée et ne peut plus être modifiée.',
+            'km_order' => 'Les km à l\'arrivée ne peuvent pas être inférieurs à ceux du départ.',
+            'time_order' => 'L\'heure de départ ne peut pas précéder l\'heure d\'arrivée.',
+            'project' => 'Vous ne pouvez pas encoder de prestations sur ce projet.',
             'invalid_credentials' => 'Ces identifiants ne correspondent pas à nos enregistrements.',
             'account_inactive' => 'Votre compte n\'est plus actif.',
             'key_invalid' => 'Veuillez vous connecter.',

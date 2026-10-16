@@ -2714,6 +2714,11 @@ return [
         'revoked' => 'Access revoked',
         'logged_out' => 'Signed out.',
         'errors' => [
+            'module_off' => 'Prestations are not switched on in the ERP.',
+            'week_locked' => 'This week has been sent and can no longer be changed.',
+            'km_order' => 'The km on arrival cannot be lower than on departure.',
+            'time_order' => 'The departure time cannot be before the arrival time.',
+            'project' => 'You cannot book prestations on this project.',
             'invalid_credentials' => 'These credentials do not match our records.',
             'account_inactive' => 'Your login is no longer active.',
             'key_invalid' => 'Please sign in.',

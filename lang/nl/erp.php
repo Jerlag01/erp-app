@@ -2714,6 +2714,11 @@ return [
         'revoked' => 'Toegang ingetrokken',
         'logged_out' => 'Afgemeld.',
         'errors' => [
+            'module_off' => 'De prestaties staan niet aan in het ERP.',
+            'week_locked' => 'Deze week is al verzonden en kan niet meer gewijzigd worden.',
+            'km_order' => 'De km bij aankomst mag niet lager zijn dan bij vertrek.',
+            'time_order' => 'Het vertrekuur mag niet voor het aankomstuur liggen.',
+            'project' => 'Op dit project kan je geen prestaties boeken.',
             'invalid_credentials' => 'Deze gegevens komen niet overeen met onze gegevens.',
             'account_inactive' => 'Je login is niet meer actief.',
             'key_invalid' => 'Meld je aan.',
