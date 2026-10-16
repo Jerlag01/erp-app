@@ -38,10 +38,10 @@
             </td>
             <td>
                 Merk: {{ $dossier->brand }}<br>
-                Type: {{ $dossier->batteryModel?->name }}<br>
+                Type: {{ $dossier->typeName() }}<br>
                 Capaciteit: {{ $dossier->new_capacity_ah }} Ah<br>
                 Aantal batterijen: {{ $dossier->new_count }}<br>
-                Gestel: {{ $dossier->mounting?->getLabel() }} ({{ $dossier->rack()?->code }})<br>
+                Gestel: {{ $dossier->mounting?->getLabel() }}@if ($dossier->rack()?->code) ({{ $dossier->rack()->code }})@endif<br>
                 Aantal elementen per batterij: {{ $dossier->cells_per_battery }}<br>
                 Productiedatum batterij: {{ $dossier->production_date }}
             </td>
@@ -49,7 +49,7 @@
     </table>
 
     <table class="w check" style="margin-top: 8px;">
-        @foreach (\App\Support\BatteryInspection::sections() as $section => $questions)
+        @foreach ($dossier->inspectionSections() as $section => $questions)
             <tr class="section"><td>{{ $section }}</td><td class="yn">Ja</td><td class="yn">Nee</td></tr>
             @foreach ($questions as $key => $question)
                 <tr>

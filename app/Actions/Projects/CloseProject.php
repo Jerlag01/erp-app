@@ -5,6 +5,7 @@ namespace App\Actions\Projects;
 use App\Actions\Batteries\BatteryDocument;
 use App\Enums\ProjectStatus;
 use App\Models\BatteryDossier;
+use App\Models\EnersysDossier;
 use App\Models\InterventionReport;
 use App\Models\Project;
 use App\Models\ProjectFile;
@@ -69,8 +70,8 @@ class CloseProject
             $add('interventie/'.basename($report->pdf_path), (string) Storage::disk(InterventionReport::DISK)->get($report->pdf_path));
         }
 
-        BatteryDossier::query()->where('project_id', $project->id)->get()->each(function (BatteryDossier $dossier) use ($add): void {
-            foreach (array_keys(BatteryDocument::DOCUMENTS) as $document) {
+        collect([BatteryDossier::class, EnersysDossier::class])->flatMap(fn (string $model) => $model::query()->where('project_id', $project->id)->get())->each(function (BatteryDossier $dossier) use ($add): void {
+            foreach (array_keys($dossier::documents()) as $document) {
                 $add('batterijen/'.BatteryDocument::filename($dossier, $document), rescue(fn (): string => $this->batteryDocuments->render($dossier, $document), '', false));
             }
         });

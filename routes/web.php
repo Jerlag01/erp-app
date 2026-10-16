@@ -4,6 +4,7 @@ use App\Http\Controllers\AbsenceDocumentController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\EmployeeDocumentController;
+use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
 use App\Http\Controllers\IncidentPdfController;
 use App\Http\Controllers\IncidentPhotoController;
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/timesheet-pdf/{user}/{week}', TimesheetPdfController::class)->whereNumber('user')->where('week', '\d{4}-\d{2}-\d{2}')->name('timesheets.pdf');
     Route::get('/battery-deliveries-pdf', BatteryDeliveriesPdfController::class)->name('batteries.deliveries-pdf');
     Route::get('/battery-dossiers/{dossier}/documents/{document}', BatteryDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('batteries.document');
+    Route::get('/enersys-dossiers/{dossier}/documents/{document}', EnersysDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('enersys.document');
     Route::get('/interventions/{report}/pdf', InterventionPdfController::class)->whereNumber('report')->name('interventions.pdf');
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');

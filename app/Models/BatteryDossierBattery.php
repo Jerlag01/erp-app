@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One new battery (string) of a dossier: its ID number, the single-line diagram values and the
- * measured voltage (and, for OPzS, the acid density) per cell.
+ * measured voltage (and, for OPzS, the acid density) per cell. Enersys dossiers measure per block
+ * disconnected (cell_voltages) and floating (floating_voltages), with the float voltage of the battery.
  */
 #[Fillable([
     'battery_dossier_id', 'position', 'id_number', 'cable_type', 'cable_length_m', 'cables_positive', 'cables_negative',
-    'cable_section', 'fuse_amperage', 'fuse_type', 'cell_voltages', 'cell_densities',
+    'cable_section', 'fuse_amperage', 'fuse_type', 'cell_voltages', 'cell_densities', 'float_voltage', 'floating_voltages',
 ])]
 class BatteryDossierBattery extends Model
 {
@@ -56,6 +57,16 @@ class BatteryDossierBattery extends Model
     }
 
     /**
+     * Enersys: the sum of the block voltages while floating ("Totale batterijspanning" in vlotting).
+     */
+    public function floatingTotal(int $blocks): ?float
+    {
+        $values = array_filter(array_map(fn (mixed $value): ?float => is_numeric($value) ? (float) $value : null, array_slice(array_values((array) $this->floating_voltages), 0, max(1, $blocks))), fn (?float $value): bool => $value !== null);
+
+        return $values === [] ? null : round(array_sum($values), 3);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -67,6 +78,8 @@ class BatteryDossierBattery extends Model
             'cables_negative' => 'integer',
             'cell_voltages' => 'array',
             'cell_densities' => 'array',
+            'float_voltage' => 'decimal:2',
+            'floating_voltages' => 'array',
         ];
     }
 }

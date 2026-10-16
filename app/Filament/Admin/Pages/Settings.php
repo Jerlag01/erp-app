@@ -310,6 +310,7 @@ class Settings extends Page
             Modules::TIMESHEETS => Heroicon::OutlinedClock,
             Modules::CHARGING => Heroicon::OutlinedBolt,
             Modules::CABLE_STRIPPING => Heroicon::OutlinedScissors,
+            Modules::ENERSYS => Heroicon::OutlinedBattery50,
         ];
 
         return [
@@ -511,6 +512,20 @@ class Settings extends Page
                         ->placeholder(__('erp.settings.fields.battery_status_unchanged')),
                     TagsInput::make('batteries.contacts')->label(__('erp.settings.fields.battery_contacts')),
                     TagsInput::make('batteries.waste_types')->label(__('erp.settings.fields.battery_waste_types'))->columnSpanFull(),
+                ]),
+            // The Enersys dossiers (605) share the client, documents and shipping texts above.
+            Section::make(__('erp.settings.sections.enersys'))
+                ->description(__('erp.settings.help.enersys'))
+                ->columns(4)
+                ->schema([
+                    TextInput::make('batteries.enersys_project_category')
+                        ->label(__('erp.settings.fields.battery_enersys_project_category'))
+                        ->required()
+                        ->maxLength(10),
+                    $text('enersys_brand'),
+                    $lines('enersys_types', 4)->helperText(__('erp.settings.help.battery_enersys_types'))->columnSpan(2),
+                    $money('enersys_removal_price'), $money('enersys_placement_base'), $money('enersys_placement_per_battery'), $money('enersys_disposal_per_battery'),
+                    $money('enersys_leak_tray_price'),
                 ]),
             Section::make(__('erp.settings.sections.battery_prices'))
                 ->description(__('erp.settings.help.battery_prices'))

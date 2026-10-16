@@ -50,6 +50,22 @@ use Illuminate\Support\HtmlString;
  */
 class BatteryDossierForm
 {
+    /**
+     * The dossier class of the form: its permissions, documents and project category (EnersysDossierForm
+     * uses the same helpers for the Enersys dossiers).
+     *
+     * @var class-string<BatteryDossier>
+     */
+    protected static string $model = BatteryDossier::class;
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    protected static function inspectionSections(): array
+    {
+        return BatteryInspection::sections();
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -59,10 +75,10 @@ class BatteryDossierForm
                 ->tabs([
                     // The Input tab needs "batteries.input"; the others see an overview of the project instead.
                     Tab::make(__('erp.batteries.tabs.input'))->icon(Heroicon::OutlinedPencilSquare)
-                        ->visible(fn (): bool => Gate::allows('viewInput', BatteryDossier::class))
+                        ->visible(fn (): bool => Gate::allows('viewInput', static::$model))
                         ->schema(self::inputTab()),
                     Tab::make(__('erp.batteries.tabs.overview'))->icon(Heroicon::OutlinedInformationCircle)->visibleOn('edit')
-                        ->visible(fn (): bool => ! Gate::allows('viewInput', BatteryDossier::class))
+                        ->visible(fn (): bool => ! Gate::allows('viewInput', static::$model))
                         ->schema(self::overviewTab()),
                     Tab::make(__('erp.batteries.tabs.delivery'))->icon(Heroicon::OutlinedTruck)->visibleOn('edit')->schema(self::deliveryTab()),
                     Tab::make(__('erp.batteries.tabs.measurement'))->icon(Heroicon::OutlinedBolt)->visibleOn('edit')->schema(self::measurementTab()),
@@ -101,8 +117,8 @@ class BatteryDossierForm
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
                 ->tooltip(__('erp.batteries.save_first'))
-                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'batteries'))
-                ->url(fn (?BatteryDossier $record): ?string => $record ? route('batteries.document', [$record, $document]) : null, shouldOpenInNewTab: true),
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), static::$model::AREA))
+                ->url(fn (?BatteryDossier $record): ?string => $record ? route(static::$model::documentRoute(), [$record, $document]) : null, shouldOpenInNewTab: true),
         ]);
     }
 
@@ -192,7 +208,7 @@ class BatteryDossierForm
      */
     protected static function inputTab(): array
     {
-        $prices = fn (?BatteryDossier $record): bool => Gate::allows('viewPrices', $record ?? BatteryDossier::class);
+        $prices = fn (?BatteryDossier $record): bool => Gate::allows('viewPrices', $record ?? static::$model);
 
         return [
             Section::make(__('erp.batteries.sections.dossier'))
@@ -200,7 +216,7 @@ class BatteryDossierForm
                 ->schema([
                     Select::make('project_id')
                         ->label(__('erp.batteries.project'))
-                        ->helperText(__('erp.batteries.project_help', ['category' => settings()->get('batteries.project_category')]))
+                        ->helperText(__('erp.batteries.project_help', ['category' => settings()->get(static::$model::CATEGORY_SETTING)]))
                         ->options(fn (?BatteryDossier $record): array => self::projectOptions($record))
                         ->searchable()
                         ->required()
@@ -344,7 +360,7 @@ class BatteryDossierForm
                         TextInput::make('fuse_type')->label(__('erp.batteries.fields.fuse_type'))->placeholder('gG')->maxLength(30),
                     ]),
                 Section::make(__('erp.batteries.sections.material_prices'))
-                    ->visible(fn (?BatteryDossier $record): bool => Gate::allows('viewPrices', $record ?? BatteryDossier::class))
+                    ->visible(fn (?BatteryDossier $record): bool => Gate::allows('viewPrices', $record ?? static::$model))
                     ->columns(4)
                     ->schema(array_map(fn (string $field): TextInput => TextInput::make($field)->label(__("erp.batteries.fields.{$field}"))->numeric()->minValue(0)->step('any')->prefix('€'),
                         ['fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price'])),
@@ -402,7 +418,7 @@ class BatteryDossierForm
     {
         $sections = [];
 
-        foreach (BatteryInspection::sections() as $title => $questions) {
+        foreach (static::inspectionSections() as $title => $questions) {
             $sections[] = Section::make($title)
                 ->compact()
                 ->collapsible()
@@ -456,7 +472,7 @@ class BatteryDossierForm
                         ? $batteries($record->old_count, $record->old_capacity_ah, $record->old_technology, $record->old_room ? __('erp.batteries.room').' '.$record->old_room : null)
                         : ($record ? __('erp.batteries.overview.no_removal') : null)),
                     $entry('install', __('erp.batteries.overview.to_install'), fn (?BatteryDossier $record): ?string => $record
-                        ? $batteries($record->new_count, $record->new_capacity_ah, $record->new_technology, trim(implode(' ', array_filter([$record->brand, $record->batteryModel?->name]))) ?: null)
+                        ? $batteries($record->new_count, $record->new_capacity_ah, $record->new_technology, trim(implode(' ', array_filter([$record->brand, $record->typeName()]))) ?: null)
                         : null),
                     $entry('ids', __('erp.batteries.overview.id_numbers'), fn (?BatteryDossier $record): ?string => $record
                         ? ($record->batteries->filter(fn (BatteryDossierBattery $battery): bool => filled($battery->id_number))->map(fn (BatteryDossierBattery $battery): string => $battery->label().': '.$battery->id_number)->implode(' · ') ?: null)
@@ -581,7 +597,7 @@ class BatteryDossierForm
     {
         return Project::query()
             ->visibleTo(auth()->user())
-            ->whereHas('category', fn (Builder $query) => $query->where('code', settings()->get('batteries.project_category', '604')))
+            ->whereHas('category', fn (Builder $query) => $query->where('code', settings()->get(static::$model::CATEGORY_SETTING)))
             ->when($record, fn (Builder $query) => $query->orWhere('projects.id', $record->project_id))
             ->orderByDesc('id')
             ->limit(500)

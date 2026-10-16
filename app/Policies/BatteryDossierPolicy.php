@@ -17,14 +17,19 @@ class BatteryDossierPolicy extends AreaPolicy
         return 'batteries';
     }
 
+    protected function moduleOn(): bool
+    {
+        return modules()->batteries();
+    }
+
     public function viewAny(User $user): bool
     {
-        return modules()->batteries() && parent::viewAny($user);
+        return $this->moduleOn() && parent::viewAny($user);
     }
 
     public function view(User $user, Model $dossier): bool
     {
-        return modules()->batteries() && $this->allows($user, 'view') && $dossier->project->isVisibleTo($user);
+        return $this->moduleOn() && $this->allows($user, 'view') && $dossier->project->isVisibleTo($user);
     }
 
     /**
@@ -32,7 +37,7 @@ class BatteryDossierPolicy extends AreaPolicy
      */
     public function create(User $user): bool
     {
-        return modules()->batteries() && parent::create($user) && $this->allows($user, 'input');
+        return $this->moduleOn() && parent::create($user) && $this->allows($user, 'input');
     }
 
     /**
@@ -40,7 +45,7 @@ class BatteryDossierPolicy extends AreaPolicy
      */
     public function viewInput(User $user, ?BatteryDossier $dossier = null): bool
     {
-        return modules()->batteries() && $this->allows($user, 'input');
+        return $this->moduleOn() && $this->allows($user, 'input');
     }
 
     public function update(User $user, Model $dossier): bool
@@ -55,6 +60,6 @@ class BatteryDossierPolicy extends AreaPolicy
 
     public function viewPrices(User $user, ?BatteryDossier $dossier = null): bool
     {
-        return modules()->batteries() && $this->allows($user, 'prices');
+        return $this->moduleOn() && $this->allows($user, 'prices');
     }
 }

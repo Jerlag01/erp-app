@@ -107,4 +107,67 @@ class BatteryInspection
     {
         return array_keys(array_merge(...array_values(self::sections())));
     }
+
+    /**
+     * The visual inspection of the Excel "12V enersys" (12 V monoblocks in a cabinet): a shorter list,
+     * with the same keys where the question is the same.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public static function enersysSections(): array
+    {
+        return [
+            'Contole van de cellen of monobloks' => [
+                'cells_identical' => 'Zijn alle cellen identiek?',
+                'cells_same_date' => 'Zijn de cellen van dezelfde productiedatum',
+                'cells_labelled' => 'Zijn de cellen voorzien van een etiket?',
+                'label_manufacturer' => 'Etiket: Fabrikant',
+                'label_type' => 'Etiket: Type van de cel',
+                'label_capacity' => 'Etiket: Capaciteit van de cel',
+                'label_float_voltage' => 'Etiket: De vlotspanning van de cel',
+                'label_production_date' => 'Etiket: De fabricatie datum (maand en jaar)',
+                'cells_measurable' => 'Is het mogelijk om de individuele spanning van de cellen te meten?',
+            ],
+            'Controle van de batterij:' => [
+                'flexible_connectors' => 'Werden er soepele intercelverbinders gebruikt?',
+                'connectors_insulated' => 'Zijn de intercelverbindingen geïsoleerd (IP20)?',
+                'polarity_marked' => 'Is de pos en negatieve aansluiting gemarkeerd?',
+                'battery_numbered' => 'Heeft de batterij een nummer (1, 1A, 2,  …) gekregen',
+                'cells_numbered' => 'Heeft elke cel een nummer gekregen (start vanaf positief)',
+                'markings_readable' => 'Zijn alle markeringen goed leesbaar?',
+                'cleaned' => 'Zijn de cellen, intercelverbinders, … gereinigd?',
+            ],
+            'De opstelling:' => [
+                'stable' => 'Zijn de batterijen stabiel opgesteld?',
+                'rack_fits' => 'Is het gestel/kast (in afmetingen) aangepast aan de batterij?',
+                'cells_accessible' => 'Zijn alle cellen vlot toegankelijk?',
+            ],
+            'Enkel bij opstelling in kast:' => [
+                'doors_open' => 'Zijn de deuren van de kasten volledig te openen? (≥90°)',
+                'doors_direction' => 'Draaien ze open naar de goede kant (zie plan) ?',
+                'door_battery_number' => 'Markering op de deur: Nummer van de batterij',
+                'door_battery_symbol' => 'Markering op de deur: Symbool van een batterij',
+                'door_danger_triangle' => 'Markering op de deur: Elektrische gevarendriehoek',
+                'door_voltage' => 'Markering op de deur: Bedrijfsspanning',
+            ],
+            'Verwijdering oude batterijen' => [
+                'old_removed' => 'Werden er oude batterijen verwijderd?',
+                'old_cells_removed' => 'Zijn alle cellen verwijderd van het Proximus terrein?',
+                'old_parts_removed' => 'Zijn alle onderdelen verwijderd?',
+                'old_rack_removed' => 'Werd de oude stelling volledig verwijderd?',
+                'old_place_clean' => 'Is de oude opstellingsplaats opgekuist?',
+                'old_accessories_removed' => 'Zijn alle oude toebehoren verwijderd?',
+                'old_docs_removed' => 'Documentatie?',
+            ],
+            'Diversen:' => [
+                'damage' => 'Zijn er beschadigingen aangebracht? (deuren, gangen, trappen,…)',
+                'packaging_removed' => 'Is al het verpakkings en transport materiaal verwijderd?',
+                'room_cleaned' => 'Is het lokaal gereinigd?',
+                'available' => 'Is de batterij beschikbaar voor laden en ontladen',
+                'documentation_delivered' => 'Is de documentatie geleverd?',
+                'photos' => "Foto's voor en na de werken zijn genomen?",
+                'measurements_available' => 'Zijn de meetresulaten van de batterijen voor de eerste vlotting, ter beschikking?',
+            ],
+        ];
+    }
 }

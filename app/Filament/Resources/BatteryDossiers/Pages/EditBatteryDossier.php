@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\BatteryDossiers\Pages;
 
-use App\Actions\Batteries\BatteryDocument;
 use App\Filament\Forms\FloorPlanEditor;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Models\BatteryDossier;
@@ -68,23 +67,24 @@ class EditBatteryDossier extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        $documents = array_keys(BatteryDocument::DOCUMENTS);
+        $model = $this->record::class;
+        $documents = array_keys($model::documents());
 
         return [
             ActionGroup::make([
                 ...array_map(fn (string $document): Action => Action::make('pdf_'.$document)
                     ->label(__('erp.batteries.documents.'.$document))
                     ->icon(Heroicon::OutlinedDocumentText)
-                    ->visible(fn (): bool => $document !== 'invoice_request' || Gate::allows('viewPrices', $this->record))
-                    ->url(fn (): string => route('batteries.document', [$this->record, $document]), shouldOpenInNewTab: true), $documents),
+                    ->visible(fn (): bool => $document !== $model::PRICE_DOCUMENT || Gate::allows('viewPrices', $this->record))
+                    ->url(fn (): string => route($model::documentRoute(), [$this->record, $document]), shouldOpenInNewTab: true), $documents),
                 Action::make('pdf_all')
                     ->label(__('erp.batteries.documents.all'))
                     ->icon(Heroicon::OutlinedArchiveBoxArrowDown)
-                    ->url(fn (): string => route('batteries.document', [$this->record, 'all'])),
+                    ->url(fn (): string => route($model::documentRoute(), [$this->record, 'all'])),
             ])
                 ->label(__('erp.batteries.pdf'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
-                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'batteries'))
+                ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), $model::AREA))
                 ->button()
                 ->color('gray'),
             Action::make('finish')
@@ -117,11 +117,11 @@ class EditBatteryDossier extends EditRecord
                 ->label(__('erp.batteries.finish.reopen'))
                 ->icon(Heroicon::OutlinedLockOpen)
                 ->color('warning')
-                ->visible(fn (): bool => $this->record->isFinished() && auth()->user()?->hasPermission('batteries.edit_finished'))
+                ->visible(fn (): bool => $this->record->isFinished() && auth()->user()?->hasPermission($model::AREA.'.edit_finished'))
                 ->requiresConfirmation()
                 ->modalDescription(__('erp.batteries.finish.reopen_help'))
-                ->action(function (): void {
-                    abort_unless((bool) auth()->user()?->hasPermission('batteries.edit_finished'), 403);
+                ->action(function () use ($model): void {
+                    abort_unless((bool) auth()->user()?->hasPermission($model::AREA.'.edit_finished'), 403);
                     $this->record->reopen();
                     Notification::make()->title(__('erp.batteries.finish.reopened'))->success()->send();
                 }),
@@ -142,6 +142,9 @@ class EditBatteryDossier extends EditRecord
             'cable_length_m' => $battery->cable_length_m !== null ? (float) $battery->cable_length_m : null,
             'cell_voltages' => array_values((array) $battery->cell_voltages),
             'cell_densities' => array_values((array) $battery->cell_densities),
+            // Enersys: float voltage and the block voltages while floating.
+            'float_voltage' => $battery->float_voltage !== null ? (float) $battery->float_voltage : null,
+            'floating_voltages' => array_values((array) $battery->floating_voltages),
         ]])->all();
         // The PNG is made again by the editor when the drawing changes; it is not sent to the browser.
         $data['floor_plan_png'] = null;
@@ -162,13 +165,13 @@ class EditBatteryDossier extends EditRecord
         $this->strings = (array) ($data['strings'] ?? []);
 
         // Without "batteries.input" the Input tab is not shown, so whatever is sent for it is ignored.
-        if (! Gate::allows('viewInput', BatteryDossier::class)) {
-            $data = array_diff_key($data, array_flip(BatteryDossier::INPUT_FIELDS));
+        if (! Gate::allows('viewInput', $this->record::class)) {
+            $data = array_diff_key($data, array_flip($this->record::INPUT_FIELDS));
             $this->strings = array_map(fn (mixed $row): array => array_diff_key((array) $row, ['id_number' => true]), $this->strings);
         }
 
         // Signed documents are locked: whatever was sent for them is ignored (administrators excepted).
-        foreach (BatteryDossier::SIGNED_FIELDS as $document => $fields) {
+        foreach ($this->record::SIGNED_FIELDS as $document => $fields) {
             if ($this->record->isLockedFor($document, auth()->user())) {
                 $data = array_diff_key($data, array_flip($fields));
             }
@@ -211,6 +214,8 @@ class EditBatteryDossier extends EditRecord
                 ...($measurementLocked ? [] : [
                     'cell_voltages' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_voltages'] ?? []))[$index] ?? null), range(0, $cells - 1)),
                     'cell_densities' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_densities'] ?? []))[$index] ?? null), range(0, $cells - 1)),
+                    ...(array_key_exists('float_voltage', $row) ? ['float_voltage' => $number($row['float_voltage'])] : []),
+                    ...(array_key_exists('floating_voltages', $row) ? ['floating_voltages' => array_map(fn (int $index): ?float => $number(((array) $row['floating_voltages'])[$index] ?? null), range(0, $cells - 1))] : []),
                 ]),
                 'id_number' => filled($row['id_number'] ?? null) ? trim((string) $row['id_number']) : $battery->id_number,
                 'cable_type' => $row['cable_type'] ?? null,

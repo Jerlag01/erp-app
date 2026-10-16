@@ -52,7 +52,9 @@ class Modules
 
     public const CABLE_STRIPPING = 'cable_stripping';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING];
+    public const ENERSYS = 'enersys';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS];
 
     public function __construct(protected Settings $settings) {}
 
@@ -168,6 +170,14 @@ class Modules
     /**
      * Charging stations and 4G routers belong to the 608 projects, so both modules must be on.
      */
+    /**
+     * Enersys dossiers on 605 projects; they build on the projects.
+     */
+    public function enersys(): bool
+    {
+        return $this->enabled(self::ENERSYS) && $this->projects();
+    }
+
     public function cableStripping(): bool
     {
         return $this->enabled(self::CABLE_STRIPPING);

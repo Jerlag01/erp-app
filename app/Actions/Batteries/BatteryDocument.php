@@ -10,7 +10,8 @@ use ZipArchive;
 
 /**
  * The documents of a battery dossier as PDF, laid out like the Excel sheets. The delivery note,
- * measurement report and shipping note are printed on the letterhead background.
+ * measurement report and shipping note are printed on the letterhead background. Which documents a
+ * dossier has depends on its kind (BatteryDossier::documents(): BAE or Enersys).
  */
 class BatteryDocument
 {
@@ -31,7 +32,7 @@ class BatteryDocument
 
     public function render(BatteryDossier $dossier, string $document): string
     {
-        [$view, $background, $landscape] = self::DOCUMENTS[$document];
+        [$view, $background, $landscape] = $dossier::documents()[$document];
 
         $dossier->loadMissing(['project.workSite', 'project.category', 'batteryModel.racks', 'cable', 'batteries', 'signatures']);
 

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Actions\Batteries\BatteryDocument;
 use App\Enums\BatteryDeliveryMode;
 use App\Enums\BatteryInvoiceKind;
 use App\Enums\BatteryMounting;
 use App\Enums\BatteryTechnology;
 use App\Enums\ProjectStatus;
+use App\Support\BatteryInspection;
 use App\Support\BatteryTemplates;
 use Database\Factories\BatteryDossierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -33,7 +35,8 @@ use Illuminate\Support\Str;
     'fuse_count', 'fuse_amperage', 'fuse_type', 'tray_length_m', 'tray_type', 'picto_plates', 'doc_holders',
     'battery_total_price', 'hourly_rate', 'fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price',
     'invoice_kind', 'invoice_percentage', 'measured_on', 'average_temperature', 'inspection', 'inspection_remarks',
-    'floor_plan', 'floor_plan_png', 'photos', 'photos_remark', 'finished_at', 'finished_by', 'acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
+    'floor_plan', 'floor_plan_png', 'photos', 'photos_remark', 'finished_at', 'finished_by', 'acid_boxes',
+    'kind', 'battery_type', 'new_capacity_label', 'leak_trays', 'order_amounts', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
 ])]
 class BatteryDossier extends Model
 {
@@ -41,6 +44,29 @@ class BatteryDossier extends Model
     use HasFactory;
 
     public const DISK = 'local';
+
+    /**
+     * The kind of dossier this class holds ("bae" for the 604 projects, "enersys" for the 605 ones);
+     * every query of the class is limited to it.
+     */
+    public const KIND = 'bae';
+
+    /**
+     * The permission area and module of the dossiers.
+     */
+    public const AREA = 'batteries';
+
+    /**
+     * The setting with the project category of the dossiers.
+     */
+    public const CATEGORY_SETTING = 'batteries.project_category';
+
+    /**
+     * The document with prices (only with "{area}.prices").
+     */
+    public const PRICE_DOCUMENT = 'invoice_request';
+
+    protected $table = 'battery_dossiers';
 
     /**
      * Most photos of the completed works per dossier.
@@ -133,7 +159,7 @@ class BatteryDossier extends Model
      */
     public function isEditableBy(?User $user): bool
     {
-        return ! $this->isFinished() || (bool) $user?->hasPermission('batteries.edit_finished');
+        return ! $this->isFinished() || (bool) $user?->hasPermission(static::AREA.'.edit_finished');
     }
 
     /**
@@ -165,7 +191,7 @@ class BatteryDossier extends Model
      */
     public function signatures(): HasMany
     {
-        return $this->hasMany(BatteryDossierSignature::class);
+        return $this->hasMany(BatteryDossierSignature::class, 'battery_dossier_id');
     }
 
     public function signature(string $document): ?BatteryDossierSignature
@@ -191,7 +217,7 @@ class BatteryDossier extends Model
      */
     public function sign(string $document, string $name, string $dataUrl, User $by): BatteryDossierSignature
     {
-        abort_unless(array_key_exists($document, self::SIGNED_FIELDS), 404);
+        abort_unless(array_key_exists($document, static::SIGNED_FIELDS), 404);
 
         $png = str_starts_with($dataUrl, 'data:image/png;base64,') ? base64_decode(substr($dataUrl, strlen('data:image/png;base64,')), true) : false;
 
@@ -220,7 +246,7 @@ class BatteryDossier extends Model
      */
     public function batteries(): HasMany
     {
-        return $this->hasMany(BatteryDossierBattery::class)->orderBy('position');
+        return $this->hasMany(BatteryDossierBattery::class, 'battery_dossier_id')->orderBy('position');
     }
 
     /**
@@ -239,7 +265,7 @@ class BatteryDossier extends Model
      */
     public function syncBatteries(): void
     {
-        $count = max(1, min(self::MAX_BATTERIES, (int) $this->new_count));
+        $count = max(1, min(static::MAX_BATTERIES, (int) $this->new_count));
 
         $this->batteries()->where('position', '>', $count)->delete();
 
@@ -252,6 +278,39 @@ class BatteryDossier extends Model
         }
 
         $this->unsetRelation('batteries');
+    }
+
+    /**
+     * Document => [view, letterhead background, landscape].
+     *
+     * @return array<string, array{0: string, 1: bool, 2: bool}>
+     */
+    public static function documents(): array
+    {
+        return BatteryDocument::DOCUMENTS;
+    }
+
+    public static function documentRoute(): string
+    {
+        return 'batteries.document';
+    }
+
+    /**
+     * The questions of the visual inspection report.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function inspectionSections(): array
+    {
+        return BatteryInspection::sections();
+    }
+
+    /**
+     * The battery type as printed on the documents.
+     */
+    public function typeName(): ?string
+    {
+        return $this->batteryModel?->name;
     }
 
     public function reference(): string
@@ -434,6 +493,9 @@ class BatteryDossier extends Model
 
     protected static function booted(): void
     {
+        static::addGlobalScope('kind', fn (Builder $query) => $query->where('battery_dossiers.kind', static::KIND));
+        static::creating(fn (self $dossier) => $dossier->kind = static::KIND);
+
         static::saved(fn (self $dossier) => $dossier->wasChanged(['new_count', 'first_id_number']) || $dossier->wasRecentlyCreated ? $dossier->syncBatteries() : null);
 
         static::deleting(fn (self $dossier) => $dossier->signatures->each->delete());
@@ -477,6 +539,7 @@ class BatteryDossier extends Model
             'inspection' => 'array',
             'floor_plan' => 'array',
             'photos' => 'array',
+            'order_amounts' => 'array',
             'finished_at' => 'datetime',
             'battery_total_price' => 'decimal:2',
             'invoice_percentage' => 'decimal:2',

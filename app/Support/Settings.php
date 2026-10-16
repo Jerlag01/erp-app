@@ -57,6 +57,7 @@ class Settings
                 Modules::TIMESHEETS => true,
                 Modules::CHARGING => true,
                 Modules::CABLE_STRIPPING => true,
+                Modules::ENERSYS => true,
             ],
             'mail' => [
                 'mailer' => null,
@@ -132,6 +133,15 @@ class Settings
                 'background' => null,
                 'inspection_header' => null,
                 'project_category' => '604',
+                // Enersys dossiers (Excel "12V enersys") on 605 projects.
+                'enersys_project_category' => '605',
+                'enersys_brand' => 'Enersys',
+                'enersys_types' => "12V62FS | 62\n12V100FS | 100\n12V155FS | 155",
+                'enersys_removal_price' => 334,
+                'enersys_placement_base' => 338,
+                'enersys_placement_per_battery' => 4,
+                'enersys_disposal_per_battery' => 6,
+                'enersys_leak_tray_price' => 70,
                 // Status of the 604 project once its batteries are delivered ("ready to plan").
                 'delivered_project_status' => 'to_be_executed',
                 'client_name' => 'Proximus NV',

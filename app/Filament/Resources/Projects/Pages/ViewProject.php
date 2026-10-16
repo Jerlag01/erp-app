@@ -6,9 +6,11 @@ use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CopyProject;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
+use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\BatteryDossier;
+use App\Models\EnersysDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Support\Interventions;
@@ -142,6 +144,16 @@ class ViewProject extends ViewRecord
                 ->url(fn (Project $record): string => ($dossier = $this->batteryDossier($record))
                     ? BatteryDossierResource::getUrl('edit', ['record' => $dossier])
                     : BatteryDossierResource::getUrl('create', ['project' => $record->id])),
+            Action::make('enersysDossier')
+                ->label(__('erp.enersys.dossier_button'))
+                ->icon(Heroicon::OutlinedBattery50)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => modules()->enersys()
+                    && $record->category?->code === settings()->get(EnersysDossier::CATEGORY_SETTING)
+                    && (($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first()) ? Gate::allows('view', $dossier) : Gate::allows('create', EnersysDossier::class)))
+                ->url(fn (Project $record): string => ($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first())
+                    ? EnersysDossierResource::getUrl('edit', ['record' => $dossier])
+                    : EnersysDossierResource::getUrl('create', ['project' => $record->id])),
             Action::make('changeStatus')
                 ->label(__('erp.projects.change_status'))
                 ->icon(Heroicon::OutlinedArrowPath)
