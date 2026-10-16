@@ -149,4 +149,22 @@ class EmployeeSelfServiceTest extends TestCase
         $this->assertSame(RequestStatus::Rejected, EmployeeCertificateRequest::query()->where('type', 'school_degree')->sole()->status);
         $this->assertSame(2, $this->employee->user->notifications()->count());
     }
+
+    #[Test]
+    public function interim_employees_do_not_get_the_emergency_and_personal_number_fields(): void
+    {
+        $this->employee->update(['is_interim' => true, 'emergency1_first_name' => null, 'emergency1_last_name' => null, 'emergency1_phone' => null, 'emergency1_relation' => null]);
+        $this->asEmployee();
+
+        Livewire::test(MyDetails::class)
+            ->assertFormFieldHidden('national_number')
+            ->assertFormFieldHidden('bank_account')
+            ->assertFormFieldHidden('date_of_birth')
+            ->assertFormFieldHidden('emergency1_first_name')
+            ->fillForm(['city' => 'Lier'])
+            ->call('submit')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(['city' => 'Lier'], EmployeeChangeRequest::sole()->new_values);
+    }
 }

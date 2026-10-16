@@ -26,6 +26,15 @@ use Illuminate\Validation\Rule;
 
 class EmployeeForm
 {
+    /**
+     * Interim employees (through an interim agency) are not asked for their national number, bank account,
+     * date of birth and emergency contacts; the fields come back when "interim" is switched off.
+     */
+    public static function isInterim(Get $get): bool
+    {
+        return (bool) $get('is_interim');
+    }
+
     public const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL'];
 
     public static function configure(Schema $schema): Schema
@@ -46,6 +55,7 @@ class EmployeeForm
                             ->schema(self::employment()),
                         Tab::make(__('erp.employees.tabs.emergency'))
                             ->icon(Heroicon::OutlinedPhone)
+                            ->hidden(fn (Get $get): bool => self::isInterim($get))
                             ->schema([
                                 self::emergencyContact(1, required: true),
                                 self::emergencyContact(2, required: false),
@@ -133,6 +143,7 @@ class EmployeeForm
                     }
                 })
                 ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);'])
+                ->hidden(fn (Get $get): bool => self::isInterim($get))
                 ->columnSpan(2),
             TextInput::make('place_of_birth')
                 ->label(__('erp.employees.place_of_birth'))
@@ -143,6 +154,7 @@ class EmployeeForm
                 ->native(false)
                 ->displayFormat('d/m/Y')
                 ->maxDate(today())
+                ->hidden(fn (Get $get): bool => self::isInterim($get))
                 ->columnSpan(2),
             Select::make('mother_tongue')
                 ->label(__('erp.employees.mother_tongue'))
@@ -163,6 +175,7 @@ class EmployeeForm
                     }
                 })
                 ->extraInputAttributes(['style' => 'font-family: var(--erp-mono); text-transform: uppercase;'])
+                ->hidden(fn (Get $get): bool => self::isInterim($get))
                 ->columnSpan(2),
         ];
     }

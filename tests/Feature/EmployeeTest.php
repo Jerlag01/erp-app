@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\CertificateType;
 use App\Enums\MedicalResult;
 use App\Filament\Admin\Resources\Employees\Pages\CreateEmployee;
+use App\Filament\Admin\Resources\Employees\Pages\EditEmployee;
 use App\Filament\Admin\Resources\Employees\Pages\ViewEmployee;
 use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\MedicalChecksRelationManager;
@@ -16,6 +17,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Notifications\WelcomeEmployee;
 use Filament\Actions\Testing\TestAction;
+use Filament\Auth\Pages\PasswordReset\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -123,6 +125,59 @@ class EmployeeTest extends TestCase
         $this->get($link)->assertRedirect(Filament::getPanel('app')->getLoginUrl());
 
         $this->get(str_replace('signature=', 'signature=x', $link))->assertForbidden();
+    }
+
+    #[Test]
+    public function the_password_is_set_through_the_welcome_link_even_when_it_was_opened_before(): void
+    {
+        Filament::setCurrentPanel('app');
+        $user = User::factory()->inTeam()->create(['email' => 'Nieuw.Persoon+test@example.com']);
+        $link = WelcomeEmployee::linkFor($user);
+
+        // Opened twice (a second click, a second tab or a mail scanner): the first page still works.
+        $first = $this->get($link)->headers->get('Location');
+        $second = $this->get($link)->headers->get('Location');
+        $this->assertSame($first, $second);
+
+        parse_str((string) parse_url($first, PHP_URL_QUERY), $query);
+        Livewire::withQueryParams($query)->test(ResetPassword::class)
+            ->fillForm(['password' => 'Een-nieuw-wachtwoord-1', 'passwordConfirmation' => 'Een-nieuw-wachtwoord-1'])
+            ->call('resetPassword')
+            ->assertNotified(__('passwords.reset'));
+
+        $this->assertTrue(Hash::check('Een-nieuw-wachtwoord-1', $user->fresh()->password));
+        $this->get($link)->assertRedirect(Filament::getPanel('app')->getLoginUrl());
+    }
+
+    #[Test]
+    public function interim_employees_are_not_asked_for_personal_numbers_and_emergency_contacts(): void
+    {
+        Notification::fake();
+        $this->admin();
+        $data = $this->employeeData(['is_interim' => true, 'interim_agency' => 'Randstad', 'login_email' => 'interim@example.com']);
+        unset($data['national_number'], $data['bank_account'], $data['date_of_birth'], $data['emergency1_first_name'], $data['emergency1_last_name'], $data['emergency1_phone'], $data['emergency1_relation']);
+
+        Livewire::test(CreateEmployee::class)
+            ->fillForm($data)
+            ->assertFormFieldHidden('national_number')
+            ->assertFormFieldHidden('bank_account')
+            ->assertFormFieldHidden('date_of_birth')
+            ->assertFormFieldHidden('emergency1_first_name')
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $employee = Employee::query()->where('last_name', 'Peeters')->sole();
+        $this->assertTrue($employee->is_interim);
+        $this->assertNull($employee->national_number);
+        $this->assertNull($employee->emergency1_first_name);
+
+        // Interim switched off: the fields are asked again.
+        Livewire::test(EditEmployee::class, ['record' => $employee->getRouteKey()])
+            ->fillForm(['is_interim' => false])
+            ->assertFormFieldVisible('national_number')
+            ->assertFormFieldVisible('emergency1_first_name')
+            ->call('save')
+            ->assertHasFormErrors(['emergency1_first_name' => 'required']);
     }
 
     #[Test]

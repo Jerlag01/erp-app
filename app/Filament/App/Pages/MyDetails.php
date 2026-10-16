@@ -16,6 +16,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -105,7 +106,7 @@ class MyDetails extends Page implements HasSchemas
             $values[$field] = EmployeeChangeRequest::normalize($field, $employee->{$field});
         }
 
-        $this->form->fill([...$values, ...($this->pendingRequest()?->new_values ?? [])]);
+        $this->form->fill([...$values, ...($this->pendingRequest()?->new_values ?? []), 'is_interim' => $employee->is_interim]);
     }
 
     public function form(Schema $schema): Schema
@@ -113,11 +114,13 @@ class MyDetails extends Page implements HasSchemas
         return $schema
             ->statePath('data')
             ->components([
+                // Interim employees are not asked for some details (see EmployeeForm::isInterim()).
+                Hidden::make('is_interim')->dehydrated(false),
                 Tabs::make()
                     ->columnSpanFull()
                     ->tabs([
                         Tab::make(__('erp.employees.tabs.personal'))->icon(Heroicon::OutlinedUser)->columns(6)->schema(EmployeeForm::personal()),
-                        Tab::make(__('erp.employees.tabs.emergency'))->icon(Heroicon::OutlinedPhone)->schema([
+                        Tab::make(__('erp.employees.tabs.emergency'))->icon(Heroicon::OutlinedPhone)->hidden(fn (Get $get): bool => EmployeeForm::isInterim($get))->schema([
                             EmployeeForm::emergencyContact(1, required: true),
                             EmployeeForm::emergencyContact(2, required: false),
                         ]),
