@@ -27,9 +27,20 @@ class BatteryDossierPolicy extends AreaPolicy
         return modules()->batteries() && $this->allows($user, 'view') && $dossier->project->isVisibleTo($user);
     }
 
+    /**
+     * A new dossier starts on the Input tab, so creating also needs "batteries.input".
+     */
     public function create(User $user): bool
     {
-        return modules()->batteries() && parent::create($user);
+        return modules()->batteries() && parent::create($user) && $this->allows($user, 'input');
+    }
+
+    /**
+     * The Input tab (project data, batteries, prices); without it an overview of the project is shown.
+     */
+    public function viewInput(User $user, ?BatteryDossier $dossier = null): bool
+    {
+        return modules()->batteries() && $this->allows($user, 'input');
     }
 
     public function update(User $user, Model $dossier): bool

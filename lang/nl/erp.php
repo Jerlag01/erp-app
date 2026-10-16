@@ -491,6 +491,7 @@ return [
             'download_pdf' => 'PDF-bestanden downloaden',
             'edit_finished' => 'Afgeronde dossiers wijzigen (facturatie) / heropenen',
             'copy' => 'Projecten kopiëren',
+            'input' => 'Invoertab (projectgegevens) zien en wijzigen',
         ],
     ],
     'settings' => [
@@ -2086,6 +2087,17 @@ return [
         ],
     ],
     'batteries' => [
+        'overview' => [
+            'title' => 'Overzicht van het project',
+            'help' => 'De gegevens van de opdracht. Ze worden ingevuld in het tabblad "Invoer" door wie daarvoor het recht heeft.',
+            'cow_code' => 'COW-code',
+            'address' => 'Adres van de COW-site',
+            'rack' => 'Type stelling',
+            'to_remove' => 'Te verwijderen batterijen',
+            'to_install' => 'Te plaatsen batterijen',
+            'id_numbers' => 'ID-nummers batterijen',
+            'no_removal' => 'Geen (blijven staan)',
+        ],
         'finish' => [
             'button' => 'Afronden',
             'heading' => 'Batterijdossier afronden',
@@ -2134,6 +2146,7 @@ return [
             'nee' => 'Nee – ter plaatse aanwezig',
         ],
         'tabs' => [
+            'overview' => 'Overzicht',
             'photos' => 'Foto\'s',
             'input' => 'Input',
             'delivery' => 'Leveringsnota',

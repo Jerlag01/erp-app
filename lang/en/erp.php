@@ -491,6 +491,7 @@ return [
             'download_pdf' => 'Download PDF files',
             'edit_finished' => 'Change finished dossiers (invoicing) / reopen',
             'copy' => 'Copy projects',
+            'input' => 'See and change the Input tab (project data)',
         ],
     ],
     'settings' => [
@@ -2086,6 +2087,17 @@ return [
         ],
     ],
     'batteries' => [
+        'overview' => [
+            'title' => 'Project overview',
+            'help' => 'The details of the job. They are filled in on the "Input" tab by whoever has the right.',
+            'cow_code' => 'COW code',
+            'address' => 'Address of the COW site',
+            'rack' => 'Type of rack',
+            'to_remove' => 'Batteries to remove',
+            'to_install' => 'Batteries to install',
+            'id_numbers' => 'Battery ID numbers',
+            'no_removal' => 'None (they stay)',
+        ],
         'finish' => [
             'button' => 'Finish',
             'heading' => 'Finish the battery dossier',
@@ -2134,6 +2146,7 @@ return [
             'nee' => 'No – already on site',
         ],
         'tabs' => [
+            'overview' => 'Overview',
             'photos' => 'Photos',
             'input' => 'Input',
             'delivery' => 'Delivery note',

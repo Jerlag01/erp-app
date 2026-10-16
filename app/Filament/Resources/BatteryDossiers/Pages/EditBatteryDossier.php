@@ -161,6 +161,12 @@ class EditBatteryDossier extends EditRecord
 
         $this->strings = (array) ($data['strings'] ?? []);
 
+        // Without "batteries.input" the Input tab is not shown, so whatever is sent for it is ignored.
+        if (! Gate::allows('viewInput', BatteryDossier::class)) {
+            $data = array_diff_key($data, array_flip(BatteryDossier::INPUT_FIELDS));
+            $this->strings = array_map(fn (mixed $row): array => array_diff_key((array) $row, ['id_number' => true]), $this->strings);
+        }
+
         // Signed documents are locked: whatever was sent for them is ignored (administrators excepted).
         foreach (BatteryDossier::SIGNED_FIELDS as $document => $fields) {
             if ($this->record->isLockedFor($document, auth()->user())) {

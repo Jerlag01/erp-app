@@ -42,7 +42,7 @@ class BatteryDossierTest extends TestCase
         $this->team = Team::factory()->create();
     }
 
-    protected function technician(array $battery = ['view', 'create', 'update', 'delete', 'generate_pdf']): User
+    protected function technician(array $battery = ['view', 'create', 'update', 'delete', 'input', 'generate_pdf']): User
     {
         return User::factory()->withPermissions(['projects' => ['view'], 'batteries' => $battery])->inTeam($this->team)->create();
     }
@@ -440,5 +440,43 @@ class BatteryDossierTest extends TestCase
 
         $this->assertSame('6.00', (string) $dossier->fresh()->man_hours);
         $this->assertFalse($dossier->fresh()->isFinished());
+    }
+
+    #[Test]
+    public function without_the_input_right_an_overview_of_the_project_is_shown(): void
+    {
+        $dossier = BatteryDossier::factory()->create([
+            'project_id' => $this->project()->id, 'contact_person' => 'Peter Peeters', 'old_count' => 2, 'old_capacity_ah' => 300,
+            'new_count' => 2, 'new_capacity_ah' => 400, 'removal' => true, 'cells_per_battery' => 2, 'man_hours' => 3,
+        ]);
+        $dossier->syncBatteries();
+        $dossier->batteries()->where('position', 1)->update(['id_number' => 'ID-0001']);
+
+        $this->actingAs($this->technician(['view', 'update']));
+        $this->assertFalse(auth()->user()->can('create', BatteryDossier::class), 'Creating starts on the Input tab.');
+
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertDontSee(__('erp.batteries.sections.prices'))
+            ->assertSee(__('erp.batteries.overview.title'))
+            ->assertSee('Peter Peeters')
+            ->assertSee('02LKA')
+            ->assertSee('Stationsstraat 12')
+            ->assertSee('ID-0001')
+            ->assertSee('2 × 300 Ah')
+            // Sent anyway: the Input fields are ignored, the rest is saved.
+            ->set('data.contact_person', 'Iemand anders')
+            ->set('data.new_count', 9)
+            ->fillForm(['man_hours' => 4])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $dossier->refresh();
+        $this->assertSame(['Peter Peeters', 2, '4.00'], [$dossier->contact_person, $dossier->new_count, (string) $dossier->man_hours]);
+        $this->assertSame('ID-0001', $dossier->batteries()->where('position', 1)->value('id_number'));
+
+        $this->actingAs($this->technician());
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertSee(__('erp.batteries.tabs.input'))
+            ->assertDontSee(__('erp.batteries.overview.title'));
     }
 }

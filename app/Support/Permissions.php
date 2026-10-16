@@ -20,7 +20,8 @@ namespace App\Support;
  * everyone's; "planning.view_all" only sees everyone's; "planning.other" adds items that are not a
  * project or warehouse job. Project leaders plan their own open projects without any of these.
  * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
- * and edits prices and the invoice request; "batteries.edit_finished" changes (and reopens) dossiers the
+ * and edits prices and the invoice request; "batteries.input" sees and fills in the Input tab (the others get
+ * a short overview of the project instead); "batteries.edit_finished" changes (and reopens) dossiers the
  * technician finished, e.g. for the invoicing.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
@@ -77,7 +78,7 @@ class Permissions
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
-        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'prices', 'generate_pdf', 'edit_finished']],
+        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];
 

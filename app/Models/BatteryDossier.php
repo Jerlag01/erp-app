@@ -48,6 +48,19 @@ class BatteryDossier extends Model
     public const MAX_PHOTOS = 40;
 
     /**
+     * The fields of the Input tab: only users with "batteries.input" see and change them.
+     *
+     * @var list<string>
+     */
+    public const INPUT_FIELDS = [
+        'project_id', 'po_number', 'contact_person', 'order_date', 'execution_date', 'truck_plate', 'waste_type',
+        'old_capacity_ah', 'old_technology', 'old_count', 'old_room', 'removal',
+        'new_capacity_ah', 'new_technology', 'new_count', 'new_room', 'delivery_mode', 'supplier_location',
+        'brand', 'battery_model_id', 'mounting', 'cells_per_battery', 'volts_per_cell', 'production_date', 'first_id_number',
+        'battery_total_price', 'hourly_rate',
+    ];
+
+    /**
      * Documents that get a written signature. Once signed, their fields are locked for everyone but
      * administrators.
      *

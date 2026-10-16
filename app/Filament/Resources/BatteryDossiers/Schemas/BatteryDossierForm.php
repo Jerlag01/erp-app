@@ -26,6 +26,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
@@ -56,7 +57,13 @@ class BatteryDossierForm
                 ->columnSpanFull()
                 ->persistTabInQueryString()
                 ->tabs([
-                    Tab::make(__('erp.batteries.tabs.input'))->icon(Heroicon::OutlinedPencilSquare)->schema(self::inputTab()),
+                    // The Input tab needs "batteries.input"; the others see an overview of the project instead.
+                    Tab::make(__('erp.batteries.tabs.input'))->icon(Heroicon::OutlinedPencilSquare)
+                        ->visible(fn (): bool => Gate::allows('viewInput', BatteryDossier::class))
+                        ->schema(self::inputTab()),
+                    Tab::make(__('erp.batteries.tabs.overview'))->icon(Heroicon::OutlinedInformationCircle)->visibleOn('edit')
+                        ->visible(fn (): bool => ! Gate::allows('viewInput', BatteryDossier::class))
+                        ->schema(self::overviewTab()),
                     Tab::make(__('erp.batteries.tabs.delivery'))->icon(Heroicon::OutlinedTruck)->visibleOn('edit')->schema(self::deliveryTab()),
                     Tab::make(__('erp.batteries.tabs.measurement'))->icon(Heroicon::OutlinedBolt)->visibleOn('edit')->schema(self::measurementTab()),
                     Tab::make(__('erp.batteries.tabs.inspection'))->icon(Heroicon::OutlinedClipboardDocumentCheck)->visibleOn('edit')->schema(self::inspectionTab()),
@@ -415,6 +422,47 @@ class BatteryDossierForm
             ]),
             self::signatureSection('inspection'),
             self::download('inspection'),
+        ];
+    }
+
+    /**
+     * For users without "batteries.input": what they need to know about the job, read-only.
+     *
+     * @return array<Component>
+     */
+    protected static function overviewTab(): array
+    {
+        $entry = fn (string $name, string $label, \Closure $state): TextEntry => TextEntry::make('overview_'.$name)
+            ->label($label)
+            ->state($state)
+            ->placeholder('—');
+        $batteries = fn (?int $count, ?int $capacity, mixed $technology, ?string $extra = null): ?string => $count
+            ? trim($count.' × '.($capacity ? $capacity.' Ah ' : '').($technology?->getLabel() ?? '').($extra ? ' · '.$extra : ''))
+            : null;
+
+        return [
+            Section::make(__('erp.batteries.overview.title'))
+                ->description(__('erp.batteries.overview.help'))
+                ->columns(['default' => 1, 'md' => 2])
+                ->schema([
+                    $entry('cow', __('erp.batteries.overview.cow_code'), fn (?BatteryDossier $record): ?string => $record?->cowCode()),
+                    $entry('address', __('erp.batteries.overview.address'), fn (?BatteryDossier $record): ?string => $record ? (implode(', ', $record->senderAddressLines()) ?: null) : null),
+                    $entry('contact', __('erp.batteries.contact_person'), fn (?BatteryDossier $record): ?string => $record?->contact_person),
+                    $entry('rack', __('erp.batteries.overview.rack'), fn (?BatteryDossier $record): ?string => $record ? (trim(implode(' · ', array_filter([
+                        $record->mounting?->getLabel(),
+                        $record->rack()?->code ? __('erp.batteries.rack_type', ['code' => $record->rack()->code]) : null,
+                    ]))) ?: null) : null),
+                    $entry('remove', __('erp.batteries.overview.to_remove'), fn (?BatteryDossier $record): ?string => $record && $record->removal
+                        ? $batteries($record->old_count, $record->old_capacity_ah, $record->old_technology, $record->old_room ? __('erp.batteries.room').' '.$record->old_room : null)
+                        : ($record ? __('erp.batteries.overview.no_removal') : null)),
+                    $entry('install', __('erp.batteries.overview.to_install'), fn (?BatteryDossier $record): ?string => $record
+                        ? $batteries($record->new_count, $record->new_capacity_ah, $record->new_technology, trim(implode(' ', array_filter([$record->brand, $record->batteryModel?->name]))) ?: null)
+                        : null),
+                    $entry('ids', __('erp.batteries.overview.id_numbers'), fn (?BatteryDossier $record): ?string => $record
+                        ? ($record->batteries->filter(fn (BatteryDossierBattery $battery): bool => filled($battery->id_number))->map(fn (BatteryDossierBattery $battery): string => $battery->label().': '.$battery->id_number)->implode(' · ') ?: null)
+                        : null)
+                        ->columnSpanFull(),
+                ]),
         ];
     }
 

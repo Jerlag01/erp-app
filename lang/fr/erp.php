@@ -491,6 +491,7 @@ return [
             'download_pdf' => 'Télécharger des fichiers PDF',
             'edit_finished' => 'Modifier les dossiers clôturés (facturation) / rouvrir',
             'copy' => 'Copier des projets',
+            'input' => 'Voir et modifier l\'onglet Saisie (données du projet)',
         ],
     ],
     'settings' => [
@@ -2086,6 +2087,17 @@ return [
         ],
     ],
     'batteries' => [
+        'overview' => [
+            'title' => 'Aperçu du projet',
+            'help' => 'Les données de la mission. Elles sont remplies dans l\'onglet « Saisie » par ceux qui en ont le droit.',
+            'cow_code' => 'Code COW',
+            'address' => 'Adresse du site COW',
+            'rack' => 'Type de rack',
+            'to_remove' => 'Batteries à enlever',
+            'to_install' => 'Batteries à placer',
+            'id_numbers' => 'Numéros ID des batteries',
+            'no_removal' => 'Aucune (elles restent)',
+        ],
         'finish' => [
             'button' => 'Clôturer',
             'heading' => 'Clôturer le dossier batteries',
@@ -2134,6 +2146,7 @@ return [
             'nee' => 'Non – déjà sur place',
         ],
         'tabs' => [
+            'overview' => 'Aperçu',
             'photos' => 'Photos',
             'input' => 'Saisie',
             'delivery' => 'Bon de livraison',
