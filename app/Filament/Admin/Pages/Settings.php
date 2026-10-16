@@ -510,6 +510,11 @@ class Settings extends Page
                         ->helperText(__('erp.settings.help.battery_delivered_project_status'))
                         ->options(ProjectStatus::class)
                         ->placeholder(__('erp.settings.fields.battery_status_unchanged')),
+                    Select::make('batteries.brussels_locale')
+                        ->label(__('erp.settings.fields.battery_brussels_locale'))
+                        ->helperText(__('erp.settings.help.battery_brussels_locale'))
+                        ->options(['nl' => 'Nederlands', 'fr' => 'Français'])
+                        ->required(),
                     TagsInput::make('batteries.contacts')->label(__('erp.settings.fields.battery_contacts')),
                     TagsInput::make('batteries.waste_types')->label(__('erp.settings.fields.battery_waste_types'))->columnSpanFull(),
                 ]),

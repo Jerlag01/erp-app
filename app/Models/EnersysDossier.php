@@ -27,6 +27,8 @@ class EnersysDossier extends BatteryDossier
 
     public const PRICE_DOCUMENT = 'order';
 
+    public const INTERNAL_DOCUMENTS = ['order'];
+
     /**
      * Document => [view, letterhead background, landscape].
      */
@@ -39,7 +41,7 @@ class EnersysDossier extends BatteryDossier
     ];
 
     public const INPUT_FIELDS = [
-        'project_id', 'po_number', 'contact_person', 'order_date', 'execution_date', 'truck_plate', 'waste_type',
+        'document_locale', 'project_id', 'po_number', 'contact_person', 'order_date', 'execution_date', 'truck_plate', 'waste_type',
         'old_capacity_ah', 'old_count', 'old_room', 'removal',
         'new_capacity_label', 'new_capacity_ah', 'new_count', 'new_room', 'delivery_mode', 'supplier_location',
         'brand', 'battery_type', 'mounting', 'cells_per_battery', 'production_date', 'first_id_number',
@@ -112,7 +114,7 @@ class EnersysDossier extends BatteryDossier
      */
     public function description(): string
     {
-        return "Vervangen van {$this->old_count} sets batterijen van ".((int) $this->old_capacity_ah)." Ah door {$this->new_count} sets batterijen van {$this->newCapacity()} Ah";
+        return __('battery_documents.lines.description', ['old' => $this->old_count, 'old_ah' => (int) $this->old_capacity_ah, 'new' => $this->new_count, 'new_ah' => $this->newCapacity()]);
     }
 
     /**
@@ -121,25 +123,25 @@ class EnersysDossier extends BatteryDossier
     public function deliveryLine(): string
     {
         return match ($this->delivery_mode) {
-            BatteryDeliveryMode::Delivery => "{$this->new_count} sets batterijen van {$this->newCapacity()} Ah worden bij u geleverd door {$this->brand}",
-            BatteryDeliveryMode::OnSite => "{$this->new_count} sets batterijen van {$this->newCapacity()} ter plaatse aanwezig : {$this->supplier_location}",
-            default => "Afhalen van {$this->new_count} sets batterijen van {$this->newCapacity()} Ah te {$this->supplier_location}",
+            BatteryDeliveryMode::Delivery => __('battery_documents.lines.delivered_by', ['count' => $this->new_count, 'ah' => $this->newCapacity(), 'brand' => $this->brand]),
+            BatteryDeliveryMode::OnSite => __('battery_documents.lines.on_site', ['count' => $this->new_count, 'ah' => $this->newCapacity(), 'location' => $this->supplier_location]),
+            default => __('battery_documents.lines.pickup', ['count' => $this->new_count, 'ah' => $this->newCapacity(), 'location' => $this->supplier_location]),
         };
     }
 
     public function removalLine(): string
     {
-        return "Wegnemen batterijen ({$this->old_count} sets ".((int) $this->old_capacity_ah).' Ah)';
+        return __('battery_documents.lines.removal', ['count' => $this->old_count, 'ah' => (int) $this->old_capacity_ah]);
     }
 
     public function placementLine(): string
     {
-        return "Terugplaatsen nieuwe batterijen ({$this->new_count} sets {$this->newCapacity()} Ah)";
+        return __('battery_documents.lines.placement', ['count' => $this->new_count, 'ah' => $this->newCapacity()]);
     }
 
     public function destroyLine(): string
     {
-        return "Afvoeren van {$this->old_count} sets oude batterijen van ".((int) $this->old_capacity_ah).' Ah';
+        return __('battery_documents.lines.dispose', ['count' => $this->old_count, 'ah' => (int) $this->old_capacity_ah]);
     }
 
     /**

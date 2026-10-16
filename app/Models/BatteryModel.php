@@ -39,7 +39,7 @@ class BatteryModel extends Model
     {
         $weight = rtrim(rtrim(number_format((float) $this->weight_kg, 2, ',', ''), '0'), ',');
 
-        return "{$cells} cellen {$this->name}. Gewicht:{$weight}Kg. Afmetingen:l:{$this->length_mm} b:{$this->width_mm} h:{$this->height_mm}";
+        return __('battery_documents.lines.model', ['cells' => $cells, 'name' => $this->name, 'weight' => $weight, 'length' => $this->length_mm, 'width' => $this->width_mm, 'height' => $this->height_mm]);
     }
 
     /**

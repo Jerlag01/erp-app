@@ -5,6 +5,7 @@ namespace App\Actions\Batteries;
 use App\Models\BatteryDossier;
 use App\Support\BatteryTemplates;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use ZipArchive;
 
@@ -30,16 +31,57 @@ class BatteryDocument
         'invoice_request' => ['batteries.pdf.invoice-request', false, false],
     ];
 
+    /**
+     * The PDF, in the language of the region of the COW site (internal documents in Dutch).
+     */
     public function render(BatteryDossier $dossier, string $document): string
     {
-        [$view, $background, $landscape] = $dossier::documents()[$document];
+        [, , $landscape] = $dossier::documents()[$document];
 
-        $dossier->loadMissing(['project.workSite', 'project.category', 'batteryModel.racks', 'cable', 'batteries', 'signatures']);
+        return Pdf::loadHTML($this->html($dossier, $document))
+            ->setPaper('a4', $landscape ? 'landscape' : 'portrait')
+            ->setOption('isFontSubsettingEnabled', true)
+            ->output();
+    }
 
-        return Pdf::loadView($view, [
+    /**
+     * The HTML of a document, rendered in its language.
+     */
+    public function html(BatteryDossier $dossier, string $document): string
+    {
+        [$view, $background] = $dossier::documents()[$document];
+
+        $dossier->loadMissing(['project.workSite.area', 'project.category', 'batteryModel.racks', 'cable', 'batteries', 'signatures']);
+
+        return $this->inLocale($this->locale($dossier, $document), fn (): string => view($view, [
             'dossier' => $dossier,
             'background' => $background ? BatteryTemplates::backgroundDataUri() : null,
-        ])->setPaper('a4', $landscape ? 'landscape' : 'portrait')->setOption('isFontSubsettingEnabled', true)->output();
+        ])->render());
+    }
+
+    public function locale(BatteryDossier $dossier, string $document): string
+    {
+        return in_array($document, $dossier::INTERNAL_DOCUMENTS, true) ? 'nl' : $dossier->documentLocale();
+    }
+
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    protected function inLocale(string $locale, callable $callback): mixed
+    {
+        $previous = [app()->getLocale(), Carbon::getLocale()];
+        app()->setLocale($locale);
+        Carbon::setLocale($locale);
+
+        try {
+            return $callback();
+        } finally {
+            app()->setLocale($previous[0]);
+            Carbon::setLocale($previous[1]);
+        }
     }
 
     public static function filename(BatteryDossier $dossier, string $document): string

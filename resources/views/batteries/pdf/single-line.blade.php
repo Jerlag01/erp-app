@@ -1,6 +1,6 @@
 @extends('batteries.pdf.layout', ['landscape' => true])
 
-@section('title', 'Eendraadschema')
+@section('title', __('battery_documents.single_line.title'))
 
 @php
     $rows = $dossier->batteries->map(fn ($battery) => $battery->only(['position', 'id_number', 'cable_type', 'cable_length_m', 'cables_positive', 'cables_negative', 'cable_section', 'fuse_amperage', 'fuse_type']))->all();
@@ -10,8 +10,8 @@
 @section('content')
     <table class="w plain">
         <tr>
-            <td><h1>Eendraadschema</h1></td>
-            <td class="num">Dossier <strong>{{ $dossier->reference() }}</strong> · Cow code <strong>{{ $dossier->cowCode() }}</strong> · lokaal {{ $dossier->new_room }}<br>{{ $dossier->batteryModel?->name }} · {{ $dossier->new_count }} × {{ $dossier->cells_per_battery }} cellen</td>
+            <td><h1>{{ __('battery_documents.single_line.title') }}</h1></td>
+            <td class="num">{{ __('battery_documents.common.dossier') }} <strong>{{ $dossier->reference() }}</strong> · {{ __('battery_documents.common.cow_code') }} <strong>{{ $dossier->cowCode() }}</strong> · {{ __('battery_documents.common.room') }} {{ $dossier->new_room }}<br>{{ $dossier->batteryModel?->name }} · {{ $dossier->new_count }} × {{ $dossier->cells_per_battery }} {{ __('battery_documents.single_line.cells') }}</td>
         </tr>
     </table>
 
@@ -27,12 +27,12 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td class="label">Type kabel</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cable_type }}</td>@endforeach</tr>
-            <tr><td class="label">Lengte (m)</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cable_length_m !== null ? rtrim(rtrim(number_format((float) $battery->cable_length_m, 2, ',', ''), '0'), ',') : '' }}</td>@endforeach</tr>
-            <tr><td class="label">Aantal per pool (+ / −)</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cables_positive }} / {{ $battery->cables_negative }}</td>@endforeach</tr>
-            <tr><td class="label">Sectie (mm²)</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cable_section }}</td>@endforeach</tr>
-            <tr><td class="label">Zekeringswaarde (A)</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->fuse_amperage }}</td>@endforeach</tr>
-            <tr><td class="label">Zekeringstype</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->fuse_type }}</td>@endforeach</tr>
+            <tr><td class="label">{{ __('battery_documents.single_line.cable_type') }}</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cable_type }}</td>@endforeach</tr>
+            <tr><td class="label">{{ __('battery_documents.single_line.length') }}</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cable_length_m !== null ? rtrim(rtrim(number_format((float) $battery->cable_length_m, 2, ',', ''), '0'), ',') : '' }}</td>@endforeach</tr>
+            <tr><td class="label">{{ __('battery_documents.single_line.per_pole') }}</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cables_positive }} / {{ $battery->cables_negative }}</td>@endforeach</tr>
+            <tr><td class="label">{{ __('battery_documents.single_line.section') }}</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->cable_section }}</td>@endforeach</tr>
+            <tr><td class="label">{{ __('battery_documents.single_line.fuse_value') }}</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->fuse_amperage }}</td>@endforeach</tr>
+            <tr><td class="label">{{ __('battery_documents.single_line.fuse_type') }}</td>@foreach ($dossier->batteries as $battery)<td class="center">{{ $battery->fuse_type }}</td>@endforeach</tr>
         </tbody>
     </table>
 @endsection

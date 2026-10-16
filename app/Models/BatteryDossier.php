@@ -36,7 +36,7 @@ use Illuminate\Support\Str;
     'battery_total_price', 'hourly_rate', 'fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price',
     'invoice_kind', 'invoice_percentage', 'measured_on', 'average_temperature', 'inspection', 'inspection_remarks',
     'floor_plan', 'floor_plan_png', 'photos', 'photos_remark', 'finished_at', 'finished_by', 'acid_boxes',
-    'kind', 'battery_type', 'new_capacity_label', 'leak_trays', 'order_amounts', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
+    'kind', 'document_locale', 'battery_type', 'new_capacity_label', 'leak_trays', 'order_amounts', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
 ])]
 class BatteryDossier extends Model
 {
@@ -66,6 +66,16 @@ class BatteryDossier extends Model
      */
     public const PRICE_DOCUMENT = 'invoice_request';
 
+    /**
+     * Internal documents (for our own administration): always in Dutch.
+     */
+    public const INTERNAL_DOCUMENTS = ['invoice_request'];
+
+    /**
+     * Languages the client documents can be printed in.
+     */
+    public const DOCUMENT_LOCALES = ['nl', 'fr'];
+
     protected $table = 'battery_dossiers';
 
     /**
@@ -79,7 +89,7 @@ class BatteryDossier extends Model
      * @var list<string>
      */
     public const INPUT_FIELDS = [
-        'project_id', 'po_number', 'contact_person', 'order_date', 'execution_date', 'truck_plate', 'waste_type',
+        'document_locale', 'project_id', 'po_number', 'contact_person', 'order_date', 'execution_date', 'truck_plate', 'waste_type',
         'old_capacity_ah', 'old_technology', 'old_count', 'old_room', 'removal',
         'new_capacity_ah', 'new_technology', 'new_count', 'new_room', 'delivery_mode', 'supplier_location',
         'brand', 'battery_model_id', 'mounting', 'cells_per_battery', 'volts_per_cell', 'production_date', 'first_id_number',
@@ -296,6 +306,47 @@ class BatteryDossier extends Model
     }
 
     /**
+     * The language of the documents for the client: set on the dossier, or that of the region of the COW site.
+     */
+    public function documentLocale(): string
+    {
+        if (in_array($this->document_locale, self::DOCUMENT_LOCALES, true)) {
+            return $this->document_locale;
+        }
+
+        $site = $this->project?->workSite;
+
+        return self::regionLocale($site?->postal_code ?? $this->project?->postal_code, $site?->area?->name);
+    }
+
+    /**
+     * Flanders (1-VLA, 2-VLA) Dutch, Wallonia (4-WAL, 5-WAL) French and Brussels (3-BRU) as set under
+     * Settings > Batteries. Taken from the Belgian postal code, else from the area of the site.
+     */
+    public static function regionLocale(?string $postalCode, ?string $area = null): string
+    {
+        $brussels = (string) settings()->get('batteries.brussels_locale', 'fr');
+        $code = (int) preg_replace('/\D/', '', (string) $postalCode);
+
+        if ($code >= 1000 && $code <= 9999) {
+            return match (true) {
+                $code <= 1299 => $brussels,
+                $code <= 1499 => 'fr',
+                $code >= 4000 && $code <= 7999 => 'fr',
+                default => 'nl',
+            };
+        }
+
+        $area = strtoupper((string) $area);
+
+        return match (true) {
+            str_contains($area, 'WAL') => 'fr',
+            str_contains($area, 'BRU') => $brussels,
+            default => 'nl',
+        };
+    }
+
+    /**
      * The questions of the visual inspection report.
      *
      * @return array<string, array<string, string>>
@@ -358,7 +409,7 @@ class BatteryDossier extends Model
      */
     public function description(): string
     {
-        return "Vervangen van {$this->old_count} sets batterijen van {$this->old_capacity_ah} Ah door {$this->new_count} sets batterijen van {$this->new_capacity_ah} Ah";
+        return __('battery_documents.lines.description', ['old' => $this->old_count, 'old_ah' => $this->old_capacity_ah, 'new' => $this->new_count, 'new_ah' => $this->new_capacity_ah]);
     }
 
     /**
@@ -367,9 +418,9 @@ class BatteryDossier extends Model
     public function deliveryLine(): string
     {
         return match ($this->delivery_mode) {
-            BatteryDeliveryMode::Delivery => "{$this->new_count} sets batterijen van {$this->new_capacity_ah} Ah worden bij u geleverd door {$this->brand}",
-            BatteryDeliveryMode::OnSite => "{$this->new_count} sets batterijen van {$this->new_capacity_ah} ter plaatse aanwezig : {$this->supplier_location}",
-            default => "Plaatsen van {$this->new_count} nieuwe batterij(en), {$this->batteryModel?->name} Ah van {$this->brand}",
+            BatteryDeliveryMode::Delivery => __('battery_documents.lines.delivered_by', ['count' => $this->new_count, 'ah' => $this->new_capacity_ah, 'brand' => $this->brand]),
+            BatteryDeliveryMode::OnSite => __('battery_documents.lines.on_site', ['count' => $this->new_count, 'ah' => $this->new_capacity_ah, 'location' => $this->supplier_location]),
+            default => __('battery_documents.lines.place', ['count' => $this->new_count, 'model' => $this->batteryModel?->name, 'brand' => $this->brand]),
         };
     }
 
@@ -388,7 +439,7 @@ class BatteryDossier extends Model
      */
     public function rackLine(): string
     {
-        return "Stelling voor {$this->new_technology?->value} batterij {$this->brand} {$this->new_capacity_ah}Ah -  ".($this->mounting?->getLabel() ?? '');
+        return __('battery_documents.lines.rack', ['technology' => $this->new_technology?->value, 'brand' => $this->brand, 'ah' => $this->new_capacity_ah, 'mounting' => $this->mounting?->getLabel() ?? '']);
     }
 
     /**
@@ -396,7 +447,7 @@ class BatteryDossier extends Model
      */
     public function destroyLine(): string
     {
-        return "Vernietigen van ({$this->old_count} batterijen {$this->old_capacity_ah} Ah {$this->old_technology?->value})";
+        return __('battery_documents.lines.destroy', ['count' => $this->old_count, 'ah' => $this->old_capacity_ah, 'technology' => $this->old_technology?->value]);
     }
 
     public function pricePerCell(): float

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\WasteCategories;
 use App\Enums\NavigationGroup;
 use App\Filament\Resources\WasteCategories\Pages\ManageWasteCategories;
 use App\Models\WasteCategory;
+use App\Support\Eural;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -18,6 +19,8 @@ use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -141,6 +144,15 @@ class WasteCategoryResource extends Resource
                     ->boolean(),
             ])
             ->filters([
+                SelectFilter::make('chapter')
+                    ->label(__('erp.waste.chapter'))
+                    ->options(fn (): array => collect(Eural::chapters())->mapWithKeys(fn (string $title, string $chapter): array => [$chapter => $chapter.' · '.$title])->all())
+                    ->searchable()
+                    ->query(fn (Builder $query, array $data) => $query->when($data['value'] ?? null, fn (Builder $query, string $chapter) => $query->where('waste_code', 'like', $chapter.'%'))),
+                Filter::make('hazardous')
+                    ->label(__('erp.waste.hazardous_only'))
+                    ->toggle()
+                    ->query(fn (Builder $query) => $query->where('waste_code', 'like', '%*')),
                 TernaryFilter::make('is_active')->label(__('erp.fields.active')),
             ])
             ->recordActions([

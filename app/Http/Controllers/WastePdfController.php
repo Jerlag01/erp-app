@@ -71,10 +71,11 @@ class WastePdfController
         $period = $request->validate([
             'from' => ['nullable', 'date'],
             'until' => ['nullable', 'date'],
+            'all' => ['nullable', 'boolean'],
         ]);
 
         return Pdf::loadView('waste.totals-pdf', [
-            'totals' => WasteTotals::between($period['from'] ?? null, $period['until'] ?? null),
+            'totals' => WasteTotals::between($period['from'] ?? null, $period['until'] ?? null, (bool) ($period['all'] ?? false)),
             'period' => WasteTotals::periodLabel($period['from'] ?? null, $period['until'] ?? null),
         ])
             ->setPaper('a4')

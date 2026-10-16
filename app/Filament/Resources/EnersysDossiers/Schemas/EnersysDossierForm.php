@@ -100,6 +100,7 @@ class EnersysDossierForm extends BatteryDossierForm
                     Select::make('waste_type')
                         ->label(__('erp.batteries.waste_type'))
                         ->options(fn (): array => collect((array) settings()->get('batteries.waste_types', []))->mapWithKeys(fn (string $type): array => [$type => $type])->all()),
+                    static::documentLocaleField(),
                 ]),
             Grid::make(['default' => 1, 'lg' => 2])
                 ->schema([

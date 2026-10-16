@@ -540,6 +540,7 @@ return [
             'timesheet_mail' => 'Weekly e-mail',
         ],
         'fields' => [
+            'battery_brussels_locale' => 'Document language Brussels',
             'battery_enersys_project_category' => 'Project category Enersys',
             'battery_enersys_brand' => 'Brand',
             'battery_enersys_types' => 'Types (type | Ah)',
@@ -631,6 +632,7 @@ return [
             'timesheet_mobility_rate' => 'Mobility allowance',
         ],
         'help' => [
+            'battery_brussels_locale' => 'Language of the battery documents for COW sites in Brussels (Flanders: Dutch, Wallonia: French).',
             'enersys' => 'For the Enersys dossiers; client, documents and shipping note are the same as above.',
             'battery_enersys_types' => 'One type per line: "12V155FS | 155".',
             'site_name' => 'Shown in the menu, browser tab and emails.',
@@ -1495,6 +1497,10 @@ return [
         ],
     ],
     'waste' => [
+        'show_all_categories' => 'Show all categories',
+        'other_categories' => 'Own categories (without Eural code)',
+        'chapter' => 'Chapter',
+        'hazardous_only' => 'Hazardous waste only',
         'title' => 'Waste registry',
         'registry' => 'Waste registry',
         'type' => 'Type of waste',
@@ -2180,6 +2186,9 @@ return [
         ],
     ],
     'batteries' => [
+        'document_locale' => 'Document language',
+        'document_locale_auto' => 'Automatic (by region)',
+        'document_locale_help' => 'Automatically by the region of the COW site: :language. Flanders in Dutch, Wallonia in French, Brussels as set.',
         'overview' => [
             'title' => 'Project overview',
             'help' => 'The details of the job. They are filled in on the "Input" tab by whoever has the right.',

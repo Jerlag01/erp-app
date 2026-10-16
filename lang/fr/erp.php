@@ -540,6 +540,7 @@ return [
             'timesheet_mail' => 'E-mail hebdomadaire',
         ],
         'fields' => [
+            'battery_brussels_locale' => 'Langue des documents Bruxelles',
             'battery_enersys_project_category' => 'Catégorie de projet Enersys',
             'battery_enersys_brand' => 'Marque',
             'battery_enersys_types' => 'Types (type | Ah)',
@@ -631,6 +632,7 @@ return [
             'timesheet_mobility_rate' => 'Indemnité de mobilité',
         ],
         'help' => [
+            'battery_brussels_locale' => 'Langue des documents batteries pour les sites COW à Bruxelles (Flandre : néerlandais, Wallonie : français).',
             'enersys' => 'Pour les dossiers Enersys ; client, documents et note d\'envoi sont les mêmes que ci-dessus.',
             'battery_enersys_types' => 'Un type par ligne : « 12V155FS | 155 ».',
             'site_name' => 'Affiché dans le menu, l\'onglet du navigateur et les e-mails.',
@@ -1495,6 +1497,10 @@ return [
         ],
     ],
     'waste' => [
+        'show_all_categories' => 'Afficher toutes les catégories',
+        'other_categories' => 'Catégories propres (sans code Eural)',
+        'chapter' => 'Chapitre',
+        'hazardous_only' => 'Déchets dangereux uniquement',
         'title' => 'Registre des déchets',
         'registry' => 'Registre des déchets',
         'type' => 'Type de déchet',
@@ -2180,6 +2186,9 @@ return [
         ],
     ],
     'batteries' => [
+        'document_locale' => 'Langue des documents',
+        'document_locale_auto' => 'Automatique (selon la région)',
+        'document_locale_help' => 'Automatiquement selon la région du site COW : :language. Flandre en néerlandais, Wallonie en français, Bruxelles comme paramétré.',
         'overview' => [
             'title' => 'Aperçu du projet',
             'help' => 'Les données de la mission. Elles sont remplies dans l\'onglet « Saisie » par ceux qui en ont le droit.',

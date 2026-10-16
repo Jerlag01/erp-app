@@ -1,6 +1,6 @@
 @extends('batteries.pdf.layout')
 
-@section('title', 'Meetrapport')
+@section('title', __('battery_documents.measurement.title'))
 
 {{--
     The measurement report of an Enersys dossier, like the sheet "Meetrapport" of "12V enersys": two batteries
@@ -29,20 +29,20 @@
 
 @section('content')
     @foreach ($groups as $group)
-        <h1>Meetrapport</h1>
-        <div class="muted">vóór de indienstname van de batterij</div>
+        <h1>{{ __('battery_documents.measurement.title') }}</h1>
+        <div class="muted">{{ __('battery_documents.measurement.subtitle') }}</div>
 
         <table class="w plain" style="margin-top: 6px;">
             <tr>
                 <td style="width: 45%;"><strong>{{ $dossier->cowCode() }}</strong></td>
-                <td>Dossier: <strong>{{ $dossier->reference() }}</strong></td>
-                <td>Temp. {{ $dossier->average_temperature !== null ? number_format((float) $dossier->average_temperature, 1, ',', '') : '….' }} +/- °C</td>
+                <td>{{ __('battery_documents.common.dossier') }}: <strong>{{ $dossier->reference() }}</strong></td>
+                <td>{{ __('battery_documents.measurement.temperature') }} {{ $dossier->average_temperature !== null ? number_format((float) $dossier->average_temperature, 1, ',', '') : '….' }} +/- °C</td>
             </tr>
             <tr>
                 <td>{{ trim(($site?->street ?? '').', '.($site?->house_number ?? ''), ', ') }}</td>
                 <td colspan="2">{{ trim(($site?->postal_code ?? '').' '.($site?->city ?? '')) }}</td>
             </tr>
-            <tr><td colspan="3">Type: {{ $dossier->brand }} {{ $dossier->typeName() }} &nbsp; · &nbsp; {{ $dossier->new_count }} batterijen × {{ $blocks }} blokken</td></tr>
+            <tr><td colspan="3">{{ __('battery_documents.measurement.type', ['type' => trim($dossier->brand.' '.$dossier->typeName())]) }} &nbsp; · &nbsp; {{ __('battery_documents.measurement.batteries_blocks', ['count' => $dossier->new_count, 'blocks' => $blocks]) }}</td></tr>
         </table>
 
         @if ($compact)
@@ -51,13 +51,13 @@
                     @foreach ($group as $battery)
                         <td style="width: 50%; vertical-align: top; padding-right: 10px;">
                             <table class="w blocks">
-                                <tr class="head"><td colspan="3"><strong>Nieuw</strong> · Batterij id: <strong>{{ $battery->id_number }}</strong> ({{ $battery->label() }})</td></tr>
-                                <tr class="head"><td colspan="3">Vlotspanning = <strong>{{ $volt($battery->float_voltage) }}</strong> V</td></tr>
-                                <tr><td class="center" style="width: 16%;"></td><td class="center">(Afgeschakeld)</td><td class="center">(In vlotting)</td></tr>
+                                <tr class="head"><td colspan="3"><strong>{{ __('battery_documents.measurement.new') }}</strong> · {{ __('battery_documents.measurement.battery_id') }} <strong>{{ $battery->id_number }}</strong> ({{ $battery->label() }})</td></tr>
+                                <tr class="head"><td colspan="3">{{ __('battery_documents.measurement.float_voltage') }} <strong>{{ $volt($battery->float_voltage) }}</strong> V</td></tr>
+                                <tr><td class="center" style="width: 16%;"></td><td class="center">{{ __('battery_documents.measurement.disconnected') }}</td><td class="center">{{ __('battery_documents.measurement.floating') }}</td></tr>
                                 @for ($block = 1; $block <= $blocks; $block++)
                                     <tr><td class="center">{{ $block }}</td><td class="num">{{ $volt(((array) $battery->cell_voltages)[$block - 1] ?? null) }} V</td><td class="num">{{ $volt(((array) $battery->floating_voltages)[$block - 1] ?? null) }} V</td></tr>
                                 @endfor
-                                <tr><td class="center">Totaal</td><td class="num bold">{{ $total((array) $battery->cell_voltages) }}</td><td class="num bold">{{ $total((array) $battery->floating_voltages) }}</td></tr>
+                                <tr><td class="center">{{ __('battery_documents.measurement.total') }}</td><td class="num bold">{{ $total((array) $battery->cell_voltages) }}</td><td class="num bold">{{ $total((array) $battery->floating_voltages) }}</td></tr>
                             </table>
                         </td>
                     @endforeach
@@ -65,21 +65,21 @@
                 </tr>
             </table>
         @else
-        @foreach (['cell_voltages' => '(Afgeschakeld)', 'floating_voltages' => '(In vlotting)'] as $field => $title)
+        @foreach (['cell_voltages' => __('battery_documents.measurement.disconnected'), 'floating_voltages' => __('battery_documents.measurement.floating')] as $field => $title)
             <table class="w" style="margin-top: 10px;">
                 <tr>
                     @foreach ($group as $battery)
                         <td style="width: 50%; vertical-align: top; padding-right: 10px;">
                             <table class="w blocks">
-                                <tr class="head"><td colspan="2"><strong>Nieuw</strong> <span class="muted">{{ $title }}</span></td></tr>
-                                <tr class="head"><td colspan="2">Batterij id: <strong>{{ $battery->id_number }}</strong> ({{ $battery->label() }})</td></tr>
+                                <tr class="head"><td colspan="2"><strong>{{ __('battery_documents.measurement.new') }}</strong> <span class="muted">{{ $title }}</span></td></tr>
+                                <tr class="head"><td colspan="2">{{ __('battery_documents.measurement.battery_id') }} <strong>{{ $battery->id_number }}</strong> ({{ $battery->label() }})</td></tr>
                                 @if ($field === 'cell_voltages')
-                                    <tr class="head"><td colspan="2">Vlotspanning = <strong>{{ $volt($battery->float_voltage) }}</strong> V</td></tr>
+                                    <tr class="head"><td colspan="2">{{ __('battery_documents.measurement.float_voltage') }} <strong>{{ $volt($battery->float_voltage) }}</strong> V</td></tr>
                                 @endif
                                 @for ($block = 1; $block <= $blocks; $block++)
                                     <tr><td style="width: 20%;" class="center">{{ $block }}</td><td class="num">{{ $volt(((array) $battery->{$field})[$block - 1] ?? null) }} V</td></tr>
                                 @endfor
-                                <tr class="head"><td colspan="2">Totale batterijspanning = <strong>{{ $total((array) $battery->{$field}) }}</strong></td></tr>
+                                <tr class="head"><td colspan="2">{{ __('battery_documents.measurement.total_voltage') }} <strong>{{ $total((array) $battery->{$field}) }}</strong></td></tr>
                             </table>
                         </td>
                     @endforeach
@@ -91,8 +91,8 @@
 
         <table class="w nobreak" style="margin-top: 10px;">
             <tr>
-                <td style="width: 48%; padding-right: 10px;"><span class="label">Meting uitgevoerd op :</span><div class="box" style="height: 34px;">{{ $date?->format('d/m/Y') }}</div></td>
-                <td><span class="label">Voor {{ $dossier->supplier_location }}:</span><div class="box" style="height: auto; min-height: 34px;">@include('batteries.pdf.signature', ['document' => 'measurement', 'height' => 30])</div></td>
+                <td style="width: 48%; padding-right: 10px;"><span class="label">{{ __('battery_documents.measurement.measured_on') }}</span><div class="box" style="height: 34px;">{{ $date?->format('d/m/Y') }}</div></td>
+                <td><span class="label">{{ __('battery_documents.common.for', ['name' => $dossier->supplier_location]) }}:</span><div class="box" style="height: auto; min-height: 34px;">@include('batteries.pdf.signature', ['document' => 'measurement', 'height' => 30])</div></td>
             </tr>
         </table>
 

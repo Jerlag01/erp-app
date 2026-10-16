@@ -12,6 +12,7 @@ use App\Models\WasteCategory;
 use App\Models\WasteEntry;
 use App\Models\WasteProcessor;
 use App\Models\WorkSite;
+use App\Support\Eural;
 use App\Support\WasteTotals;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Testing\TestAction;
@@ -44,10 +45,31 @@ class WasteTest extends TestCase
     {
         $lead = $this->category('16 06 01*');
 
-        $this->assertSame('Batterijen', $lead->parent->name);
+        $this->assertSame(['16 06', "Batterijen en accu's"], [$lead->parent->waste_code, $lead->parent->name]);
         $this->assertTrue($lead->isBatteries());
         $this->assertTrue($lead->isHazardous());
         $this->assertFalse($this->category('17 04 01')->isBatteries());
+        $this->assertTrue($this->category('20 01 33*')->isBatteries(), 'Collected batteries in chapter 20 are battery waste too.');
+    }
+
+    #[Test]
+    public function the_complete_european_list_of_waste_is_available(): void
+    {
+        // Commission Decision 2014/955/EU: 111 subchapters and 842 codes, of which 408 hazardous.
+        $this->assertSame(111, WasteCategory::query()->whereNull('parent_id')->whereNotNull('waste_code')->count());
+        $this->assertSame(842, WasteCategory::query()->whereNotNull('parent_id')->count());
+        $this->assertSame(408, WasteCategory::query()->whereNotNull('parent_id')->where('waste_code', 'like', '%*')->count());
+        $this->assertSame(20, count(Eural::chapters()));
+
+        // Existing categories kept their name under their subchapter.
+        $this->assertSame('Kabels zonder gevaarlijke stoffen', $this->category('17 04 11')->name);
+        $this->assertSame('17 04', $this->category('17 04 11')->parent->waste_code);
+        $this->assertSame("Gescheiden ingezamelde elektrolyt uit batterijen en accu's", $this->category('16 06 06*')->name);
+        $this->assertSame(0, WasteCategory::query()->whereNull('waste_code')->count(), 'The old groups without a code are gone.');
+
+        $this->registrar();
+        $this->assertArrayHasKey("Batterijen en accu's", WasteCategory::selectOptions());
+        $this->get('/waste-categories')->assertForbidden();
     }
 
     #[Test]
@@ -156,7 +178,7 @@ class WasteTest extends TestCase
         WasteEntry::factory()->create(['waste_category_id' => $this->category('17 04 01')->id, 'weight_kg' => 999, 'date' => '2025-12-31']);
 
         $totals = WasteTotals::between('2026-01-01', '2026-12-31');
-        $metals = collect($totals['groups'])->first(fn (array $group): bool => $group['category']->name === 'Metalen');
+        $metals = collect($totals['groups'])->first(fn (array $group): bool => $group['category']->waste_code === '17 04');
         $copper = collect($metals['rows'])->first(fn (array $row): bool => $row['category']->waste_code === '17 04 01');
 
         $this->assertEqualsWithDelta(150.25, $copper['kg'], 0.001);
@@ -164,10 +186,25 @@ class WasteTest extends TestCase
         $this->assertEqualsWithDelta(170.25, $metals['kg'], 0.001);
         $this->assertEqualsWithDelta(170.25, $totals['kg'], 0.001);
 
+        // Grouped under the Eural chapters; only categories with entries unless the complete list is asked.
+        $this->assertSame(['17'], array_map('strval', array_keys($totals['chapters'])));
+        $this->assertSame('Bouw- en sloopafval (inclusief afgegraven grond van verontreinigde locaties)', $totals['chapters']['17']['title']);
+        $this->assertEqualsWithDelta(170.25, $totals['chapters']['17']['kg'], 0.001);
+        $this->assertCount(1, $totals['groups']);
+        $this->assertCount(2, $metals['rows']);
+        $complete = WasteTotals::between('2026-01-01', '2026-12-31', all: true);
+        $this->assertCount(111, $complete['groups']);
+        $this->assertCount(20, $complete['chapters']);
+        $this->assertEqualsWithDelta(170.25, $complete['kg'], 0.001);
+
         $this->registrar();
         Livewire::test(WasteTotalsOverview::class)
             ->assertSee('17 04 01')
             ->assertSee('150,25 kg')
+            ->assertDontSee('16 06 01*')
+            ->set('all', true)
+            ->assertSee('16 06 01*')
+            ->assertSee("Loodaccu&#039;s", false)
             ->call('setYear', 2025)
             ->assertSee('999,00 kg');
     }

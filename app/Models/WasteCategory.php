@@ -109,10 +109,11 @@ class WasteCategory extends Model
 
     protected static function booted(): void
     {
-        // A subcategory follows the batteries flag of its category.
+        // A subcategory of a battery category is battery waste as well (a single code such as
+        // 20 01 33* can also be battery waste on its own).
         static::saving(function (self $category): void {
-            if ($category->parent_id !== null && $category->parent) {
-                $category->is_batteries = $category->parent->is_batteries;
+            if ($category->parent_id !== null && $category->parent?->is_batteries) {
+                $category->is_batteries = true;
             }
         });
 

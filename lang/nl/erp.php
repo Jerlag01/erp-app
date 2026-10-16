@@ -540,6 +540,7 @@ return [
             'timesheet_mail' => 'Wekelijkse e-mail',
         ],
         'fields' => [
+            'battery_brussels_locale' => 'Taal documenten Brussel',
             'battery_enersys_project_category' => 'Projectcategorie Enersys',
             'battery_enersys_brand' => 'Merk',
             'battery_enersys_types' => 'Types (type | Ah)',
@@ -631,6 +632,7 @@ return [
             'timesheet_mobility_rate' => 'Mobiliteitsvergoeding',
         ],
         'help' => [
+            'battery_brussels_locale' => 'Taal van de batterijdocumenten voor COW-sites in Brussel (Vlaanderen: Nederlands, Wallonië: Frans).',
             'enersys' => 'Voor de Enersys-dossiers; klant, documenten en verzendnota zijn dezelfde als hierboven.',
             'battery_enersys_types' => 'Eén type per regel: "12V155FS | 155".',
             'site_name' => 'Getoond in het menu, het browsertabblad en e-mails.',
@@ -1495,6 +1497,10 @@ return [
         ],
     ],
     'waste' => [
+        'show_all_categories' => 'Alle categorieën tonen',
+        'other_categories' => 'Eigen categorieën (zonder Eural-code)',
+        'chapter' => 'Hoofdstuk',
+        'hazardous_only' => 'Enkel gevaarlijk afval',
         'title' => 'Afvalregister',
         'registry' => 'Afvalregister',
         'type' => 'Soort afval',
@@ -2180,6 +2186,9 @@ return [
         ],
     ],
     'batteries' => [
+        'document_locale' => 'Taal documenten',
+        'document_locale_auto' => 'Automatisch (volgens regio)',
+        'document_locale_help' => 'Automatisch volgens de regio van de COW-site: :language. Vlaanderen in het Nederlands, Wallonië in het Frans, Brussel zoals ingesteld.',
         'overview' => [
             'title' => 'Overzicht van het project',
             'help' => 'De gegevens van de opdracht. Ze worden ingevuld in het tabblad "Invoer" door wie daarvoor het recht heeft.',

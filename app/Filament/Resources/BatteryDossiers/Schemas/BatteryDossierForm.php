@@ -204,6 +204,23 @@ class BatteryDossierForm
     }
 
     /**
+     * The language of the documents: automatic (the region of the COW site) or set by hand.
+     */
+    public static function documentLocaleField(): Select
+    {
+        return Select::make('document_locale')
+            ->label(__('erp.batteries.document_locale'))
+            ->options(['nl' => 'Nederlands', 'fr' => 'Français'])
+            ->placeholder(__('erp.batteries.document_locale_auto'))
+            ->helperText(function (Get $get): string {
+                $site = Project::query()->with('workSite.area')->find($get('project_id'))?->workSite;
+                $locale = BatteryDossier::regionLocale($site?->postal_code, $site?->area?->name);
+
+                return __('erp.batteries.document_locale_help', ['language' => $locale === 'fr' ? 'Français' : 'Nederlands']);
+            });
+    }
+
+    /**
      * @return array<Component>
      */
     protected static function inputTab(): array
@@ -237,6 +254,7 @@ class BatteryDossierForm
                     Select::make('waste_type')
                         ->label(__('erp.batteries.waste_type'))
                         ->options(fn (): array => collect((array) settings()->get('batteries.waste_types', []))->mapWithKeys(fn (string $type): array => [$type => $type])->all()),
+                    static::documentLocaleField(),
                 ]),
             Grid::make(['default' => 1, 'lg' => 2])->schema([
                 Section::make(__('erp.batteries.sections.old'))

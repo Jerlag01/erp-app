@@ -1,0 +1,3841 @@
+{
+ "source": "Besluit 2014/955/EU van de Commissie (lijst van afvalstoffen, Eural), Publicatieblad L 370 van 30.12.2014, Nederlandse versie",
+ "chapters": {
+  "01": "Afval van exploratie, mijnbouw, exploitatie van steengroeven en de fysische en chemische bewerking van mineralen",
+  "02": "Afval van landbouw, tuinbouw, aquacultuur, bosbouw, jacht en visserij en de voedselbereiding en -verwerking",
+  "03": "Afval van de houtverwerking en de productie van panelen en meubelen alsmede pulp, papier en karton",
+  "04": "Afval van de leer-, bont- en textielindustrie",
+  "05": "Afval van petroleumraffinage, aardgaszuivering en de pyrolytische behandeling van kool",
+  "06": "Afval van anorganische chemische processen",
+  "07": "Afval van organische chemische processen",
+  "08": "Afval van bereiding, formulering, levering en gebruik (BFLG) van coatings (verf, lak en email), lijm, kit en drukinkt",
+  "09": "Afval van de fotografische industrie",
+  "10": "Afval van thermische processen",
+  "11": "Afval van de chemische oppervlaktebehandeling en coating van metalen en andere materialen; non-ferrohydrometallurgie",
+  "12": "Afval van de machinale bewerking en de fysische en mechanische oppervlaktebehandeling van metalen en kunststoffen",
+  "13": "Olieafval en afval van vloeibare brandstoffen (exclusief spijsolie, 05 en 12)",
+  "14": "Afval van organische oplosmiddelen, koelmiddelen en drijfgassen (exclusief 07 en 08)",
+  "15": "Verpakkingsafval; absorbentia, poetsdoeken, filtermateriaal en beschermende kleding (niet elders genoemd)",
+  "16": "Niet elders in de lijst genoemd afval",
+  "17": "Bouw- en sloopafval (inclusief afgegraven grond van verontreinigde locaties)",
+  "18": "Afval van de gezondheidszorg bij mens of dier en/of verwant onderzoek (exclusief keuken- en restaurantafval dat niet rechtstreeks van de gezondheidszorg afkomstig is)",
+  "19": "Afval van installaties voor afvalbeheer, offsite waterzuiveringsinstallaties en de bereiding van voor menselijke consumptie bestemd water en water voor industrieel gebruik",
+  "20": "Stedelijk afval (huishoudelijk afval en soortgelijk bedrijfsafval, industrieel afval en afval van instellingen) inclusief gescheiden ingezamelde fracties"
+ },
+ "subchapters": [
+  [
+   "01 01",
+   "afval van de winning van mineralen"
+  ],
+  [
+   "01 03",
+   "afval van de fysische en chemische verwerking van metaalhoudende mineralen"
+  ],
+  [
+   "01 04",
+   "afval van de fysische en chemische verwerking van niet-metaalhoudende mineralen"
+  ],
+  [
+   "01 05",
+   "boorgruis en overig boorafval"
+  ],
+  [
+   "02 01",
+   "afval van landbouw, tuinbouw, aquacultuur, bosbouw, jacht en visserij"
+  ],
+  [
+   "02 02",
+   "afval van de bereiding en verwerking van vlees, vis en ander voedsel van dierlijke oorsprong"
+  ],
+  [
+   "02 03",
+   "afval van de bereiding en verwerking van fruit, groente, granen, spijsolie, cacao, koffie, thee en tabak; de productie van conserven; de productie van gist en gistextract en de bereiding en fermentatie van melasse"
+  ],
+  [
+   "02 04",
+   "afval van de suikerverwerking"
+  ],
+  [
+   "02 05",
+   "afval van de zuivelindustrie"
+  ],
+  [
+   "02 06",
+   "afval van bakkerijen en van de banketbakkersindustrie"
+  ],
+  [
+   "02 07",
+   "afval van de productie van alcoholische en niet-alcoholische dranken (exclusief koffie, thee en cacao)"
+  ],
+  [
+   "03 01",
+   "afval van de houtverwerking en de productie van panelen en meubelen"
+  ],
+  [
+   "03 02",
+   "houtverduurzamingsafval"
+  ],
+  [
+   "03 03",
+   "afval van de productie en verwerking van pulp, papier en karton"
+  ],
+  [
+   "04 01",
+   "afval van de leer- en de bontindustrie"
+  ],
+  [
+   "04 02",
+   "afval van de textielindustrie"
+  ],
+  [
+   "05 01",
+   "afval van petroleumraffinage"
+  ],
+  [
+   "05 06",
+   "afval van de pyrolytische behandeling van kool"
+  ],
+  [
+   "05 07",
+   "afval van aardgaszuivering en -transport"
+  ],
+  [
+   "06 01",
+   "afval van bereiding, formulering, levering en gebruik (BFLG) van zuren"
+  ],
+  [
+   "06 02",
+   "afval van BFLG van basen"
+  ],
+  [
+   "06 03",
+   "afval van BFLG van zouten en hun oplossingen en metaaloxiden"
+  ],
+  [
+   "06 04",
+   "niet onder 06 03 vallend metaalhoudend afval"
+  ],
+  [
+   "06 05",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "06 06",
+   "afval van BFLG van zwavelverbindingen, chemische processen met zwavel en ontzwavelingsprocessen"
+  ],
+  [
+   "06 07",
+   "afval van BFLG van halogenen en chemische processen met halogenen"
+  ],
+  [
+   "06 08",
+   "afval van BFLG van silicium en siliciumderivaten"
+  ],
+  [
+   "06 09",
+   "afval van BFLG van fosforverbindingen en chemische processen met fosfor"
+  ],
+  [
+   "06 10",
+   "afval van BFLG van stikstofverbindingen, chemische processen met stikstof en kunstmestbereiding"
+  ],
+  [
+   "06 11",
+   "afval van de bereiding van anorganische pigmenten en opacificeermiddelen"
+  ],
+  [
+   "06 13",
+   "afval van niet elders genoemde anorganische chemische processen"
+  ],
+  [
+   "07 01",
+   "afval van bereiding, formulering, levering en gebruik (BFLG) van organische basischemicaliën"
+  ],
+  [
+   "07 02",
+   "afval van BFLG van kunststoffen, synthetische rubber en kunstvezels"
+  ],
+  [
+   "07 03",
+   "afval van BFLG van organische kleurstoffen en pigmenten (exclusief 06 11)"
+  ],
+  [
+   "07 04",
+   "afval van BFLG van organische gewasbeschermingsmiddelen (exclusief 02 01 08 en 02 01 09), houtverduurzamingsmiddelen (exclusief 03 02) en andere biociden"
+  ],
+  [
+   "07 05",
+   "afval van BFLG van farmaceutische producten"
+  ],
+  [
+   "07 06",
+   "afval van BFLG van vetten, smeermiddelen, zepen, detergenten, desinfecterende middelen en cosmetische producten"
+  ],
+  [
+   "07 07",
+   "afval van BFLG van fijnchemicaliën en niet elders genoemde chemische producten"
+  ],
+  [
+   "08 01",
+   "afval van BFLG en verwijdering van verf en lak"
+  ],
+  [
+   "08 02",
+   "afval van BFLG van andere coatings (inclusief keramisch materiaal)"
+  ],
+  [
+   "08 03",
+   "afval van BFLG van drukinkt"
+  ],
+  [
+   "08 04",
+   "afval van BFLG van lijm en kit (inclusief vochtwerende producten)"
+  ],
+  [
+   "08 05",
+   "niet elders in 08 genoemd afval"
+  ],
+  [
+   "09 01",
+   "afval van de fotografische industrie"
+  ],
+  [
+   "10 01",
+   "afval van elektriciteitscentrales en andere verbrandingsinstallaties (exclusief 19)"
+  ],
+  [
+   "10 02",
+   "afval van de ijzer- en staalindustrie"
+  ],
+  [
+   "10 03",
+   "afval van thermische processen in de aluminiummetallurgie"
+  ],
+  [
+   "10 04",
+   "afval van thermische processen in de loodmetallurgie"
+  ],
+  [
+   "10 05",
+   "afval van thermische processen in de zinkmetallurgie"
+  ],
+  [
+   "10 06",
+   "afval van thermische processen in de kopermetallurgie"
+  ],
+  [
+   "10 07",
+   "afval van thermische processen in de zilver-, de goud- en de platinametallurgie"
+  ],
+  [
+   "10 08",
+   "afval van thermische processen in de overige non-ferrometallurgie"
+  ],
+  [
+   "10 09",
+   "afval van ijzergieten"
+  ],
+  [
+   "10 10",
+   "afval van het gieten van non-ferrometalen"
+  ],
+  [
+   "10 11",
+   "afval van de fabricage van glas en glasproducten"
+  ],
+  [
+   "10 12",
+   "afval van de fabricage van keramische producten, stenen, tegels en bouwmaterialen"
+  ],
+  [
+   "10 13",
+   "afval van de fabricage van cement, (ongebluste) kalk en pleistermortel en producten die hiervan zijn gemaakt"
+  ],
+  [
+   "10 14",
+   "afval van crematoria"
+  ],
+  [
+   "11 01",
+   "afval van chemische oppervlaktebehandeling en coating van metalen en andere materialen (bv. galvanische processen, verzinken, beitsen, etsen, fosfaatbehandeling, alkalisch ontvetten en anodisatie)"
+  ],
+  [
+   "11 02",
+   "afval van non-ferrohydrometallurgische processen"
+  ],
+  [
+   "11 03",
+   "slib en vaste stoffen van temperingsprocessen"
+  ],
+  [
+   "11 05",
+   "afval van thermische galvanisatieprocessen"
+  ],
+  [
+   "12 01",
+   "afval van de machinale bewerking en de fysische en mechanische oppervlaktebehandeling van metalen en kunststoffen"
+  ],
+  [
+   "12 03",
+   "afval van water- en stoomontvetting (exclusief 11)"
+  ],
+  [
+   "13 01",
+   "afval van hydraulische olie"
+  ],
+  [
+   "13 02",
+   "afval van motor-, transmissie- en smeerolie"
+  ],
+  [
+   "13 03",
+   "afval van olie voor isolatie en warmteoverdracht"
+  ],
+  [
+   "13 04",
+   "bilge-olie"
+  ],
+  [
+   "13 05",
+   "inhoud van olie/waterscheiders"
+  ],
+  [
+   "13 07",
+   "afval van vloeibare brandstoffen"
+  ],
+  [
+   "13 08",
+   "niet elders genoemd olieafval"
+  ],
+  [
+   "14 06",
+   "afval van organische oplosmiddelen, koelmiddelen en drijfgassen voor schuim/aërosolen"
+  ],
+  [
+   "15 01",
+   "verpakking (inclusief gescheiden ingezameld stedelijk verpakkingsafval)"
+  ],
+  [
+   "15 02",
+   "absorbentia, filtermateriaal, poetsdoeken en beschermende kleding"
+  ],
+  [
+   "16 01",
+   "afgedankte voertuigen van verschillende soorten vervoer (inclusief niet voor de weg bestemde machines) en afval van de sloop van afgedankte voertuigen en het onderhoud van voertuigen (exclusief 13, 14, 16 06 en 16 08)"
+  ],
+  [
+   "16 02",
+   "afval van elektrische en elektronische apparatuur"
+  ],
+  [
+   "16 03",
+   "afgekeurde charges en ongebruikte producten"
+  ],
+  [
+   "16 04",
+   "afvalexplosieven"
+  ],
+  [
+   "16 05",
+   "gassen in drukhouders en afgedankte chemicaliën"
+  ],
+  [
+   "16 06",
+   "batterijen en accu's"
+  ],
+  [
+   "16 07",
+   "afval van de reiniging van transport- en opslagtanks en vaten (exclusief 05 en 13)"
+  ],
+  [
+   "16 08",
+   "afgewerkte katalysatoren"
+  ],
+  [
+   "16 09",
+   "oxiderende stoffen"
+  ],
+  [
+   "16 10",
+   "waterig vloeibaar afval dat bestemd is om elders te worden verwerkt"
+  ],
+  [
+   "16 11",
+   "ovenpuin"
+  ],
+  [
+   "17 01",
+   "beton, stenen, tegels en keramische producten"
+  ],
+  [
+   "17 02",
+   "hout, glas en kunststof"
+  ],
+  [
+   "17 03",
+   "bitumineuze mengsels, koolteer en met teer behandelde producten"
+  ],
+  [
+   "17 04",
+   "metaal (inclusief legeringen)"
+  ],
+  [
+   "17 05",
+   "grond (inclusief afgegraven grond van verontreinigde locaties), stenen en baggerspecie"
+  ],
+  [
+   "17 06",
+   "isolatiemateriaal en asbesthoudend bouwmateriaal"
+  ],
+  [
+   "17 08",
+   "gipshoudend bouwmateriaal"
+  ],
+  [
+   "17 09",
+   "overig bouw- en sloopafval"
+  ],
+  [
+   "18 01",
+   "afval van verloskundige zorg en de diagnose, behandeling of preventie van ziektes bij de mens"
+  ],
+  [
+   "18 02",
+   "afval van onderzoek en de diagnose, behandeling of preventie van ziektes bij dieren"
+  ],
+  [
+   "19 01",
+   "afval van de verbranding of pyrolyse van afval"
+  ],
+  [
+   "19 02",
+   "afval van de fysisch-chemische behandeling van afval (inclusief verwijdering van chroom of cyanide of neutralisatie)"
+  ],
+  [
+   "19 03",
+   "gestabiliseerd/verhard afval"
+  ],
+  [
+   "19 04",
+   "verglaasd afval en afval van verglazen"
+  ],
+  [
+   "19 05",
+   "afval van de aerobe behandeling van vast afval"
+  ],
+  [
+   "19 06",
+   "afval van de anaerobe behandeling van afval"
+  ],
+  [
+   "19 07",
+   "percolatiewater van stortplaatsen"
+  ],
+  [
+   "19 08",
+   "niet elders genoemd afval van afvalwaterzuivering"
+  ],
+  [
+   "19 09",
+   "afval van de bereiding van voor menselijke consumptie bestemd water en water voor industrieel gebruik"
+  ],
+  [
+   "19 10",
+   "afval van de shredding van metaalhoudend afval"
+  ],
+  [
+   "19 11",
+   "afval van de regeneratie van olie"
+  ],
+  [
+   "19 12",
+   "afval van niet elders genoemde mechanische afvalverwerking (bv. sorteren, breken, verdichten, palletiseren)"
+  ],
+  [
+   "19 13",
+   "afval van bodem- en grondwatersanering"
+  ],
+  [
+   "20 01",
+   "gescheiden ingezamelde fracties (exclusief 15 01)"
+  ],
+  [
+   "20 02",
+   "tuin- en plantsoenafval (inclusief afval van begraafplaatsen)"
+  ],
+  [
+   "20 03",
+   "overig stedelijk afval"
+  ]
+ ],
+ "codes": [
+  [
+   "01 01 01",
+   "afval van de winning van metaalhoudende mineralen"
+  ],
+  [
+   "01 01 02",
+   "afval van de winning van niet-metaalhoudende mineralen"
+  ],
+  [
+   "01 03 04*",
+   "zuurvormende tailings verkregen bij de verwerking van sulfide-erts"
+  ],
+  [
+   "01 03 05*",
+   "andere tailings die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "01 03 06",
+   "niet onder 01 03 04 en 01 03 05 vallende tailings"
+  ],
+  [
+   "01 03 07*",
+   "ander afval van de fysische en chemische verwerking van metaalhoudende mineralen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "01 03 08",
+   "niet onder 01 03 07 vallend stof- en poederachtig afval"
+  ],
+  [
+   "01 03 09",
+   "niet onder 01 03 10 vallend rood slib van de aluminiumproductie"
+  ],
+  [
+   "01 03 10*",
+   "niet onder 01 03 07 vallend rood slib van de aluminiumproductie dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "01 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "01 04 07*",
+   "afval van de fysische en chemische verwerking van niet-metaalhoudende mineralen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "01 04 08",
+   "niet onder 01 04 07 vallend grind- en rotsafval"
+  ],
+  [
+   "01 04 09",
+   "zand- en kleiafval"
+  ],
+  [
+   "01 04 10",
+   "niet onder 01 04 07 vallend stof- en poederachtig afval"
+  ],
+  [
+   "01 04 11",
+   "niet onder 01 04 07 vallend afval van de kali- en steenzoutverwerking"
+  ],
+  [
+   "01 04 12",
+   "niet onder 01 04 07 en 01 04 11 vallende schilfers en ander afval van het wassen en schoonmaken van mineralen"
+  ],
+  [
+   "01 04 13",
+   "niet onder 01 04 07 vallend afval van het hakken en zagen van steen"
+  ],
+  [
+   "01 04 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "01 05 04",
+   "zoetwaterboorgruis en -afval"
+  ],
+  [
+   "01 05 05*",
+   "oliehoudend boorgruis en -afval"
+  ],
+  [
+   "01 05 06*",
+   "boorgruis en ander boorafval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "01 05 07",
+   "niet onder 01 05 05 en 01 05 06 vallend bariethoudend boorgruis en -afval"
+  ],
+  [
+   "01 05 08",
+   "niet onder 01 05 05 en 01 05 06 vallend chloridehoudend boorgruis en -afval"
+  ],
+  [
+   "01 05 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 01 01",
+   "slib van wassen en schoonmaken"
+  ],
+  [
+   "02 01 02",
+   "afval van dierlijke weefsels"
+  ],
+  [
+   "02 01 03",
+   "afval van plantaardige weefsels"
+  ],
+  [
+   "02 01 04",
+   "kunststofafval (exclusief verpakkingen)"
+  ],
+  [
+   "02 01 06",
+   "dierlijke feces, urine en mest (inclusief gebruikt stro), afvalwater, gescheiden ingezameld en elders verwerkt"
+  ],
+  [
+   "02 01 07",
+   "afval van de bosbouw"
+  ],
+  [
+   "02 01 08*",
+   "agrochemisch afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "02 01 09",
+   "niet onder 02 01 08 vallend agrochemisch afval"
+  ],
+  [
+   "02 01 10",
+   "metaalafval"
+  ],
+  [
+   "02 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 02 01",
+   "slib van wassen en schoonmaken"
+  ],
+  [
+   "02 02 02",
+   "afval van dierlijke weefsels"
+  ],
+  [
+   "02 02 03",
+   "voor consumptie of verwerking ongeschikt materiaal"
+  ],
+  [
+   "02 02 04",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "02 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 03 01",
+   "slib van wassen, schoonmaken, pellen, centrifugeren en scheiden"
+  ],
+  [
+   "02 03 02",
+   "afval van conserveermiddelen"
+  ],
+  [
+   "02 03 03",
+   "afval van oplosmiddelenextractie"
+  ],
+  [
+   "02 03 04",
+   "voor consumptie of verwerking ongeschikt materiaal"
+  ],
+  [
+   "02 03 05",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "02 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 04 01",
+   "grond van het schoonmaken en wassen van bieten"
+  ],
+  [
+   "02 04 02",
+   "afgekeurd calciumcarbonaat (= schuimaarde)"
+  ],
+  [
+   "02 04 03",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "02 04 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 05 01",
+   "voor consumptie of verwerking ongeschikt materiaal"
+  ],
+  [
+   "02 05 02",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "02 05 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 06 01",
+   "voor consumptie of verwerking ongeschikt materiaal"
+  ],
+  [
+   "02 06 02",
+   "afval van conserveermiddelen"
+  ],
+  [
+   "02 06 03",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "02 06 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "02 07 01",
+   "afval van wassen, schoonmaken en mechanische bewerking van de grondstoffen"
+  ],
+  [
+   "02 07 02",
+   "afval van de destillatie van alcoholische dranken"
+  ],
+  [
+   "02 07 03",
+   "afval van chemische behandeling"
+  ],
+  [
+   "02 07 04",
+   "voor consumptie of verwerking ongeschikt materiaal"
+  ],
+  [
+   "02 07 05",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "02 07 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "03 01 01",
+   "schors- en kurkafval"
+  ],
+  [
+   "03 01 04*",
+   "zaagsel, schaafsel, spaanders, hout, spaanplaat en fineer die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "03 01 05",
+   "niet onder 03 01 04 vallend zaagsel, schaafsel, spaanders, hout, spaanplaat en fineer"
+  ],
+  [
+   "03 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "03 02 01*",
+   "niet-gehalogeneerde organische houtverduurzamingsmiddelen"
+  ],
+  [
+   "03 02 02*",
+   "organochloor-houtverduurzamingsmiddelen"
+  ],
+  [
+   "03 02 03*",
+   "organometaal-houtverduurzamingsmiddelen"
+  ],
+  [
+   "03 02 04*",
+   "anorganische houtverduurzamingsmiddelen"
+  ],
+  [
+   "03 02 05*",
+   "andere houtverduurzamingsmiddelen die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "03 02 99",
+   "niet elders genoemde houtverduurzamingsmiddelen"
+  ],
+  [
+   "03 03 01",
+   "schors- en houtafval"
+  ],
+  [
+   "03 03 02",
+   "„green liquor”-slib (afkomstig van de terugwinning van de kookvloeistof)"
+  ],
+  [
+   "03 03 05",
+   "ontinktingsslib van papierrecycling"
+  ],
+  [
+   "03 03 07",
+   "mechanisch afgescheiden rejects afkomstig van de verpulping van papier- en kartonafval"
+  ],
+  [
+   "03 03 08",
+   "afval van het scheiden van voor recycling bestemd papier en karton"
+  ],
+  [
+   "03 03 09",
+   "kalkneerslagafval"
+  ],
+  [
+   "03 03 10",
+   "onbruikbare vezels en door mechanische afscheiding verkregen vezel-, vulstof- en coatingslib"
+  ],
+  [
+   "03 03 11",
+   "niet onder 03 03 10 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "03 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "04 01 01",
+   "schraapafval"
+  ],
+  [
+   "04 01 02",
+   "loogafval"
+  ],
+  [
+   "04 01 03*",
+   "ontvettingsafval dat oplosmiddelen bevat zonder vloeibare fase"
+  ],
+  [
+   "04 01 04",
+   "chroomhoudende looivloeistof"
+  ],
+  [
+   "04 01 05",
+   "chroomvrije looivloeistof"
+  ],
+  [
+   "04 01 06",
+   "chroomhoudend slib, met name van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "04 01 07",
+   "chroomvrij slib, met name van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "04 01 08",
+   "chroomhoudend gelooid leerafval (snij-afval, polijststof)"
+  ],
+  [
+   "04 01 09",
+   "afval van bewerking en afwerking"
+  ],
+  [
+   "04 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "04 02 09",
+   "afval van composietmaterialen (geïmpregneerde textiel, elastomeren, plastomeren)"
+  ],
+  [
+   "04 02 10",
+   "organisch afval van natuurlijke producten (bv. vet en was)"
+  ],
+  [
+   "04 02 14*",
+   "afval van afwerking dat organische oplosmiddelen bevat"
+  ],
+  [
+   "04 02 15",
+   "niet onder 04 02 14 vallend afval van afwerking"
+  ],
+  [
+   "04 02 16*",
+   "kleurstoffen en pigmenten die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "04 02 17",
+   "niet onder 04 02 16 vallende kleurstoffen en pigmenten"
+  ],
+  [
+   "04 02 19*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "04 02 20",
+   "niet onder 04 02 19 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "04 02 21",
+   "afval van onverwerkte textielvezels"
+  ],
+  [
+   "04 02 22",
+   "afval van verwerkte textielvezels"
+  ],
+  [
+   "04 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "05 01 02*",
+   "ontzoutingsslib"
+  ],
+  [
+   "05 01 03*",
+   "tankbodemslib"
+  ],
+  [
+   "05 01 04*",
+   "zuur alkylslib"
+  ],
+  [
+   "05 01 05*",
+   "gemorste olie"
+  ],
+  [
+   "05 01 06*",
+   "olieachtig slib afkomstig van onderhoudswerkzaamheden aan installaties of apparaten"
+  ],
+  [
+   "05 01 07*",
+   "zuurteer"
+  ],
+  [
+   "05 01 08*",
+   "overige teer"
+  ],
+  [
+   "05 01 09*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "05 01 10",
+   "niet onder 05 01 09 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "05 01 11*",
+   "afval van brandstofzuivering met behulp van basen"
+  ],
+  [
+   "05 01 12*",
+   "olie die zuren bevat"
+  ],
+  [
+   "05 01 13",
+   "ketelvoedingwaterslib"
+  ],
+  [
+   "05 01 14",
+   "afval van koeltorens"
+  ],
+  [
+   "05 01 15*",
+   "afgewerkte bleekaarde"
+  ],
+  [
+   "05 01 16",
+   "zwavelhoudend afval van de ontzwaveling van petroleum"
+  ],
+  [
+   "05 01 17",
+   "bitumen"
+  ],
+  [
+   "05 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "05 06 01*",
+   "zuurteer"
+  ],
+  [
+   "05 06 03*",
+   "overige teer"
+  ],
+  [
+   "05 06 04",
+   "afval van koeltorens"
+  ],
+  [
+   "05 06 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "05 07 01*",
+   "kwikhoudend afval"
+  ],
+  [
+   "05 07 02",
+   "zwavelhoudend afval"
+  ],
+  [
+   "05 07 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 01 01*",
+   "zwavelzuur en zwaveligzuur"
+  ],
+  [
+   "06 01 02*",
+   "zoutzuur"
+  ],
+  [
+   "06 01 03*",
+   "waterstoffluoride"
+  ],
+  [
+   "06 01 04*",
+   "fosfor- en fosforigzuur"
+  ],
+  [
+   "06 01 05*",
+   "salpeter- en salpeterigzuur"
+  ],
+  [
+   "06 01 06*",
+   "overige zuren"
+  ],
+  [
+   "06 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 02 01*",
+   "calciumhydroxide"
+  ],
+  [
+   "06 02 03*",
+   "ammoniumhydroxide"
+  ],
+  [
+   "06 02 04*",
+   "natrium- en kaliumhydroxide"
+  ],
+  [
+   "06 02 05*",
+   "overige basen"
+  ],
+  [
+   "06 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 03 11*",
+   "vaste zouten en oplossingen die cyanide bevatten"
+  ],
+  [
+   "06 03 13*",
+   "vaste zouten en oplossingen die zware metalen bevatten"
+  ],
+  [
+   "06 03 14",
+   "niet onder 06 03 11 en 06 03 13 vallende vaste zouten en oplossingen"
+  ],
+  [
+   "06 03 15*",
+   "metaaloxiden die zware metalen bevatten"
+  ],
+  [
+   "06 03 16",
+   "niet onder 06 03 15 vallende metaaloxiden"
+  ],
+  [
+   "06 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 04 03*",
+   "arseenhoudend afval"
+  ],
+  [
+   "06 04 04*",
+   "kwikhoudend afval"
+  ],
+  [
+   "06 04 05*",
+   "afval dat andere zware metalen bevat"
+  ],
+  [
+   "06 04 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 05 02*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "06 05 03",
+   "niet onder 06 05 02 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "06 06 02*",
+   "afval dat gevaarlijke sulfiden bevat"
+  ],
+  [
+   "06 06 03",
+   "niet onder 06 06 02 vallend afval dat sulfiden bevat"
+  ],
+  [
+   "06 06 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 07 01*",
+   "asbesthoudend afval van elektrolyse"
+  ],
+  [
+   "06 07 02*",
+   "actieve kool van de chloorbereiding"
+  ],
+  [
+   "06 07 03*",
+   "bariumsulfaatslib dat kwik bevat"
+  ],
+  [
+   "06 07 04*",
+   "oplossingen en zuren, bv. contactzuur"
+  ],
+  [
+   "06 07 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 08 02*",
+   "afval dat gevaarlijke chloorsilanen bevat"
+  ],
+  [
+   "06 08 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 09 02",
+   "fosforhoudende slakken"
+  ],
+  [
+   "06 09 03*",
+   "calciumhoudend reactieafval dat gevaarlijke stoffen bevat of daarmee is verontreinigd"
+  ],
+  [
+   "06 09 04",
+   "niet onder 06 09 03 vallend calciumhoudend reactieafval"
+  ],
+  [
+   "06 09 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 10 02*",
+   "afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "06 10 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 11 01",
+   "calciumhoudend reactieafval van de productie van titaandioxide"
+  ],
+  [
+   "06 11 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "06 13 01*",
+   "anorganische gewasbeschermingsmiddelen, houtverduurzamingsmiddelen en andere biociden"
+  ],
+  [
+   "06 13 02*",
+   "afgewerkte actieve kool (exclusief 06 07 02)"
+  ],
+  [
+   "06 13 03",
+   "zwartsel (carbon black)"
+  ],
+  [
+   "06 13 04*",
+   "afval van asbestverwerking"
+  ],
+  [
+   "06 13 05*",
+   "roet"
+  ],
+  [
+   "06 13 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 01 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 01 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 01 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 01 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 01 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 01 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 01 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 01 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 01 12",
+   "niet onder 07 01 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 02 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 02 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 02 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 02 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 02 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 02 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 02 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 02 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 02 12",
+   "niet onder 07 02 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 02 13",
+   "kunststofafval"
+  ],
+  [
+   "07 02 14*",
+   "afval van additieven die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "07 02 15",
+   "afval van niet onder 07 02 14 bedoelde additieven"
+  ],
+  [
+   "07 02 16*",
+   "afval dat gevaarlijke siliconen bevat"
+  ],
+  [
+   "07 02 17",
+   "afval dat niet onder 07 02 16 vallende siliconen bevat"
+  ],
+  [
+   "07 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 03 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 03 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 03 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 03 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 03 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 03 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 03 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 03 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 03 12",
+   "niet onder 07 03 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 04 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 04 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 04 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 04 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 04 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 04 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 04 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 04 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 04 12",
+   "niet onder 07 04 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 04 13*",
+   "vaste afvalstoffen die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "07 04 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 05 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 05 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 05 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 05 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 05 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 05 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 05 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 05 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 05 12",
+   "niet onder 07 05 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 05 13*",
+   "vaste afvalstoffen die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "07 05 14",
+   "niet onder 07 05 13 vallende vaste afvalstoffen"
+  ],
+  [
+   "07 05 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 06 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 06 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 06 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 06 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 06 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 06 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 06 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 06 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 06 12",
+   "niet onder 07 06 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 06 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "07 07 01*",
+   "waterige wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 07 03*",
+   "gehalogeneerde organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 07 04*",
+   "overige organische oplosmiddelen, wasvloeistoffen en moederlogen"
+  ],
+  [
+   "07 07 07*",
+   "gehalogeneerde destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 07 08*",
+   "overige destillatieresiduen en reactieresiduen"
+  ],
+  [
+   "07 07 09*",
+   "gehalogeneerde filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 07 10*",
+   "overige filterkoek en afgewerkte absorbentia"
+  ],
+  [
+   "07 07 11*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "07 07 12",
+   "niet onder 07 07 11 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "07 07 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "08 01 11*",
+   "afval van verf en lak dat organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 01 12",
+   "niet onder 08 01 11 vallend afval van verf en lak"
+  ],
+  [
+   "08 01 13*",
+   "slib van verf of lak dat organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 01 14",
+   "niet onder 08 01 13 vallend slib van verf of lak"
+  ],
+  [
+   "08 01 15*",
+   "waterig slib dat verf of lak met organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 01 16",
+   "niet onder 08 01 15 vallend waterig slib dat verf of lak bevat"
+  ],
+  [
+   "08 01 17*",
+   "afval van verf- en lakverwijdering dat organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 01 18",
+   "niet onder 08 01 17 vallend afval van verf- en lakverwijdering"
+  ],
+  [
+   "08 01 19*",
+   "waterige suspensies die verf of lak met organische oplosmiddelen of andere gevaarlijke stoffen bevatten"
+  ],
+  [
+   "08 01 20",
+   "niet onder 08 01 19 vallende waterige suspensies die verf of lak bevatten"
+  ],
+  [
+   "08 01 21*",
+   "afval van verf- of lakverwijderaar"
+  ],
+  [
+   "08 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "08 02 01",
+   "afval-coatingpoeder"
+  ],
+  [
+   "08 02 02",
+   "waterig slib dat keramisch materiaal bevat"
+  ],
+  [
+   "08 02 03",
+   "waterige suspensies die keramisch materiaal bevatten"
+  ],
+  [
+   "08 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "08 03 07",
+   "waterig slib dat inkt bevat"
+  ],
+  [
+   "08 03 08",
+   "waterig vloeibaar afval dat inkt bevat"
+  ],
+  [
+   "08 03 12*",
+   "inktafval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 03 13",
+   "niet onder 08 03 12 vallend inktafval"
+  ],
+  [
+   "08 03 14*",
+   "inktslib dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 03 15",
+   "niet onder 08 03 14 vallend inktslib"
+  ],
+  [
+   "08 03 16*",
+   "afval van etsoplossingen"
+  ],
+  [
+   "08 03 17*",
+   "tonerafval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 03 18",
+   "niet onder 08 03 17 vallend tonerafval"
+  ],
+  [
+   "08 03 19*",
+   "dispersieolie"
+  ],
+  [
+   "08 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "08 04 09*",
+   "afval van lijm en kit dat organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 04 10",
+   "niet onder 08 04 09 vallend afval van lijm en kit"
+  ],
+  [
+   "08 04 11*",
+   "slib van lijm en kit dat organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 04 12",
+   "niet onder 08 04 11 vallend slib van lijm en kit"
+  ],
+  [
+   "08 04 13*",
+   "waterig slib dat lijm of kit met organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 04 14",
+   "niet onder 08 04 13 vallend waterig slib dat lijm of kit bevat"
+  ],
+  [
+   "08 04 15*",
+   "waterig vloeibaar afval dat lijm of kit met organische oplosmiddelen of andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "08 04 16",
+   "niet onder 08 04 15 vallend waterig vloeibaar afval dat lijm of kit bevat"
+  ],
+  [
+   "08 04 17*",
+   "harsolie"
+  ],
+  [
+   "08 04 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "08 05 01*",
+   "isocyanaatafval"
+  ],
+  [
+   "09 01 01*",
+   "ontwikkelvloeistof en activatoroplossing op basis van water"
+  ],
+  [
+   "09 01 02*",
+   "ontwikkelvloeistof voor offsetplaten op basis van water"
+  ],
+  [
+   "09 01 03*",
+   "ontwikkelvloeistof op basis van oplosmiddelen"
+  ],
+  [
+   "09 01 04*",
+   "fixeervloeistof"
+  ],
+  [
+   "09 01 05*",
+   "bleek- en bleekfixeervloeistof"
+  ],
+  [
+   "09 01 06*",
+   "zilverhoudend afval van ter plaatse behandeld fotografisch afval"
+  ],
+  [
+   "09 01 07",
+   "fotografische film en papier die zilver of zilververbindingen bevatten"
+  ],
+  [
+   "09 01 08",
+   "fotografische film en papier zonder zilver of zilververbindingen"
+  ],
+  [
+   "09 01 10",
+   "wegwerpcamera's zonder batterijen"
+  ],
+  [
+   "09 01 11*",
+   "wegwerpcamera's met onder 16 06 01, 16 06 02 of 16 06 03 vermelde batterijen"
+  ],
+  [
+   "09 01 12",
+   "niet onder 09 01 11 vallende wegwerpcamera's met batterijen"
+  ],
+  [
+   "09 01 13*",
+   "niet onder 09 01 06 vallend waterig vloeibaar afval van ter plaatse uitgevoerde terugwinning van zilver"
+  ],
+  [
+   "09 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 01 01",
+   "bodemas, slakken en ketelstof (exclusief het onder 10 01 04 vallende ketelstof)"
+  ],
+  [
+   "10 01 02",
+   "koolvliegas"
+  ],
+  [
+   "10 01 03",
+   "vliegas van turf en onbehandeld hout"
+  ],
+  [
+   "10 01 04*",
+   "olievliegas and -ketelstof"
+  ],
+  [
+   "10 01 05",
+   "calciumhoudend reactieafval van rookgasontzwaveling in vaste vorm"
+  ],
+  [
+   "10 01 07",
+   "calciumhoudend reactieafval van rookgasontzwaveling in slibvorm"
+  ],
+  [
+   "10 01 09*",
+   "zwavelzuur"
+  ],
+  [
+   "10 01 13*",
+   "vliegas van als brandstof gebruikte geëmulgeerde koolwaterstoffen"
+  ],
+  [
+   "10 01 14*",
+   "bij meeverbranden vrijkomende bodemas, slakken en ketelstof die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 01 15",
+   "niet onder 10 01 14 vallende bij meeverbranden vrijkomende bodemas, slakken en ketelstof"
+  ],
+  [
+   "10 01 16*",
+   "bij meeverbranden vrijkomende vliegas die gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 01 17",
+   "niet onder 10 01 16 vallende bij meeverbranden vrijkomende vliegas"
+  ],
+  [
+   "10 01 18*",
+   "afval van gasreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 01 19",
+   "niet onder 10 01 05, 10 01 07 en 10 01 18 vallend afval van gasreiniging"
+  ],
+  [
+   "10 01 20*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 01 21",
+   "niet onder 10 01 20 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "10 01 22*",
+   "waterig slib van ketelreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 01 23",
+   "niet onder 10 01 22 vallend waterig slib van ketelreiniging"
+  ],
+  [
+   "10 01 24",
+   "wervelbedzand"
+  ],
+  [
+   "10 01 25",
+   "afval van de opslag en toebereiding van brandstof voor kolengestookte elektriciteitscentrales"
+  ],
+  [
+   "10 01 26",
+   "afval van koelwaterzuivering"
+  ],
+  [
+   "10 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 02 01",
+   "afval van de verwerking van slakken"
+  ],
+  [
+   "10 02 02",
+   "onverwerkte slakken"
+  ],
+  [
+   "10 02 07*",
+   "vast afval van gasreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 02 08",
+   "niet onder 10 02 07 vallend vast afval van gasreiniging"
+  ],
+  [
+   "10 02 10",
+   "walshuid"
+  ],
+  [
+   "10 02 11*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 02 12",
+   "niet onder 10 02 11 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 02 13*",
+   "slib en filterkoek van gasreiniging die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 02 14",
+   "niet onder 10 02 13 vallende slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 02 15",
+   "overig(e) slib en filterkoek"
+  ],
+  [
+   "10 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 03 02",
+   "anodeafval"
+  ],
+  [
+   "10 03 04*",
+   "slakken van primaire productie"
+  ],
+  [
+   "10 03 05",
+   "aluminiumoxideafval"
+  ],
+  [
+   "10 03 08*",
+   "zoutslakken van secundaire productie"
+  ],
+  [
+   "10 03 09*",
+   "black drosses van secundaire productie"
+  ],
+  [
+   "10 03 15*",
+   "skimmings die brandbaar zijn of waaruit bij contact met water gevaarlijke hoeveelheden brandbare gassen vrijkomen"
+  ],
+  [
+   "10 03 16",
+   "niet onder 10 03 15 vallende skimmings"
+  ],
+  [
+   "10 03 17*",
+   "teerhoudend afval van de anodefabricage"
+  ],
+  [
+   "10 03 18",
+   "niet onder 10 03 17 vallend koolstofhoudend afval van de anodefabricage"
+  ],
+  [
+   "10 03 19*",
+   "rookgasstof dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 03 20",
+   "niet onder 10 03 19 vallend rookgasstof"
+  ],
+  [
+   "10 03 21*",
+   "overige deeltjes en stof (inclusief kogelmolenstof) die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 03 22",
+   "overige, niet onder 10 03 21 vallende deeltjes en stof (inclusief kogelmolenstof)"
+  ],
+  [
+   "10 03 23*",
+   "vast afval van gasreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 03 24",
+   "niet onder 10 03 23 vallend vast afval van gasreiniging"
+  ],
+  [
+   "10 03 25*",
+   "bij gasreiniging vrijkomende slib en filterkoek die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 03 26",
+   "niet onder 10 03 25 vallende bij gasreiniging verkregen slib en filterkoek"
+  ],
+  [
+   "10 03 27*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 03 28",
+   "niet onder 10 03 27 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 03 29*",
+   "afval van de behandeling van zoutslakken en black drosses dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 03 30",
+   "niet onder 10 03 29 vallend afval van de behandeling van zoutslakken en black drosses"
+  ],
+  [
+   "10 03 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 04 01*",
+   "slakken van primaire en secundaire productie"
+  ],
+  [
+   "10 04 02*",
+   "dross en skimmings van primaire en secundaire productie"
+  ],
+  [
+   "10 04 03*",
+   "calciumarsenaat"
+  ],
+  [
+   "10 04 04*",
+   "rookgasstof"
+  ],
+  [
+   "10 04 05*",
+   "overige deeltjes en stof"
+  ],
+  [
+   "10 04 06*",
+   "vast afval van gasreiniging"
+  ],
+  [
+   "10 04 07*",
+   "slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 04 09*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 04 10",
+   "niet onder 10 04 09 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 04 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 05 01",
+   "slakken van primaire en secundaire productie"
+  ],
+  [
+   "10 05 03*",
+   "rookgasstof"
+  ],
+  [
+   "10 05 04",
+   "overige deeltjes en stof"
+  ],
+  [
+   "10 05 05*",
+   "vast afval van gasreiniging"
+  ],
+  [
+   "10 05 06*",
+   "slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 05 08*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 05 09",
+   "niet onder 10 05 08 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 05 10*",
+   "dross en skimmings die brandbaar zijn of waaruit bij contact met water gevaarlijke hoeveelheden brandbare gassen vrijkomen"
+  ],
+  [
+   "10 05 11",
+   "niet onder 10 05 10 vallende dross en skimmings"
+  ],
+  [
+   "10 05 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 06 01",
+   "slakken van primaire en secundaire productie"
+  ],
+  [
+   "10 06 02",
+   "dross en skimmings van primaire en secundaire productie"
+  ],
+  [
+   "10 06 03*",
+   "rookgasstof"
+  ],
+  [
+   "10 06 04",
+   "overige deeltjes en stof"
+  ],
+  [
+   "10 06 06*",
+   "vast afval van gasreiniging"
+  ],
+  [
+   "10 06 07*",
+   "slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 06 09*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 06 10",
+   "niet onder 10 06 09 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 06 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 07 01",
+   "slakken van primaire en secundaire productie"
+  ],
+  [
+   "10 07 02",
+   "dross en skimmings van primaire en secundaire productie"
+  ],
+  [
+   "10 07 03",
+   "vast afval van gasreiniging"
+  ],
+  [
+   "10 07 04",
+   "overige deeltjes en stof"
+  ],
+  [
+   "10 07 05",
+   "slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 07 07*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 07 08",
+   "niet onder 10 07 07 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 07 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 08 04",
+   "deeltjes en stof"
+  ],
+  [
+   "10 08 08*",
+   "zoutslakken van primaire en secundaire productie"
+  ],
+  [
+   "10 08 09",
+   "overige slakken"
+  ],
+  [
+   "10 08 10*",
+   "dross en skimmings die brandbaar zijn of waaruit bij contact met water gevaarlijke hoeveelheden brandbare gassen vrijkomen"
+  ],
+  [
+   "10 08 11",
+   "niet onder 10 08 10 vallende dross en skimmings"
+  ],
+  [
+   "10 08 12*",
+   "teerhoudend afval van de anodefabricage"
+  ],
+  [
+   "10 08 13",
+   "niet onder 10 08 12 vallend koolstofhoudend afval van de anodefabricage"
+  ],
+  [
+   "10 08 14",
+   "anodeafval"
+  ],
+  [
+   "10 08 15*",
+   "rookgasstof dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 08 16",
+   "niet onder 10 08 15 vallend rookgasstof"
+  ],
+  [
+   "10 08 17*",
+   "slib en filterkoek van rookgasreiniging die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 08 18",
+   "niet onder 10 08 17 vallende slib en filterkoek van rookgasreiniging"
+  ],
+  [
+   "10 08 19*",
+   "oliehoudend afval van koelwaterzuivering"
+  ],
+  [
+   "10 08 20",
+   "niet onder 10 08 19 vallend afval van koelwaterzuivering"
+  ],
+  [
+   "10 08 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 09 03",
+   "ovenslak"
+  ],
+  [
+   "10 09 05*",
+   "gietkernen en -vormen die gevaarlijke stoffen bevatten en niet voor gieten zijn gebruikt"
+  ],
+  [
+   "10 09 06",
+   "niet onder 10 09 05 vallende gietkernen en -vormen die niet voor gieten zijn gebruikt"
+  ],
+  [
+   "10 09 07*",
+   "gietkernen en -vormen die gevaarlijke stoffen bevatten en voor gieten zijn gebruikt"
+  ],
+  [
+   "10 09 08",
+   "niet onder 10 09 07 vallende gietkernen en -vormen die voor gieten zijn gebruikt"
+  ],
+  [
+   "10 09 09*",
+   "rookgasstof dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 09 10",
+   "niet onder 10 09 09 vallend rookgasstof"
+  ],
+  [
+   "10 09 11*",
+   "andere deeltjes die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 09 12",
+   "niet onder 10 09 11 vallende deeltjes"
+  ],
+  [
+   "10 09 13*",
+   "bindmiddelafval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 09 14",
+   "niet onder 10 09 13 vallend bindmiddelafval"
+  ],
+  [
+   "10 09 15*",
+   "afval van scheurindicatorstoffen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 09 16",
+   "niet onder 10 09 15 vallend afval van scheurindicatorstoffen"
+  ],
+  [
+   "10 09 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 10 03",
+   "ovenslak"
+  ],
+  [
+   "10 10 05*",
+   "gietkernen en -vormen die gevaarlijke stoffen bevatten en niet voor gieten zijn gebruikt"
+  ],
+  [
+   "10 10 06",
+   "niet onder 10 10 05 vallende gietkernen en -vormen die niet voor gieten zijn gebruikt"
+  ],
+  [
+   "10 10 07*",
+   "gietkernen en -vormen die gevaarlijke stoffen bevatten en voor gieten zijn gebruikt"
+  ],
+  [
+   "10 10 08",
+   "niet onder 10 10 07 vallende gietkernen en -vormen die voor gieten zijn gebruikt"
+  ],
+  [
+   "10 10 09*",
+   "rookgasstof dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 10 10",
+   "niet onder 10 10 09 vallend rookgasstof"
+  ],
+  [
+   "10 10 11*",
+   "andere deeltjes die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 10 12",
+   "niet onder 10 10 11 vallende deeltjes"
+  ],
+  [
+   "10 10 13*",
+   "bindmiddelafval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 10 14",
+   "niet onder 10 10 13 vallend bindmiddelafval"
+  ],
+  [
+   "10 10 15*",
+   "afval van scheurindicatorstoffen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 10 16",
+   "niet onder 10 10 15 vallend afval van scheurindicatorstoffen"
+  ],
+  [
+   "10 10 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 11 03",
+   "afval van glasvezelmateriaal"
+  ],
+  [
+   "10 11 05",
+   "deeltjes en stof"
+  ],
+  [
+   "10 11 09*",
+   "afval van het mengsel vóór thermische verwerking dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 11 10",
+   "niet onder 10 11 09 vallend afval van het mengsel vóór thermische verwerking"
+  ],
+  [
+   "10 11 11*",
+   "glasafval in de vorm van kleine glasdeeltjes en glaspoeder die zware metalen bevatten (bv. van kathodestraalbuizen)"
+  ],
+  [
+   "10 11 12",
+   "niet onder 10 11 11 vallend glasafval"
+  ],
+  [
+   "10 11 13*",
+   "slib van het polijsten en slijpen van glas dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 11 14",
+   "niet onder 10 11 13 vallend slib van het polijsten en slijpen van glas"
+  ],
+  [
+   "10 11 15*",
+   "vast afval van rookgasreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 11 16",
+   "niet onder 10 11 15 vallend vast afval van rookgasreiniging"
+  ],
+  [
+   "10 11 17*",
+   "slib en filterkoek van rookgasreiniging die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "10 11 18",
+   "niet onder 10 11 17 vallende slib en filterkoek van rookgasreiniging"
+  ],
+  [
+   "10 11 19*",
+   "vast afval van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 11 20",
+   "niet onder 10 11 19 vallend vast afval van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "10 11 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 12 01",
+   "afval van het mengsel vóór thermische verwerking"
+  ],
+  [
+   "10 12 03",
+   "deeltjes en stof"
+  ],
+  [
+   "10 12 05",
+   "slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 12 06",
+   "afgedankte vormen"
+  ],
+  [
+   "10 12 08",
+   "afval van keramische producten, stenen, tegels en bouwmaterialen (na thermische verwerking)"
+  ],
+  [
+   "10 12 09*",
+   "vast afval van gasreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 12 10",
+   "niet onder 10 12 09 vallend vast afval van gasreiniging"
+  ],
+  [
+   "10 12 11*",
+   "glazuurafval dat zware metalen bevat"
+  ],
+  [
+   "10 12 12",
+   "niet onder 10 12 11 vallend glazuurafval"
+  ],
+  [
+   "10 12 13",
+   "slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "10 12 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 13 01",
+   "afval van het mengsel voor thermische verwerking"
+  ],
+  [
+   "10 13 04",
+   "afval van het branden en blussen van kalk"
+  ],
+  [
+   "10 13 06",
+   "deeltjes en stof (exclusief 10 13 12 en 10 13 13)"
+  ],
+  [
+   "10 13 07",
+   "slib en filterkoek van gasreiniging"
+  ],
+  [
+   "10 13 09*",
+   "afval van de fabricage van asbestcement dat asbest bevat"
+  ],
+  [
+   "10 13 10",
+   "niet onder 10 13 09 vallend afval van de fabricage van asbestcement"
+  ],
+  [
+   "10 13 11",
+   "niet onder 10 13 09 en 10 13 10 vallend afval van cementhoudende composietmaterialen"
+  ],
+  [
+   "10 13 12*",
+   "vast afval van gasreiniging dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "10 13 13",
+   "niet onder 10 13 12 vallend vast afval van gasreiniging"
+  ],
+  [
+   "10 13 14",
+   "betonafval en betonslib"
+  ],
+  [
+   "10 13 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "10 14 01*",
+   "afval van gasreiniging dat kwik bevat"
+  ],
+  [
+   "11 01 05*",
+   "beitszuren"
+  ],
+  [
+   "11 01 06*",
+   "niet elders genoemde zuren"
+  ],
+  [
+   "11 01 07*",
+   "basen gebruikt voor beitsen"
+  ],
+  [
+   "11 01 08*",
+   "slib van fosfaatbehandeling"
+  ],
+  [
+   "11 01 09*",
+   "slib en filterkoek die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "11 01 10",
+   "niet onder 11 01 09 vallende slib en filterkoek"
+  ],
+  [
+   "11 01 11*",
+   "waterige spoelvloeistoffen die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "11 01 12",
+   "niet onder 11 01 11 vallende waterige spoelvloeistoffen"
+  ],
+  [
+   "11 01 13*",
+   "afval van ontvetting dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "11 01 14",
+   "niet onder 11 01 13 vallend afval van ontvetting"
+  ],
+  [
+   "11 01 15*",
+   "eluaat en slib van membraansystemen of ionenwisselaars die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "11 01 16*",
+   "verzadigde of afgewerkte ionenwisselaarharsen"
+  ],
+  [
+   "11 01 98*",
+   "overig afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "11 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "11 02 02*",
+   "slib van de zink-hydrometallurgie (inclusief jarosiet en goethiet)"
+  ],
+  [
+   "11 02 03",
+   "afval van de productie van anoden voor waterige elektrolyseprocessen"
+  ],
+  [
+   "11 02 05*",
+   "afval van koperhydrometallurgische processen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "11 02 06",
+   "niet onder 11 02 05 vallend afval van koperhydrometallurgische processen"
+  ],
+  [
+   "11 02 07*",
+   "overig afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "11 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "11 03 01*",
+   "cyanidehoudend afval"
+  ],
+  [
+   "11 03 02*",
+   "overig afval"
+  ],
+  [
+   "11 05 01",
+   "hardzink"
+  ],
+  [
+   "11 05 02",
+   "zinkas"
+  ],
+  [
+   "11 05 03*",
+   "vast afval van gasreiniging"
+  ],
+  [
+   "11 05 04*",
+   "fluxbad afval"
+  ],
+  [
+   "11 05 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "12 01 01",
+   "ferrometaalvijlsel en -krullen"
+  ],
+  [
+   "12 01 02",
+   "ferrometaalstof en -deeltjes"
+  ],
+  [
+   "12 01 03",
+   "non-ferrometaalvijlsel en -krullen"
+  ],
+  [
+   "12 01 04",
+   "non-ferrometaalstof en -deeltjes"
+  ],
+  [
+   "12 01 05",
+   "kunststofschaafsel en -krullen"
+  ],
+  [
+   "12 01 06*",
+   "halogeenhoudende minerale machineolie (exclusief emulsies en oplossingen)"
+  ],
+  [
+   "12 01 07*",
+   "halogeenvrije minerale machineolie (exclusief emulsies en oplossingen)"
+  ],
+  [
+   "12 01 08*",
+   "halogeenhoudende emulsies en oplossingen voor machinale bewerking"
+  ],
+  [
+   "12 01 09*",
+   "halogeenvrije emulsies en oplossingen voor machinale bewerking"
+  ],
+  [
+   "12 01 10*",
+   "synthetische machineolie"
+  ],
+  [
+   "12 01 12*",
+   "afgewerkte wassen en vetten"
+  ],
+  [
+   "12 01 13",
+   "lasafval"
+  ],
+  [
+   "12 01 14*",
+   "slib van machinale bewerking dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "12 01 15",
+   "niet onder 12 01 14 vallend slib van machinale bewerking"
+  ],
+  [
+   "12 01 16*",
+   "afval van gritstralen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "12 01 17",
+   "niet onder 12 01 16 vallend afval van gritstralen"
+  ],
+  [
+   "12 01 18*",
+   "oliehoudend metaalslib (slib van slijpen, wetten en leppen)"
+  ],
+  [
+   "12 01 19*",
+   "biologisch gemakkelijk afbreekbare machineolie"
+  ],
+  [
+   "12 01 20*",
+   "afgewerkt slijpgereedschap en slijpmateriaal die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "12 01 21",
+   "niet onder 12 01 20 vallend afgewerkt slijpgereedschap en slijpmateriaal"
+  ],
+  [
+   "12 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "12 03 01*",
+   "waterige wasvloeistoffen"
+  ],
+  [
+   "12 03 02*",
+   "afval van stoomontvetting"
+  ],
+  [
+   "13 01 01*",
+   "hydraulische olie die pcb's bevat"
+  ],
+  [
+   "13 01 04*",
+   "gechloreerde emulsies"
+  ],
+  [
+   "13 01 05*",
+   "niet-gechloreerde emulsies"
+  ],
+  [
+   "13 01 09*",
+   "gechloreerde minerale hydraulische olie"
+  ],
+  [
+   "13 01 10*",
+   "niet-gechloreerde minerale hydraulische olie"
+  ],
+  [
+   "13 01 11*",
+   "synthetische hydraulische olie"
+  ],
+  [
+   "13 01 12*",
+   "biologisch gemakkelijk afbreekbare hydraulische olie"
+  ],
+  [
+   "13 01 13*",
+   "overige hydraulische olie"
+  ],
+  [
+   "13 02 04*",
+   "gechloreerde minerale motor-, transmissie- en smeerolie"
+  ],
+  [
+   "13 02 05*",
+   "niet-gechloreerde minerale motor-, transmissie- en smeerolie"
+  ],
+  [
+   "13 02 06*",
+   "synthetische motor-, transmissie- en smeerolie"
+  ],
+  [
+   "13 02 07*",
+   "biologisch gemakkelijk afbreekbare motor-, transmissie- en smeerolie"
+  ],
+  [
+   "13 02 08*",
+   "overige motor-, transmissie- en smeerolie"
+  ],
+  [
+   "13 03 01*",
+   "olie voor isolatie en warmteoverdracht die pcb's bevat"
+  ],
+  [
+   "13 03 06*",
+   "niet onder 13 03 01 vallende gechloreerde minerale olie voor isolatie en warmteoverdracht"
+  ],
+  [
+   "13 03 07*",
+   "niet-gechloreerde minerale olie voor isolatie en warmteoverdracht"
+  ],
+  [
+   "13 03 08*",
+   "synthetische olie voor isolatie en warmteoverdracht"
+  ],
+  [
+   "13 03 09*",
+   "biologisch gemakkelijk afbreekbare olie voor isolatie en warmteoverdracht"
+  ],
+  [
+   "13 03 10*",
+   "overige olie voor isolatie en warmteoverdracht"
+  ],
+  [
+   "13 04 01*",
+   "bilge-olie van de binnenvaart"
+  ],
+  [
+   "13 04 02*",
+   "bilge-olie uit de kadeafvoer"
+  ],
+  [
+   "13 04 03*",
+   "bilge-olie van de overige scheepvaart"
+  ],
+  [
+   "13 05 01*",
+   "vaste stoffen uit zandvangers en olie/waterscheiders"
+  ],
+  [
+   "13 05 02*",
+   "slib uit olie/waterscheiders"
+  ],
+  [
+   "13 05 03*",
+   "opvangerslib"
+  ],
+  [
+   "13 05 06*",
+   "olie uit olie/waterscheiders"
+  ],
+  [
+   "13 05 07*",
+   "met olie verontreinigd water uit olie/waterscheiders"
+  ],
+  [
+   "13 05 08*",
+   "afvalmengsels uit zandvangers en olie/waterscheiders"
+  ],
+  [
+   "13 07 01*",
+   "stookolie en dieselolie"
+  ],
+  [
+   "13 07 02*",
+   "Benzine"
+  ],
+  [
+   "13 07 03*",
+   "overige brandstoffen (inclusief mengsels)"
+  ],
+  [
+   "13 08 01*",
+   "ontzoutingsslib en -emulsies"
+  ],
+  [
+   "13 08 02*",
+   "overige emulsies"
+  ],
+  [
+   "13 08 99*",
+   "niet elders genoemd afval"
+  ],
+  [
+   "14 06 01*",
+   "chloorfluorkoolstoffen, hcfk's, hfk's"
+  ],
+  [
+   "14 06 02*",
+   "overige gehalogeneerde oplosmiddelen en mengsels van oplosmiddelen"
+  ],
+  [
+   "14 06 03*",
+   "overige oplosmiddelen en mengsels van oplosmiddelen"
+  ],
+  [
+   "14 06 04*",
+   "slib of vast afval dat gehalogeneerde oplosmiddelen bevat"
+  ],
+  [
+   "14 06 05*",
+   "slib of vast afval dat andere oplosmiddelen bevat"
+  ],
+  [
+   "15 01 01",
+   "papieren en kartonnen verpakking"
+  ],
+  [
+   "15 01 02",
+   "kunststofverpakking"
+  ],
+  [
+   "15 01 03",
+   "houten verpakking"
+  ],
+  [
+   "15 01 04",
+   "metalen verpakking"
+  ],
+  [
+   "15 01 05",
+   "composietverpakking"
+  ],
+  [
+   "15 01 06",
+   "gemengde verpakking"
+  ],
+  [
+   "15 01 07",
+   "glazen verpakking"
+  ],
+  [
+   "15 01 09",
+   "textielen verpakking"
+  ],
+  [
+   "15 01 10*",
+   "verpakking die resten van gevaarlijke stoffen bevat of daarmee is verontreinigd"
+  ],
+  [
+   "15 01 11*",
+   "metalen verpakking die een gevaarlijk vaste poreuze matrix (bv. asbest) bevat, inclusief lege drukhouders"
+  ],
+  [
+   "15 02 02*",
+   "absorbentia, filtermateriaal (inclusief niet elders genoemde oliefilters), poetsdoeken en beschermende kleding die met gevaarlijke stoffen zijn verontreinigd"
+  ],
+  [
+   "15 02 03",
+   "niet onder 15 02 02 vallende absorbentia, filtermateriaal, poetsdoeken en beschermende kleding"
+  ],
+  [
+   "16 01 03",
+   "afgedankte banden"
+  ],
+  [
+   "16 01 04*",
+   "afgedankte voertuigen"
+  ],
+  [
+   "16 01 06",
+   "afgedankte voertuigen die noch vloeistoffen, noch andere gevaarlijke onderdelen bevatten"
+  ],
+  [
+   "16 01 07*",
+   "oliefilters"
+  ],
+  [
+   "16 01 08*",
+   "onderdelen die kwik bevatten"
+  ],
+  [
+   "16 01 09*",
+   "onderdelen die pcb's bevatten"
+  ],
+  [
+   "16 01 10*",
+   "explosieve onderdelen (bv. airbags)"
+  ],
+  [
+   "16 01 11*",
+   "remblokken die asbest bevatten"
+  ],
+  [
+   "16 01 12",
+   "niet onder 16 01 11 vallende remblokken"
+  ],
+  [
+   "16 01 13*",
+   "remvloeistoffen"
+  ],
+  [
+   "16 01 14*",
+   "antivriesvloeistoffen die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "16 01 15",
+   "niet onder 16 01 14 vallende antivriesvloeistoffen"
+  ],
+  [
+   "16 01 16",
+   "tanks voor vloeibaar gas"
+  ],
+  [
+   "16 01 17",
+   "ferrometalen"
+  ],
+  [
+   "16 01 18",
+   "non-ferrometalen"
+  ],
+  [
+   "16 01 19",
+   "kunststoffen"
+  ],
+  [
+   "16 01 20",
+   "glas"
+  ],
+  [
+   "16 01 21*",
+   "niet onder 16 01 07 tot en met 16 01 11 alsmede 16 01 13 en 16 01 14 vallende gevaarlijke onderdelen"
+  ],
+  [
+   "16 01 22",
+   "niet elders genoemde onderdelen"
+  ],
+  [
+   "16 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "16 02 09*",
+   "transformatoren en condensatoren die pcb's bevatten"
+  ],
+  [
+   "16 02 10*",
+   "niet onder 16 02 09 vallende afgedankte apparatuur die pcb's bevat of daarmee verontreinigd is"
+  ],
+  [
+   "16 02 11*",
+   "afgedankte apparatuur die chloorfluorkoolstoffen, hcfk's en/of hfk's bevat"
+  ],
+  [
+   "16 02 12*",
+   "afgedankte apparatuur die vrije asbestvezels bevat"
+  ],
+  [
+   "16 02 13*",
+   "niet onder 16 02 09 tot en met 16 02 12 vallende afgedankte apparatuur die gevaarlijke onderdelen bevat"
+  ],
+  [
+   "16 02 14",
+   "niet onder 16 02 09 tot en met 16 02 13 vallende afgedankte apparatuur"
+  ],
+  [
+   "16 02 15*",
+   "uit afgedankte apparatuur verwijderde gevaarlijke onderdelen"
+  ],
+  [
+   "16 02 16",
+   "niet onder 16 02 15 vallende uit afgedankte apparatuur verwijderde onderdelen"
+  ],
+  [
+   "16 03 03*",
+   "anorganisch afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 03 04",
+   "niet onder 16 03 03 vallend anorganisch afval"
+  ],
+  [
+   "16 03 05*",
+   "organisch afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 03 06",
+   "niet onder 16 03 05 vallend organisch afval"
+  ],
+  [
+   "16 03 07*",
+   "metallisch kwik"
+  ],
+  [
+   "16 04 01*",
+   "afvalmunitie"
+  ],
+  [
+   "16 04 02*",
+   "vuurwerkafval"
+  ],
+  [
+   "16 04 03*",
+   "overig explosief afval"
+  ],
+  [
+   "16 05 04*",
+   "gassen in drukhouders (inclusief halonen) die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "16 05 05",
+   "niet onder 16 05 04 vallende gassen in drukhouders"
+  ],
+  [
+   "16 05 06*",
+   "labchemicaliën die uit gevaarlijke stoffen bestaan of deze bevatten, inclusief mengsels van labchemicaliën"
+  ],
+  [
+   "16 05 07*",
+   "afgedankte anorganische chemicaliën die uit gevaarlijke stoffen bestaan of deze bevatten"
+  ],
+  [
+   "16 05 08*",
+   "afgedankte organische chemicaliën die uit gevaarlijke stoffen bestaan of deze bevatten"
+  ],
+  [
+   "16 05 09",
+   "niet onder 16 05 06, 16 05 07 of 16 05 08 vallende afgedankte chemicaliën"
+  ],
+  [
+   "16 06 01*",
+   "loodaccu's"
+  ],
+  [
+   "16 06 02*",
+   "NiCd-batterijen"
+  ],
+  [
+   "16 06 03*",
+   "kwikhoudende batterijen"
+  ],
+  [
+   "16 06 04",
+   "alkalibatterijen (exclusief 16 06 03)"
+  ],
+  [
+   "16 06 05",
+   "overige batterijen en accu's"
+  ],
+  [
+   "16 06 06*",
+   "gescheiden ingezamelde elektrolyt uit batterijen en accu's"
+  ],
+  [
+   "16 07 08*",
+   "afval dat olie bevat"
+  ],
+  [
+   "16 07 09*",
+   "afval dat andere gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 07 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "16 08 01",
+   "afgewerkte katalysatoren die goud, zilver, rhenium, rhodium, palladium, iridium of platina bevatten (exclusief 16 08 07)"
+  ],
+  [
+   "16 08 02*",
+   "afgewerkte katalysatoren die gevaarlijke overgangsmetalen of gevaarlijke verbindingen van overgangsmetalen bevatten"
+  ],
+  [
+   "16 08 03",
+   "niet elders genoemde afgewerkte katalysatoren die overgangsmetalen of verbindingen van overgangsmetalen bevatten"
+  ],
+  [
+   "16 08 04",
+   "afgewerkte katalysatoren voor wervelbedkrakers (exclusief 16 08 07)"
+  ],
+  [
+   "16 08 05*",
+   "afgewerkte katalysatoren die fosforzuur bevatten"
+  ],
+  [
+   "16 08 06*",
+   "afgewerkte vloeistoffen die als katalysator zijn gebruikt"
+  ],
+  [
+   "16 08 07*",
+   "afgewerkte katalysatoren die met gevaarlijke stoffen zijn verontreinigd"
+  ],
+  [
+   "16 09 01*",
+   "permanganaten, bv. kaliumpermanganaat"
+  ],
+  [
+   "16 09 02*",
+   "chromaten, bv. kaliumchromaat, kalium- of natriumdichromaat"
+  ],
+  [
+   "16 09 03*",
+   "peroxiden, bv. waterstofperoxide"
+  ],
+  [
+   "16 09 04*",
+   "niet elders genoemde oxiderende stoffen"
+  ],
+  [
+   "16 10 01*",
+   "waterig vloeibaar afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 10 02",
+   "niet onder 16 10 01 vallend waterig vloeibaar afval"
+  ],
+  [
+   "16 10 03*",
+   "waterige concentraten die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "16 10 04",
+   "niet onder 16 10 03 vallende waterige concentraten"
+  ],
+  [
+   "16 11 01*",
+   "koolstofhoudend ovenpuin van metallurgische processen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 11 02",
+   "niet onder 16 11 01 vallend koolstofhoudend ovenpuin van metallurgische processen"
+  ],
+  [
+   "16 11 03*",
+   "overig ovenpuin van metallurgische processen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 11 04",
+   "overig, niet onder 16 11 03 vallend ovenpuin van metallurgische processen"
+  ],
+  [
+   "16 11 05*",
+   "ovenpuin van niet-metallurgische processen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "16 11 06",
+   "niet onder 16 11 05 vallend ovenpuin van niet-metallurgische processen"
+  ],
+  [
+   "17 01 01",
+   "beton"
+  ],
+  [
+   "17 01 02",
+   "stenen"
+  ],
+  [
+   "17 01 03",
+   "tegels en keramische producten"
+  ],
+  [
+   "17 01 06*",
+   "mengsels van beton, stenen, tegels of keramische producten, of afzonderlijke fracties daarvan, die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "17 01 07",
+   "niet onder 17 01 06 vallende mengsels van beton, stenen, tegels of keramische producten"
+  ],
+  [
+   "17 02 01",
+   "hout"
+  ],
+  [
+   "17 02 02",
+   "glas"
+  ],
+  [
+   "17 02 03",
+   "kunststof"
+  ],
+  [
+   "17 02 04*",
+   "glas, kunststof en hout die gevaarlijke stoffen bevatten of daarmee verontreinigd zijn"
+  ],
+  [
+   "17 03 01*",
+   "bitumineuze mengsels die koolteer bevatten"
+  ],
+  [
+   "17 03 02",
+   "niet onder 17 03 01 vallende bitumineuze mengsels"
+  ],
+  [
+   "17 03 03*",
+   "koolteer en met teer behandelde producten"
+  ],
+  [
+   "17 04 01",
+   "koper, brons en messing"
+  ],
+  [
+   "17 04 02",
+   "aluminium"
+  ],
+  [
+   "17 04 03",
+   "lood"
+  ],
+  [
+   "17 04 04",
+   "zink"
+  ],
+  [
+   "17 04 05",
+   "ijzer en staal"
+  ],
+  [
+   "17 04 06",
+   "tin"
+  ],
+  [
+   "17 04 07",
+   "gemengde metalen"
+  ],
+  [
+   "17 04 09*",
+   "metaalafval dat met gevaarlijke stoffen is verontreinigd"
+  ],
+  [
+   "17 04 10*",
+   "kabels die olie, koolteer of andere gevaarlijke stoffen bevatten"
+  ],
+  [
+   "17 04 11",
+   "niet onder 17 04 10 vallende kabels"
+  ],
+  [
+   "17 05 03*",
+   "grond en stenen die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "17 05 04",
+   "niet onder 17 05 03 vallende grond en stenen"
+  ],
+  [
+   "17 05 05*",
+   "baggerspecie die gevaarlijke stoffen bevat"
+  ],
+  [
+   "17 05 06",
+   "niet onder 17 05 05 vallende baggerspecie"
+  ],
+  [
+   "17 05 07*",
+   "spoorwegballast die gevaarlijke stoffen bevat"
+  ],
+  [
+   "17 05 08",
+   "niet onder 17 05 07 vallende spoorwegballast"
+  ],
+  [
+   "17 06 01*",
+   "asbesthoudend isolatiemateriaal"
+  ],
+  [
+   "17 06 03*",
+   "overig isolatiemateriaal dat uit gevaarlijke stoffen bestaat of dergelijke stoffen bevat"
+  ],
+  [
+   "17 06 04",
+   "niet onder 17 06 01 en 17 06 03 vallend isolatiemateriaal"
+  ],
+  [
+   "17 06 05*",
+   "asbesthoudende bouwmaterialen"
+  ],
+  [
+   "17 08 01*",
+   "gipshoudend bouwmateriaal dat met gevaarlijke stoffen is verontreinigd"
+  ],
+  [
+   "17 08 02",
+   "niet onder 17 08 01 vallend gipshoudend bouwmateriaal"
+  ],
+  [
+   "17 09 01*",
+   "bouw- en sloopafval dat kwik bevat"
+  ],
+  [
+   "17 09 02*",
+   "bouw- en sloopafval dat pcb's bevat (bv. pcb-houdende kit, vloerbedekkingen waarin pcb-houdende hars is verwerkt, isolerende beglazing met pcb-houdende afdichting, pcb-houdende condensatoren)"
+  ],
+  [
+   "17 09 03*",
+   "overig bouw- en sloopafval (inclusief gemengd afval) dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "17 09 04",
+   "niet onder 17 09 01, 17 09 02 en 17 09 03 vallend gemengd bouw- en sloopafval"
+  ],
+  [
+   "18 01 01",
+   "scherpe voorwerpen (exclusief 18 01 03)"
+  ],
+  [
+   "18 01 02",
+   "lichaamsdelen en organen, inclusief bloedzakjes en geconserveerd bloed (exclusief 18 01 03)"
+  ],
+  [
+   "18 01 03*",
+   "afval waarvan de inzameling en verwijdering zijn onderworpen aan speciale richtlijnen teneinde infectie te voorkomen"
+  ],
+  [
+   "18 01 04",
+   "afval waarvan de inzameling en verwijdering niet zijn onderworpen aan speciale richtlijnen teneinde infectie te voorkomen (bv. verband, gipsverband, linnengoed, wegwerpkleding, luiers)"
+  ],
+  [
+   "18 01 06*",
+   "chemicaliën die uit gevaarlijke stoffen bestaan of deze bevatten"
+  ],
+  [
+   "18 01 07",
+   "niet onder 18 01 06 vallende chemicaliën"
+  ],
+  [
+   "18 01 08*",
+   "cytotoxische en cytostatische geneesmiddelen"
+  ],
+  [
+   "18 01 09",
+   "niet onder 18 01 08 vallende geneesmiddelen"
+  ],
+  [
+   "18 01 10*",
+   "amalgaamafval uit de tandheelkunde"
+  ],
+  [
+   "18 02 01",
+   "scherpe voorwerpen (exclusief 18 02 02)"
+  ],
+  [
+   "18 02 02*",
+   "afval waarvan de inzameling en verwijdering zijn onderworpen aan speciale richtlijnen teneinde infectie te voorkomen"
+  ],
+  [
+   "18 02 03",
+   "afval waarvan de inzameling en verwijdering niet zijn onderworpen aan speciale richtlijnen teneinde infectie te voorkomen"
+  ],
+  [
+   "18 02 05*",
+   "chemicaliën die uit gevaarlijke stoffen bestaan of deze bevatten"
+  ],
+  [
+   "18 02 06",
+   "niet onder 18 02 05 vallende chemicaliën"
+  ],
+  [
+   "18 02 07*",
+   "cytotoxische en cytostatische geneesmiddelen"
+  ],
+  [
+   "18 02 08",
+   "niet onder 18 02 07 vallende geneesmiddelen"
+  ],
+  [
+   "19 01 02",
+   "uit bodemas verwijderde ferromaterialen"
+  ],
+  [
+   "19 01 05*",
+   "filterkoek van gasreiniging"
+  ],
+  [
+   "19 01 06*",
+   "waterig vloeibaar afval van gasreiniging en ander waterig vloeibaar afval"
+  ],
+  [
+   "19 01 07*",
+   "vast afval van gasreiniging"
+  ],
+  [
+   "19 01 10*",
+   "afgewerkte actieve kool van rookgasreiniging"
+  ],
+  [
+   "19 01 11*",
+   "bodemas en slakken die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "19 01 12",
+   "niet onder 19 01 11 vallende bodemas en slakken"
+  ],
+  [
+   "19 01 13*",
+   "vliegas dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 01 14",
+   "niet onder 19 01 13 vallende vliegas"
+  ],
+  [
+   "19 01 15*",
+   "ketelas die gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 01 16",
+   "niet onder 19 01 15 vallende ketelas"
+  ],
+  [
+   "19 01 17*",
+   "afval van pyrolyse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 01 18",
+   "niet onder 19 01 17 vallend afval van pyrolyse"
+  ],
+  [
+   "19 01 19",
+   "wervelbedzand"
+  ],
+  [
+   "19 01 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 02 03",
+   "voorgemengd afval dat uitsluitend bestaat uit niet-gevaarlijke afvalstoffen"
+  ],
+  [
+   "19 02 04*",
+   "voorgemengd afval dat ten minste één gevaarlijke afvalstof bevat"
+  ],
+  [
+   "19 02 05*",
+   "slib van fysisch-chemische behandeling dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 02 06",
+   "niet onder 19 02 05 vallend slib van fysisch-chemische behandeling"
+  ],
+  [
+   "19 02 07*",
+   "door afscheiding verkregen oliën en concentraten"
+  ],
+  [
+   "19 02 08*",
+   "vloeibaar brandbaar afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 02 09*",
+   "vast brandbaar afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 02 10",
+   "niet onder 19 02 08 en 19 02 09 vallend brandbaar afval"
+  ],
+  [
+   "19 02 11*",
+   "overig afval dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 02 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 03 04*",
+   "niet onder 19 03 08 vallend als gevaarlijk ingedeeld, gedeeltelijk gestabiliseerd afval"
+  ],
+  [
+   "19 03 05",
+   "niet onder 19 03 04 vallend gestabiliseerd afval"
+  ],
+  [
+   "19 03 06*",
+   "als gevaarlijk ingedeeld afval dat verhard is"
+  ],
+  [
+   "19 03 07",
+   "niet onder 19 03 06 vallend verhard afval"
+  ],
+  [
+   "19 03 08*",
+   "gedeeltelijk gestabiliseerd kwik"
+  ],
+  [
+   "19 04 01",
+   "verglaasd afval"
+  ],
+  [
+   "19 04 02*",
+   "vliegas en ander rookgasreinigingsafval"
+  ],
+  [
+   "19 04 03*",
+   "niet-verglaasde vaste fase"
+  ],
+  [
+   "19 04 04",
+   "waterig vloeibaar afval van het ontlaten van verglaasd afval"
+  ],
+  [
+   "19 05 01",
+   "niet-gecomposteerde fractie van huishoudelijk en soortgelijk afval"
+  ],
+  [
+   "19 05 02",
+   "niet-gecomposteerde fractie van dierlijk en plantaardig afval"
+  ],
+  [
+   "19 05 03",
+   "afgekeurde compost"
+  ],
+  [
+   "19 05 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 06 03",
+   "vloeistof verkregen bij de anaerobe behandeling van stedelijk afval"
+  ],
+  [
+   "19 06 04",
+   "digestaat van de anaerobe behandeling van stedelijk afval"
+  ],
+  [
+   "19 06 05",
+   "vloeistof verkregen bij de anaerobe behandeling van dierlijk en plantaardig afval"
+  ],
+  [
+   "19 06 06",
+   "digestaat van de anaerobe behandeling van dierlijk en plantaardig afval"
+  ],
+  [
+   "19 06 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 07 02*",
+   "percolatiewater van stortplaatsen dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 07 03",
+   "niet onder 19 07 02 vallend percolatiewater van stortplaatsen"
+  ],
+  [
+   "19 08 01",
+   "roostergoed"
+  ],
+  [
+   "19 08 02",
+   "afval van zandvang"
+  ],
+  [
+   "19 08 05",
+   "slib van de behandeling van stedelijk afvalwater"
+  ],
+  [
+   "19 08 06*",
+   "verzadigde of afgewerkte ionenwisselaarharsen"
+  ],
+  [
+   "19 08 07*",
+   "oplossingen en slib van de regeneratie van ionenwisselaars"
+  ],
+  [
+   "19 08 08*",
+   "afval van membraansystemen dat zware metalen bevat"
+  ],
+  [
+   "19 08 09",
+   "vet- en oliemengsels uit olie/waterscheiders die uitsluitend spijsolie en -vetten bevatten"
+  ],
+  [
+   "19 08 10*",
+   "niet onder 19 08 09 vallende vet- en oliemengsels uit olie/waterscheiders"
+  ],
+  [
+   "19 08 11*",
+   "slib van de biologische zuivering van industrieel afvalwater dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 08 12",
+   "niet onder 19 08 11 vallend slib van de biologische zuivering van industrieel afvalwater"
+  ],
+  [
+   "19 08 13*",
+   "slib van andere behandelingen van industrieel afvalwater dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 08 14",
+   "niet onder 19 08 13 vallend slib van andere behandelingen van industrieel afvalwater"
+  ],
+  [
+   "19 08 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 09 01",
+   "vast afval van primaire filtratie en roostergoed"
+  ],
+  [
+   "19 09 02",
+   "waterzuiveringsslib"
+  ],
+  [
+   "19 09 03",
+   "onthardingsslib"
+  ],
+  [
+   "19 09 04",
+   "afgewerkte actieve kool"
+  ],
+  [
+   "19 09 05",
+   "verzadigde of afgewerkte ionenwisselaarharsen"
+  ],
+  [
+   "19 09 06",
+   "oplossingen en slib van de regeneratie van ionenwisselaars"
+  ],
+  [
+   "19 09 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 10 01",
+   "ijzer- en staalafval"
+  ],
+  [
+   "19 10 02",
+   "non-ferroafval"
+  ],
+  [
+   "19 10 03*",
+   "lichte fractie en stof dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 10 04",
+   "niet onder 19 10 03 vallende lichte fracties en stof"
+  ],
+  [
+   "19 10 05*",
+   "andere fracties die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "19 10 06",
+   "andere, niet onder 19 10 05 vallende fracties"
+  ],
+  [
+   "19 11 01*",
+   "afgewerkte bleekaarde"
+  ],
+  [
+   "19 11 02*",
+   "Zuurteer"
+  ],
+  [
+   "19 11 03*",
+   "waterig vloeibaar afval"
+  ],
+  [
+   "19 11 04*",
+   "afval van brandstofzuivering met behulp van basen"
+  ],
+  [
+   "19 11 05*",
+   "slib van afvalwaterbehandeling ter plaatse dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 11 06",
+   "niet onder 19 11 05 vallend slib van afvalwaterbehandeling ter plaatse"
+  ],
+  [
+   "19 11 07*",
+   "afval van rookgasreiniging"
+  ],
+  [
+   "19 11 99",
+   "niet elders genoemd afval"
+  ],
+  [
+   "19 12 01",
+   "papier en karton"
+  ],
+  [
+   "19 12 02",
+   "ferrometalen"
+  ],
+  [
+   "19 12 03",
+   "non-ferrometalen"
+  ],
+  [
+   "19 12 04",
+   "kunststoffen en rubber"
+  ],
+  [
+   "19 12 05",
+   "glas"
+  ],
+  [
+   "19 12 06*",
+   "hout dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 12 07",
+   "niet onder 19 12 06 vallend hout"
+  ],
+  [
+   "19 12 08",
+   "textiel"
+  ],
+  [
+   "19 12 09",
+   "minerale stoffen (bijvoorbeeld zand, steen)"
+  ],
+  [
+   "19 12 10",
+   "brandbaar afval (RDF)"
+  ],
+  [
+   "19 12 11*",
+   "overig afval (inclusief mengsels van materialen) van mechanische afvalverwerking dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 12 12",
+   "overig, niet onder 19 12 11 vallend afval (inclusief mengsels van materialen) van mechanische afvalverwerking"
+  ],
+  [
+   "19 13 01*",
+   "vast afval van bodemsanering dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 13 02",
+   "niet onder 19 13 01 vallend vast afval van bodemsanering"
+  ],
+  [
+   "19 13 03*",
+   "slib van bodemsanering dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 13 04",
+   "niet onder 19 13 03 vallend slib van bodemsanering"
+  ],
+  [
+   "19 13 05*",
+   "slib van grondwatersanering dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "19 13 06",
+   "niet onder 19 13 05 vallend slib van grondwatersanering"
+  ],
+  [
+   "19 13 07*",
+   "waterig vloeibaar afval en waterige concentraten van grondwatersanering die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "19 13 08",
+   "niet onder 19 13 07 vallend waterig vloeibaar afval en waterige concentraten van grondwatersanering"
+  ],
+  [
+   "20 01 01",
+   "papier en karton"
+  ],
+  [
+   "20 01 02",
+   "glas"
+  ],
+  [
+   "20 01 08",
+   "biologisch afbreekbaar keuken- en kantineafval"
+  ],
+  [
+   "20 01 10",
+   "kleding"
+  ],
+  [
+   "20 01 11",
+   "textiel"
+  ],
+  [
+   "20 01 13*",
+   "oplosmiddelen"
+  ],
+  [
+   "20 01 14*",
+   "zuren"
+  ],
+  [
+   "20 01 15*",
+   "basisch afval"
+  ],
+  [
+   "20 01 17*",
+   "fotochemicaliën"
+  ],
+  [
+   "20 01 19*",
+   "pesticiden"
+  ],
+  [
+   "20 01 21*",
+   "tl-buizen en ander kwikhoudend afval"
+  ],
+  [
+   "20 01 23*",
+   "afgedankte apparatuur die chloorfluorkoolstoffen bevat"
+  ],
+  [
+   "20 01 25",
+   "spijsolie en -vetten"
+  ],
+  [
+   "20 01 26*",
+   "niet onder 20 01 25 vallende oliën en vetten"
+  ],
+  [
+   "20 01 27*",
+   "verf, inkt, lijm en hars die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "20 01 28",
+   "niet onder 20 01 27 vallende verf, inkt, lijm en hars"
+  ],
+  [
+   "20 01 29*",
+   "detergenten die gevaarlijke stoffen bevatten"
+  ],
+  [
+   "20 01 30",
+   "niet onder 20 01 29 vallende detergenten"
+  ],
+  [
+   "20 01 31*",
+   "cytotoxische en cytostatische geneesmiddelen"
+  ],
+  [
+   "20 01 32",
+   "niet onder 20 01 31 vallende geneesmiddelen"
+  ],
+  [
+   "20 01 33*",
+   "onder 16 06 01, 16 06 02 of 16 06 03 vermelde batterijen en accu's alsmede ongesorteerde mengsels van batterijen en accu's die dergelijke batterijen en accu's bevatten"
+  ],
+  [
+   "20 01 34",
+   "niet onder 20 01 33 vallende batterijen en accu's"
+  ],
+  [
+   "20 01 35*",
+   "niet onder 20 01 21 en 20 01 23 vallende afgedankte elektrische en elektronische apparatuur die gevaarlijke onderdelen bevat"
+  ],
+  [
+   "20 01 36",
+   "niet onder 20 01 21, 20 01 23 en 20 01 35 vallende afgedankte elektrische en elektronische apparatuur"
+  ],
+  [
+   "20 01 37*",
+   "hout dat gevaarlijke stoffen bevat"
+  ],
+  [
+   "20 01 38",
+   "niet onder 20 01 37 vallend hout"
+  ],
+  [
+   "20 01 39",
+   "kunststoffen"
+  ],
+  [
+   "20 01 40",
+   "metalen"
+  ],
+  [
+   "20 01 41",
+   "afval van het vegen van schoorstenen"
+  ],
+  [
+   "20 01 99",
+   "niet elders genoemde fracties"
+  ],
+  [
+   "20 02 01",
+   "biologisch afbreekbaar afval"
+  ],
+  [
+   "20 02 02",
+   "grond en stenen"
+  ],
+  [
+   "20 02 03",
+   "overig niet biologisch afbreekbaar afval"
+  ],
+  [
+   "20 03 01",
+   "gemengd stedelijk afval"
+  ],
+  [
+   "20 03 02",
+   "marktafval"
+  ],
+  [
+   "20 03 03",
+   "veegvuil"
+  ],
+  [
+   "20 03 04",
+   "slib van septische tanks"
+  ],
+  [
+   "20 03 06",
+   "afval van het reinigen van riolen"
+  ],
+  [
+   "20 03 07",
+   "grofvuil"
+  ],
+  [
+   "20 03 99",
+   "niet elders genoemd stedelijk afval"
+  ]
+ ]
+}

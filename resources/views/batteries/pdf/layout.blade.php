@@ -8,7 +8,7 @@
     $landscape = $landscape ?? false;
 @endphp
 <!doctype html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <title>@yield('title') {{ $dossier->reference() }}</title>

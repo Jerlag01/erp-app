@@ -8,7 +8,8 @@
         .erp-waste-totals .mono { font-family: var(--erp-mono, monospace); }
         .erp-waste-totals .hazard { color: rgb(220 38 38); }
         .erp-waste-totals .muted { opacity: .6; }
-        .erp-waste-totals tr.group td { font-weight: 700; background: rgb(148 163 184 / .12); }
+        .erp-waste-totals tr.chapter td { font-weight: 800; text-transform: uppercase; font-size: .75rem; letter-spacing: .04em; background: rgb(148 163 184 / .22); }
+        .erp-waste-totals tr.group td { font-weight: 700; background: rgb(148 163 184 / .1); }
         .erp-waste-totals tr.total td { font-weight: 700; border-top: 2px solid var(--primary-500); border-bottom: 0; }
     </style>
 
@@ -28,6 +29,10 @@
                 @endforeach
                 <x-filament::button size="sm" color="gray" wire:click="clearPeriod">{{ __('erp.waste.all_time') }}</x-filament::button>
             </div>
+            <label style="display: inline-flex; gap: .4rem; align-items: center; font-size: .875rem; margin-left: auto;">
+                <x-filament::input.checkbox wire:model.live="all" />
+                {{ __('erp.waste.show_all_categories') }}
+            </label>
         </div>
     </x-filament::section>
 

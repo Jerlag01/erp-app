@@ -7,14 +7,16 @@ use App\Models\WasteEntry;
 use Illuminate\Support\Carbon;
 
 /**
- * Total weight per waste category and subcategory (with waste code) over a period.
+ * Total weight per waste category and subcategory (with waste code) over a period, grouped under the
+ * chapters of the Eural. By default only categories with entries in the period; with $all every active
+ * category (the complete list) is shown.
  */
 class WasteTotals
 {
     /**
-     * @return array{groups: list<array{category: WasteCategory, rows: list<array{category: WasteCategory, kg: float, count: int}>, kg: float, count: int}>, kg: float, count: int}
+     * @return array{groups: list<array{category: WasteCategory, chapter: ?string, rows: list<array{category: WasteCategory, kg: float, count: int}>, kg: float, count: int}>, chapters: array<string, array{title: string, kg: float, count: int}>, kg: float, count: int}
      */
-    public static function between(?string $from, ?string $until): array
+    public static function between(?string $from, ?string $until, bool $all = false): array
     {
         $sums = WasteEntry::query()
             ->when($from, fn ($query, $date) => $query->whereDate('date', '>=', $date))
@@ -34,8 +36,8 @@ class WasteTotals
             foreach ($members as $member) {
                 $sum = $sums->get($member->id);
 
-                // Inactive categories without entries in the period are left out.
-                if ($sum === null && ! $member->is_active) {
+                // Without entries in the period: only in the complete list, and only when active.
+                if ($sum === null && (! $all || ! $member->is_active)) {
                     continue;
                 }
 
@@ -50,6 +52,7 @@ class WasteTotals
             if ($rows !== []) {
                 $groups[] = [
                     'category' => $category,
+                    'chapter' => Eural::chapterOf($category->waste_code),
                     'rows' => $rows,
                     'kg' => array_sum(array_column($rows, 'kg')),
                     'count' => array_sum(array_column($rows, 'count')),
@@ -57,8 +60,20 @@ class WasteTotals
             }
         }
 
+        // Per Eural chapter (in order); own categories without an Eural code come last.
+        usort($groups, fn (array $a, array $b): int => [$a['chapter'] ?? '99', $a['category']->sort_order] <=> [$b['chapter'] ?? '99', $b['category']->sort_order]);
+        $chapters = [];
+
+        foreach ($groups as $group) {
+            $key = $group['chapter'] ?? '';
+            $chapters[$key] ??= ['title' => $key === '' ? __('erp.waste.other_categories') : Eural::chapters()[$key], 'kg' => 0.0, 'count' => 0];
+            $chapters[$key]['kg'] += $group['kg'];
+            $chapters[$key]['count'] += $group['count'];
+        }
+
         return [
             'groups' => $groups,
+            'chapters' => $chapters,
             'kg' => array_sum(array_column($groups, 'kg')),
             'count' => array_sum(array_column($groups, 'count')),
         ];

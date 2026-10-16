@@ -36,6 +36,12 @@ class WasteTotalsOverview extends Page
     #[Url]
     public ?string $until = null;
 
+    /**
+     * Also the categories without entries in the period: the complete list.
+     */
+    #[Url]
+    public bool $all = false;
+
     public static function canAccess(): bool
     {
         return auth()->check() && Gate::allows('viewAny', WasteEntry::class);
@@ -75,7 +81,7 @@ class WasteTotalsOverview extends Page
      */
     public function totals(): array
     {
-        return WasteTotals::between($this->validDate($this->from), $this->validDate($this->until));
+        return WasteTotals::between($this->validDate($this->from), $this->validDate($this->until), $this->all);
     }
 
     protected function validDate(?string $date): ?string
@@ -101,7 +107,7 @@ class WasteTotalsOverview extends Page
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
                 ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'waste'))
-                ->url(fn (): string => route('waste.totals-pdf', array_filter(['from' => $this->validDate($this->from), 'until' => $this->validDate($this->until)])), shouldOpenInNewTab: true),
+                ->url(fn (): string => route('waste.totals-pdf', array_filter(['from' => $this->validDate($this->from), 'until' => $this->validDate($this->until), 'all' => $this->all ? 1 : null])), shouldOpenInNewTab: true),
         ];
     }
 }

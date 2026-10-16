@@ -13,6 +13,7 @@
     .mono { font-family: DejaVu Sans Mono, monospace; }
     .muted { color: #64748b; font-size: 8pt; }
     .hazard { color: #b91c1c; }
+    tr.chapter td { background: #cbd5e1; font-weight: bold; text-transform: uppercase; font-size: 7.5pt; }
     tr.group td { background: #e2e8f0; font-weight: bold; }
     tr.total td { border-top: 2px solid {{ settings()->color('primary') }}; font-weight: bold; background: #fff; }
     .footer { position: fixed; bottom: -10mm; left: 0; right: 0; font-size: 7pt; color: #94a3b8; text-align: center; }

@@ -9,7 +9,17 @@
         </tr>
     </thead>
     <tbody>
+        @php($chapter = false)
         @forelse ($totals['groups'] as $group)
+            @if (($group['chapter'] ?? '') !== $chapter)
+                @php($chapter = $group['chapter'] ?? '')
+                <tr class="chapter">
+                    <td class="mono">{{ $chapter }}</td>
+                    <td>{{ $totals['chapters'][$chapter]['title'] }}</td>
+                    <td class="num">{{ $totals['chapters'][$chapter]['count'] }}</td>
+                    <td class="num mono">{{ \App\Models\WasteEntry::formatKg($totals['chapters'][$chapter]['kg']) }}</td>
+                </tr>
+            @endif
             @php($single = count($group['rows']) === 1 && $group['rows'][0]['category']->is($group['category']))
             @unless ($single)
                 <tr class="group">

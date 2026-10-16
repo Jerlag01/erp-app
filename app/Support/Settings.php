@@ -133,6 +133,8 @@ class Settings
                 'background' => null,
                 'inspection_header' => null,
                 'project_category' => '604',
+                // Language of the battery documents for COW sites in Brussels (Flanders Dutch, Wallonia French).
+                'brussels_locale' => 'fr',
                 // Enersys dossiers (Excel "12V enersys") on 605 projects.
                 'enersys_project_category' => '605',
                 'enersys_brand' => 'Enersys',
