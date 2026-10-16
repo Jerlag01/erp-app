@@ -56,6 +56,7 @@ class Settings
                 Modules::BATTERIES => true,
                 Modules::TIMESHEETS => true,
                 Modules::CHARGING => true,
+                Modules::CABLE_STRIPPING => true,
             ],
             'mail' => [
                 'mailer' => null,
