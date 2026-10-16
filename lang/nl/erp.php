@@ -2308,7 +2308,7 @@ return [
         'deliveries' => 'Overzicht levering batterijen',
         'deliveries_search' => 'Zoek locatie, ordernr., bevestiging…',
         'location' => 'Locatie',
-        'order_number' => 'Order n°',
+        'order_number' => 'Bestelnr.',
         'order_number_help' => 'Het 604-project van deze bestelling; locatie en ordernummer komen hiervan.',
         'order_confirmation' => 'N° orderbevestiging',
         'pieces' => 'Stuks',

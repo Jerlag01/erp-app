@@ -1,6 +1,6 @@
-{{-- The delivery overview, printed like the Excel "Overzicht Levering Batterijen". --}}
+{{-- The delivery overview, printed like the Excel "Overzicht Levering Batterijen", in Dutch (Belgium). --}}
 <!doctype html>
-<html lang="nl">
+<html lang="nl-BE">
 <head>
     <meta charset="utf-8">
     <title>Overzicht levering batterijen</title>
@@ -19,20 +19,20 @@
 <body>
     <table style="margin: 0; border: 0;">
         <tr>
-            <td style="border: 0; padding: 0;"><h1>Übersicht Aufträge {{ settings()->get('batteries.supplier_location') }}</h1></td>
-            <td style="border: 0; padding: 0; text-align: right;">{{ today()->format('d/m/Y') }}</td>
+            <td style="border: 0; padding: 0;"><h1>Overzicht bestellingen {{ settings()->get('batteries.supplier_location') }}</h1></td>
+            <td style="border: 0; padding: 0; text-align: right;">Afgedrukt op {{ today()->format('d/m/Y') }}</td>
         </tr>
     </table>
     <table>
         <thead>
             <tr>
-                <th>Location:</th>
-                <th>Order n°:</th>
-                <th>N° order confirmation:</th>
-                <th>battery type:</th>
-                <th class="num">pcs.</th>
-                <th>Delivery date planned from BAE Berlin:</th>
-                <th>Actual delivery date</th>
+                <th>Locatie</th>
+                <th>Bestelnr.</th>
+                <th>Nr. orderbevestiging</th>
+                <th>Type batterij</th>
+                <th class="num">Aantal</th>
+                <th>Geplande leverdatum BAE Berlin</th>
+                <th>Werkelijke leverdatum</th>
             </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@
                     <td>{{ $delivery->delivered_at?->format('d/m/Y') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7">—</td></tr>
+                <tr><td colspan="7">Geen leveringen</td></tr>
             @endforelse
         </tbody>
     </table>

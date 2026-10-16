@@ -144,6 +144,12 @@ class BatteryDeliveryTest extends TestCase
 
         $this->actingAs($this->user(['view', 'generate_pdf']));
         $this->get(route('batteries.deliveries-pdf', ['tab' => 'all']))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+
+        // In Dutch (Belgium), not in German.
+        $html = view('batteries.pdf.deliveries', ['deliveries' => collect()])->render();
+        $this->assertStringContainsString('Overzicht bestellingen', $html);
+        $this->assertStringContainsString('Werkelijke leverdatum', $html);
+        $this->assertStringNotContainsString('Übersicht', $html);
         Livewire::test(ManageBatteryDeliveries::class)->assertActionVisible('print');
     }
 
