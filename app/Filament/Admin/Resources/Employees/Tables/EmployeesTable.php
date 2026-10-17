@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Employees\Tables;
 
+use App\Enums\DriverLicenseCategory;
 use App\Enums\EmploymentCategory;
 use App\Models\Employee;
 use Filament\Actions\EditAction;
@@ -42,6 +43,14 @@ class EmployeesTable
                     ->badge()
                     ->color('warning')
                     ->placeholder(''),
+                TextColumn::make('driver_license_categories')
+                    ->label(__('erp.employees.tabs.driver_license'))
+                    ->state(fn (Employee $record): array => array_map(fn (DriverLicenseCategory $category): string => $category->value, $record->driverLicenseCategories()))
+                    ->badge()
+                    ->color(fn (Employee $record): string => $record->driverLicenseExpiresSoon() ? 'danger' : 'gray')
+                    ->tooltip(fn (Employee $record): ?string => $record->driver_license_expires_on ? __('erp.employees.driver_license_expires_on').' '.$record->driver_license_expires_on->format('d/m/Y') : null)
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('employment_category')
                     ->label(__('erp.employees.employment_category'))
                     ->badge()

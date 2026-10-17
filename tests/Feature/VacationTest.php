@@ -3,12 +3,16 @@
 namespace Tests\Feature;
 
 use App\Actions\SubmitVacationRequest;
+use App\Enums\AbsenceType;
 use App\Enums\VacationStatus;
+use App\Enums\VacationType;
 use App\Filament\Admin\Resources\Holidays\Pages\ManageHolidays;
 use App\Filament\App\Resources\MyVacations\Pages\ListMyVacations;
 use App\Filament\Resources\VacationRequests\Pages\ManageVacationRequests;
+use App\Models\Absence;
 use App\Models\Holiday;
 use App\Models\Team;
+use App\Models\TimesheetWeek;
 use App\Models\User;
 use App\Models\VacationRequest;
 use App\Support\BelgianHolidays;
@@ -197,5 +201,35 @@ class VacationTest extends TestCase
         } catch (ValidationException $exception) {
             $this->assertArrayHasKey($field, $exception->errors());
         }
+    }
+
+    #[Test]
+    public function overtime_as_paid_leave_follows_the_vacation_approval(): void
+    {
+        $team = Team::factory()->create();
+        $employee = User::factory()->inTeam($team)->create();
+        $leader = User::factory()->withPermissions(['vacations' => ['view', 'approve']])->inTeam($team)->create();
+        TimesheetWeek::query()->create(['user_id' => $employee->id, 'week_start' => '2026-10-05', 'overtime_carried' => 12]);
+
+        $this->actingAs($employee);
+        Filament::setCurrentPanel('app');
+
+        Livewire::test(ListMyVacations::class)
+            ->callAction('create', ['type' => 'overtime', 'start_date' => '2026-11-16', 'end_date' => '2026-11-16'])
+            ->assertHasNoActionErrors();
+
+        $request = VacationRequest::sole();
+        $this->assertSame(VacationType::Overtime, $request->type);
+        $this->assertSame(20.0, $employee->vacationBalance(2026)['remaining'], 'Overtime leave does not use vacation days.');
+        $this->assertCount(1, $leader->notifications);
+
+        $this->actingAs($leader);
+        Livewire::test(ManageVacationRequests::class)
+            ->assertCanSeeTableRecords([$request])
+            ->callTableAction('approve', $request)
+            ->assertHasNoTableActionErrors();
+
+        $this->assertSame(VacationStatus::Approved, $request->fresh()->status);
+        $this->assertSame(AbsenceType::Overtime, Absence::query()->sole()->type);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Employees\Schemas;
 
+use App\Enums\DriverLicenseCategory;
 use App\Models\Employee;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -130,6 +131,39 @@ class EmployeeInfolist
                                 TextEntry::make('size_sweater')->label(__('erp.employees.size_sweater_short'))->placeholder('—'),
                                 TextEntry::make('size_shoes')->label(__('erp.employees.size_shoes_short'))->placeholder('—'),
                             ]),
+                    ]),
+                Section::make(__('erp.employees.tabs.driver_license'))
+                    ->columnSpanFull()
+                    ->columns(['default' => 1, 'md' => 4])
+                    ->schema([
+                        TextEntry::make('driver_license_categories')
+                            ->label(__('erp.employees.driver_license_categories'))
+                            ->state(fn (Employee $record): array => array_map(fn (DriverLicenseCategory $category): string => $category->value, $record->driverLicenseCategories()))
+                            ->badge()
+                            ->placeholder(__('erp.employees.no_driver_license')),
+                        TextEntry::make('driver_license_number')
+                            ->label(__('erp.employees.driver_license_number'))
+                            ->placeholder('—'),
+                        TextEntry::make('driver_license_expires_on')
+                            ->label(__('erp.employees.driver_license_expires_on'))
+                            ->date('d/m/Y')
+                            ->badge()
+                            ->color(fn (Employee $record): string => $record->driverLicenseExpiresSoon() ? 'danger' : 'success')
+                            ->placeholder('—'),
+                        TextEntry::make('driver_license_files')
+                            ->label(__('erp.employees.driver_license_files'))
+                            ->state(fn (Employee $record): array => array_map(
+                                fn (int $index, string $path): string => sprintf(
+                                    '<a href="%s" target="_blank" rel="noopener" style="text-decoration: underline;">%s</a>',
+                                    e(route('employees.document', ['employee' => $record->id, 'kind' => 'license', 'id' => 0, 'file' => $index])),
+                                    e($record->driverLicenseFileName($path)),
+                                ),
+                                array_keys($files = array_values((array) $record->driver_license_files)),
+                                $files,
+                            ))
+                            ->html()
+                            ->listWithLineBreaks()
+                            ->placeholder('—'),
                     ]),
                 Section::make(__('erp.fields.notes'))
                     ->columnSpanFull()

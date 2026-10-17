@@ -2,15 +2,14 @@
 
 namespace App\Filament\App\Resources\MyAbsences;
 
+use App\Actions\NotifyAbsenceAdministrators;
 use App\Enums\NavigationGroup;
 use App\Filament\Admin\Resources\Absences\AbsenceResource;
 use App\Filament\Resources\VacationRequests\VacationRequestResource;
 use App\Models\Absence;
-use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -157,33 +156,10 @@ class MyAbsenceResource extends Resource
                         $path = is_array($data['document']) ? reset($data['document']) : $data['document'];
                         $name = $data['document_name'] ?? null;
                         $record->attachDocument($path, is_array($name) ? ($name[$path] ?? reset($name)) : $name, Absence::SOURCE_EMPLOYEE);
-                        self::notifyAdministrators($record);
+                        app(NotifyAbsenceAdministrators::class)->handle($record, NotifyAbsenceAdministrators::UPLOADED);
                     })
                     ->successNotificationTitle(__('erp.absences.uploaded')),
             ]);
-    }
-
-    /**
-     * Lets the administrators know a certificate came in.
-     */
-    protected static function notifyAdministrators(Absence $absence): void
-    {
-        $admins = User::query()->where('is_active', true)->whereHas('role', fn (Builder $query) => $query->where('is_admin', true))->get();
-
-        foreach ($admins as $admin) {
-            $locale = $admin->preferredLocale() ?? config('app.locale');
-
-            Notification::make()
-                ->title(__('erp.absences.notification_title', ['name' => $absence->user->name], $locale))
-                ->body(__('erp.enums.absence_type.'.$absence->type->value, [], $locale).' · '.VacationRequestResource::period($absence))
-                ->icon(Heroicon::OutlinedDocumentArrowUp)
-                ->actions([
-                    Action::make('open')
-                        ->label(__('erp.absences.download', [], $locale))
-                        ->url(AbsenceResource::documentUrl($absence), shouldOpenInNewTab: true),
-                ])
-                ->sendToDatabase($admin);
-        }
     }
 
     public static function getPages(): array

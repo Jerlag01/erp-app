@@ -155,4 +155,28 @@ class AbsenceTest extends TestCase
         $this->actingAs($employee)->get('/my-absences')->assertForbidden();
         $this->actingAs(User::factory()->admin()->create())->get('/admin/absences')->assertForbidden();
     }
+
+    #[Test]
+    public function an_employee_reports_sickness_with_the_certificate(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $employee = User::factory()->inTeam()->create();
+        $this->actingAs($employee);
+        Filament::setCurrentPanel('app');
+
+        Livewire::test(ListMyAbsences::class)
+            ->callAction('report_sickness', [
+                'start_date' => '2026-10-12',
+                'end_date' => '2026-10-13',
+                'note' => 'Griep',
+                'document' => UploadedFile::fake()->image('attest.jpg')->size(100),
+            ])
+            ->assertHasNoActionErrors();
+
+        $absence = Absence::query()->sole();
+        $this->assertSame([AbsenceType::Medical, $employee->id, 2.0, 'Griep'], [$absence->type, $absence->user_id, (float) $absence->days, $absence->note]);
+        $this->assertSame(Absence::SOURCE_EMPLOYEE, $absence->document_source);
+        Storage::disk('local')->assertExists($absence->document);
+        $this->assertCount(1, $admin->notifications);
+    }
 }

@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');
     Route::get('/waste-totals-pdf', [WastePdfController::class, 'totals'])->name('waste.totals-pdf');
     Route::get('/knowledge-base/{article}/files/{index}', KbDownloadController::class)->whereNumber(['article', 'index'])->name('kb.download');
-    Route::get('/employee-documents/{employee}/{kind}/{id}/{file?}', EmployeeDocumentController::class)->whereIn('kind', ['certificate', 'medical', 'request'])->whereNumber(['employee', 'id', 'file'])->name('employees.document');
+    Route::get('/employee-documents/{employee}/{kind}/{id}/{file?}', EmployeeDocumentController::class)->whereIn('kind', ['certificate', 'medical', 'request', 'license'])->whereNumber(['employee', 'id', 'file'])->name('employees.document');
 });
 
 // Received Peppol documents, POSTed by the access point (no session, so no CSRF token).

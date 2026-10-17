@@ -7,6 +7,7 @@ use App\Models\AssetCheck;
 use App\Models\Team;
 use App\Models\User;
 use App\Policies\AssetCheckPolicy;
+use App\Support\PushNotifications;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -72,7 +73,13 @@ class ManageAssetChecks extends ManageRecords
                         ->label(__('erp.asset_checks.fill', locale: $user->preferredLocale()))
                         ->url(AssetCheckResource::getUrl('view', ['record' => $check], panel: 'app')),
                 ])
-                ->sendToDatabase($user));
+                ->sendToDatabase($user))
+            ->each(fn (User $user) => app(PushNotifications::class)->toUser(
+                $user,
+                __('erp.asset_checks.notification', ['year' => $year], $user->preferredLocale()),
+                $team->name,
+                ['screen' => 'asset_check', 'id' => $check->id],
+            ));
 
         return $check;
     }

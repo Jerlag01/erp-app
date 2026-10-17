@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
  * request ("Authorization: Bearer <key>.<secret>"); only a SHA-256 hash of the secret is stored, so
  * the secret is shown once, when the key is issued. A key is valid for a year from the sign-in.
  */
-#[Fillable(['user_id', 'device_name', 'device_id', 'expires_at', 'last_used_at', 'last_used_ip', 'revoked_at', 'revoked_reason'])]
+#[Fillable(['user_id', 'device_name', 'device_id', 'push_token', 'push_token_updated_at', 'expires_at', 'last_used_at', 'last_used_ip', 'revoked_at', 'revoked_reason'])]
 #[Hidden(['secret_hash'])]
 class MobileKey extends Model
 {
@@ -140,6 +140,7 @@ class MobileKey extends Model
             'expires_at' => 'datetime',
             'last_used_at' => 'datetime',
             'revoked_at' => 'datetime',
+            'push_token_updated_at' => 'datetime',
             'revoked_reason' => MobileKeyRevokeReason::class,
         ];
     }

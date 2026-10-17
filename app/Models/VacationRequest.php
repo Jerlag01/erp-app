@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\AbsenceType;
 use App\Enums\VacationStatus;
+use App\Enums\VacationType;
 use App\Support\WorkingDays;
 use Database\Factories\VacationRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'start_date', 'end_date', 'half_day', 'days', 'reason', 'status', 'reviewed_by', 'reviewed_at', 'review_note'])]
+#[Fillable(['user_id', 'type', 'start_date', 'end_date', 'half_day', 'days', 'reason', 'status', 'reviewed_by', 'reviewed_at', 'review_note', 'absence_id'])]
 class VacationRequest extends Model
 {
     /** @use HasFactory<VacationRequestFactory> */
@@ -31,6 +33,21 @@ class VacationRequest extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /**
+     * The overtime absence an approved overtime request became.
+     *
+     * @return BelongsTo<Absence, $this>
+     */
+    public function absence(): BelongsTo
+    {
+        return $this->belongsTo(Absence::class);
+    }
+
+    public function isOvertime(): bool
+    {
+        return $this->type === VacationType::Overtime;
     }
 
     public function isPending(): bool
@@ -82,6 +99,24 @@ class VacationRequest extends Model
     }
 
     /**
+     * Vacation only (not overtime taken as leave, which counts as an overtime absence once approved).
+     *
+     * @param  Builder<VacationRequest>  $query
+     */
+    public function scopeVacation(Builder $query): void
+    {
+        $query->where('vacation_requests.type', VacationType::Vacation);
+    }
+
+    /**
+     * @param  Builder<VacationRequest>  $query
+     */
+    public function scopeOvertime(Builder $query): void
+    {
+        $query->where('vacation_requests.type', VacationType::Overtime);
+    }
+
+    /**
      * Requests that overlap a period and still count (pending or approved).
      *
      * @param  Builder<VacationRequest>  $query
@@ -103,6 +138,46 @@ class VacationRequest extends Model
                 $request->days = WorkingDays::count($request->start_date, $request->end_date, (bool) $request->half_day);
             }
         });
+
+        static::saved(fn (self $request) => $request->syncOvertimeAbsence());
+
+        static::deleted(fn (self $request) => $request->absence_id ? Absence::query()->find($request->absence_id)?->delete() : null);
+    }
+
+    /**
+     * An approved overtime request is an overtime absence (the "R" days of the prestation sheets);
+     * when it is no longer approved (cancelled, rejected, turned into vacation) the absence goes.
+     */
+    public function syncOvertimeAbsence(): void
+    {
+        if ($this->isOvertime() && $this->status === VacationStatus::Approved) {
+            $absence = ($this->absence_id ? Absence::query()->find($this->absence_id) : null) ?? new Absence(['user_id' => $this->user_id, 'type' => AbsenceType::Overtime]);
+            $absence->fill([
+                'user_id' => $this->user_id,
+                'start_date' => $this->start_date,
+                'end_date' => $this->end_date,
+                'half_day' => (bool) $this->half_day,
+                'note' => $this->reason,
+                'created_by' => $absence->created_by ?? $this->reviewed_by,
+            ])->save();
+
+            if ($this->absence_id !== $absence->id) {
+                $this->absence_id = $absence->id;
+                $this->saveQuietly();
+            }
+
+            $this->setRelation('absence', $absence);
+
+            return;
+        }
+
+        if ($this->absence_id !== null) {
+            $absence = Absence::query()->find($this->absence_id);
+            $this->absence_id = null;
+            $this->saveQuietly();
+            $this->setRelation('absence', null);
+            $absence?->delete();
+        }
     }
 
     /**
@@ -116,6 +191,7 @@ class VacationRequest extends Model
             'half_day' => 'boolean',
             'days' => 'decimal:1',
             'status' => VacationStatus::class,
+            'type' => VacationType::class,
             'reviewed_at' => 'datetime',
         ];
     }

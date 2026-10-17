@@ -9,6 +9,7 @@ use App\Models\PlanningItem;
 use App\Models\User;
 use App\Support\MailTemplates;
 use App\Support\Planning;
+use App\Support\PushNotifications;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,7 @@ use Throwable;
 
 /**
  * Tells an employee that items were added to, changed in or removed from their planning: always in
- * the platform (unless they made the change themselves) and, when asked, by e-mail to them with a
+ * the platform and on their phone (unless they made the change themselves) and, when asked, by e-mail to them with a
  * copy to the addresses from Settings > Planning.
  */
 class NotifyPlanningChange
@@ -83,6 +84,13 @@ class NotifyPlanningChange
         };
 
         $notification->sendToDatabase($employee);
+
+        app(PushNotifications::class)->toUser(
+            $employee,
+            __("erp.planning.notifications.{$event}_title", [], $locale),
+            implode("\n", array_map(fn (PlanningItem $item): string => $item->summary($locale), array_slice($items, 0, 4))),
+            ['screen' => 'planning', 'date' => $date],
+        );
     }
 
     /**

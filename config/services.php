@@ -14,6 +14,14 @@ return [
     |
     */
 
+    // Push notifications to the mobile app through Expo's push service. The access token is only needed
+    // when "enhanced push security" is switched on for the project at expo.dev.
+    'expo_push' => [
+        'url' => env('EXPO_PUSH_URL', 'https://exp.host/--/api/v2/push/send'),
+        'access_token' => env('EXPO_ACCESS_TOKEN'),
+        'enabled' => (bool) env('EXPO_PUSH_ENABLED', true),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

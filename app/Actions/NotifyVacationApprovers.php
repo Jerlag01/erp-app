@@ -25,13 +25,13 @@ class NotifyVacationApprovers
 
         foreach ($approvers as $approver) {
             Notification::make()
-                ->title(__('erp.vacations.notifications.new_title', ['name' => $request->user->name], $approver->preferredLocale()))
+                ->title(__($request->isOvertime() ? 'erp.vacations.notifications.new_overtime_title' : 'erp.vacations.notifications.new_title', ['name' => $request->user->name], $approver->preferredLocale()))
                 ->body(__('erp.vacations.notifications.new_body', [
                     'start' => $request->start_date->format('d/m/Y'),
                     'end' => $request->end_date->format('d/m/Y'),
                     'days' => $request->days,
                 ], $approver->preferredLocale()))
-                ->icon('heroicon-o-sun')
+                ->icon($request->isOvertime() ? 'heroicon-o-clock' : 'heroicon-o-sun')
                 ->warning()
                 ->actions([
                     Action::make('review')

@@ -4,11 +4,14 @@ namespace App\Filament\Resources\VacationRequests;
 
 use App\Enums\NavigationGroup;
 use App\Enums\VacationStatus;
+use App\Enums\VacationType;
 use App\Filament\Concerns\ScopesToVisibleRecords;
 use App\Filament\Resources\VacationRequests\Pages\ManageVacationRequests;
 use App\Models\Absence;
 use App\Models\User;
 use App\Models\VacationRequest;
+use App\Support\PushNotifications;
+use App\Support\Timesheets;
 use App\Support\WorkingDays;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -91,6 +94,12 @@ class VacationRequestResource extends Resource
                     ->required()
                     ->disabledOn('edit')
                     ->columnSpanFull(),
+                Select::make('type')
+                    ->label(__('erp.vacations.type'))
+                    ->options(VacationType::class)
+                    ->default(VacationType::Vacation)
+                    ->required()
+                    ->columnSpanFull(),
                 DatePicker::make('start_date')
                     ->label(__('erp.fields.start_date'))
                     ->native(false)
@@ -135,6 +144,10 @@ class VacationRequestResource extends Resource
                     ->description(fn (VacationRequest $record): ?string => modules()->teams() ? $record->user?->teams->pluck('name')->implode(', ') ?: null : null)
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('type')
+                    ->label(__('erp.vacations.type'))
+                    ->badge()
+                    ->sortable(),
                 TextColumn::make('start_date')
                     ->label(__('erp.fields.period'))
                     ->formatStateUsing(fn (VacationRequest $record): string => static::period($record))
@@ -170,6 +183,9 @@ class VacationRequestResource extends Resource
                     ->label(__('erp.fields.status'))
                     ->options(VacationStatus::class)
                     ->default(VacationStatus::Pending->value),
+                SelectFilter::make('type')
+                    ->label(__('erp.vacations.type'))
+                    ->options(VacationType::class),
                 SelectFilter::make('user')
                     ->label(__('erp.fields.employee'))
                     ->relationship('user', 'name')
@@ -230,6 +246,18 @@ class VacationRequestResource extends Resource
 
     protected static function summary(VacationRequest $record): string
     {
+        if ($record->isOvertime()) {
+            $overtime = app(Timesheets::class)->overtimeBalance($record->user, ignoreRequestId: $record->id);
+
+            return __('erp.vacations.summary_overtime', [
+                'name' => $record->user->name,
+                'period' => static::period($record),
+                'days' => $record->days,
+                'hours' => round((float) $record->days * $overtime['day_hours'], 2),
+                'available' => $overtime['available'],
+            ]);
+        }
+
         $balance = $record->user->vacationBalance($record->start_date->year, ignoreRequestId: $record->id);
 
         return __('erp.vacations.summary', [
@@ -253,6 +281,13 @@ class VacationRequestResource extends Resource
             ->icon($approved ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
             ->status($approved ? 'success' : 'danger')
             ->sendToDatabase($user);
+
+        app(PushNotifications::class)->toUser(
+            $user,
+            __($approved ? 'erp.vacations.notifications.approved_title' : 'erp.vacations.notifications.rejected_title', [], $locale),
+            trim($record->type->getLabel().' · '.static::period($record).'. '.$record->review_note),
+            ['screen' => 'leave'],
+        );
     }
 
     public static function getPages(): array

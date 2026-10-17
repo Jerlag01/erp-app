@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\CertificateType;
+use App\Enums\DriverLicenseCategory;
 use App\Enums\MedicalResult;
 use App\Filament\Admin\Resources\Employees\Pages\CreateEmployee;
 use App\Filament\Admin\Resources\Employees\Pages\EditEmployee;
@@ -21,6 +22,7 @@ use Filament\Auth\Pages\PasswordReset\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -454,5 +456,47 @@ class EmployeeTest extends TestCase
 
         $this->setModules(['employees' => false]);
         $this->actingAs($admin)->get('/admin/employees')->assertForbidden();
+    }
+
+    #[Test]
+    public function the_driver_license_with_several_categories_and_a_copy_is_kept_in_the_register(): void
+    {
+        Storage::fake('local');
+        $this->admin();
+        $employee = Employee::factory()->for(User::factory()->create())->create();
+
+        Livewire::test(EditEmployee::class, ['record' => $employee->getRouteKey()])
+            ->fillForm([
+                'driver_license_categories' => ['CE', 'B', 'C'],
+                'driver_license_number' => '1234567890',
+                'driver_license_expires_on' => '2027-03-31',
+                'driver_license_files' => [UploadedFile::fake()->image('voorkant.jpg'), UploadedFile::fake()->create('achterkant.pdf', 50, 'application/pdf')],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $employee->refresh();
+        $this->assertSame([DriverLicenseCategory::B, DriverLicenseCategory::C, DriverLicenseCategory::CE], $employee->driverLicenseCategories());
+        $this->assertSame('1234567890', $employee->driver_license_number);
+        $this->assertNotSame('1234567890', DB::table('employees')->where('id', $employee->id)->value('driver_license_number'), 'The number is encrypted.');
+        $this->assertCount(2, $employee->driver_license_files);
+        $front = $employee->driver_license_files[0];
+        Storage::disk('local')->assertExists($front);
+        $this->assertSame('voorkant.jpg', $employee->driverLicenseFileName($front));
+
+        $this->get(route('employees.document', ['employee' => $employee->id, 'kind' => 'license', 'id' => 0, 'file' => 0]))->assertOk();
+        $this->get(route('filament.admin.resources.employees.view', $employee))->assertOk()->assertSee('CE')->assertSee('31/03/2027');
+
+        // Removing a copy removes the file.
+        $employee->update(['driver_license_files' => [$employee->driver_license_files[1]]]);
+        Storage::disk('local')->assertMissing($front);
+
+        // The employee sees it in the app.
+        $this->getJson('/api/v1/me', $this->mobileAuth($employee->user))
+            ->assertJsonPath('data.employee.driver_license.categories.2.value', 'CE')
+            ->assertJsonPath('data.employee.driver_license.expires_on', '2027-03-31');
+
+        // Only administrators get the copies.
+        $this->actingAs($employee->user)->get(route('employees.document', ['employee' => $employee->id, 'kind' => 'license', 'id' => 0, 'file' => 0]))->assertForbidden();
     }
 }

@@ -418,6 +418,35 @@ class Timesheets
     }
 
     /**
+     * The overtime an employee can still take as paid leave: the balance carried into this week, minus
+     * overtime leave that is requested (pending) or approved from this week on (those days are not in
+     * the balance yet). One day of leave uses the hours of a working day.
+     *
+     * @return array{balance: float, reserved: float, available: float, day_hours: float}
+     */
+    public function overtimeBalance(User $user, ?int $ignoreRequestId = null): array
+    {
+        $monday = self::monday(today()->toImmutable());
+        $record = TimesheetWeek::query()->where('user_id', $user->id)->whereDate('week_start', $monday->toDateString())->first();
+        $balance = $this->carried($user, $monday, $record)[1];
+        $days = (float) VacationRequest::query()
+            ->overtime()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [VacationStatus::Pending, VacationStatus::Approved])
+            ->whereDate('end_date', '>=', $monday->toDateString())
+            ->when($ignoreRequestId, fn (Builder $query, int $id) => $query->whereKeyNot($id))
+            ->sum('days');
+        $reserved = round($days * $this->dayHours(), 2);
+
+        return [
+            'balance' => $balance,
+            'reserved' => $reserved,
+            'available' => round($balance - $reserved, 2),
+            'day_hours' => $this->dayHours(),
+        ];
+    }
+
+    /**
      * Kilometres and overtime carried into a week: set by an administrator on that week, or the
      * "new" values of the previous week, counted from the employee's first week.
      *
@@ -480,7 +509,7 @@ class Timesheets
             $absences->where('type', AbsenceType::Medical)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'medical', $absence->half_day ? 'Ziekte (halve dag)' : 'Ziekte', $absence->half_day ? $day / 2 : $day, true));
 
-            VacationRequest::query()->where('user_id', $user->id)->where('status', VacationStatus::Approved)
+            VacationRequest::query()->vacation()->where('user_id', $user->id)->where('status', VacationStatus::Approved)
                 ->whereDate('start_date', '<=', $until->toDateString())->whereDate('end_date', '>=', $from->toDateString())->get()
                 ->each(fn (VacationRequest $request) => $set($request->start_date, $request->end_date, 'vacation', $request->half_day ? 'Verlof (halve dag)' : 'Verlof', $request->half_day ? $day / 2 : $day, true));
         }

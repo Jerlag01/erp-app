@@ -4,15 +4,18 @@ namespace App\Filament\App\Resources\MyVacations;
 
 use App\Enums\NavigationGroup;
 use App\Enums\VacationStatus;
+use App\Enums\VacationType;
 use App\Filament\App\Resources\MyVacations\Pages\ListMyVacations;
 use App\Filament\Resources\VacationRequests\VacationRequestResource;
 use App\Models\VacationRequest;
+use App\Support\Timesheets;
 use App\Support\WorkingDays;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
@@ -100,6 +103,15 @@ class MyVacationResource extends Resource
         return $schema
             ->columns(2)
             ->components([
+                ToggleButtons::make('type')
+                    ->label(__('erp.vacations.type'))
+                    ->options(VacationType::class)
+                    ->default(VacationType::Vacation->value)
+                    ->inline()
+                    ->required()
+                    ->visible(fn (): bool => app(Timesheets::class)->enabled())
+                    ->live()
+                    ->columnSpanFull(),
                 DatePicker::make('start_date')
                     ->label(__('erp.fields.start_date'))
                     ->native(false)
@@ -128,6 +140,17 @@ class MyVacationResource extends Resource
                     ->columnSpanFull(),
                 Text::make(function (Get $get): string {
                     $days = WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'));
+
+                    if ($get('type') === VacationType::Overtime->value || $get('type') === VacationType::Overtime) {
+                        $overtime = app(Timesheets::class)->overtimeBalance(auth()->user());
+
+                        return __('erp.vacations.preview_overtime', [
+                            'days' => $days,
+                            'hours' => round($days * $overtime['day_hours'], 2),
+                            'available' => $overtime['available'],
+                        ]);
+                    }
+
                     $year = $get('start_date') ? (int) substr((string) $get('start_date'), 0, 4) : (int) date('Y');
 
                     return __('erp.vacations.preview', [
@@ -155,6 +178,9 @@ class MyVacationResource extends Resource
                 TextColumn::make('days')
                     ->label(__('erp.vacations.days'))
                     ->numeric(decimalPlaces: 1),
+                TextColumn::make('type')
+                    ->label(__('erp.vacations.type'))
+                    ->badge(),
                 TextColumn::make('status')
                     ->label(__('erp.fields.status'))
                     ->badge(),

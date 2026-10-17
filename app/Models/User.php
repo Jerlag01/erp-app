@@ -296,6 +296,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         $year ??= (int) date('Y');
 
         $sums = $this->vacationRequests()
+            ->vacation()
             ->whereYear('start_date', $year)
             ->when($ignoreRequestId, fn (Builder $query, int $id) => $query->whereKeyNot($id))
             ->whereIn('status', [VacationStatus::Approved, VacationStatus::Pending])

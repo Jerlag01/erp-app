@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContractTerm;
+use App\Enums\DriverLicenseCategory;
 use App\Enums\EducationLevel;
 use App\Enums\EmploymentCategory;
 use Database\Factories\EmployeeFactory;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * An employee in the employee register, linked to a login account (users). The national number
@@ -26,6 +28,7 @@ use Illuminate\Support\Carbon;
     'private_email', 'private_phone', 'national_number', 'bank_account',
     'place_of_birth', 'date_of_birth', 'employment_date', 'mother_tongue',
     'employment_category', 'contract_term', 'is_mentor', 'is_interim', 'interim_agency', 'education_level',
+    'driver_license_categories', 'driver_license_number', 'driver_license_expires_on', 'driver_license_files', 'driver_license_file_names',
     'size_pants', 'size_shirt', 'size_sweater', 'size_shoes',
     'emergency1_first_name', 'emergency1_last_name', 'emergency1_phone', 'emergency1_relation',
     'emergency2_first_name', 'emergency2_last_name', 'emergency2_phone', 'emergency2_relation',
@@ -50,6 +53,11 @@ class Employee extends Model
      * The occupational doctor sees every employee once a year.
      */
     public const MEDICAL_INTERVAL_MONTHS = 12;
+
+    /**
+     * Copies of the driver license: photos of the card (any picture type) or a PDF.
+     */
+    public const DRIVER_LICENSE_FILE_TYPES = ['image/*', 'application/pdf'];
 
     public const MOTHER_TONGUES = ['nl', 'fr', 'de', 'en', 'other'];
 
@@ -236,6 +244,39 @@ class Employee extends Model
         return $remainder === 1;
     }
 
+    /**
+     * The categories on the driver license, in the order of the license.
+     *
+     * @return list<DriverLicenseCategory>
+     */
+    public function driverLicenseCategories(): array
+    {
+        $held = array_map(fn (mixed $value): string => $value instanceof DriverLicenseCategory ? $value->value : (string) $value, (array) $this->driver_license_categories);
+
+        return array_values(array_filter(DriverLicenseCategory::cases(), fn (DriverLicenseCategory $category): bool => in_array($category->value, $held, true)));
+    }
+
+    /**
+     * The original name of an uploaded copy of the driver license.
+     */
+    public function driverLicenseFileName(string $path): string
+    {
+        return (string) (((array) $this->driver_license_file_names)[$path] ?? basename($path));
+    }
+
+    public function hasDriverLicense(): bool
+    {
+        return $this->driverLicenseCategories() !== [] || filled($this->driver_license_number) || filled($this->driver_license_files);
+    }
+
+    /**
+     * The license is expired, or expires within the warning period of certificates.
+     */
+    public function driverLicenseExpiresSoon(): bool
+    {
+        return $this->driver_license_expires_on !== null && $this->driver_license_expires_on->lte(today()->addDays(self::EXPIRY_WARNING_DAYS));
+    }
+
     public static function formatIban(?string $iban): ?string
     {
         return filled($iban) ? trim(chunk_split(strtoupper(preg_replace('/\s+/', '', $iban)), 4, ' ')) : $iban;
@@ -250,7 +291,23 @@ class Employee extends Model
             $employee->medicalChecks->each->delete();
         });
 
+        static::deleted(fn (self $employee) => Storage::disk(self::DISK)->delete((array) $employee->driver_license_files));
+
+        // Copies of the driver license that were removed in the form are removed from the disk.
+        static::updated(function (self $employee): void {
+            if ($employee->wasChanged('driver_license_files')) {
+                $old = (array) json_decode((string) $employee->getRawOriginal('driver_license_files'), true);
+                Storage::disk(self::DISK)->delete(array_values(array_diff($old, (array) $employee->driver_license_files)));
+            }
+        });
+
         static::saving(function (self $employee): void {
+            // Only known categories, in the order of the license.
+            $employee->driver_license_categories = array_values(array_map(
+                fn (DriverLicenseCategory $category): string => $category->value,
+                $employee->driverLicenseCategories(),
+            )) ?: null;
+
             if (filled($employee->national_number)) {
                 $employee->national_number = preg_replace('/\D/', '', $employee->national_number);
             }
@@ -278,6 +335,11 @@ class Employee extends Model
             'education_level' => EducationLevel::class,
             'is_mentor' => 'boolean',
             'is_interim' => 'boolean',
+            'driver_license_categories' => 'array',
+            'driver_license_number' => 'encrypted',
+            'driver_license_expires_on' => 'date',
+            'driver_license_files' => 'array',
+            'driver_license_file_names' => 'array',
         ];
     }
 }

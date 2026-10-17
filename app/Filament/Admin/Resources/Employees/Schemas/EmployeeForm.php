@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Employees\Schemas;
 
 use App\Enums\ContractTerm;
+use App\Enums\DriverLicenseCategory;
 use App\Enums\EducationLevel;
 use App\Enums\EmploymentCategory;
 use App\Models\Country;
@@ -11,7 +12,9 @@ use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use Closure;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -64,6 +67,10 @@ class EmployeeForm
                             ->icon(Heroicon::OutlinedSwatch)
                             ->columns(4)
                             ->schema(self::clothing()),
+                        Tab::make(__('erp.employees.tabs.driver_license'))
+                            ->icon(Heroicon::OutlinedIdentification)
+                            ->columns(2)
+                            ->schema(self::driverLicense()),
                         Tab::make(__('erp.employees.tabs.account'))
                             ->icon(Heroicon::OutlinedKey)
                             ->columns(2)
@@ -71,6 +78,46 @@ class EmployeeForm
                             ->schema(self::account()),
                     ]),
             ]);
+    }
+
+    /**
+     * The driver license: one or more categories, the number, until when it is valid and a copy of the
+     * card (front and back, photos or PDF).
+     *
+     * @return list<mixed>
+     */
+    public static function driverLicense(): array
+    {
+        return [
+            CheckboxList::make('driver_license_categories')
+                ->label(__('erp.employees.driver_license_categories'))
+                ->options(DriverLicenseCategory::class)
+                ->descriptions(collect(DriverLicenseCategory::cases())->mapWithKeys(fn (DriverLicenseCategory $category): array => [$category->value => $category->getDescription()])->all())
+                ->columns(['default' => 2, 'md' => 3, 'xl' => 5])
+                ->gridDirection('row')
+                ->bulkToggleable()
+                ->columnSpanFull(),
+            TextInput::make('driver_license_number')
+                ->label(__('erp.employees.driver_license_number'))
+                ->maxLength(30),
+            DatePicker::make('driver_license_expires_on')
+                ->label(__('erp.employees.driver_license_expires_on')),
+            FileUpload::make('driver_license_files')
+                ->label(__('erp.employees.driver_license_files'))
+                ->helperText(__('erp.employees.driver_license_files_help'))
+                ->multiple()
+                ->maxFiles(6)
+                ->appendFiles()
+                ->disk(Employee::DISK)
+                ->directory('employees/driver-licenses')
+                ->visibility('private')
+                ->acceptedFileTypes(Employee::DRIVER_LICENSE_FILE_TYPES)
+                ->maxSize(12288)
+                ->storeFileNamesIn('driver_license_file_names')
+                ->downloadable()
+                ->openable()
+                ->columnSpanFull(),
+        ];
     }
 
     /**

@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Certificate PDFs (also of certificates employees submitted) and medical check-up files from the
- * employee register, for administrators only.
+ * Certificate PDFs (also of certificates employees submitted), medical check-up files and copies of
+ * the driver license from the employee register, for administrators only.
  * A medical check-up holds several files; $file is the position in its list.
  */
 class EmployeeDocumentController
@@ -22,6 +22,9 @@ class EmployeeDocumentController
             $record = $kind === 'certificate' ? $employee->certificates()->find($id) : $employee->certificateRequests()->find($id);
             $path = $record?->document;
             $name = $record?->document_name;
+        } elseif ($kind === 'license') {
+            $path = array_values((array) $employee->driver_license_files)[$file] ?? null;
+            $name = $path ? $employee->driverLicenseFileName($path) : null;
         } else {
             $record = $employee->medicalChecks()->find($id);
             $path = $record?->documents[$file] ?? null;

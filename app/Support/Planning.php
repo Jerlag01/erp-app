@@ -194,6 +194,7 @@ class Planning
 
         if (modules()->vacations()) {
             VacationRequest::query()
+                ->vacation()
                 ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
                 ->where('status', VacationStatus::Approved)
                 ->whereDate('start_date', '<=', $until->toDateString())

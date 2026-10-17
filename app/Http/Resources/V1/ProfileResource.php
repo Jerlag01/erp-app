@@ -2,13 +2,22 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Enums\DriverLicenseCategory;
 use App\Enums\RequestStatus;
+use App\Http\Controllers\Api\V1\AssetCheckController;
+use App\Models\BatteryDossier;
 use App\Models\Employee;
+use App\Models\EnersysDossier;
+use App\Models\Incident;
+use App\Models\Suggestion;
 use App\Models\User;
+use App\Support\Planning;
+use App\Support\Timesheets;
 use BackedEnum;
 use Filament\Support\Contracts\HasLabel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The user's own details as the mobile app shows them: the same personal details the employee sees on
@@ -35,6 +44,32 @@ class ProfileResource extends JsonResource
             'locale' => $this->preferredLocale() ?? config('app.locale'),
             'teams' => $this->teams()->orderBy('name')->pluck('name')->all(),
             'employee' => $employee ? $this->employeeDetails($employee) : null,
+            'features' => $this->features(),
+        ];
+    }
+
+    /**
+     * Which parts of the app the user has: the modules that are on and what they may see. Open equipment
+     * controls get their own tab while they are open.
+     *
+     * @return array<string, bool|int>
+     */
+    protected function features(): array
+    {
+        /** @var User $user */
+        $user = $this->resource;
+        $gate = Gate::forUser($user);
+
+        return [
+            'timesheets' => app(Timesheets::class)->enabled(),
+            'leave' => modules()->vacations(),
+            'overtime_leave' => modules()->vacations() && app(Timesheets::class)->enabled(),
+            'planning' => app(Planning::class)->enabled(),
+            'open_asset_checks' => AssetCheckController::openChecks($user)->count(),
+            'battery_dossiers' => $gate->allows('viewAny', BatteryDossier::class),
+            'enersys_dossiers' => $gate->allows('viewAny', EnersysDossier::class),
+            'incidents' => $gate->allows('create', Incident::class),
+            'suggestions' => $gate->allows('create', Suggestion::class),
         ];
     }
 
@@ -77,6 +112,13 @@ class ProfileResource extends JsonResource
                 'shoes' => $employee->size_shoes,
             ],
             'emergency_contacts' => $employee->emergencyContacts(),
+            'driver_license' => $employee->hasDriverLicense() ? [
+                'categories' => array_map(fn (DriverLicenseCategory $category): array => ['value' => $category->value, 'label' => $category->getDescription()], $employee->driverLicenseCategories()),
+                'number' => $employee->driver_license_number,
+                'expires_on' => $employee->driver_license_expires_on?->toDateString(),
+                'expires_soon' => $employee->driverLicenseExpiresSoon(),
+                'copies' => count((array) $employee->driver_license_files),
+            ] : null,
             'has_pending_changes' => $employee->changeRequests()->where('status', RequestStatus::Pending)->exists(),
         ];
     }

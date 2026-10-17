@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BatteryDossiers\Pages;
 
+use App\Actions\Batteries\SaveBatteryDossier;
 use App\Filament\Forms\FloorPlanEditor;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Models\BatteryDossier;
@@ -164,18 +165,8 @@ class EditBatteryDossier extends EditRecord
 
         $this->strings = (array) ($data['strings'] ?? []);
 
-        // Without "batteries.input" the Input tab is not shown, so whatever is sent for it is ignored.
-        if (! Gate::allows('viewInput', $this->record::class)) {
-            $data = array_diff_key($data, array_flip($this->record::INPUT_FIELDS));
-            $this->strings = array_map(fn (mixed $row): array => array_diff_key((array) $row, ['id_number' => true]), $this->strings);
-        }
-
-        // Signed documents are locked: whatever was sent for them is ignored (administrators excepted).
-        foreach ($this->record::SIGNED_FIELDS as $document => $fields) {
-            if ($this->record->isLockedFor($document, auth()->user())) {
-                $data = array_diff_key($data, array_flip($fields));
-            }
-        }
+        // Input fields without the input permission and signed documents are left out.
+        $data = app(SaveBatteryDossier::class)->allowedData($this->record, $data, auth()->user());
 
         $png = $data['floor_plan_png'] ?? null;
         $data['floor_plan'] = FloorPlanEditor::sanitize($data['floor_plan'] ?? []);
@@ -197,36 +188,7 @@ class EditBatteryDossier extends EditRecord
 
     protected function afterSave(): void
     {
-        $this->record->syncBatteries();
-        $cells = max(1, (int) $this->record->cells_per_battery);
-        $number = fn (mixed $value): ?float => is_numeric($value) ? (float) $value : null;
-
-        foreach ($this->record->batteries as $battery) {
-            $row = (array) ($this->strings[$battery->position] ?? []);
-
-            if ($row === []) {
-                continue;
-            }
-
-            $measurementLocked = $this->record->isLockedFor('measurement', auth()->user());
-
-            $battery->update([
-                ...($measurementLocked ? [] : [
-                    'cell_voltages' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_voltages'] ?? []))[$index] ?? null), range(0, $cells - 1)),
-                    'cell_densities' => array_map(fn (int $index): ?float => $number(((array) ($row['cell_densities'] ?? []))[$index] ?? null), range(0, $cells - 1)),
-                    ...(array_key_exists('float_voltage', $row) ? ['float_voltage' => $number($row['float_voltage'])] : []),
-                    ...(array_key_exists('floating_voltages', $row) ? ['floating_voltages' => array_map(fn (int $index): ?float => $number(((array) $row['floating_voltages'])[$index] ?? null), range(0, $cells - 1))] : []),
-                ]),
-                'id_number' => filled($row['id_number'] ?? null) ? trim((string) $row['id_number']) : $battery->id_number,
-                'cable_type' => $row['cable_type'] ?? null,
-                'cable_length_m' => $number($row['cable_length_m'] ?? null),
-                'cables_positive' => is_numeric($row['cables_positive'] ?? null) ? (int) $row['cables_positive'] : null,
-                'cables_negative' => is_numeric($row['cables_negative'] ?? null) ? (int) $row['cables_negative'] : null,
-                'cable_section' => $row['cable_section'] ?? null,
-                'fuse_amperage' => $row['fuse_amperage'] ?? null,
-                'fuse_type' => filled($row['fuse_type'] ?? null) ? $row['fuse_type'] : BatteryDossierBattery::DEFAULT_FUSE_TYPE,
-            ]);
-        }
+        app(SaveBatteryDossier::class)->saveBatteries($this->record, $this->strings, auth()->user());
 
         // Rows were added or removed when the number of batteries changed: show them.
         $this->fillForm();
