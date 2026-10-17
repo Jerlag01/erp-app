@@ -43,7 +43,7 @@ class MobilePlanningAndChecksApiTest extends TestCase
         $this->withoutDefer();
         Filament::setCurrentPanel('app');
 
-        $this->team = Team::factory()->create(['name' => 'Ploeg Gent']);
+        $this->team = Team::factory()->create(['name' => 'Mobiele ploeg test']);
         $this->user = User::factory()->withPermissions(['projects' => ['view']])->inTeam($this->team)->create(['name' => 'Jan', 'locale' => 'nl']);
         $this->auth = $this->mobileAuth($this->user, 'ExponentPushToken[jan]');
     }
@@ -114,7 +114,7 @@ class MobilePlanningAndChecksApiTest extends TestCase
             && json_decode($request->body(), true)[0]['data']['screen'] === 'asset_check');
 
         $this->getJson('/api/v1/me', $this->auth)->assertJsonPath('data.features.open_asset_checks', 1);
-        $this->getJson('/api/v1/asset-checks', $this->auth)->assertOk()->assertJsonPath('data.0.team', 'Ploeg Gent')->assertJsonPath('data.0.total', 1);
+        $this->getJson('/api/v1/asset-checks', $this->auth)->assertOk()->assertJsonPath('data.0.team', 'Mobiele ploeg test')->assertJsonPath('data.0.total', 1);
 
         $item = $check->items()->sole();
         $this->getJson("/api/v1/asset-checks/{$check->id}", $this->auth)

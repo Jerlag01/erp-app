@@ -127,6 +127,8 @@ class Settings
                 'send_day' => 5,
                 'send_time' => '18:00',
                 'recipients' => [],
+                // Every employee also gets their own sheet by e-mail.
+                'send_to_employee' => true,
             ],
             // Battery dossiers: templates, client, prices and the fixed texts of the shipping note (Settings > Batteries).
             'batteries' => [

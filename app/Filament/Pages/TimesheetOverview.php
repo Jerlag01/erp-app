@@ -106,7 +106,7 @@ class TimesheetOverview extends Page
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->visible(fn (): bool => auth()->user()->isAdmin() || auth()->user()->hasPermission('timesheets.send'))
                 ->requiresConfirmation()
-                ->modalDescription(fn (): string => __('erp.timesheets.send_week_help', ['recipients' => implode(', ', app(Timesheets::class)->recipients()) ?: '—']))
+                ->modalDescription(fn (): string => __('erp.timesheets.send_week_help', ['recipients' => app(Timesheets::class)->recipientsDescription()]))
                 ->action(function (): void {
                     $result = app(SendWeeklyTimesheets::class)->handle($this->monday());
 

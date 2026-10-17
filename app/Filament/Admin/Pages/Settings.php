@@ -454,6 +454,10 @@ class Settings extends Page
                         ->placeholder('payroll@example.com')
                         ->nestedRecursiveRules(['email:rfc', 'max:255'])
                         ->columnSpanFull(),
+                    Toggle::make('timesheets.send_to_employee')
+                        ->label(__('erp.settings.fields.timesheet_send_to_employee'))
+                        ->helperText(__('erp.settings.help.timesheet_send_to_employee'))
+                        ->columnSpanFull(),
                 ]),
         ];
     }

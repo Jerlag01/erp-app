@@ -39,7 +39,7 @@ class SendWeeklyTimesheetsCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Sent {$result['count']} prestation sheet(s) of week {$monday->isoWeek()}.");
+        $this->info("Sent {$result['count']} prestation sheet(s) of week {$monday->isoWeek()} ({$result['personal']} to the employees themselves).");
 
         return self::SUCCESS;
     }

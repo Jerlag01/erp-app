@@ -184,29 +184,45 @@ class TimesheetTest extends TestCase
     }
 
     #[Test]
-    public function the_weekly_pdfs_are_mailed_to_the_recipients(): void
+    public function the_weekly_pdfs_are_mailed_to_each_employee_and_the_general_addresses(): void
     {
         Mail::fake();
         settings()->save('timesheets', [...settings('timesheets'), 'recipients' => ['payroll@example.com', 'boss@example.com']]);
-        $first = User::factory()->create(['name' => 'Anna']);
-        $second = User::factory()->create(['name' => 'Bert']);
+        $first = User::factory()->create(['name' => 'Anna', 'email' => 'anna@example.com', 'locale' => 'nl']);
+        $second = User::factory()->create(['name' => 'Bert', 'email' => 'bert@example.com', 'locale' => 'fr']);
         $this->day($first, self::MONDAY);
         $this->day($second, self::MONDAY);
 
         $this->artisan('timesheets:send-weekly', ['--week' => self::MONDAY])->assertSuccessful();
 
+        // The general addresses get everyone's sheets in one e-mail.
         Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::TimesheetWeek
             && $mail->hasTo('payroll@example.com') && $mail->hasTo('boss@example.com')
             && count($mail->files) === 2
             && str_contains($mail->rendered['html'], 'Anna'));
+
+        // Each employee gets only their own sheet, in their language.
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::TimesheetEmployee
+            && $mail->hasTo('anna@example.com') && ! $mail->hasTo('payroll@example.com')
+            && count($mail->files) === 1 && str_contains($mail->files[0]['name'], 'anna')
+            && str_starts_with($mail->rendered['subject'], 'Je prestatiefiche van week'));
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::TimesheetEmployee
+            && $mail->hasTo('bert@example.com') && $mail->templateLocale === 'fr');
+        Mail::assertSent(SystemMail::class, 3);
+
         $this->assertSame(2, TimesheetWeek::query()->whereNotNull('sent_at')->count());
         Storage::disk('local')->assertExists(TimesheetWeek::query()->where('user_id', $first->id)->value('pdf_path'));
 
         // Sent weeks are not sent again by the schedule.
         $this->artisan('timesheets:send-weekly', ['--week' => self::MONDAY])->assertSuccessful();
-        Mail::assertSent(SystemMail::class, 1);
+        Mail::assertSent(SystemMail::class, 3);
 
+        // Without general addresses the employees still get theirs; with nobody to send to, nothing goes.
         settings()->save('timesheets', [...settings('timesheets'), 'recipients' => []]);
+        $result = app(SendWeeklyTimesheets::class)->handle(CarbonImmutable::parse(self::MONDAY), [$first]);
+        $this->assertSame([true, 1], [$result['sent'], $result['personal']]);
+
+        settings()->save('timesheets', [...settings('timesheets'), 'send_to_employee' => false]);
         $this->assertFalse(app(SendWeeklyTimesheets::class)->handle(CarbonImmutable::parse(self::MONDAY))['sent']);
     }
 

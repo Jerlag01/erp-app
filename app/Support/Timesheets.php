@@ -530,7 +530,26 @@ class Timesheets
     }
 
     /**
-     * Recipients of the weekly PDFs (Settings > Prestations).
+     * Whether every employee also gets their own weekly sheet by e-mail (Settings > Prestations).
+     */
+    public function sendsToEmployees(): bool
+    {
+        return (bool) settings()->get('timesheets.send_to_employee', true);
+    }
+
+    /**
+     * Who gets the weekly sheets, for the confirmation: "the employee themself, payroll@…".
+     */
+    public function recipientsDescription(): string
+    {
+        return implode(', ', array_filter([
+            $this->sendsToEmployees() ? __('erp.timesheets.recipient_employee') : null,
+            ...$this->recipients(),
+        ])) ?: '—';
+    }
+
+    /**
+     * General recipients of the weekly PDFs of everyone (Settings > Prestations).
      *
      * @return list<string>
      */
