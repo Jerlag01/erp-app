@@ -514,6 +514,7 @@ return [
         'title' => 'Settings',
         'saved' => 'Settings saved',
         'tabs' => [
+            'mobile_app' => 'Mobile app',
             'general' => 'General',
             'modules' => 'Modules',
             'mail' => 'Email',
@@ -524,6 +525,7 @@ return [
             'timesheets' => 'Prestations',
         ],
         'sections' => [
+            'mobile_app' => 'Android app',
             'enersys' => 'Enersys batteries (605)',
             'identity' => 'Site',
             'reminders' => 'Reminders',
@@ -546,6 +548,9 @@ return [
             'timesheet_mail' => 'Weekly e-mail',
         ],
         'fields' => [
+            'mobile_app_apk' => 'APK file',
+            'mobile_app_version' => 'Version',
+            'mobile_app_prompt' => 'Suggest on Android phones',
             'battery_brussels_locale' => 'Document language Brussels',
             'battery_enersys_project_category' => 'Project category Enersys',
             'battery_enersys_brand' => 'Brand',
@@ -639,6 +644,11 @@ return [
             'timesheet_mobility_rate' => 'Mobility allowance',
         ],
         'help' => [
+            'mobile_app' => 'Upload the APK of the mobile app here. Signed-in employees download it from the platform (user menu) and are offered it when they open the platform on an Android phone.',
+            'mobile_app_apk' => 'The .apk file of the Android app (from the EAS build), max. :size MB. A new upload replaces the previous one.',
+            'mobile_app_uploaded' => 'Current version uploaded on :date.',
+            'mobile_app_version' => 'Shown when downloading; a new version shows the suggestion again.',
+            'mobile_app_prompt' => 'After signing in on an Android phone, a message suggests downloading the app.',
             'battery_brussels_locale' => 'Language of the battery documents for COW sites in Brussels (Flanders: Dutch, Wallonia: French).',
             'enersys' => 'For the Enersys dossiers; client, documents and shipping note are the same as above.',
             'battery_enersys_types' => 'One type per line: "12V155FS | 155".',
@@ -2168,6 +2178,15 @@ return [
             'elastoflex' => 'Elastoflex',
             'handed_over' => 'File handed over to Proximus',
         ],
+    ],
+    'mobile_app' => [
+        'prompt_title' => 'Download the :app app',
+        'version' => 'Version :version',
+        'prompt_body' => 'Working on your phone? The app is handier: planning, prestations, leave, toolbox meetings and notifications, also on the road.',
+        'install_help' => 'After downloading: open the file and allow the installation when Android asks.',
+        'download' => 'Download the app',
+        'later' => 'Later',
+        'download_menu' => 'Download the mobile app',
     ],
     'toolbox' => [
         'singular' => 'toolbox meeting',

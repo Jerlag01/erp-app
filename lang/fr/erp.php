@@ -514,6 +514,7 @@ return [
         'title' => 'Paramètres',
         'saved' => 'Paramètres enregistrés',
         'tabs' => [
+            'mobile_app' => 'Application mobile',
             'general' => 'Général',
             'modules' => 'Modules',
             'mail' => 'E-mail',
@@ -524,6 +525,7 @@ return [
             'timesheets' => 'Prestations',
         ],
         'sections' => [
+            'mobile_app' => 'Application Android',
             'enersys' => 'Batteries Enersys (605)',
             'identity' => 'Site',
             'reminders' => 'Rappels',
@@ -546,6 +548,9 @@ return [
             'timesheet_mail' => 'E-mail hebdomadaire',
         ],
         'fields' => [
+            'mobile_app_apk' => 'Fichier APK',
+            'mobile_app_version' => 'Version',
+            'mobile_app_prompt' => 'Proposer sur les téléphones Android',
             'battery_brussels_locale' => 'Langue des documents Bruxelles',
             'battery_enersys_project_category' => 'Catégorie de projet Enersys',
             'battery_enersys_brand' => 'Marque',
@@ -639,6 +644,11 @@ return [
             'timesheet_mobility_rate' => 'Indemnité de mobilité',
         ],
         'help' => [
+            'mobile_app' => 'Téléversez ici l\'APK de l\'application mobile. Les employés connectés la téléchargent via la plateforme (menu utilisateur) et se la voient proposer lorsqu\'ils ouvrent la plateforme sur un téléphone Android.',
+            'mobile_app_apk' => 'Le fichier .apk de l\'application Android (du build EAS), max. :size Mo. Un nouveau téléversement remplace le précédent.',
+            'mobile_app_uploaded' => 'Version actuelle téléversée le :date.',
+            'mobile_app_version' => 'Affichée lors du téléchargement ; une nouvelle version affiche à nouveau le message.',
+            'mobile_app_prompt' => 'Après la connexion sur un téléphone Android, un message propose de télécharger l\'application.',
             'battery_brussels_locale' => 'Langue des documents batteries pour les sites COW à Bruxelles (Flandre : néerlandais, Wallonie : français).',
             'enersys' => 'Pour les dossiers Enersys ; client, documents et note d\'envoi sont les mêmes que ci-dessus.',
             'battery_enersys_types' => 'Un type par ligne : « 12V155FS | 155 ».',
@@ -2168,6 +2178,15 @@ return [
             'elastoflex' => 'Elastoflex',
             'handed_over' => 'Dossier transmis à Proximus',
         ],
+    ],
+    'mobile_app' => [
+        'prompt_title' => 'Téléchargez l\'application :app',
+        'version' => 'Version :version',
+        'prompt_body' => 'Vous travaillez sur votre téléphone ? L\'application est plus pratique : planning, prestations, congés, toolbox meetings et notifications, aussi en déplacement.',
+        'install_help' => 'Après le téléchargement : ouvrez le fichier et autorisez l\'installation lorsque Android le demande.',
+        'download' => 'Télécharger l\'application',
+        'later' => 'Plus tard',
+        'download_menu' => 'Télécharger l\'application mobile',
     ],
     'toolbox' => [
         'singular' => 'toolbox meeting',

@@ -5,6 +5,7 @@ namespace App\Providers\Filament\Concerns;
 use App\Enums\NavigationGroup;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Http\Middleware\SetUserLocale;
+use App\Support\MobileApp;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -55,12 +56,19 @@ trait ConfiguresErpPanel
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
             // The language switch, next to the user menu.
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.language-switch'))
+            // Suggests the Android app to someone who signed in on an Android phone.
+            ->renderHook(PanelsRenderHook::BODY_END, fn () => view('filament.mobile-app-prompt'))
             ->userMenuItems([
                 Action::make('employeePanel')
                     ->label(fn (): string => __('erp.panels.app'))
                     ->icon(Heroicon::OutlinedBriefcase)
                     ->url('/')
                     ->visible(fn (): bool => $panel->getId() !== 'app'),
+                Action::make('mobileApp')
+                    ->label(fn (): string => __('erp.mobile_app.download_menu'))
+                    ->icon(Heroicon::OutlinedDevicePhoneMobile)
+                    ->url(fn (): string => route('mobile-app.download'))
+                    ->visible(fn (): bool => app(MobileApp::class)->available()),
                 Action::make('adminPanel')
                     ->label(fn (): string => __('erp.panels.admin'))
                     ->icon(Heroicon::OutlinedCog6Tooth)

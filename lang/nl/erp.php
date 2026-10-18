@@ -514,6 +514,7 @@ return [
         'title' => 'Instellingen',
         'saved' => 'Instellingen opgeslagen',
         'tabs' => [
+            'mobile_app' => 'Mobiele app',
             'general' => 'Algemeen',
             'modules' => 'Modules',
             'mail' => 'E-mail',
@@ -524,6 +525,7 @@ return [
             'timesheets' => 'Prestaties',
         ],
         'sections' => [
+            'mobile_app' => 'Android-app',
             'enersys' => 'Enersys-batterijen (605)',
             'identity' => 'Site',
             'reminders' => 'Herinneringen',
@@ -546,6 +548,9 @@ return [
             'timesheet_mail' => 'Wekelijkse e-mail',
         ],
         'fields' => [
+            'mobile_app_apk' => 'APK-bestand',
+            'mobile_app_version' => 'Versie',
+            'mobile_app_prompt' => 'Voorstellen op Android-telefoons',
             'battery_brussels_locale' => 'Taal documenten Brussel',
             'battery_enersys_project_category' => 'Projectcategorie Enersys',
             'battery_enersys_brand' => 'Merk',
@@ -639,6 +644,11 @@ return [
             'timesheet_mobility_rate' => 'Mobiliteitsvergoeding',
         ],
         'help' => [
+            'mobile_app' => 'Laad hier de APK van de mobiele app op. Aangemelde werknemers downloaden ze via het platform (gebruikersmenu) en krijgen ze voorgesteld als ze het platform op een Android-telefoon openen.',
+            'mobile_app_apk' => 'Het .apk-bestand van de Android-app (van de EAS-build), max. :size MB. Een nieuwe upload vervangt de vorige.',
+            'mobile_app_uploaded' => 'Huidige versie opgeladen op :date.',
+            'mobile_app_version' => 'Getoond bij het downloaden; een nieuwe versie toont de melding opnieuw.',
+            'mobile_app_prompt' => 'Na het aanmelden op een Android-telefoon verschijnt een melding om de app te downloaden.',
             'battery_brussels_locale' => 'Taal van de batterijdocumenten voor COW-sites in Brussel (Vlaanderen: Nederlands, Wallonië: Frans).',
             'enersys' => 'Voor de Enersys-dossiers; klant, documenten en verzendnota zijn dezelfde als hierboven.',
             'battery_enersys_types' => 'Eén type per regel: "12V155FS | 155".',
@@ -2168,6 +2178,15 @@ return [
             'elastoflex' => 'Elastoflex',
             'handed_over' => 'Dossier overgedragen aan Proximus',
         ],
+    ],
+    'mobile_app' => [
+        'prompt_title' => 'Download de :app-app',
+        'version' => 'Versie :version',
+        'prompt_body' => 'Werk je op je telefoon? De app is handiger: planning, prestaties, verlof, toolboxmeetings en meldingen, ook onderweg.',
+        'install_help' => 'Na het downloaden: open het bestand en sta de installatie toe als Android ernaar vraagt.',
+        'download' => 'App downloaden',
+        'later' => 'Later',
+        'download_menu' => 'Mobiele app downloaden',
     ],
     'toolbox' => [
         'singular' => 'toolboxmeeting',

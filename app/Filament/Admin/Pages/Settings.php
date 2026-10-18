@@ -7,6 +7,7 @@ use App\Enums\ProjectStatus;
 use App\Http\Controllers\PeppolInboundController;
 use App\Models\Client;
 use App\Models\Employee;
+use App\Support\MobileApp;
 use App\Support\Modules;
 use App\Support\Settings as SiteSettings;
 use BackedEnum;
@@ -35,6 +36,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -102,6 +104,9 @@ class Settings extends Page
                         Tab::make(__('erp.settings.tabs.appearance'))
                             ->icon(Heroicon::OutlinedSwatch)
                             ->schema($this->appearanceFields()),
+                        Tab::make(__('erp.settings.tabs.mobile_app'))
+                            ->icon(Heroicon::OutlinedDevicePhoneMobile)
+                            ->schema($this->mobileAppFields()),
                         // Only while the finance module is on.
                         Tab::make(__('erp.settings.tabs.finance'))
                             ->icon(Heroicon::OutlinedBanknotes)
@@ -157,6 +162,18 @@ class Settings extends Page
 
             if (filled($old) && Arr::has($data, $image) && $old !== Arr::get($data, $image)) {
                 Storage::disk('public')->delete($old);
+            }
+        }
+
+        // A new APK replaces the previous one on the disk.
+        if (isset($data['mobile_app'])) {
+            $previous = $settings->get('mobile_app.apk');
+            $current = $data['mobile_app']['apk'] ?? null;
+            $data['mobile_app']['prompt'] = (bool) ($data['mobile_app']['prompt'] ?? false);
+            $data['mobile_app']['uploaded_at'] = $previous === $current ? $settings->get('mobile_app.uploaded_at') : ($current ? now()->toIso8601String() : null);
+
+            if (filled($previous) && $previous !== $current) {
+                Storage::disk(MobileApp::DISK)->delete($previous);
             }
         }
 
@@ -459,6 +476,42 @@ class Settings extends Page
                         ->label(__('erp.settings.fields.timesheet_send_to_employee'))
                         ->helperText(__('erp.settings.help.timesheet_send_to_employee'))
                         ->columnSpanFull(),
+                ]),
+        ];
+    }
+
+    /**
+     * The Android app (APK) employees download from the platform, and the suggestion on Android phones.
+     *
+     * @return array<Component>
+     */
+    protected function mobileAppFields(): array
+    {
+        return [
+            Section::make(__('erp.settings.sections.mobile_app'))
+                ->description(__('erp.settings.help.mobile_app'))
+                ->columns(2)
+                ->schema([
+                    FileUpload::make('mobile_app.apk')
+                        ->label(__('erp.settings.fields.mobile_app_apk'))
+                        ->helperText(fn (): string => __('erp.settings.help.mobile_app_apk', ['size' => (int) (MobileApp::MAX_KILOBYTES / 1024)])
+                            .(filled($at = settings()->get('mobile_app.uploaded_at')) ? ' '.__('erp.settings.help.mobile_app_uploaded', ['date' => Carbon::parse($at)->format('d/m/Y H:i')]) : ''))
+                        ->disk(MobileApp::DISK)
+                        ->directory(MobileApp::DIRECTORY)
+                        ->visibility('private')
+                        ->acceptedFileTypes(MobileApp::MIME_TYPES)
+                        ->mimeTypeMap(['apk' => 'application/vnd.android.package-archive'])
+                        ->maxSize(MobileApp::MAX_KILOBYTES)
+                        ->storeFileNamesIn('mobile_app.apk_name')
+                        ->columnSpanFull(),
+                    TextInput::make('mobile_app.version')
+                        ->label(__('erp.settings.fields.mobile_app_version'))
+                        ->helperText(__('erp.settings.help.mobile_app_version'))
+                        ->placeholder('1.0.0')
+                        ->maxLength(30),
+                    Toggle::make('mobile_app.prompt')
+                        ->label(__('erp.settings.fields.mobile_app_prompt'))
+                        ->helperText(__('erp.settings.help.mobile_app_prompt')),
                 ]),
         ];
     }

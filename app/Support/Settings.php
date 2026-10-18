@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging'];
+    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -28,6 +28,15 @@ class Settings
     public static function defaults(): array
     {
         return [
+            // The Android app (APK) employees download from the platform (Settings > Mobile app).
+            'mobile_app' => [
+                'apk' => null,
+                'apk_name' => null,
+                'version' => null,
+                'uploaded_at' => null,
+                // Suggest the app to employees who open the platform on an Android phone.
+                'prompt' => true,
+            ],
             'general' => [
                 'site_name' => 'ERP',
                 'company_name' => null,
