@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -52,11 +53,35 @@ class MobileApp
     }
 
     /**
-     * Whether to suggest the app: switched on, an APK is there, and the browser is an Android phone.
+     * What identifies the current upload: the version, or else when it was uploaded. A new release shows
+     * the suggestion again, also to who chose "don't show again".
      */
-    public function shouldPrompt(?string $userAgent): bool
+    public function release(): string
     {
-        return (bool) settings()->get('mobile_app.prompt', true) && $this->available() && self::isAndroidPhone($userAgent);
+        return (string) ($this->version() ?? settings()->get('mobile_app.uploaded_at') ?? '');
+    }
+
+    /**
+     * Whether to suggest the app: switched on, an APK is there, the browser is an Android phone and the
+     * user did not choose "don't show again" for this release.
+     */
+    public function shouldPrompt(?string $userAgent, ?User $user = null): bool
+    {
+        return (bool) settings()->get('mobile_app.prompt', true)
+            && $this->available()
+            && self::isAndroidPhone($userAgent)
+            && ($user === null || $user->mobile_app_dismissed_release !== $this->release());
+    }
+
+    /**
+     * The message of Settings > Mobile app in the user's language, or the standard text.
+     */
+    public function message(?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+        $custom = settings()->get("mobile_app.message_{$locale}") ?: settings()->get('mobile_app.message_nl');
+
+        return filled($custom) ? (string) $custom : __('erp.mobile_app.prompt_body', [], $locale);
     }
 
     public static function isAndroidPhone(?string $userAgent): bool

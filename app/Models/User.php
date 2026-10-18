@@ -22,7 +22,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'initials', 'email', 'password', 'role_id', 'permissions', 'job_title', 'phone', 'locale', 'is_active', 'vacation_days'])]
+#[Fillable(['name', 'initials', 'email', 'password', 'role_id', 'permissions', 'job_title', 'phone', 'locale', 'is_active', 'vacation_days', 'mobile_app_dismissed_release'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasLocalePreference
 {

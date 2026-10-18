@@ -1,16 +1,26 @@
 {{--
-    Suggests the Android app to someone who signed in on an Android phone. "Later" hides it on this phone
-    for 14 days; a new version (or a new upload) shows it again. Inline styles: Filament ships
-    precompiled CSS.
+    Suggests the Android app to someone who signed in on an Android phone, with the message of
+    Settings > Mobile app. ✕ and "Later" hide it on this phone for 14 days; "Don't show again" keeps it
+    away for this user until a new version is uploaded. Colours are set for light and dark mode
+    explicitly: Filament ships precompiled CSS, so utility classes like dark:bg-… do not exist.
 --}}
 @php($mobileApp = app(\App\Support\MobileApp::class))
-@if (auth()->check() && $mobileApp->shouldPrompt(request()->userAgent()))
-    @php($release = settings()->get('mobile_app.version') ?: settings()->get('mobile_app.uploaded_at'))
+@if (auth()->check() && $mobileApp->shouldPrompt(request()->userAgent(), auth()->user()))
+    <style>
+        .erp-app-prompt { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; background: rgb(15 23 42 / .6); padding: 1rem; }
+        .erp-app-prompt__card { position: relative; width: 100%; max-width: 26rem; background: #ffffff; color: #0f172a; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 20px 40px rgb(0 0 0 / .3); }
+        .dark .erp-app-prompt__card { background: #111827; color: #f1f5f9; }
+        .erp-app-prompt__title { font-size: 1.125rem; font-weight: 700; padding-right: 2rem; }
+        .erp-app-prompt__muted { font-size: .8125rem; opacity: .75; line-height: 1.45; }
+        .erp-app-prompt__text { margin-top: .875rem; font-size: .9375rem; line-height: 1.5; white-space: pre-line; }
+        .erp-app-prompt__close { position: absolute; top: .75rem; right: .75rem; width: 2rem; height: 2rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; line-height: 1; color: inherit; opacity: .6; background: transparent; border: 0; cursor: pointer; }
+        .erp-app-prompt__never { margin-top: .875rem; width: 100%; text-align: center; font-size: .8125rem; text-decoration: underline; color: inherit; opacity: .7; background: transparent; border: 0; cursor: pointer; }
+    </style>
     <div
         x-data="{
             open: false,
             key: 'erp-mobile-app-prompt',
-            release: @js((string) $release),
+            release: @js($mobileApp->release()),
             init() {
                 const mobile = /Android/i.test(navigator.userAgent) && (navigator.userAgentData?.mobile ?? /Mobile/i.test(navigator.userAgent));
                 let dismissed = null;
@@ -22,25 +32,34 @@
                 try { localStorage.setItem(this.key, JSON.stringify({ release: this.release, at: Date.now() })); } catch (e) {}
                 this.open = false;
             },
+            never() {
+                this.open = false;
+                fetch(@js(route('mobile-app.dismiss')), {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '', 'Accept': 'application/json' },
+                });
+            },
         }"
         x-show="open"
         x-cloak
-        data-mobile-app-prompt
-        style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; background: rgb(15 23 42 / .55); padding: 1rem;"
         x-on:keydown.escape.window="later()"
+        x-on:click.self="later()"
+        class="erp-app-prompt"
+        data-mobile-app-prompt
     >
-        <div role="dialog" aria-modal="true" aria-labelledby="mobile-app-title" style="width: 100%; max-width: 26rem; background: var(--erp-surface, #fff); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 20px 40px rgb(0 0 0 / .25);" class="dark:bg-gray-900">
+        <div role="dialog" aria-modal="true" aria-labelledby="mobile-app-title" class="erp-app-prompt__card">
+            <button type="button" class="erp-app-prompt__close" x-on:click="later()" aria-label="{{ __('erp.mobile_app.close') }}">✕</button>
             <div style="display: flex; gap: .875rem; align-items: center;">
                 <x-filament::icon icon="heroicon-o-device-phone-mobile" style="width: 2.5rem; height: 2.5rem; color: var(--primary-600); flex-shrink: 0;" />
                 <div>
-                    <h2 id="mobile-app-title" style="font-size: 1.125rem; font-weight: 700;">{{ __('erp.mobile_app.prompt_title', ['app' => settings()->siteName()]) }}</h2>
+                    <h2 id="mobile-app-title" class="erp-app-prompt__title">{{ __('erp.mobile_app.prompt_title', ['app' => settings()->siteName()]) }}</h2>
                     @if ($version = $mobileApp->version())
-                        <p style="font-size: .8125rem; opacity: .7;">{{ __('erp.mobile_app.version', ['version' => $version]) }}</p>
+                        <p class="erp-app-prompt__muted">{{ __('erp.mobile_app.version', ['version' => $version]) }}</p>
                     @endif
                 </div>
             </div>
-            <p style="margin-top: .875rem; font-size: .9375rem; line-height: 1.5;">{{ __('erp.mobile_app.prompt_body') }}</p>
-            <p style="margin-top: .5rem; font-size: .8125rem; opacity: .75; line-height: 1.45;">{{ __('erp.mobile_app.install_help') }}</p>
+            <p class="erp-app-prompt__text" data-mobile-app-message>{{ $mobileApp->message() }}</p>
+            <p class="erp-app-prompt__muted" style="margin-top: .5rem;">{{ __('erp.mobile_app.install_help') }}</p>
             <div style="display: flex; gap: .5rem; margin-top: 1.125rem;">
                 <x-filament::button tag="a" :href="route('mobile-app.download')" icon="heroicon-o-arrow-down-tray" style="flex: 1;" x-on:click="later()">
                     {{ __('erp.mobile_app.download') }}
@@ -49,6 +68,7 @@
                     {{ __('erp.mobile_app.later') }}
                 </x-filament::button>
             </div>
+            <button type="button" class="erp-app-prompt__never" x-on:click="never()">{{ __('erp.mobile_app.never') }}</button>
         </div>
     </div>
 @endif

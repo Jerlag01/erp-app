@@ -513,6 +513,14 @@ class Settings extends Page
                         ->label(__('erp.settings.fields.mobile_app_prompt'))
                         ->helperText(__('erp.settings.help.mobile_app_prompt')),
                 ]),
+            Section::make(__('erp.settings.sections.mobile_app_message'))
+                ->description(__('erp.settings.help.mobile_app_message'))
+                ->columns(3)
+                ->schema(array_map(fn (string $locale): Textarea => Textarea::make("mobile_app.message_{$locale}")
+                    ->label(__("erp.settings.fields.mobile_app_message_{$locale}"))
+                    ->placeholder(__('erp.mobile_app.prompt_body', [], $locale))
+                    ->rows(5)
+                    ->maxLength(1000), ['nl', 'fr', 'en'])),
         ];
     }
 

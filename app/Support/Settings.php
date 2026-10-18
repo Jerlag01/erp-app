@@ -36,6 +36,10 @@ class Settings
                 'uploaded_at' => null,
                 // Suggest the app to employees who open the platform on an Android phone.
                 'prompt' => true,
+                // The text of the suggestion per language; empty = the standard text.
+                'message_nl' => null,
+                'message_fr' => null,
+                'message_en' => null,
             ],
             'general' => [
                 'site_name' => 'ERP',

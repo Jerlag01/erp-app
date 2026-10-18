@@ -100,4 +100,30 @@ class MobileAppDownloadTest extends TestCase
         settings()->save('mobile_app', [...settings('mobile_app'), 'prompt' => false]);
         $this->actingAs($employee)->withHeader('User-Agent', self::ANDROID)->get('/')->assertOk()->assertDontSee('data-mobile-app-prompt', false);
     }
+
+    #[Test]
+    public function the_message_is_set_per_language_and_the_employee_can_dismiss_it(): void
+    {
+        $this->upload('1.2.0');
+        settings()->save('mobile_app', [...settings('mobile_app'), 'message_nl' => 'Installeer de app vóór maandag.', 'message_fr' => "Installez l'app avant lundi."]);
+        $jan = User::factory()->withPermissions([])->inTeam()->create(['locale' => 'nl']);
+        $marie = User::factory()->withPermissions([])->inTeam()->create(['locale' => 'fr']);
+
+        $this->actingAs($jan)->withHeader('User-Agent', self::ANDROID)->get('/')
+            ->assertSee('Installeer de app vóór maandag.')
+            ->assertSee('Niet meer tonen')
+            // Readable in light and dark mode: the card sets its own text colour.
+            ->assertSee('.dark .erp-app-prompt__card { background: #111827; color: #f1f5f9; }', false);
+        $this->actingAs($marie)->withHeader('User-Agent', self::ANDROID)->get('/')->assertSee("Installez l'app avant lundi.");
+
+        // "Don't show again": gone for this user, on every device…
+        $this->actingAs($jan)->post(route('mobile-app.dismiss'))->assertNoContent();
+        $this->assertSame('1.2.0', $jan->fresh()->mobile_app_dismissed_release);
+        $this->actingAs($jan->fresh())->withHeader('User-Agent', self::ANDROID)->get('/')->assertDontSee('data-mobile-app-prompt', false);
+        $this->actingAs($marie)->withHeader('User-Agent', self::ANDROID)->get('/')->assertSee('data-mobile-app-prompt', false);
+
+        // …until a new version is uploaded.
+        $this->upload('1.3.0');
+        $this->actingAs($jan->fresh())->withHeader('User-Agent', self::ANDROID)->get('/')->assertSee('data-mobile-app-prompt', false);
+    }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\ItAssetLabelController;
 use App\Http\Controllers\ItAssetQrController;
 use App\Http\Controllers\KbDownloadController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MobileAppDismissController;
 use App\Http\Controllers\MobileAppDownloadController;
 use App\Http\Controllers\PeppolInboundController;
 use App\Http\Controllers\ProjectArchiveController;
@@ -60,6 +61,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
     Route::get('/mobile-app/download', MobileAppDownloadController::class)->name('mobile-app.download');
+    Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');
     Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');
     Route::get('/waste-totals-pdf', [WastePdfController::class, 'totals'])->name('waste.totals-pdf');

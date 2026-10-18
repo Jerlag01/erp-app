@@ -525,6 +525,7 @@ return [
             'timesheets' => 'Prestations',
         ],
         'sections' => [
+            'mobile_app_message' => 'Message on the phone',
             'mobile_app' => 'Android app',
             'enersys' => 'Enersys batteries (605)',
             'identity' => 'Site',
@@ -548,6 +549,9 @@ return [
             'timesheet_mail' => 'Weekly e-mail',
         ],
         'fields' => [
+            'mobile_app_message_nl' => 'Message (Dutch)',
+            'mobile_app_message_fr' => 'Message (French)',
+            'mobile_app_message_en' => 'Message (English)',
             'mobile_app_apk' => 'APK file',
             'mobile_app_version' => 'Version',
             'mobile_app_prompt' => 'Suggest on Android phones',
@@ -644,6 +648,7 @@ return [
             'timesheet_mobility_rate' => 'Mobility allowance',
         ],
         'help' => [
+            'mobile_app_message' => 'The text of the message, per language: employees see it in their language. Empty = the standard text (grey).',
             'mobile_app' => 'Upload the APK of the mobile app here. Signed-in employees download it from the platform (user menu) and are offered it when they open the platform on an Android phone.',
             'mobile_app_apk' => 'The .apk file of the Android app (from the EAS build), max. :size MB. A new upload replaces the previous one.',
             'mobile_app_uploaded' => 'Current version uploaded on :date.',
@@ -2180,6 +2185,8 @@ return [
         ],
     ],
     'mobile_app' => [
+        'close' => 'Close',
+        'never' => 'Don\'t show again',
         'prompt_title' => 'Download the :app app',
         'version' => 'Version :version',
         'prompt_body' => 'Working on your phone? The app is handier: planning, prestations, leave, toolbox meetings and notifications, also on the road.',

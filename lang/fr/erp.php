@@ -525,6 +525,7 @@ return [
             'timesheets' => 'Prestations',
         ],
         'sections' => [
+            'mobile_app_message' => 'Message sur le téléphone',
             'mobile_app' => 'Application Android',
             'enersys' => 'Batteries Enersys (605)',
             'identity' => 'Site',
@@ -548,6 +549,9 @@ return [
             'timesheet_mail' => 'E-mail hebdomadaire',
         ],
         'fields' => [
+            'mobile_app_message_nl' => 'Message (néerlandais)',
+            'mobile_app_message_fr' => 'Message (français)',
+            'mobile_app_message_en' => 'Message (anglais)',
             'mobile_app_apk' => 'Fichier APK',
             'mobile_app_version' => 'Version',
             'mobile_app_prompt' => 'Proposer sur les téléphones Android',
@@ -644,6 +648,7 @@ return [
             'timesheet_mobility_rate' => 'Indemnité de mobilité',
         ],
         'help' => [
+            'mobile_app_message' => 'Le texte du message, par langue : les employés le voient dans leur langue. Vide = le texte standard (gris).',
             'mobile_app' => 'Téléversez ici l\'APK de l\'application mobile. Les employés connectés la téléchargent via la plateforme (menu utilisateur) et se la voient proposer lorsqu\'ils ouvrent la plateforme sur un téléphone Android.',
             'mobile_app_apk' => 'Le fichier .apk de l\'application Android (du build EAS), max. :size Mo. Un nouveau téléversement remplace le précédent.',
             'mobile_app_uploaded' => 'Version actuelle téléversée le :date.',
@@ -2180,6 +2185,8 @@ return [
         ],
     ],
     'mobile_app' => [
+        'close' => 'Fermer',
+        'never' => 'Ne plus afficher',
         'prompt_title' => 'Téléchargez l\'application :app',
         'version' => 'Version :version',
         'prompt_body' => 'Vous travaillez sur votre téléphone ? L\'application est plus pratique : planning, prestations, congés, toolbox meetings et notifications, aussi en déplacement.',

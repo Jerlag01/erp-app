@@ -525,6 +525,7 @@ return [
             'timesheets' => 'Prestaties',
         ],
         'sections' => [
+            'mobile_app_message' => 'Melding op de telefoon',
             'mobile_app' => 'Android-app',
             'enersys' => 'Enersys-batterijen (605)',
             'identity' => 'Site',
@@ -548,6 +549,9 @@ return [
             'timesheet_mail' => 'Wekelijkse e-mail',
         ],
         'fields' => [
+            'mobile_app_message_nl' => 'Bericht (Nederlands)',
+            'mobile_app_message_fr' => 'Bericht (Frans)',
+            'mobile_app_message_en' => 'Bericht (Engels)',
             'mobile_app_apk' => 'APK-bestand',
             'mobile_app_version' => 'Versie',
             'mobile_app_prompt' => 'Voorstellen op Android-telefoons',
@@ -644,6 +648,7 @@ return [
             'timesheet_mobility_rate' => 'Mobiliteitsvergoeding',
         ],
         'help' => [
+            'mobile_app_message' => 'De tekst in de melding, per taal: werknemers zien die in hun taal. Leeg = de standaardtekst (grijs).',
             'mobile_app' => 'Laad hier de APK van de mobiele app op. Aangemelde werknemers downloaden ze via het platform (gebruikersmenu) en krijgen ze voorgesteld als ze het platform op een Android-telefoon openen.',
             'mobile_app_apk' => 'Het .apk-bestand van de Android-app (van de EAS-build), max. :size MB. Een nieuwe upload vervangt de vorige.',
             'mobile_app_uploaded' => 'Huidige versie opgeladen op :date.',
@@ -2180,6 +2185,8 @@ return [
         ],
     ],
     'mobile_app' => [
+        'close' => 'Sluiten',
+        'never' => 'Niet meer tonen',
         'prompt_title' => 'Download de :app-app',
         'version' => 'Versie :version',
         'prompt_body' => 'Werk je op je telefoon? De app is handiger: planning, prestaties, verlof, toolboxmeetings en meldingen, ook onderweg.',
