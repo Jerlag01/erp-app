@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PushTokenController;
 use App\Http\Controllers\Api\V1\SuggestionController;
 use App\Http\Controllers\Api\V1\TimesheetController;
+use App\Http\Controllers\Api\V1\ToolboxController;
 use App\Http\Middleware\AuthenticateMobileKey;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,13 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('/incidents', [IncidentController::class, 'store'])->name('incidents.store');
         Route::get('/suggestions', [SuggestionController::class, 'index'])->name('suggestions');
         Route::post('/suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
+
+        // Toolbox meetings: read and sign.
+        Route::get('/toolbox', [ToolboxController::class, 'index'])->name('toolbox');
+        Route::get('/toolbox/{meeting}', [ToolboxController::class, 'show'])->whereNumber('meeting')->name('toolbox.show');
+        Route::post('/toolbox/{meeting}/read', [ToolboxController::class, 'read'])->whereNumber('meeting')->name('toolbox.read');
+        Route::post('/toolbox/{meeting}/attachments/{index}', [ToolboxController::class, 'attachment'])->whereNumber(['meeting', 'index'])->name('toolbox.attachment');
+        Route::post('/toolbox/{meeting}/sign', [ToolboxController::class, 'sign'])->whereNumber('meeting')->name('toolbox.sign');
 
         // Battery (604, "bae") and Enersys (605) dossiers.
         Route::prefix('/dossiers/{kind}')->whereIn('kind', array_keys(BatteryDossierController::KINDS))->name('dossiers.')->group(function (): void {

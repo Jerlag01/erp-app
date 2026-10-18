@@ -8,6 +8,7 @@ use App\Filament\Pages\FinanceStatistics;
 use App\Filament\Pages\Planning;
 use App\Filament\Pages\Timesheet;
 use App\Filament\Pages\TimesheetOverview;
+use App\Filament\Pages\ToolboxOverview;
 use App\Filament\Pages\VacationCalendar;
 use App\Filament\Pages\WasteTotalsOverview;
 use App\Filament\Widgets\ControlsDue;
@@ -43,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
                 Planning::class,
                 Timesheet::class,
                 TimesheetOverview::class,
+                ToolboxOverview::class,
             ])
             ->widgets([
                 DashboardCountersWidget::class,

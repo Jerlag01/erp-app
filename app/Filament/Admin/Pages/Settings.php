@@ -311,6 +311,7 @@ class Settings extends Page
             Modules::CHARGING => Heroicon::OutlinedBolt,
             Modules::CABLE_STRIPPING => Heroicon::OutlinedScissors,
             Modules::ENERSYS => Heroicon::OutlinedBattery50,
+            Modules::TOOLBOX => Heroicon::OutlinedPresentationChartLine,
         ];
 
         return [

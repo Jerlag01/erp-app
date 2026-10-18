@@ -10,6 +10,7 @@ use App\Models\Employee;
 use App\Models\EnersysDossier;
 use App\Models\Incident;
 use App\Models\Suggestion;
+use App\Models\ToolboxMeeting;
 use App\Models\User;
 use App\Support\Planning;
 use App\Support\Timesheets;
@@ -70,6 +71,10 @@ class ProfileResource extends JsonResource
             'enersys_dossiers' => $gate->allows('viewAny', EnersysDossier::class),
             'incidents' => $gate->allows('create', Incident::class),
             'suggestions' => $gate->allows('create', Suggestion::class),
+            'toolbox' => $gate->allows('viewAny', ToolboxMeeting::class),
+            'open_toolbox' => $gate->allows('viewAny', ToolboxMeeting::class)
+                ? ToolboxMeeting::query()->published()->whereDoesntHave('participants', fn ($query) => $query->where('user_id', $user->id)->whereNotNull('signed_at'))->count()
+                : 0,
         ];
     }
 

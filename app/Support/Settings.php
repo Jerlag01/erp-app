@@ -57,6 +57,7 @@ class Settings
                 Modules::TIMESHEETS => true,
                 Modules::CHARGING => true,
                 Modules::CABLE_STRIPPING => true,
+                Modules::TOOLBOX => true,
                 Modules::ENERSYS => true,
             ],
             'mail' => [

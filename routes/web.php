@@ -23,6 +23,8 @@ use App\Http\Controllers\SuggestionPdfController;
 use App\Http\Controllers\SuggestionPhotoController;
 use App\Http\Controllers\TimesheetPdfController;
 use App\Http\Controllers\TimesheetReportPdfController;
+use App\Http\Controllers\ToolboxAttachmentController;
+use App\Http\Controllers\ToolboxPdfController;
 use App\Http\Controllers\WastePdfController;
 use App\Http\Controllers\WelcomeLinkController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -32,6 +34,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/q/{item}', StockQrController::class)->name('stock.qr');
 Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
+
+// An attachment of a toolbox meeting through a short-lived signed link from the mobile app.
+Route::get('/toolbox-files/{meeting}/{index}', ToolboxAttachmentController::class)->whereNumber('index')->middleware('signed')->name('toolbox.attachment');
 
 Route::middleware('auth')->group(function (): void {
     Route::post('/locale', LocaleController::class)->name('locale.update');
@@ -53,6 +58,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
+    Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');
     Route::get('/waste-totals-pdf', [WastePdfController::class, 'totals'])->name('waste.totals-pdf');
     Route::get('/knowledge-base/{article}/files/{index}', KbDownloadController::class)->whereNumber(['article', 'index'])->name('kb.download');
