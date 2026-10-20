@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WorkSites\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\Icons\Heroicon;
 
@@ -11,7 +12,7 @@ use Filament\Support\Icons\Heroicon;
 class WorkSiteContactFields
 {
     /**
-     * @return list<TextInput>
+     * @return list<TextInput|Select>
      */
     public static function make(): array
     {
@@ -37,6 +38,13 @@ class WorkSiteContactFields
                 ->tel()
                 ->prefixIcon(Heroicon::OutlinedPhone)
                 ->maxLength(30),
+            // The language of the mails to this person, such as GPW requests.
+            Select::make('locale')
+                ->label(__('erp.fields.language'))
+                ->options(['nl' => 'Nederlands', 'fr' => 'Français', 'en' => 'English'])
+                ->default('nl')
+                ->required()
+                ->selectablePlaceholder(false),
         ];
     }
 }

@@ -25,6 +25,9 @@ class ClientPortal
     /** Projects of other clients too: without it a user sees only their own projects and COW sites. */
     public const ALL_PROJECTS = 'all_projects';
 
+    /** See and approve (or refuse) the GPW requests of the projects the user sees. */
+    public const GPW = 'gpw';
+
     public const BATTERY_DELIVERIES = 'battery_deliveries';
 
     public const CHARGING_STATIONS = 'charging_stations';
@@ -36,7 +39,7 @@ class ClientPortal
     public const ROUTER_SECRETS = 'router_secrets';
 
     public const PERMISSIONS = [
-        self::PROJECTS, self::ALL_PROJECTS, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
+        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
     ];
 
     /**

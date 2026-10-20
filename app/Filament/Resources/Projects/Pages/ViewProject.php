@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Projects\Pages;
 
+use App\Actions\Gpw\RequestGpw;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CopyProject;
 use App\Enums\ProjectStatus;
@@ -19,12 +20,15 @@ use App\Support\ProjectProgress;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 
@@ -154,6 +158,31 @@ class ViewProject extends ViewRecord
                 ->url(fn (Project $record): string => ($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first())
                     ? EnersysDossierResource::getUrl('edit', ['record' => $dossier])
                     : EnersysDossierResource::getUrl('create', ['project' => $record->id])),
+            Action::make('requestGpw')
+                ->label(__('erp.gpw.request'))
+                ->icon(Heroicon::OutlinedCalendarDateRange)
+                ->color('primary')
+                ->visible(fn (Project $record): bool => Gate::allows('requestGpw', $record))
+                ->authorize(fn (Project $record): bool => Gate::allows('requestGpw', $record))
+                ->modalHeading(__('erp.gpw.request_heading'))
+                ->modalDescription(fn (Project $record): string => ($contact = RequestGpw::contactFor($record)) && filled($contact->email)
+                    ? __('erp.gpw.request_help', ['name' => $contact->label(), 'email' => $contact->email, 'language' => ['nl' => 'Nederlands', 'fr' => 'Français', 'en' => 'English'][$contact->preferredLocale()] ?? $contact->preferredLocale()])
+                    : __('erp.gpw.errors.no_contact'))
+                ->modalSubmitActionLabel(__('erp.gpw.send'))
+                ->schema([
+                    Grid::make(2)->schema([
+                        DatePicker::make('starts_on')->label(__('erp.gpw.starts_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->required()->live(),
+                        DatePicker::make('ends_on')->label(__('erp.gpw.ends_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->afterOrEqual('starts_on')->required(),
+                    ]),
+                    Textarea::make('remarks')->label(__('erp.gpw.remarks'))->helperText(__('erp.gpw.remarks_help'))->rows(4)->maxLength(2000),
+                ])
+                ->action(function (Project $record, array $data, RequestGpw $requests): void {
+                    $gpw = $requests->handle($record, auth()->user(), $data);
+
+                    $requests->mailFailed
+                        ? Notification::make()->title(__('erp.gpw.mail_failed'))->body(__('erp.gpw.mail_failed_body'))->warning()->persistent()->send()
+                        : Notification::make()->title(__('erp.gpw.sent', ['email' => $gpw->contact_email]))->success()->send();
+                }),
             Action::make('changeStatus')
                 ->label(__('erp.projects.change_status'))
                 ->icon(Heroicon::OutlinedArrowPath)

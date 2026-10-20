@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientWelcomeLinkController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
+use App\Http\Controllers\GpwDecisionController;
 use App\Http\Controllers\IncidentPdfController;
 use App\Http\Controllers\IncidentPhotoController;
 use App\Http\Controllers\InterventionPdfController;
@@ -85,6 +86,10 @@ Route::post('/peppol/inbound/{secret}', PeppolInboundController::class)
     ->withoutMiddleware([PreventRequestForgery::class])
     ->middleware('throttle:120,1')
     ->name('peppol.inbound');
+
+// The link in a GPW request mail: the contact person approves or refuses the request (signed, until the period ends).
+Route::get('/gpw/{gpwRequest}', [GpwDecisionController::class, 'show'])->whereNumber('gpwRequest')->middleware('signed')->name('gpw.decide');
+Route::post('/gpw/{gpwRequest}', [GpwDecisionController::class, 'decide'])->whereNumber('gpwRequest')->middleware(['signed', 'throttle:20,1']);
 
 // The link in the welcome mail: signed, valid for 7 days, and only until the password is set.
 Route::get('/welcome/{user}', WelcomeLinkController::class)->middleware('signed')->name('welcome');

@@ -257,6 +257,16 @@ class Project extends Model
     }
 
     /**
+     * GPW requests, newest first.
+     *
+     * @return HasMany<GpwRequest, $this>
+     */
+    public function gpwRequests(): HasMany
+    {
+        return $this->hasMany(GpwRequest::class)->latest('id');
+    }
+
+    /**
      * @return HasMany<PlanningItem, $this>
      */
     public function planningItems(): HasMany

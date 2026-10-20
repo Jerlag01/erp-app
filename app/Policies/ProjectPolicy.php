@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -66,6 +67,17 @@ class ProjectPolicy extends AreaPolicy
     public function copy(User $user, Project $project): bool
     {
         return $this->view($user, $project) && $this->allows($user, 'copy') && $this->allows($user, 'create');
+    }
+
+    /**
+     * Ask the client for a GPW: "projects.gpw", only while the project is to be executed.
+     */
+    public function requestGpw(User $user, Project $project): bool
+    {
+        return $this->view($user, $project)
+            && ! $project->isArchived()
+            && $this->allows($user, 'gpw')
+            && $project->status === ProjectStatus::ToBeExecuted;
     }
 
     /**

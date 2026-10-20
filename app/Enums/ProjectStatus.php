@@ -14,6 +14,11 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Offer = 'offer';
 
+    /**
+     * The client approved a GPW request: to be planned in the approved period.
+     */
+    case ToBePlanned = 'to_be_planned';
+
     case Planned = 'planned';
 
     case ToBeExecuted = 'to_be_executed';
@@ -37,7 +42,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     }
 
     /**
-     * Open projects can be put in the planning: planned, to be executed or in progress.
+     * Open projects can be put in the planning: to be planned, planned, to be executed or in progress.
      */
     public function isOpen(): bool
     {
@@ -49,13 +54,14 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
      */
     public static function open(): array
     {
-        return [self::Planned, self::ToBeExecuted, self::InProgress];
+        return [self::ToBePlanned, self::Planned, self::ToBeExecuted, self::InProgress];
     }
 
     public function getColor(): string
     {
         return match ($this) {
             self::Offer => 'gray',
+            self::ToBePlanned => 'warning',
             self::Planned => 'info',
             self::ToBeExecuted => 'primary',
             self::InProgress => 'warning',
@@ -70,6 +76,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Offer => Heroicon::OutlinedDocumentText,
+            self::ToBePlanned => Heroicon::OutlinedCalendar,
             self::Planned => Heroicon::OutlinedCalendarDays,
             self::ToBeExecuted => Heroicon::OutlinedClock,
             self::InProgress => Heroicon::OutlinedWrenchScrewdriver,

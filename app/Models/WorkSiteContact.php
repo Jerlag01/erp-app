@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * A contact person for work sites, often from the building owner or a subcontractor.
  */
-#[Fillable(['first_name', 'last_name', 'company', 'email', 'phone'])]
+#[Fillable(['first_name', 'last_name', 'company', 'email', 'phone', 'locale'])]
 class WorkSiteContact extends Model
 {
     /** @use HasFactory<WorkSiteContactFactory> */
@@ -31,6 +31,14 @@ class WorkSiteContact extends Model
     public function workSites(): HasMany
     {
         return $this->hasMany(WorkSite::class);
+    }
+
+    /**
+     * The language of the mails to this contact (GPW requests).
+     */
+    public function preferredLocale(): string
+    {
+        return in_array($this->locale, ['nl', 'fr', 'en'], true) ? $this->locale : config('app.locale');
     }
 
     public function fullName(): string

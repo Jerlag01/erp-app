@@ -131,6 +131,11 @@ class MailTemplateResource extends Resource
             'items' => new HtmlString('- **'.today()->addDay()->format('d/m/Y').' 07:30–16:00** · 604-001-02GAM'),
             'company' => 'Proximus', 'portal_name' => __('erp.client_portal.brand'), 'portal_url' => url('/client/login'),
             'reset_link' => url('/client/login'), 'minutes' => '60',
+            'contact_name' => 'Marc Janssens', 'project' => '610-012-02GAM', 'cow_code' => '02GAM', 'address' => 'Stationsstraat 1, 9000 Gent',
+            'description' => 'Vervangen gelijkrichter', 'period' => today()->addWeek()->format('d/m/Y').' – '.today()->addWeek()->addDays(2)->format('d/m/Y'),
+            'from' => today()->addWeek()->format('d/m/Y'), 'until' => today()->addWeek()->addDays(2)->format('d/m/Y'), 'remarks' => 'Toegang via achterpoort',
+            'requested_by' => 'Jan Janssens', 'requester_email' => 'jan@example.com', 'approve_url' => url('/'), 'portal_url' => url('/client'),
+            'decided_by' => 'Marc Janssens', 'note' => '—', 'project_url' => url('/'),
             'overviews' => new HtmlString("- Projecten (600, 604, 605)\n- Batterijleveringen"),
             'previous' => new HtmlString('- **'.today()->format('d/m/Y').' 07:30–12:00** · 604-001-02GAM'),
         ];

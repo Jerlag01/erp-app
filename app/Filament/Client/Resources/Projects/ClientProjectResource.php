@@ -2,6 +2,7 @@
 
 namespace App\Filament\Client\Resources\Projects;
 
+use App\Enums\GpwStatus;
 use App\Enums\ProjectStatus;
 use App\Filament\Client\ClientResource;
 use App\Models\Project;
@@ -57,7 +58,7 @@ class ClientProjectResource extends ClientResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = Project::query()->with(['category', 'workSite', 'poNumbers']);
+        $query = Project::query()->with(['category', 'workSite', 'poNumbers', 'gpwRequests' => fn ($query) => $query->where('status', '!=', GpwStatus::Cancelled)]);
 
         return ClientPortal::user()?->restrictProjects($query) ?? $query->whereRaw('1 = 0');
     }
@@ -100,6 +101,14 @@ class ClientProjectResource extends ClientResource
                     ->label(__('erp.client_portal.status'))
                     ->badge()
                     ->sortable(),
+                // The latest GPW request: its period, and whether it is approved or planned.
+                TextColumn::make('gpw')
+                    ->label(__('erp.gpw.short'))
+                    ->state(fn (Project $record): ?string => ($gpw = $record->gpwRequests->first()) ? $gpw->status->getLabel().' · '.$gpw->period() : null)
+                    ->badge()
+                    ->color(fn (Project $record): string => $record->gpwRequests->first()?->status->getColor() ?? 'gray')
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('po_numbers')
                     ->label(__('erp.client_portal.po_numbers'))
                     ->state(fn (Project $record): array => $record->poNumbers->pluck('number')->all())

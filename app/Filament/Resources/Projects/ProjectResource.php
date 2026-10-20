@@ -11,6 +11,7 @@ use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ExtraFilesRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\GpwRequestsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\InvoicesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\OffersRelationManager;
@@ -91,6 +92,7 @@ class ProjectResource extends Resource
     public static function getRelations(): array
     {
         return [
+            GpwRequestsRelationManager::class,
             PartsRelationManager::class,
             ChargingStationsRelationManager::class,
             DocumentsRelationManager::class,

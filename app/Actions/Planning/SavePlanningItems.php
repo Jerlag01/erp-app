@@ -3,6 +3,7 @@
 namespace App\Actions\Planning;
 
 use App\Enums\PlanningKind;
+use App\Models\GpwRequest;
 use App\Models\PlanningItem;
 use App\Models\User;
 use App\Support\Planning;
@@ -30,14 +31,15 @@ class SavePlanningItems
 
     /**
      * One item per employee per day from "date" to "until" (weekends only when asked). Days that are
-     * blocked or already taken in that timeslot are skipped and reported.
+     * blocked or already taken in that timeslot are skipped and reported. With an approved GPW request
+     * its requester may plan that project even without planning rights (see PlanGpw for the period).
      *
      * @param  array<string, mixed>  $data
      * @return array{created: list<PlanningItem>, skipped: list<string>}
      */
-    public function create(array $data, User $actor): array
+    public function create(array $data, User $actor, ?GpwRequest $gpw = null): array
     {
-        $attributes = $this->attributes($data, $actor);
+        $attributes = $this->attributes($data, $actor, gpw: $gpw);
         $employees = User::query()->active()->whereKey((array) ($data['user_ids'] ?? []))->orderBy('name')->get();
 
         if ($employees->isEmpty()) {
@@ -144,12 +146,13 @@ class SavePlanningItems
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    protected function attributes(array $data, User $actor, ?PlanningItem $item = null): array
+    protected function attributes(array $data, User $actor, ?PlanningItem $item = null, ?GpwRequest $gpw = null): array
     {
         $kind = PlanningKind::tryFrom((string) ($data['kind'] ?? '')) ?? throw ValidationException::withMessages(['kind' => __('validation.required', ['attribute' => __('erp.planning.kind')])]);
+        $viaGpw = $gpw !== null && $kind === PlanningKind::Project && $gpw->project_id === (int) ($data['project_id'] ?? 0) && $gpw->canBePlannedBy($actor);
 
         // An item's kind may be kept when editing even if the editor could not create that kind.
-        if (! $this->planning->canPlanKind($actor, $kind) && $kind !== $item?->kind) {
+        if (! $viaGpw && ! $this->planning->canPlanKind($actor, $kind) && $kind !== $item?->kind) {
             throw ValidationException::withMessages(['kind' => __('erp.planning.errors.kind_not_allowed')]);
         }
 
@@ -166,7 +169,7 @@ class SavePlanningItems
             $projectId = (int) ($data['project_id'] ?? 0);
             $unchanged = $item !== null && $item->project_id === $projectId;
 
-            if (! $unchanged && ! $this->planning->plannableProjects($actor)->whereKey($projectId)->exists()) {
+            if (! $unchanged && ! $viaGpw && ! $this->planning->plannableProjects($actor)->whereKey($projectId)->exists()) {
                 throw ValidationException::withMessages(['project_id' => __('erp.planning.errors.project_not_open')]);
             }
         }
