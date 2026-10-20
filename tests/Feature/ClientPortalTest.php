@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
 use App\Filament\Admin\Resources\ClientUsers\Pages\ManageClientUsers;
 use App\Filament\Client\Resources\BatteryDeliveries\ClientBatteryDeliveryResource;
@@ -15,17 +16,20 @@ use App\Filament\Client\Resources\Routers\Pages\ListClientRouters;
 use App\Models\BatteryDelivery;
 use App\Models\ChargingStation;
 use App\Models\ClientUser;
+use App\Models\MailTemplate;
 use App\Models\Project;
 use App\Models\Router;
 use App\Models\User;
 use App\Models\WorkSite;
+use App\Notifications\Client\ClientResetPassword;
+use App\Notifications\Client\ClientWelcome;
 use App\Support\ClientPortal;
-use Filament\Auth\Notifications\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -161,6 +165,7 @@ class ClientPortalTest extends TestCase
                 'email' => 'pm@proximus.example',
                 'company' => 'Proximus',
                 'locale' => 'fr',
+                'send_welcome_mail' => false,
                 'password' => 'Een-lang-wachtwoord',
                 'is_active' => true,
                 'permissions' => [ClientPortal::PROJECTS, ClientPortal::ROUTERS],
@@ -169,6 +174,7 @@ class ClientPortalTest extends TestCase
             ->assertHasNoActionErrors();
 
         $client = ClientUser::query()->sole();
+        Notification::assertNothingSentTo($client);
         $this->assertTrue(Hash::check('Een-lang-wachtwoord', $client->password));
         $this->assertSame([ClientPortal::PROJECTS, ClientPortal::ROUTERS], $client->permissions);
         $this->assertSame(['604', '610'], $client->projectCategories());
@@ -180,10 +186,73 @@ class ClientPortalTest extends TestCase
 
         // The password link leads to the portal's own reset page.
         Livewire::test(ManageClientUsers::class)->callTableAction('send_reset', $client);
-        Notification::assertSentTo($client, ResetPassword::class, fn (ResetPassword $notification): bool => str_contains($notification->url, '/client/password-reset/reset'));
+        Notification::assertSentTo($client, ClientResetPassword::class, fn (ClientResetPassword $notification): bool => str_contains($notification->toMail($client)->rendered['html'], '/client/password-reset/reset'));
 
         // Only administrators manage them.
         $this->actingAs(User::factory()->withPermissions(['projects' => ['view']])->inTeam()->create());
         $this->get(route('filament.admin.resources.client-users.index'))->assertForbidden();
+    }
+
+    #[Test]
+    public function a_new_client_user_gets_a_welcome_mail_in_their_language(): void
+    {
+        Notification::fake();
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+
+        // Without a password: the welcome mail lets the user choose one.
+        Livewire::test(ManageClientUsers::class)
+            ->callAction('create', [
+                'name' => 'Sophie Dubois',
+                'email' => 'sophie@proximus.example',
+                'company' => 'Proximus',
+                'locale' => 'fr',
+                'send_welcome_mail' => true,
+                'is_active' => true,
+                'permissions' => [ClientPortal::PROJECTS, ClientPortal::BATTERY_DELIVERIES],
+                'project_categories' => ['604', '605'],
+            ])
+            ->assertHasNoActionErrors();
+
+        $client = ClientUser::query()->sole();
+        $this->assertNotNull($client->welcome_sent_at);
+        Notification::assertSentTo($client, ClientWelcome::class);
+
+        $mail = (new ClientWelcome)->toMail($client);
+        $this->assertSame('Votre accès à Global overview for Client', $mail->rendered['subject']);
+        $this->assertStringContainsString('sophie@proximus.example', $mail->rendered['html']);
+        $this->assertStringContainsString('Projets (604, 605)', $mail->rendered['html']);
+        $this->assertStringContainsString('/client-welcome/', $mail->rendered['html']);
+
+        // An edited template is used, in the language of the user.
+        MailTemplate::query()->create(['key' => MailTemplateKey::ClientWelcome->value, 'locale' => 'en', 'subject' => 'Hi {name}', 'body' => 'Go to {portal_url}', 'is_active' => true]);
+        $client->update(['locale' => 'en']);
+        $this->assertSame('Hi Sophie Dubois', (new ClientWelcome)->toMail($client)->rendered['subject']);
+
+        // The link opens the portal's "choose a password" page, until a password is set.
+        $link = ClientWelcome::linkFor($client);
+        auth()->logout();
+        $this->get($link)->assertRedirectContains('/client/password-reset/reset');
+        $this->get($link)->assertRedirectContains('/client/password-reset/reset');
+        $client->update(['password' => 'Een-nieuw-wachtwoord']);
+        $this->get($link)->assertRedirect(Filament::getPanel(ClientPortal::PANEL)->getLoginUrl());
+        $this->get(URL::temporarySignedRoute('client.welcome', now()->subMinute(), ['clientUser' => $client->id, 'h' => ClientWelcome::passwordFingerprint($client)]))->assertForbidden();
+
+        // Resending works from the list; an inactive user gets nothing.
+        $this->actingAs(User::factory()->admin()->create());
+        Livewire::test(ManageClientUsers::class)->callTableAction('send_welcome', $client);
+        Notification::assertSentToTimes($client, ClientWelcome::class, 2);
+    }
+
+    #[Test]
+    public function the_forgot_password_mail_uses_the_editable_template(): void
+    {
+        $client = ClientUser::factory()->create(['locale' => 'nl', 'name' => 'Piet']);
+
+        $mail = (new ClientResetPassword('token-123'))->toMail($client);
+
+        $this->assertSame('Nieuw wachtwoord voor Global overview for Client', $mail->rendered['subject']);
+        $this->assertStringContainsString('/client/password-reset/reset', $mail->rendered['html']);
+        $this->assertStringContainsString('60 minuten', $mail->rendered['html']);
     }
 }

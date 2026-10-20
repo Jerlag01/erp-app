@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\ClientUsers;
 
+use App\Actions\ClientPortal\SendClientWelcomeMail;
 use App\Enums\NavigationGroup;
 use App\Models\ClientUser;
 use App\Support\ClientPortal;
@@ -83,13 +84,22 @@ class ClientUserResource extends Resource
                             ->options(['nl' => 'Nederlands', 'fr' => 'Français', 'en' => 'English'])
                             ->default('nl')
                             ->required(),
+                        // New users get the welcome mail by default and then choose their own password.
+                        Toggle::make('send_welcome_mail')
+                            ->label(__('erp.client_portal.send_welcome'))
+                            ->helperText(__('erp.client_portal.send_welcome_help').' '.__('erp.client_portal.mail_templates_hint'))
+                            ->default(true)
+                            ->live()
+                            ->visibleOn('create')
+                            ->columnSpanFull(),
                         TextInput::make('password')
                             ->label(__('erp.client_portal.password'))
                             ->helperText(fn (string $operation): string => $operation === 'edit' ? __('erp.client_portal.password_edit_help') : __('erp.client_portal.password_help'))
                             ->password()
                             ->revealable()
+                            ->autocomplete('new-password')
                             ->rule('min:12')
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->required(fn (string $operation, Get $get): bool => $operation === 'create' && ! $get('send_welcome_mail'))
                             ->dehydrated(fn (?string $state): bool => filled($state))
                             ->maxLength(255),
                         Toggle::make('is_active')
@@ -136,8 +146,17 @@ class ClientUserResource extends Resource
                     ->wrap(),
                 IconColumn::make('is_active')->label(__('erp.fields.active'))->boolean(),
                 TextColumn::make('last_login_at')->label(__('erp.client_portal.last_login'))->since()->placeholder(__('erp.client_portal.never_signed_in'))->sortable(),
+                TextColumn::make('welcome_sent_at')->label(__('erp.client_portal.welcome_sent_at'))->since()->placeholder(__('erp.client_portal.welcome_not_sent'))->sortable()->toggleable(),
             ])
             ->recordActions([
+                Action::make('send_welcome')
+                    ->label(__('erp.client_portal.resend_welcome'))
+                    ->icon(Heroicon::OutlinedPaperAirplane)
+                    ->color('gray')
+                    ->visible(fn (ClientUser $record): bool => $record->is_active)
+                    ->requiresConfirmation()
+                    ->modalDescription(fn (ClientUser $record): string => __('erp.client_portal.resend_welcome_help', ['email' => $record->email]))
+                    ->action(fn (ClientUser $record) => self::notifyWelcome($record, app(SendClientWelcomeMail::class)->handle($record))),
                 Action::make('send_reset')
                     ->label(__('erp.client_portal.send_reset'))
                     ->icon(Heroicon::OutlinedEnvelope)
@@ -154,6 +173,16 @@ class ClientUserResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
+    }
+
+    /**
+     * Tells the administrator whether the welcome mail went out.
+     */
+    public static function notifyWelcome(ClientUser $user, bool $sent): void
+    {
+        $sent
+            ? Notification::make()->title(__('erp.client_portal.welcome_sent', ['email' => $user->email]))->success()->send()
+            : Notification::make()->title(__('erp.client_portal.welcome_failed'))->body(__('erp.client_portal.welcome_failed_body'))->warning()->persistent()->send();
     }
 
     public static function getPages(): array

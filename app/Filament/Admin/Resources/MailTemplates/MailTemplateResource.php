@@ -129,6 +129,9 @@ class MailTemplateResource extends Resource
             'iban' => 'BE68 5390 0754 7034', 'subject' => 'Elektriciteitswerken',
             'changed_by' => 'Jan Janssens', 'planning_url' => url('/planning'),
             'items' => new HtmlString('- **'.today()->addDay()->format('d/m/Y').' 07:30–16:00** · 604-001-02GAM'),
+            'company' => 'Proximus', 'portal_name' => __('erp.client_portal.brand'), 'portal_url' => url('/client/login'),
+            'reset_link' => url('/client/login'), 'minutes' => '60',
+            'overviews' => new HtmlString("- Projecten (600, 604, 605)\n- Batterijleveringen"),
             'previous' => new HtmlString('- **'.today()->format('d/m/Y').' 07:30–12:00** · 604-001-02GAM'),
         ];
     }

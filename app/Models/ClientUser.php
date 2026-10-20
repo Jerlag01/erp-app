@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
+use App\Notifications\Client\ClientResetPassword;
 use App\Support\ClientPortal;
 use Database\Factories\ClientUserFactory;
-use Filament\Auth\Notifications\ResetPassword;
-use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -20,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
  * the ERP's users: they sign in on /client only and see, read-only, what their permissions allow —
  * never prices.
  */
-#[Fillable(['name', 'email', 'company', 'password', 'locale', 'is_active', 'permissions', 'project_categories', 'last_login_at'])]
+#[Fillable(['name', 'email', 'company', 'password', 'locale', 'is_active', 'permissions', 'project_categories', 'last_login_at', 'welcome_sent_at'])]
 #[Hidden(['password', 'remember_token'])]
 class ClientUser extends Authenticatable implements FilamentUser, HasLocalePreference
 {
@@ -51,15 +50,12 @@ class ClientUser extends Authenticatable implements FilamentUser, HasLocalePrefe
     }
 
     /**
-     * The reset link always leads to the client portal's own reset page, also when an administrator of
-     * the ERP sends it.
+     * The editable "client portal: new password" mail, in the user's language; its link always leads to
+     * the client portal's own reset page, also when an administrator of the ERP sends it.
      */
     public function sendPasswordResetNotification($token): void
     {
-        $notification = app(ResetPassword::class, ['token' => $token]);
-        $notification->url = Filament::getPanel(ClientPortal::PANEL)->getResetPasswordUrl($token, $this);
-
-        $this->notify($notification);
+        $this->notify(new ClientResetPassword($token));
     }
 
     public function preferredLocale(): ?string
@@ -87,6 +83,7 @@ class ClientUser extends Authenticatable implements FilamentUser, HasLocalePrefe
             'permissions' => 'array',
             'project_categories' => 'array',
             'last_login_at' => 'datetime',
+            'welcome_sent_at' => 'datetime',
         ];
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\AbsenceDocumentController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\ClientRouterVpnController;
+use App\Http\Controllers\ClientWelcomeLinkController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
@@ -41,6 +42,8 @@ Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
 
 // The VPN file of a router for the client portal (its own guard; checked in the controller).
 Route::get('/client-files/routers/{router}/vpn', ClientRouterVpnController::class)->whereNumber('router')->name('client.routers.vpn');
+// The link in a client portal user's welcome mail: signed, valid for 7 days, and only until the password is set.
+Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->whereNumber('clientUser')->middleware('signed')->name('client.welcome');
 
 // The privacy policy of the mobile app: public (Google Play and the app link to it).
 Route::get('/privacy', PrivacyPolicyController::class)->name('privacy');

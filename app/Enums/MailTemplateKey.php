@@ -31,6 +31,10 @@ enum MailTemplateKey: string implements HasLabel
 
     case TimesheetEmployee = 'timesheet_employee';
 
+    case ClientWelcome = 'client_welcome';
+
+    case ClientPasswordReset = 'client_password_reset';
+
     public function getLabel(): string
     {
         return __('erp.enums.mail_template.'.$this->value);
@@ -53,6 +57,8 @@ enum MailTemplateKey: string implements HasLabel
             self::PlanningUpdated => [...$company, 'name', 'changed_by', 'items', 'previous', 'planning_url'],
             self::TimesheetWeek => [...$company, 'week', 'from', 'until', 'count', 'summary'],
             self::TimesheetEmployee => [...$company, 'name', 'week', 'from', 'until', 'hours', 'overtime', 'balance', 'km'],
+            self::ClientWelcome => [...$company, 'name', 'email', 'company', 'portal_name', 'portal_url', 'password_link', 'link_days', 'overviews'],
+            self::ClientPasswordReset => [...$company, 'name', 'email', 'portal_name', 'portal_url', 'reset_link', 'minutes'],
         };
     }
 

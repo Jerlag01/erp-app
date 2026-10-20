@@ -45,6 +45,14 @@ class ClientPortal
         return $user instanceof ClientUser ? $user : null;
     }
 
+    /**
+     * Where client users sign in.
+     */
+    public static function loginUrl(): string
+    {
+        return Filament::getPanel(self::PANEL)->getLoginUrl();
+    }
+
     public static function may(string $permission): bool
     {
         return (bool) self::user()?->may($permission);
