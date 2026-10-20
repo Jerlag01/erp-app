@@ -40,6 +40,10 @@ class Settings
                 'message_nl' => null,
                 'message_fr' => null,
                 'message_en' => null,
+                // The app's name, and the controller and contact in its privacy policy (/privacy).
+                'name' => 'PI ERP',
+                'privacy_company' => null,
+                'privacy_email' => null,
             ],
             'general' => [
                 'site_name' => 'ERP',

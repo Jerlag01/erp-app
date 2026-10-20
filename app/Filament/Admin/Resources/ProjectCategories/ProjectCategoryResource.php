@@ -7,6 +7,7 @@ use App\Enums\ProjectNumbering;
 use App\Filament\Admin\Resources\ProjectCategories\Pages\ManageProjectCategories;
 use App\Models\ProjectCategory;
 use BackedEnum;
+use Closure;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Radio;
@@ -14,6 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
@@ -85,6 +87,23 @@ class ProjectCategoryResource extends Resource
                     ->required()
                     ->disabled($locked)
                     ->columnSpanFull(),
+                TextInput::make('next_number')
+                    ->label(__('erp.projects.next_number'))
+                    ->helperText(fn (?ProjectCategory $record): string => __('erp.projects.next_number_help', [
+                        'next' => $record ? $record->numbering->formatNumber($record->nextNumber()) : '—',
+                    ]))
+                    ->placeholder(fn (?ProjectCategory $record): ?string => $record ? $record->numbering->formatNumber((clone $record)->forceFill(['next_number' => null])->nextNumber()) : null)
+                    ->integer()
+                    ->minValue(1)
+                    ->maxValue(999999)
+                    ->rule(fn (Get $get, ?ProjectCategory $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
+                        $numbering = ProjectNumbering::tryFrom($get('numbering') instanceof ProjectNumbering ? $get('numbering')->value : (string) $get('numbering')) ?? $record?->numbering;
+
+                        if (filled($value) && $numbering && ! (new ProjectCategory(['numbering' => $numbering]))->numberFitsNumbering((int) $value)) {
+                            $fail(__('erp.projects.next_number_year', ['from' => now()->format('y').'001', 'until' => now()->format('y').'999']));
+                        }
+                    })
+                    ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
                 Toggle::make('has_short_description')
                     ->label(__('erp.projects.has_short_description'))
                     ->helperText(__('erp.projects.has_short_description_help')),

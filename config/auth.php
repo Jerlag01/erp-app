@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ClientUser;
 use App\Models\User;
 
 return [
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // The client portal ("Global overview for Client") has its own accounts.
+        'client' => [
+            'driver' => 'session',
+            'provider' => 'client_users',
+        ],
     ],
 
     /*
@@ -62,6 +69,11 @@ return [
     */
 
     'providers' => [
+        'client_users' => [
+            'driver' => 'eloquent',
+            'model' => ClientUser::class,
+        ],
+
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
@@ -96,6 +108,13 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'client_users' => [
+            'provider' => 'client_users',
+            'table' => 'client_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

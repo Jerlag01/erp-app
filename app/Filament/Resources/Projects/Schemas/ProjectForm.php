@@ -79,15 +79,17 @@ class ProjectForm
                                     ->dehydrateStateUsing(fn (?string $state): ?string => self::workOrderNumber($state))
                                     ->visible($isIntervention)
                                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+                                // Empty on a new project: the next in line. On an existing one it can be corrected;
+                                // the reference follows.
                                 TextInput::make('number')
                                     ->label(__('erp.projects.number'))
-                                    ->helperText(__('erp.projects.number_help'))
+                                    ->helperText(fn (string $operation): string => $operation === 'edit' ? __('erp.projects.number_edit_help') : __('erp.projects.number_help'))
                                     ->placeholder(fn (Get $get): ?string => ($selected = $category($get)) ? $selected->numbering->formatNumber($selected->nextNumber()) : null)
                                     ->integer()
                                     ->minValue(1)
                                     ->maxValue(999999)
-                                    ->rule(fn (Get $get) => Rule::unique('projects', 'number')->where('project_category_id', $get('project_category_id')))
-                                    ->visibleOn('create'),
+                                    ->required(fn (string $operation): bool => $operation === 'edit')
+                                    ->rule(fn (Get $get, ?Project $record) => Rule::unique('projects', 'number')->where('project_category_id', $get('project_category_id'))->ignore($record?->id)),
                                 Select::make('work_site_id')
                                     ->label(__('erp.resources.work_site.singular'))
                                     ->helperText(__('erp.projects.work_site_help'))

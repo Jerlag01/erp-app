@@ -6,6 +6,7 @@ use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Filament\Admin\Resources\ProjectCategories\Pages\ManageProjectCategories;
 use App\Filament\Resources\Projects\Pages\CreateProject;
+use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
@@ -326,5 +327,82 @@ class ProjectTest extends TestCase
         $this->actingAs($member)->get('/projects')->assertForbidden();
         $this->actingAs($member)->get("/projects/{$project->id}")->assertForbidden();
         $this->actingAs(User::factory()->admin()->create())->get('/admin/project-categories')->assertForbidden();
+    }
+
+    #[Test]
+    public function new_projects_count_on_from_the_follow_up_number_of_the_category(): void
+    {
+        $site = WorkSite::factory()->create(['cow_code' => '02GAM']);
+        $category = ProjectCategory::query()->where('code', '604')->sole();
+        Project::factory()->count(3)->inCategory('604')->for($site)->create();
+
+        // Set by hand: numbering continues from there.
+        $category->update(['next_number' => 150]);
+        $this->assertSame('604-150-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
+        $this->assertSame('604-151-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
+
+        // Numbers in use are skipped: from 2, the first free one is 4.
+        $category->update(['next_number' => 2]);
+        $this->assertSame(4, $category->fresh()->nextNumber());
+
+        // Empty again: the number after the highest.
+        $category->update(['next_number' => null]);
+        $this->assertSame(152, $category->fresh()->nextNumber());
+
+        // Yearly numbering only takes a number of this year.
+        $yearly = ProjectCategory::query()->where('code', '605')->sole();
+        $yy = (int) now()->format('y');
+        $yearly->update(['next_number' => $yy * 1000 + 100]);
+        $this->assertSame($yy * 1000 + 100, $yearly->fresh()->nextNumber());
+        $yearly->update(['next_number' => ($yy - 1) * 1000 + 100]);
+        $this->assertSame($yy * 1000 + 1, $yearly->fresh()->nextNumber(), 'A number of another year is ignored.');
+    }
+
+    #[Test]
+    public function the_follow_up_number_of_a_project_can_be_chosen_or_changed(): void
+    {
+        $site = WorkSite::factory()->create(['cow_code' => '02GAM']);
+        $this->actingAs($this->employee());
+        Filament::setCurrentPanel('app');
+
+        Livewire::test(CreateProject::class)
+            ->fillForm(['project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $project = Project::query()->sole();
+        $this->assertSame('604-042-02GAM', $project->reference);
+        $other = Project::factory()->inCategory('604')->for($site)->create();
+        $this->assertSame('604-043-02GAM', $other->reference, 'Without a number: the next in line.');
+
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
+            ->fillForm(['number' => 7])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame('604-007-02GAM', $project->fresh()->reference);
+
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
+            ->fillForm(['number' => 43])
+            ->call('save')
+            ->assertHasFormErrors(['number' => 'unique']);
+        $this->assertSame('604-007-02GAM', $project->fresh()->reference);
+    }
+
+    #[Test]
+    public function the_follow_up_number_is_set_on_the_category(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+        $sequence = ProjectCategory::query()->where('code', '604')->sole();
+        $yearly = ProjectCategory::query()->where('code', '605')->sole();
+
+        Livewire::test(ManageProjectCategories::class)
+            ->callTableAction('edit', $sequence, ['next_number' => 200])
+            ->assertHasNoTableActionErrors();
+        $this->assertSame(200, $sequence->fresh()->next_number);
+
+        Livewire::test(ManageProjectCategories::class)
+            ->callTableAction('edit', $yearly, ['next_number' => 12345])
+            ->assertHasTableActionErrors(['next_number']);
     }
 }

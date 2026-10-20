@@ -39,6 +39,30 @@ class MobileApp
         return $this->available() ? (string) settings()->get('mobile_app.apk') : null;
     }
 
+    /**
+     * The name of the app, as on the phone ("PI ERP").
+     */
+    public function name(): string
+    {
+        return filled($name = settings()->get('mobile_app.name')) ? (string) $name : 'PI ERP';
+    }
+
+    /**
+     * The data controller in the privacy policy: set in Settings > Mobile app, else the company block of
+     * the documents, else the site name.
+     */
+    public function privacyCompany(): string
+    {
+        return (string) (settings()->get('mobile_app.privacy_company') ?: settings()->get('batteries.company_block') ?: settings()->siteName());
+    }
+
+    public function privacyEmail(): ?string
+    {
+        $email = settings()->get('mobile_app.privacy_email') ?: settings()->get('finance.email');
+
+        return filled($email) ? (string) $email : null;
+    }
+
     public function version(): ?string
     {
         return filled($version = settings()->get('mobile_app.version')) ? (string) $version : null;

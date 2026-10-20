@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Throwable;
 use UnitEnum;
@@ -512,6 +513,27 @@ class Settings extends Page
                     Toggle::make('mobile_app.prompt')
                         ->label(__('erp.settings.fields.mobile_app_prompt'))
                         ->helperText(__('erp.settings.help.mobile_app_prompt')),
+                ]),
+            Section::make(__('erp.settings.sections.mobile_app_privacy'))
+                ->description(fn (): HtmlString => new HtmlString(e(__('erp.settings.help.mobile_app_privacy')).' <a href="'.e(route('privacy')).'" target="_blank" rel="noopener" style="text-decoration: underline;">'.e(route('privacy')).'</a>'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('mobile_app.name')
+                        ->label(__('erp.settings.fields.mobile_app_name'))
+                        ->placeholder('PI ERP')
+                        ->maxLength(60),
+                    TextInput::make('mobile_app.privacy_email')
+                        ->label(__('erp.settings.fields.mobile_app_privacy_email'))
+                        ->helperText(__('erp.settings.help.mobile_app_privacy_email'))
+                        ->email()
+                        ->maxLength(255),
+                    Textarea::make('mobile_app.privacy_company')
+                        ->label(__('erp.settings.fields.mobile_app_privacy_company'))
+                        ->helperText(__('erp.settings.help.mobile_app_privacy_company'))
+                        ->placeholder(fn (): string => (string) (settings()->get('batteries.company_block') ?: settings()->siteName()))
+                        ->rows(4)
+                        ->maxLength(1000)
+                        ->columnSpanFull(),
                 ]),
             Section::make(__('erp.settings.sections.mobile_app_message'))
                 ->description(__('erp.settings.help.mobile_app_message'))

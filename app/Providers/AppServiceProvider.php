@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\ClientUser;
 use App\Support\Modules;
 use App\Support\Settings;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +25,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // When a client portal user signs in, note it (shown to the administrators).
+        Event::listen(Login::class, function (Login $event): void {
+            if ($event->user instanceof ClientUser) {
+                $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
+            }
+        });
+
         // Mail settings from the admin panel override .env once the mailer is first used.
         $this->app->afterResolving('mail.manager', fn () => $this->app->make(Settings::class)->applyMailConfig());
 

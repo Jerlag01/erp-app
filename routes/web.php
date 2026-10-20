@@ -3,6 +3,7 @@
 use App\Http\Controllers\AbsenceDocumentController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDocumentController;
+use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MobileAppDismissController;
 use App\Http\Controllers\MobileAppDownloadController;
 use App\Http\Controllers\PeppolInboundController;
+use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\ProjectArchiveController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\RouterVpnController;
@@ -36,6 +38,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/q/{item}', StockQrController::class)->name('stock.qr');
 Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
+
+// The VPN file of a router for the client portal (its own guard; checked in the controller).
+Route::get('/client-files/routers/{router}/vpn', ClientRouterVpnController::class)->whereNumber('router')->name('client.routers.vpn');
+
+// The privacy policy of the mobile app: public (Google Play and the app link to it).
+Route::get('/privacy', PrivacyPolicyController::class)->name('privacy');
 
 // An attachment of a toolbox meeting through a short-lived signed link from the mobile app.
 Route::get('/toolbox-files/{meeting}/{index}', ToolboxAttachmentController::class)->whereNumber('index')->middleware('signed')->name('toolbox.attachment');

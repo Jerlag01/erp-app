@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * are built. A category that holds projects cannot be deleted, and its code and numbering
  * are locked so existing references stay valid.
  */
-#[Fillable(['code', 'name', 'description', 'numbering', 'has_short_description', 'is_active'])]
+#[Fillable(['code', 'name', 'description', 'numbering', 'next_number', 'has_short_description', 'is_active'])]
 class ProjectCategory extends Model
 {
     /** @use HasFactory<ProjectCategoryFactory> */
@@ -39,10 +39,23 @@ class ProjectCategory extends Model
     }
 
     /**
-     * The next free project number: 001, 002, … or, for yearly numbering, 26001, 26002, … in 2026.
+     * The next free project number: 001, 002, … or, for yearly numbering, 26001, 26002, … in 2026. With a
+     * follow-up number set on the category, numbering continues from there instead.
      */
     public function nextNumber(): int
     {
+        // Set by hand: count on from there, skipping numbers that are already in use.
+        if ($this->next_number !== null && $this->numberFitsNumbering((int) $this->next_number)) {
+            $taken = $this->projects()->where('number', '>=', (int) $this->next_number)->pluck('number')->map(fn (mixed $number): int => (int) $number)->flip();
+            $number = (int) $this->next_number;
+
+            while ($taken->has($number)) {
+                $number++;
+            }
+
+            return $number;
+        }
+
         if ($this->numbering === ProjectNumbering::Yearly) {
             $start = (int) now()->format('y') * 1000;
             $last = $this->projects()->whereBetween('number', [$start, $start + 999])->max('number');
@@ -54,12 +67,27 @@ class ProjectCategory extends Model
     }
 
     /**
+     * Yearly numbers belong to this year (26001–26999 in 2026); a starting number of another year is ignored.
+     */
+    public function numberFitsNumbering(int $number): bool
+    {
+        if ($this->numbering !== ProjectNumbering::Yearly) {
+            return $number >= 1;
+        }
+
+        $start = (int) now()->format('y') * 1000;
+
+        return $number > $start && $number <= $start + 999;
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
             'numbering' => ProjectNumbering::class,
+            'next_number' => 'integer',
             'has_short_description' => 'boolean',
             'is_active' => 'boolean',
         ];

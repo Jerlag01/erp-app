@@ -52,7 +52,7 @@
             <div style="display: flex; gap: .875rem; align-items: center;">
                 <x-filament::icon icon="heroicon-o-device-phone-mobile" style="width: 2.5rem; height: 2.5rem; color: var(--primary-600); flex-shrink: 0;" />
                 <div>
-                    <h2 id="mobile-app-title" class="erp-app-prompt__title">{{ __('erp.mobile_app.prompt_title', ['app' => settings()->siteName()]) }}</h2>
+                    <h2 id="mobile-app-title" class="erp-app-prompt__title">{{ __('erp.mobile_app.prompt_title', ['app' => $mobileApp->name()]) }}</h2>
                     @if ($version = $mobileApp->version())
                         <p class="erp-app-prompt__muted">{{ __('erp.mobile_app.version', ['version' => $version]) }}</p>
                     @endif
