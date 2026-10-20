@@ -7,8 +7,9 @@ use Filament\Facades\Filament;
 
 /**
  * The client portal ("Global overview for Client"): a separate panel with its own users, showing
- * projects, battery deliveries, charging stations and 4G routers read-only. Prices are never shown;
- * logins, recovery codes and VPN files only with their own permission.
+ * projects, battery deliveries, charging stations and 4G routers read-only. A user sees only their own
+ * projects (assigned to them, or at the COW sites of their contact person) unless they may see all.
+ * Prices are never shown; logins, recovery codes and VPN files only with their own permission.
  */
 class ClientPortal
 {
@@ -21,6 +22,9 @@ class ClientPortal
 
     public const PROJECTS = 'projects';
 
+    /** Projects of other clients too: without it a user sees only their own projects and COW sites. */
+    public const ALL_PROJECTS = 'all_projects';
+
     public const BATTERY_DELIVERIES = 'battery_deliveries';
 
     public const CHARGING_STATIONS = 'charging_stations';
@@ -32,7 +36,7 @@ class ClientPortal
     public const ROUTER_SECRETS = 'router_secrets';
 
     public const PERMISSIONS = [
-        self::PROJECTS, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
+        self::PROJECTS, self::ALL_PROJECTS, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
     ];
 
     /**

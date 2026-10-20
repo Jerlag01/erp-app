@@ -56,7 +56,12 @@ class ClientBatteryDeliveryResource extends ClientResource
 
     public static function getEloquentQuery(): Builder
     {
-        return BatteryDelivery::query()->with(['project.workSite', 'batteryModel']);
+        $user = ClientPortal::user();
+
+        // Deliveries follow their project: only those of the projects the user sees.
+        return BatteryDelivery::query()
+            ->with(['project.workSite', 'batteryModel'])
+            ->whereHas('project', fn (Builder $query) => $user ? $user->restrictProjects($query) : $query->whereRaw('1 = 0'));
     }
 
     public static function table(Table $table): Table

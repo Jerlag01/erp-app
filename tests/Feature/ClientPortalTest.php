@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
+use App\Filament\Admin\Resources\ClientUsers\ClientUserResource;
 use App\Filament\Admin\Resources\ClientUsers\Pages\ManageClientUsers;
 use App\Filament\Client\Resources\BatteryDeliveries\ClientBatteryDeliveryResource;
 use App\Filament\Client\Resources\BatteryDeliveries\Pages\ListClientBatteryDeliveries;
@@ -21,6 +22,8 @@ use App\Models\Project;
 use App\Models\Router;
 use App\Models\User;
 use App\Models\WorkSite;
+use App\Models\WorkSiteArea;
+use App\Models\WorkSiteContact;
 use App\Notifications\Client\ClientResetPassword;
 use App\Notifications\Client\ClientWelcome;
 use App\Support\ClientPortal;
@@ -75,7 +78,7 @@ class ClientPortalTest extends TestCase
         $battery->poNumbers()->create(['number' => '4500123456']);
         $enersys = Project::factory()->inCategory('605')->for($site)->create();
         $private = Project::factory()->inCategory('606')->create(['client_name' => 'Familie Peeters']);
-        $this->client([ClientPortal::PROJECTS], ['604']);
+        $this->client([ClientPortal::PROJECTS, ClientPortal::ALL_PROJECTS], ['604']);
 
         Livewire::test(ListClientProjects::class)
             ->assertCanSeeTableRecords([$battery])
@@ -94,7 +97,7 @@ class ClientPortalTest extends TestCase
     public function battery_deliveries_never_show_their_cost(): void
     {
         $delivery = BatteryDelivery::factory()->create(['total_cost' => 98765.43, 'notes' => 'Prijs per cel 123,45', 'order_confirmation' => '4141234']);
-        $this->client([ClientPortal::BATTERY_DELIVERIES]);
+        $this->client([ClientPortal::BATTERY_DELIVERIES, ClientPortal::ALL_PROJECTS]);
 
         Livewire::test(ListClientBatteryDeliveries::class)
             ->assertCanSeeTableRecords([$delivery])
@@ -116,7 +119,7 @@ class ClientPortalTest extends TestCase
         Storage::disk('local')->put('routers/vpn.ovpn', 'client');
         $router = Router::factory()->create(['password' => 'Router-Geheim', 'vpn_file' => 'routers/vpn.ovpn', 'vpn_file_name' => 'site.ovpn']);
 
-        $this->client([ClientPortal::CHARGING_STATIONS, ClientPortal::ROUTERS]);
+        $this->client([ClientPortal::CHARGING_STATIONS, ClientPortal::ROUTERS, ClientPortal::ALL_PROJECTS]);
         Livewire::test(ListClientChargingStations::class)
             ->assertCanSeeTableRecords([$station])
             ->assertDontSee('Laadpaal-Geheim')
@@ -127,7 +130,7 @@ class ClientPortalTest extends TestCase
             ->assertTableActionHidden('vpn', $router);
         $this->get(route('client.routers.vpn', $router))->assertForbidden();
 
-        $this->client([ClientPortal::CHARGING_STATIONS, ClientPortal::CHARGING_SECRETS, ClientPortal::ROUTERS, ClientPortal::ROUTER_SECRETS]);
+        $this->client([ClientPortal::CHARGING_STATIONS, ClientPortal::CHARGING_SECRETS, ClientPortal::ROUTERS, ClientPortal::ROUTER_SECRETS, ClientPortal::ALL_PROJECTS]);
         Livewire::test(ListClientChargingStations::class)->assertSee('Laadpaal-Geheim')->assertSee('HERSTEL-123');
         Livewire::test(ListClientRouters::class)->assertSee('Router-Geheim')->assertTableActionVisible('vpn', $router);
         $this->get(route('client.routers.vpn', $router))->assertOk()->assertDownload('site.ovpn');
@@ -254,5 +257,83 @@ class ClientPortalTest extends TestCase
         $this->assertSame('Nieuw wachtwoord voor Global overview for Client', $mail->rendered['subject']);
         $this->assertStringContainsString('/client/password-reset/reset', $mail->rendered['html']);
         $this->assertStringContainsString('60 minuten', $mail->rendered['html']);
+    }
+
+    #[Test]
+    public function a_client_sees_only_their_own_projects_unless_they_may_see_all(): void
+    {
+        $contact = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Janssens', 'company' => 'Proximus']);
+        $ownSite = WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_contact_id' => $contact->id]);
+        $areaSite = WorkSite::factory()->create(['cow_code' => '02E23', 'work_site_contact_id' => null, 'work_site_area_id' => WorkSiteArea::factory()->create(['work_site_contact_id' => $contact->id])->id]);
+        $otherSite = WorkSite::factory()->create(['cow_code' => '03XYZ', 'work_site_contact_id' => WorkSiteContact::factory()->create()->id]);
+
+        $atOwnSite = Project::factory()->inCategory('604')->for($ownSite)->create();
+        $atAreaSite = Project::factory()->inCategory('610')->for($areaSite)->create();
+        $assigned = Project::factory()->inCategory('620')->for($otherSite)->create();
+        $otherClient = Project::factory()->inCategory('604')->for($otherSite)->create();
+
+        $ownDelivery = BatteryDelivery::factory()->create(['project_id' => $atOwnSite->id]);
+        $otherDelivery = BatteryDelivery::factory()->create(['project_id' => $otherClient->id]);
+        $ownRouter = Router::factory()->create(['work_site_id' => $ownSite->id]);
+        $otherRouter = Router::factory()->create(['work_site_id' => WorkSite::factory()->create()->id]);
+        $ownStation = ChargingStation::factory()->create(['work_site_id' => $areaSite->id]);
+        $otherStation = ChargingStation::factory()->create(['work_site_id' => WorkSite::factory()->create()->id]);
+
+        $client = $this->client([ClientPortal::PROJECTS, ClientPortal::BATTERY_DELIVERIES, ClientPortal::CHARGING_STATIONS, ClientPortal::ROUTERS, ClientPortal::ROUTER_SECRETS]);
+        $client->update(['work_site_contact_id' => $contact->id]);
+        $client->projects()->attach($assigned);
+
+        Livewire::test(ListClientProjects::class)
+            ->assertCanSeeTableRecords([$atOwnSite, $atAreaSite, $assigned])
+            ->assertCanNotSeeTableRecords([$otherClient]);
+        Livewire::test(ListClientBatteryDeliveries::class)->assertCanSeeTableRecords([$ownDelivery])->assertCanNotSeeTableRecords([$otherDelivery]);
+        // The assigned project's site counts as the client's own site too.
+        Livewire::test(ListClientRouters::class)->assertCanSeeTableRecords([$ownRouter])->assertCanNotSeeTableRecords([$otherRouter]);
+        Livewire::test(ListClientChargingStations::class)->assertCanSeeTableRecords([$ownStation])->assertCanNotSeeTableRecords([$otherStation]);
+
+        // Someone else's VPN file stays closed, also through the direct link.
+        Storage::fake('local');
+        Storage::disk('local')->put('routers/other.ovpn', 'client');
+        $otherRouter->update(['vpn_file' => 'routers/other.ovpn']);
+        $this->get(route('client.routers.vpn', $otherRouter))->assertForbidden();
+
+        // Without a contact or assigned projects there is nothing to see.
+        $this->client([ClientPortal::PROJECTS]);
+        Livewire::test(ListClientProjects::class)->assertCountTableRecords(0);
+
+        // With "all projects" the other clients' projects show too, within the ticked categories.
+        $client->update(['permissions' => [...$client->permissions, ClientPortal::ALL_PROJECTS], 'project_categories' => ['604']]);
+        $this->actingAs($client->fresh(), ClientPortal::GUARD);
+        Livewire::test(ListClientProjects::class)
+            ->assertCanSeeTableRecords([$atOwnSite, $otherClient])
+            ->assertCanNotSeeTableRecords([$atAreaSite, $assigned]);
+    }
+
+    #[Test]
+    public function an_administrator_links_a_contact_person_and_projects_to_a_client_user(): void
+    {
+        Notification::fake();
+        $contact = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Janssens', 'company' => 'Proximus', 'email' => 'marc@proximus.example']);
+        WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_contact_id' => $contact->id]);
+        $project = Project::factory()->inCategory('604')->create();
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+
+        // Found by COW code, and the contact's details fill the empty fields.
+        $this->assertSame([$contact->id => 'Marc Janssens (Proximus)'], ClientUserResource::contactOptions('02GA'));
+        $this->assertStringContainsString('02GAM', ClientUserResource::contactSitesText($contact->id));
+
+        Livewire::test(ManageClientUsers::class)
+            ->mountAction('create')
+            ->fillForm(['work_site_contact_id' => $contact->id])
+            ->assertSchemaStateSet(['name' => 'Marc Janssens', 'email' => 'marc@proximus.example', 'company' => 'Proximus'])
+            ->fillForm(['locale' => 'nl', 'send_welcome_mail' => false, 'password' => 'Een-lang-wachtwoord', 'projects' => [$project->id], 'permissions' => [ClientPortal::PROJECTS]])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        $client = ClientUser::query()->sole();
+        $this->assertSame($contact->id, $client->work_site_contact_id);
+        $this->assertTrue($client->projects->contains($project));
+        $this->assertFalse($client->seesAllProjects());
     }
 }

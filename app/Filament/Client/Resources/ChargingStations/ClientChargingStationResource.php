@@ -58,7 +58,9 @@ class ClientChargingStationResource extends ClientResource
 
     public static function getEloquentQuery(): Builder
     {
-        return ChargingStation::query()->with(['workSite', 'project']);
+        $query = ChargingStation::query()->with(['workSite', 'project']);
+
+        return ClientPortal::user()?->restrictToOwnSites($query, orOwnProject: true) ?? $query->whereRaw('1 = 0');
     }
 
     public static function table(Table $table): Table

@@ -57,11 +57,9 @@ class ClientProjectResource extends ClientResource
 
     public static function getEloquentQuery(): Builder
     {
-        $categories = ClientPortal::user()?->projectCategories() ?? [];
+        $query = Project::query()->with(['category', 'workSite', 'poNumbers']);
 
-        return Project::query()
-            ->whereHas('category', fn (Builder $query) => $query->whereIn('code', $categories))
-            ->with(['category', 'workSite', 'poNumbers']);
+        return ClientPortal::user()?->restrictProjects($query) ?? $query->whereRaw('1 = 0');
     }
 
     public static function table(Table $table): Table

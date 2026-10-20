@@ -5,6 +5,9 @@ namespace App\Filament\Admin\Resources\ClientUsers;
 use App\Actions\ClientPortal\SendClientWelcomeMail;
 use App\Enums\NavigationGroup;
 use App\Models\ClientUser;
+use App\Models\Project;
+use App\Models\WorkSite;
+use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -18,11 +21,13 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Password;
 use UnitEnum;
 
@@ -108,6 +113,39 @@ class ClientUserResource extends Resource
                             ->default(true)
                             ->inline(false),
                     ]),
+                Section::make(__('erp.client_portal.own_projects'))
+                    ->description(__('erp.client_portal.own_projects_help'))
+                    ->columns(2)
+                    ->schema([
+                        Select::make('work_site_contact_id')
+                            ->label(__('erp.client_portal.contact'))
+                            ->helperText(fn (?int $state): string => self::contactSitesText($state))
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search): array => self::contactOptions($search))
+                            ->getOptionLabelUsing(fn (int|string|null $value): ?string => WorkSiteContact::query()->find($value)?->label())
+                            ->live()
+                            ->afterStateUpdated(function (?int $state, Get $get, Set $set): void {
+                                // A new user takes over the contact's details where nothing is filled in yet.
+                                $contact = WorkSiteContact::query()->find($state);
+
+                                if ($contact === null) {
+                                    return;
+                                }
+
+                                foreach (['name' => $contact->fullName(), 'email' => $contact->email, 'company' => $contact->company] as $field => $value) {
+                                    if (blank($get($field)) && filled($value)) {
+                                        $set($field, $value);
+                                    }
+                                }
+                            }),
+                        Select::make('projects')
+                            ->label(__('erp.client_portal.assigned_projects'))
+                            ->helperText(__('erp.client_portal.assigned_projects_help'))
+                            ->relationship('projects', 'reference', fn (Builder $query) => $query->whereHas('category', fn (Builder $query) => $query->whereIn('code', ClientPortal::CATEGORIES)))
+                            ->getOptionLabelFromRecordUsing(fn (Project $record): string => trim($record->reference.' '.($record->subtitle() ? '· '.$record->subtitle() : '')))
+                            ->multiple()
+                            ->searchable(['reference', 'short_description', 'work_order_number']),
+                    ]),
                 Section::make(__('erp.client_portal.rights'))
                     ->description(__('erp.client_portal.rights_help'))
                     ->schema([
@@ -144,6 +182,11 @@ class ClientUserResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => str_contains($state, '🔒') ? 'warning' : 'gray')
                     ->wrap(),
+                TextColumn::make('contact.first_name')
+                    ->label(__('erp.client_portal.contact'))
+                    ->formatStateUsing(fn (ClientUser $record): ?string => $record->contact?->label())
+                    ->placeholder('—')
+                    ->toggleable(),
                 IconColumn::make('is_active')->label(__('erp.fields.active'))->boolean(),
                 TextColumn::make('last_login_at')->label(__('erp.client_portal.last_login'))->since()->placeholder(__('erp.client_portal.never_signed_in'))->sortable(),
                 TextColumn::make('welcome_sent_at')->label(__('erp.client_portal.welcome_sent_at'))->since()->placeholder(__('erp.client_portal.welcome_not_sent'))->sortable()->toggleable(),
@@ -173,6 +216,49 @@ class ClientUserResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
+    }
+
+    /**
+     * Contact persons matching the search on name, company, e-mail or the COW code of one of their sites.
+     *
+     * @return array<int, string>
+     */
+    public static function contactOptions(string $search): array
+    {
+        $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $search).'%';
+
+        return WorkSiteContact::query()
+            ->where(fn (Builder $query) => $query
+                ->whereRaw("concat_ws(' ', first_name, last_name) like ?", [$like])
+                ->orWhere('company', 'like', $like)
+                ->orWhere('email', 'like', $like)
+                ->orWhereHas('workSites', fn (Builder $query) => $query->where('cow_code', 'like', $like))
+                ->orWhereHas('areas.workSites', fn (Builder $query) => $query->where('cow_code', 'like', $like)))
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->limit(50)
+            ->get()
+            ->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => $contact->label()])
+            ->all();
+    }
+
+    /**
+     * Which COW sites the chosen contact person is the contact for, as a hint under the field.
+     */
+    public static function contactSitesText(?int $contactId): string
+    {
+        if ($contactId === null) {
+            return __('erp.client_portal.contact_help');
+        }
+
+        $codes = WorkSite::query()
+            ->whereIn('id', (new ClientUser(['work_site_contact_id' => $contactId]))->contactWorkSiteIds())
+            ->orderBy('cow_code')
+            ->pluck('cow_code');
+
+        return $codes->isEmpty()
+            ? __('erp.client_portal.contact_no_sites')
+            : __('erp.client_portal.contact_sites', ['count' => $codes->count(), 'codes' => $codes->take(20)->implode(', ').($codes->count() > 20 ? ', …' : '')]);
     }
 
     /**
