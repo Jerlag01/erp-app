@@ -10,10 +10,12 @@ use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Filament\Resources\Projects\Schemas\ProjectForm;
 use App\Models\BatteryDossier;
 use App\Models\EnersysDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\ProjectPoNumber;
 use App\Support\Interventions;
 use App\Support\PdfAccess;
 use App\Support\ProjectProgress;
@@ -31,6 +33,7 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Grid;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class ViewProject extends ViewRecord
 {
@@ -69,6 +72,20 @@ class ViewProject extends ViewRecord
         abort_unless(ProjectProgress::appliesTo($project) && Gate::allows('update', $project), 403);
 
         ProjectProgress::toggle($project, $step, auth()->user());
+    }
+
+    /**
+     * Adding a PO number to a 600 project: administrators and "projects.intervention_po", on a project
+     * they see that is not archived (administrators also on archived ones).
+     */
+    protected function mayAddPoNumber(Project $project): bool
+    {
+        $user = auth()->user();
+
+        return $project->category?->numbering->isIntervention()
+            && ProjectForm::mayAddInterventionPo()
+            && Gate::allows('view', $project)
+            && (! $project->isArchived() || $user->isAdmin());
     }
 
     protected function getHeaderActions(): array
@@ -158,6 +175,32 @@ class ViewProject extends ViewRecord
                 ->url(fn (Project $record): string => ($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first())
                     ? EnersysDossierResource::getUrl('edit', ['record' => $dossier])
                     : EnersysDossierResource::getUrl('create', ['project' => $record->id])),
+            // 600 projects: a PO number can be added at any moment, whatever the status.
+            Action::make('addPoNumber')
+                ->label(__('erp.projects.add_po_number'))
+                ->icon(Heroicon::OutlinedHashtag)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => $this->mayAddPoNumber($record))
+                ->authorize(fn (Project $record): bool => $this->mayAddPoNumber($record))
+                ->modalDescription(fn (Project $record): string => $record->poNumbers->isEmpty()
+                    ? __('erp.projects.po_numbers_help')
+                    : __('erp.projects.po_numbers_current', ['numbers' => $record->poNumbers->pluck('number')->implode(', ')]))
+                ->schema([
+                    TextInput::make('number')
+                        ->label(__('erp.projects.po_number'))
+                        ->placeholder('4500123456')
+                        ->required()
+                        ->length(10)
+                        ->regex(ProjectPoNumber::PATTERN)
+                        ->validationMessages(['regex' => __('erp.projects.po_number_invalid')])
+                        ->rule(fn (Project $record) => Rule::unique('project_po_numbers', 'number')->where('project_id', $record->id))
+                        ->extraInputAttributes(['inputmode' => 'numeric', 'style' => 'font-family: var(--erp-mono);']),
+                ])
+                ->action(function (Project $record, array $data): void {
+                    $record->poNumbers()->create(['number' => $data['number']]);
+                    $record->load('poNumbers');
+                })
+                ->successNotificationTitle(__('erp.projects.po_number_added')),
             Action::make('requestGpw')
                 ->label(__('erp.gpw.request'))
                 ->icon(Heroicon::OutlinedCalendarDateRange)

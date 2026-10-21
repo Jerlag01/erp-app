@@ -9,6 +9,7 @@ use App\Enums\ProjectStatus;
 use App\Filament\Admin\Resources\InterventionReports\Pages\ViewInterventionReport;
 use App\Filament\Resources\Interventions\Pages\ListInterventions;
 use App\Filament\Resources\Projects\Pages\CreateProject;
+use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Models\InterventionCategory;
 use App\Models\InterventionReport;
@@ -310,5 +311,36 @@ class InterventionTest extends TestCase
         Livewire::test(ViewInterventionReport::class, ['record' => $report->getRouteKey()])
             ->mountAction('approve')
             ->assertSchemaStateSet(['po_number' => '4500999999']);
+    }
+
+    #[Test]
+    public function a_po_number_can_be_added_to_a_600_project_at_any_moment(): void
+    {
+        $team = Team::factory()->create();
+        $project = $this->intervention(['status' => ProjectStatus::InProgress], $team);
+
+        // Without the permission: no button, no PO numbers on the edit form.
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view', 'update']])->inTeam($team)->create());
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('addPoNumber');
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])->assertSchemaComponentHidden('poNumbers');
+
+        // With it: from the project page, whatever the status, and on the edit form.
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view', 'update', 'intervention_po']])->inTeam($team)->create());
+        foreach ([ProjectStatus::InProgress, ProjectStatus::Executed] as $i => $status) {
+            $project->refresh()->update(['status' => $status]);
+            Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+                ->callAction('addPoNumber', ['number' => '450000000'.$i])
+                ->assertHasNoActionErrors();
+        }
+        $this->assertSame(['4500000000', '4500000001'], $project->poNumbers()->orderBy('number')->pluck('number')->all());
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('addPoNumber', ['number' => '4500000000'])
+            ->assertHasActionErrors(['number' => 'unique']);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('addPoNumber', ['number' => '12345'])
+            ->assertHasActionErrors(['number']);
+
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])->assertSchemaComponentVisible('poNumbers');
     }
 }

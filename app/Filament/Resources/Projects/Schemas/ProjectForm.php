@@ -29,7 +29,7 @@ use Illuminate\Validation\Rule;
 class ProjectForm
 {
     /**
-     * PO numbers on a new intervention (600): administrators and "projects.intervention_po".
+     * PO numbers on an intervention (600), at any moment: administrators and "projects.intervention_po".
      */
     public static function mayAddInterventionPo(): bool
     {
@@ -194,12 +194,12 @@ class ProjectForm
                             ->visible(fn (Get $get): bool => (bool) $subcategory($get)?->tagList()),
                     ]),
                 // Interventions get their PO number when an administrator approves them; administrators and
-                // "projects.intervention_po" may already enter it when creating the intervention.
+                // "projects.intervention_po" may enter it at any moment (creating or editing).
                 Section::make(__('erp.projects.po_numbers'))
                     ->description(fn (Get $get): string => $interventionFields($get) ? __('erp.projects.intervention_po_help') : __('erp.projects.po_numbers_help'))
                     ->columnSpanFull()
                     ->visible(fn (Get $get, string $operation): bool => (bool) $category($get)?->numbering->hasPoNumbers()
-                        && (! $interventionFields($get) || ($operation === 'create' && self::mayAddInterventionPo())))
+                        && (! $interventionFields($get) || self::mayAddInterventionPo()))
                     ->schema([
                         Repeater::make('poNumbers')
                             ->hiddenLabel()
