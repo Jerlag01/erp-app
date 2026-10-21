@@ -29,7 +29,7 @@ class ChargingExport
 
         return array_filter([
             'Volledig uitgevoerd' => fn (ChargingStation $station): string => $yes($station->fully_executed),
-            'CowCode' => fn (ChargingStation $station): ?string => $station->workSite?->cow_code,
+            'CowCode' => fn (ChargingStation $station): ?string => $station->locationLabel(),
             'ACE-number' => fn (ChargingStation $station): ?string => $station->ace_number,
             'Password' => $withSecrets ? fn (ChargingStation $station): ?string => $station->password : null,
             'Recovery Code' => $withSecrets ? fn (ChargingStation $station): ?string => $station->recovery_code : null,
@@ -39,7 +39,7 @@ class ChargingExport
             'Licentie' => fn (ChargingStation $station): ?string => $station->license_key,
             'Adres' => fn (ChargingStation $station): ?string => $station->address(),
             'Type' => fn (ChargingStation $station): ?string => mb_strtoupper((string) $station->type?->getLabel()),
-            'Waar?' => fn (ChargingStation $station): ?string => $station->workSite?->city,
+            'Waar?' => fn (ChargingStation $station): ?string => $station->cityName(),
             'Online/Offline' => fn (ChargingStation $station): string => $station->online ? 'ONLINE' : 'OFFLINE',
             'Backoffice' => fn (ChargingStation $station): ?string => $station->backoffice,
             'Installatiejaar' => fn (ChargingStation $station): ?int => $station->installation_year,

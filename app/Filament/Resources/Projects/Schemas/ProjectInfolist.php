@@ -22,6 +22,8 @@ class ProjectInfolist
     public static function configure(Schema $schema): Schema
     {
         $isPrivate = fn (Project $record): bool => $record->category->numbering->hasClient();
+        // Private projects and 608 projects at a third-party client show the client and address.
+        $hasClient = fn (Project $record): bool => $isPrivate($record) || $record->isThirdParty();
 
         return $schema
             ->components([
@@ -78,7 +80,7 @@ class ProjectInfolist
                                     ->state(fn (Project $record): ?string => $record->workSite ? trim($record->workSite->cow_code.' · '.$record->workSite->addressLine(), ' ·') : $record->cow_code)
                                     ->url(fn (Project $record): ?string => $record->workSite && modules()->workSites() && Gate::allows('view', $record->workSite) ? WorkSiteResource::getUrl('view', ['record' => $record->workSite]) : null)
                                     ->placeholder('—')
-                                    ->hidden($isPrivate),
+                                    ->hidden($hasClient),
                                 TextEntry::make('work_order_number')
                                     ->label(__('erp.interventions.wo_number'))
                                     ->prefix('WO ')
@@ -153,10 +155,10 @@ class ProjectInfolist
                             ->visible(fn (Project $record): bool => filled($record->interventionReport?->review_note))
                             ->columnSpanFull(),
                     ]),
-                Section::make(__('erp.projects.client'))
+                Section::make(fn (Project $record): string => $record->isThirdParty() ? __('erp.projects.third_party') : __('erp.projects.client'))
                     ->columnSpanFull()
                     ->columns(3)
-                    ->visible($isPrivate)
+                    ->visible($hasClient)
                     ->schema([
                         TextEntry::make('client_name')
                             ->label(__('erp.projects.client_name'))

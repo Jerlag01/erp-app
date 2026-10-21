@@ -170,6 +170,8 @@ class InterventionReportResource extends Resource
             ->visible(fn (InterventionReport $record): bool => Gate::allows('review', $record))
             ->authorize(fn (InterventionReport $record): bool => Gate::allows('review', $record))
             ->modalDescription(__('erp.interventions.approve_help'))
+            // A PO number entered when the intervention was created is proposed.
+            ->fillForm(fn (InterventionReport $record): array => ['po_number' => $record->project?->poNumbers()->oldest('id')->value('number')])
             ->schema([
                 TextInput::make('po_number')
                     ->label(__('erp.interventions.po_number'))

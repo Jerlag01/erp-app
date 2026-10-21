@@ -169,13 +169,19 @@ class WorkSiteTest extends TestCase
     {
         $areaContact = WorkSiteContact::factory()->create(['first_name' => 'Anna', 'last_name' => 'Area']);
         $siteContact = WorkSiteContact::factory()->create(['first_name' => 'Sam', 'last_name' => 'Site']);
-        $area = WorkSiteArea::factory()->create(['work_site_contact_id' => $areaContact->id]);
+        $area = WorkSiteArea::factory()->hasAttached($areaContact, [], 'contacts')->create();
 
         $withOwn = WorkSite::factory()->for($area, 'area')->create(['work_site_contact_id' => $siteContact->id]);
         $withoutOwn = WorkSite::factory()->for($area, 'area')->create();
 
         $this->assertTrue($withOwn->effectiveContact()->is($siteContact));
         $this->assertTrue($withoutOwn->effectiveContact()->is($areaContact));
+
+        // An area can have several contact persons; a site without its own contact has them all.
+        $second = WorkSiteContact::factory()->create(['first_name' => 'Bert', 'last_name' => 'Area']);
+        $area->contacts()->attach($second);
+        $this->assertEqualsCanonicalizing([$areaContact->id, $second->id], $withoutOwn->fresh()->effectiveContacts()->pluck('id')->all());
+        $this->assertSame([$siteContact->id], $withOwn->fresh()->effectiveContacts()->pluck('id')->all());
     }
 
     #[Test]
@@ -223,7 +229,7 @@ class WorkSiteTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $contact = WorkSiteContact::factory()->create();
-        $area = WorkSiteArea::factory()->create(['work_site_contact_id' => $contact->id]);
+        $area = WorkSiteArea::factory()->hasAttached($contact, [], 'contacts')->create();
         WorkSite::factory()->for($area, 'area')->create();
 
         $this->assertFalse($admin->can('delete', $area));
@@ -249,7 +255,7 @@ class WorkSiteTest extends TestCase
     public function every_work_site_page_renders(): void
     {
         $admin = User::factory()->admin()->create();
-        $area = WorkSiteArea::factory()->create(['work_site_contact_id' => WorkSiteContact::factory()->create()->id]);
+        $area = WorkSiteArea::factory()->hasAttached(WorkSiteContact::factory(), [], 'contacts')->create();
         $site = WorkSite::factory()->for($area, 'area')->create(['images' => ['work-sites/a.jpg']]);
         $site->changeBuildingType(BuildingType::Ec, '2026-10-01', 'Upgrade');
         $site->remarks()->create(['body' => 'Toegang via achterpoort']);

@@ -6,14 +6,17 @@ use App\Enums\ChargingConnectivity;
 use App\Enums\ChargingStationType;
 use App\Enums\ChargingSystem;
 use App\Enums\NavigationGroup;
+use App\Enums\SiteLocationType;
 use App\Filament\Resources\ChargingStations\Pages\CreateChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\EditChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\ListChargingStations;
 use App\Filament\Resources\ChargingStations\Pages\ViewChargingStation;
 use App\Models\ChargingStation;
+use App\Models\Country;
 use App\Models\Project;
 use App\Models\WorkSite;
 use BackedEnum;
+use Closure;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
@@ -115,15 +118,47 @@ class ChargingStationResource extends Resource
         return ChargingStation::query()->whereNotNull($column)->distinct()->orderBy($column)->limit(50)->pluck($column)->all();
     }
 
+    /**
+     * The third-party client and its installation address, shown when the location is "Other".
+     *
+     * @return list<TextInput|Select>
+     */
+    public static function thirdPartyFields(Closure $isOther): array
+    {
+        return [
+            TextInput::make('client_name')->label(__('erp.charging.client_name'))->required($isOther)->visible($isOther)->maxLength(255)->columnSpan(3),
+            TextInput::make('client_company')->label(__('erp.fields.company'))->visible($isOther)->maxLength(255)->columnSpan(3),
+            TextInput::make('client_phone')->label(__('erp.fields.phone'))->tel()->visible($isOther)->maxLength(50)->columnSpan(3),
+            TextInput::make('client_email')->label(__('erp.fields.email'))->email()->visible($isOther)->maxLength(255)->columnSpan(3),
+            TextInput::make('street')->label(__('erp.charging.installation_street'))->required($isOther)->visible($isOther)->maxLength(150)->columnSpan(4),
+            TextInput::make('house_number')->label(__('erp.fields.house_number'))->visible($isOther)->maxLength(20)->columnSpan(1),
+            TextInput::make('addition')->label(__('erp.fields.addition'))->visible($isOther)->maxLength(20)->columnSpan(1),
+            TextInput::make('postal_code')->label(__('erp.fields.postal_code'))->required($isOther)->visible($isOther)->maxLength(20)->columnSpan(2),
+            TextInput::make('city')->label(__('erp.fields.city'))->required($isOther)->visible($isOther)->maxLength(100)->columnSpan(2),
+            Select::make('country_id')->label(__('erp.fields.country'))->options(fn (): array => Country::options())->default(fn (): ?int => Country::belgiumId())->searchable()->visible($isOther)->columnSpan(2),
+        ];
+    }
+
     public static function form(Schema $schema): Schema
     {
         $isCluster = fn (Get $get): bool => in_array($get('type'), [ChargingStationType::Cluster, ChargingStationType::Cluster->value], true);
+        $isOther = fn (Get $get): bool => in_array($get('location_type'), [SiteLocationType::Other, SiteLocationType::Other->value], true);
+        $isCow = fn (Get $get): bool => ! $isOther($get);
 
         return $schema->components([
             Section::make(__('erp.charging.sections.location'))
-                ->columns(3)
+                ->columns(6)
                 ->columnSpanFull()
                 ->schema([
+                    // "COW-code": only a site from the list. "Other": a third-party client with its own address.
+                    ToggleButtons::make('location_type')
+                        ->label(__('erp.charging.location_type'))
+                        ->options(SiteLocationType::class)
+                        ->default(SiteLocationType::Cow->value)
+                        ->inline()
+                        ->required()
+                        ->live()
+                        ->columnSpan(2),
                     Select::make('project_id')
                         ->label(__('erp.charging.project'))
                         ->helperText(__('erp.charging.project_help'))
@@ -131,19 +166,34 @@ class ChargingStationResource extends Resource
                         ->searchable()
                         ->live()
                         ->afterStateUpdated(function (mixed $state, Set $set): void {
-                            if ($site = Project::query()->find($state)?->work_site_id) {
-                                $set('work_site_id', $site);
+                            $project = Project::query()->find($state);
+
+                            if ($project?->isThirdParty()) {
+                                $set('location_type', SiteLocationType::Other->value);
+
+                                foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {
+                                    $set($field, $project->{$field});
+                                }
+                            } elseif ($project?->work_site_id) {
+                                $set('location_type', SiteLocationType::Cow->value);
+                                $set('work_site_id', $project->work_site_id);
                             }
-                        }),
+                        })
+                        ->columnSpan(2),
                     Select::make('work_site_id')
                         ->label(__('erp.charging.cow_code'))
                         ->options(fn (): array => self::siteOptions())
                         ->searchable()
-                        ->required()
-                        ->live(),
+                        ->required($isCow)
+                        ->visible($isCow)
+                        ->live()
+                        ->columnSpan(2),
                     Text::make(fn (Get $get): string => ($site = WorkSite::query()->find($get('work_site_id')))
                         ? __('erp.charging.address').': '.((new ChargingStation)->setRelation('workSite', $site)->address() ?? '—')
-                        : __('erp.charging.address_help')),
+                        : __('erp.charging.address_help'))
+                        ->visible($isCow)
+                        ->columnSpanFull(),
+                    ...self::thirdPartyFields($isOther),
                 ]),
             Section::make(__('erp.charging.sections.station'))
                 ->columns(4)
@@ -196,9 +246,15 @@ class ChargingStationResource extends Resource
                 ->columns(4)
                 ->columnSpanFull()
                 ->schema([
-                    TextEntry::make('workSite.cow_code')->label(__('erp.charging.cow_code'))->fontFamily(FontFamily::Mono)->weight(FontWeight::Bold),
+                    TextEntry::make('workSite.cow_code')->label(__('erp.charging.cow_code'))->fontFamily(FontFamily::Mono)->weight(FontWeight::Bold)->visible(fn (ChargingStation $record): bool => ! $record->isThirdParty()),
+                    TextEntry::make('client_name')
+                        ->label(__('erp.charging.third_party'))
+                        ->state(fn (ChargingStation $record): string => trim(implode(' · ', array_filter([$record->client_company, $record->client_name]))))
+                        ->helperText(fn (ChargingStation $record): ?string => trim(implode(' · ', array_filter([$record->client_phone, $record->client_email]))) ?: null)
+                        ->weight(FontWeight::Bold)
+                        ->visible(fn (ChargingStation $record): bool => $record->isThirdParty()),
                     TextEntry::make('address')->label(__('erp.charging.address'))->state(fn (ChargingStation $record): ?string => $record->address())->placeholder('—')->columnSpan(2),
-                    TextEntry::make('workSite.city')->label(__('erp.charging.city'))->placeholder('—'),
+                    TextEntry::make('city')->label(__('erp.charging.city'))->state(fn (ChargingStation $record): ?string => $record->cityName())->placeholder('—'),
                     TextEntry::make('project.reference')->label(__('erp.charging.project'))->placeholder('—'),
                 ]),
             Section::make(__('erp.charging.sections.station'))
@@ -251,7 +307,16 @@ class ChargingStationResource extends Resource
             ->defaultSort(fn (Builder $query) => $query->orderBy(WorkSite::query()->select('cow_code')->whereColumn('work_sites.id', 'charging_stations.work_site_id'))->orderBy('cluster_number')->orderBy('ace_number'))
             ->searchPlaceholder(__('erp.charging.search'))
             ->columns([
-                TextColumn::make('workSite.cow_code')->label(__('erp.charging.cow_code'))->fontFamily(FontFamily::Mono)->weight(FontWeight::Bold)->searchable()->description(fn (ChargingStation $record): ?string => $record->workSite?->city),
+                TextColumn::make('workSite.cow_code')
+                    ->label(__('erp.charging.cow_code'))
+                    ->state(fn (ChargingStation $record): ?string => $record->locationLabel())
+                    ->fontFamily(fn (ChargingStation $record): ?FontFamily => $record->isThirdParty() ? null : FontFamily::Mono)
+                    ->weight(FontWeight::Bold)
+                    ->searchable(query: fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query
+                        ->whereHas('workSite', fn (Builder $query) => $query->where('cow_code', 'like', '%'.addcslashes($search, '%_\\').'%'))
+                        ->orWhere('client_name', 'like', '%'.addcslashes($search, '%_\\').'%')
+                        ->orWhere('client_company', 'like', '%'.addcslashes($search, '%_\\').'%')))
+                    ->description(fn (ChargingStation $record): ?string => $record->isThirdParty() ? trim(__('erp.charging.third_party').' · '.$record->city, ' ·') : $record->workSite?->city),
                 TextColumn::make('ace_number')->label(__('erp.charging.ace_number'))->fontFamily(FontFamily::Mono)->searchable()->copyable()->placeholder('—'),
                 TextColumn::make('type')->label(__('erp.charging.type'))->badge()->color('gray')->description(fn (ChargingStation $record): ?string => $record->cluster_number ? __('erp.charging.cluster_short', ['number' => $record->cluster_number]) : null),
                 TextColumn::make('connectivity')->label(__('erp.charging.connectivity'))->placeholder('—')->toggleable(),

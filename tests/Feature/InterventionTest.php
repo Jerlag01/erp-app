@@ -272,4 +272,43 @@ class InterventionTest extends TestCase
 
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('closeIntervention');
     }
+
+    #[Test]
+    public function the_po_number_can_be_entered_on_creation_with_the_permission(): void
+    {
+        $site = WorkSite::factory()->create();
+        $category = ProjectCategory::query()->where('code', '600')->value('id');
+        $data = fn (string $wo): array => [
+            'project_category_id' => $category,
+            'work_site_id' => $site->id,
+            'work_order_number' => $wo,
+            'interventionCategories' => [$this->category('PREPARE')->id],
+            'intervention_subcategory_id' => $this->category('COLIBRI')->id,
+        ];
+
+        // Without "projects.intervention_po" the PO numbers are not offered.
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view', 'create']])->inTeam()->create());
+        Livewire::test(CreateProject::class)
+            ->fillForm($data('111111'))
+            ->assertSchemaComponentHidden('poNumbers');
+
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view', 'create', 'intervention_po']])->inTeam()->create());
+        Livewire::test(CreateProject::class)
+            ->fillForm($data('222222'))
+            ->assertSchemaComponentVisible('poNumbers')
+            ->fillForm(['poNumbers' => [['number' => '4500999999']]])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $project = Project::query()->where('work_order_number', '222222')->sole();
+        $this->assertSame(['4500999999'], $project->poNumbers()->pluck('number')->all());
+
+        // When approving, that PO number is proposed.
+        $report = InterventionReport::factory()->for($project)->create(['closed_by' => User::factory()->create()->id]);
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+        Livewire::test(ViewInterventionReport::class, ['record' => $report->getRouteKey()])
+            ->mountAction('approve')
+            ->assertSchemaStateSet(['po_number' => '4500999999']);
+    }
 }

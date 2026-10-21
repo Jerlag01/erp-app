@@ -49,19 +49,19 @@ class WorkSiteInfolist
                                     ->placeholder('—'),
                                 TextEntry::make('contact')
                                     ->label(__('erp.fields.contact_person'))
-                                    ->state(fn (WorkSite $record): ?string => $record->effectiveContact()?->label())
-                                    ->helperText(fn (WorkSite $record): ?string => $record->contact === null && $record->area?->contact ? __('erp.work_sites.contact_from_area') : null)
+                                    ->state(fn (WorkSite $record): ?string => $record->contactLabels())
+                                    ->helperText(fn (WorkSite $record): ?string => $record->contact === null && $record->area?->contacts->isNotEmpty() ? __('erp.work_sites.contact_from_area') : null)
                                     ->placeholder('—'),
                                 TextEntry::make('contact_phone')
                                     ->label(__('erp.fields.phone'))
-                                    ->state(fn (WorkSite $record): ?string => $record->effectiveContact()?->phone)
-                                    ->url(fn (WorkSite $record): ?string => filled($phone = $record->effectiveContact()?->phone) ? 'tel:'.preg_replace('/[^+\d]/', '', $phone) : null)
-                                    ->visible(fn (WorkSite $record): bool => filled($record->effectiveContact()?->phone)),
+                                    ->state(fn (WorkSite $record): ?string => $record->effectiveContacts()->pluck('phone')->filter()->implode(', ') ?: null)
+                                    ->url(fn (WorkSite $record): ?string => ($phones = $record->effectiveContacts()->pluck('phone')->filter())->count() === 1 ? 'tel:'.preg_replace('/[^+\d]/', '', $phones->first()) : null)
+                                    ->visible(fn (WorkSite $record): bool => $record->effectiveContacts()->pluck('phone')->filter()->isNotEmpty()),
                                 TextEntry::make('contact_email')
                                     ->label(__('erp.fields.email'))
-                                    ->state(fn (WorkSite $record): ?string => $record->effectiveContact()?->email)
-                                    ->url(fn (WorkSite $record): ?string => filled($email = $record->effectiveContact()?->email) ? "mailto:{$email}" : null)
-                                    ->visible(fn (WorkSite $record): bool => filled($record->effectiveContact()?->email)),
+                                    ->state(fn (WorkSite $record): ?string => $record->effectiveContacts()->pluck('email')->filter()->implode(', ') ?: null)
+                                    ->url(fn (WorkSite $record): ?string => ($emails = $record->effectiveContacts()->pluck('email')->filter())->isNotEmpty() ? 'mailto:'.$emails->implode(',') : null)
+                                    ->visible(fn (WorkSite $record): bool => $record->effectiveContacts()->pluck('email')->filter()->isNotEmpty()),
                             ]),
                         Section::make(__('erp.fields.address'))
                             ->columnSpan(['lg' => 2])

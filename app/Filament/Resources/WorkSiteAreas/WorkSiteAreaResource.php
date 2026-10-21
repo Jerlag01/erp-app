@@ -59,10 +59,11 @@ class WorkSiteAreaResource extends Resource
                 ->required()
                 ->maxLength(100)
                 ->unique(ignoreRecord: true),
-            Select::make('work_site_contact_id')
-                ->label(__('erp.fields.contact_person'))
+            Select::make('contacts')
+                ->label(__('erp.fields.contact_persons'))
                 ->helperText(__('erp.help.area_contact'))
-                ->relationship('contact', 'last_name')
+                ->relationship('contacts', 'last_name')
+                ->multiple()
                 ->getOptionLabelFromRecordUsing(fn (WorkSiteContact $record): string => $record->label())
                 ->searchable(['first_name', 'last_name', 'company'])
                 ->preload()
@@ -77,7 +78,7 @@ class WorkSiteAreaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('contact')->withCount('workSites'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('contacts')->withCount('workSites'))
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')
@@ -86,10 +87,10 @@ class WorkSiteAreaResource extends Resource
                     ->weight('bold')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('contact')
-                    ->label(__('erp.fields.contact_person'))
-                    ->state(fn (WorkSiteArea $record): ?string => $record->contact?->label())
-                    ->description(fn (WorkSiteArea $record): ?string => $record->contact?->phone ?? $record->contact?->email)
+                TextColumn::make('contacts')
+                    ->label(__('erp.fields.contact_persons'))
+                    ->state(fn (WorkSiteArea $record): array => $record->contacts->map(fn (WorkSiteContact $contact): string => trim($contact->label().' · '.($contact->phone ?? $contact->email ?? ''), ' ·'))->all())
+                    ->listWithLineBreaks()
                     ->placeholder('—'),
                 TextColumn::make('work_sites_count')
                     ->label(__('erp.resources.work_site.plural'))

@@ -264,7 +264,7 @@ class ClientPortalTest extends TestCase
     {
         $contact = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Janssens', 'company' => 'Proximus']);
         $ownSite = WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_contact_id' => $contact->id]);
-        $areaSite = WorkSite::factory()->create(['cow_code' => '02E23', 'work_site_contact_id' => null, 'work_site_area_id' => WorkSiteArea::factory()->create(['work_site_contact_id' => $contact->id])->id]);
+        $areaSite = WorkSite::factory()->create(['cow_code' => '02E23', 'work_site_contact_id' => null, 'work_site_area_id' => WorkSiteArea::factory()->hasAttached($contact, [], 'contacts')->create()->id]);
         $otherSite = WorkSite::factory()->create(['cow_code' => '03XYZ', 'work_site_contact_id' => WorkSiteContact::factory()->create()->id]);
 
         $atOwnSite = Project::factory()->inCategory('604')->for($ownSite)->create();

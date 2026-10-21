@@ -6,6 +6,7 @@ use Database\Factories\WorkSiteContactFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -18,11 +19,11 @@ class WorkSiteContact extends Model
     use HasFactory;
 
     /**
-     * @return HasMany<WorkSiteArea, $this>
+     * @return BelongsToMany<WorkSiteArea, $this>
      */
-    public function areas(): HasMany
+    public function areas(): BelongsToMany
     {
-        return $this->hasMany(WorkSiteArea::class);
+        return $this->belongsToMany(WorkSiteArea::class, 'work_site_area_contact')->withTimestamps();
     }
 
     /**

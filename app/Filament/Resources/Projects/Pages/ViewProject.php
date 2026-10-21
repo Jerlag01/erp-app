@@ -165,8 +165,8 @@ class ViewProject extends ViewRecord
                 ->visible(fn (Project $record): bool => Gate::allows('requestGpw', $record))
                 ->authorize(fn (Project $record): bool => Gate::allows('requestGpw', $record))
                 ->modalHeading(__('erp.gpw.request_heading'))
-                ->modalDescription(fn (Project $record): string => ($contact = RequestGpw::contactFor($record)) && filled($contact->email)
-                    ? __('erp.gpw.request_help', ['name' => $contact->label(), 'email' => $contact->email, 'language' => ['nl' => 'Nederlands', 'fr' => 'Français', 'en' => 'English'][$contact->preferredLocale()] ?? $contact->preferredLocale()])
+                ->modalDescription(fn (Project $record): string => ($recipients = RequestGpw::recipientsText($record))
+                    ? __('erp.gpw.request_help', ['recipients' => $recipients])
                     : __('erp.gpw.errors.no_contact'))
                 ->modalSubmitActionLabel(__('erp.gpw.send'))
                 ->schema([

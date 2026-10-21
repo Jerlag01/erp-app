@@ -21,7 +21,7 @@ class ProjectProgress
 
     public const STEPS = [
         1 => 'request', 2 => 'site_visit', 3 => 'offer_sent', 4 => 'po_received', 5 => 'site_preparation',
-        6 => 'station_delivery', 7 => 'levelling', 8 => 'acx_earthing', 9 => 'commissioning', 10 => 'outgoing_connected',
+        6 => 'station_delivery', 7 => 'cabling', 8 => 'acx_earthing', 9 => 'commissioning', 10 => 'outgoing_connected',
         11 => 'as_built', 12 => 'inspection_normec', 13 => 'elastoflex', 14 => 'handed_over',
     ];
 

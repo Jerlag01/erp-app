@@ -4,14 +4,17 @@ namespace Tests\Feature;
 
 use App\Enums\ChargingConnectivity;
 use App\Enums\ChargingStationType;
+use App\Enums\SiteLocationType;
 use App\Filament\Admin\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\ChargingStations\Pages\CreateChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\EditChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\ListChargingStations;
+use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Routers\Pages\CreateRouter;
 use App\Filament\Resources\Routers\Pages\ListRouters;
 use App\Models\ChargingStation;
 use App\Models\Project;
+use App\Models\ProjectCategory;
 use App\Models\Role;
 use App\Models\Router;
 use App\Models\User;
@@ -244,5 +247,59 @@ class ChargingTest extends TestCase
         // Only the explicit permissions are stored on an administrator role.
         $role = Role::factory()->create(['is_admin' => true, 'permissions' => ['vehicles' => ['view'], 'routers' => ['view', 'secrets']]]);
         $this->assertSame(['routers' => ['secrets']], $role->permissions);
+    }
+
+    #[Test]
+    public function a_station_and_a_608_project_can_be_at_a_third_party_client(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        $category = ProjectCategory::query()->where('code', '608')->value('id');
+
+        // The project: "Other" asks for the client and installation address instead of a COW site.
+        Livewire::test(CreateProject::class)
+            ->fillForm(['project_category_id' => $category, 'location_type' => SiteLocationType::Other->value])
+            ->assertSchemaComponentHidden('work_site_id')
+            ->call('create')
+            ->assertHasFormErrors(['client_name' => 'required', 'street' => 'required', 'city' => 'required']);
+
+        Livewire::test(CreateProject::class)
+            ->fillForm([
+                'project_category_id' => $category, 'location_type' => SiteLocationType::Other->value, 'status' => 'offer',
+                'client_name' => 'Piet Peeters', 'client_company' => 'Fluvius', 'street' => 'Brusselsesteenweg', 'house_number' => '199',
+                'postal_code' => '9090', 'city' => 'Melle',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $project = Project::query()->latest('id')->first();
+        $this->assertTrue($project->isThirdParty());
+        $this->assertSame('Fluvius', $project->client_company);
+        $this->assertNull($project->work_site_id);
+        $this->assertMatchesRegularExpression('/^608-\d{3}$/', $project->reference);
+
+        // A station opened from that project takes over the client and its address.
+        Livewire::test(CreateChargingStation::class)
+            ->assertSchemaStateSet(['location_type' => SiteLocationType::Cow])
+            ->fillForm(['project_id' => $project->id])
+            ->assertSchemaStateSet(['location_type' => SiteLocationType::Other, 'client_company' => 'Fluvius', 'city' => 'Melle'])
+            ->fillForm(['ace_number' => 'ACE0000001', 'type' => 'standalone'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $station = ChargingStation::query()->where('ace_number', 'ACE0000001')->sole();
+        $this->assertNull($station->work_site_id);
+        $this->assertSame('Brusselsesteenweg 199, 9090 Melle', $station->address());
+        $this->assertSame('Fluvius', $station->locationLabel());
+        Livewire::test(ListChargingStations::class)->assertCanSeeTableRecords([$station])->assertSee('Fluvius');
+
+        // With "COW-code" only a site from the list is accepted, and third-party details are dropped.
+        $site = $this->site();
+        $station->update(['location_type' => SiteLocationType::Cow, 'work_site_id' => $site->id]);
+        $this->assertNull($station->fresh()->client_company);
+        $this->assertSame('02GAM', $station->fresh()->locationLabel());
+        Livewire::test(CreateChargingStation::class)
+            ->fillForm(['location_type' => 'cow', 'ace_number' => 'ACE0000002', 'type' => 'standalone'])
+            ->call('create')
+            ->assertHasFormErrors(['work_site_id' => 'required']);
     }
 }

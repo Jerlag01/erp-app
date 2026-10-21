@@ -17,9 +17,9 @@ use Illuminate\View\View;
  */
 class GpwDecisionController
 {
-    public function show(GpwRequest $gpwRequest): View
+    public function show(Request $request, GpwRequest $gpwRequest): View
     {
-        App::setLocale($gpwRequest->locale);
+        App::setLocale($this->locale($request, $gpwRequest));
         $gpwRequest->loadMissing('project.workSite', 'requester');
 
         return view('gpw.decision', ['gpw' => $gpwRequest]);
@@ -27,7 +27,7 @@ class GpwDecisionController
 
     public function decide(Request $request, GpwRequest $gpwRequest, DecideGpw $decide): RedirectResponse
     {
-        App::setLocale($gpwRequest->locale);
+        App::setLocale($this->locale($request, $gpwRequest));
         $data = $request->validate([
             'decision' => ['required', 'in:approve,reject'],
             'note' => ['nullable', 'string', 'max:2000', 'required_if:decision,reject'],
@@ -42,5 +42,13 @@ class GpwDecisionController
         }
 
         return redirect()->to($request->fullUrl());
+    }
+
+    /**
+     * The language of the contact the link was mailed to (part of the signed link).
+     */
+    protected function locale(Request $request, GpwRequest $gpwRequest): string
+    {
+        return in_array($request->query('lang'), ['nl', 'fr', 'en'], true) ? $request->query('lang') : $gpwRequest->locale;
     }
 }

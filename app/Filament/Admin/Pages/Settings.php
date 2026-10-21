@@ -7,6 +7,7 @@ use App\Enums\ProjectStatus;
 use App\Http\Controllers\PeppolInboundController;
 use App\Models\Client;
 use App\Models\Employee;
+use App\Support\EmployeeBanner;
 use App\Support\MobileApp;
 use App\Support\Modules;
 use App\Support\Settings as SiteSettings;
@@ -276,6 +277,26 @@ class Settings extends Page
                     TextInput::make('general.company_name')
                         ->label(__('erp.settings.fields.company_name'))
                         ->maxLength(150),
+                ]),
+            Section::make(__('erp.settings.sections.banner'))
+                ->description(__('erp.settings.help.banner'))
+                ->columns(2)
+                ->schema([
+                    Toggle::make('banner.enabled')
+                        ->label(__('erp.settings.fields.banner_enabled'))
+                        ->live(),
+                    Select::make('banner.color')
+                        ->label(__('erp.settings.fields.banner_color'))
+                        ->options(collect(EmployeeBanner::COLORS)->mapWithKeys(fn (string $rgb, string $color): array => [$color => __("erp.settings.banner_colors.{$color}")])->all())
+                        ->default('info')
+                        ->required()
+                        ->selectablePlaceholder(false),
+                    ...array_map(fn (string $locale): TextInput => TextInput::make("banner.message_{$locale}")
+                        ->label(__("erp.settings.fields.banner_message_{$locale}"))
+                        ->helperText($locale === 'nl' ? __('erp.settings.help.banner_message') : null)
+                        ->required(fn (Get $get): bool => $locale === 'nl' && (bool) $get('banner.enabled'))
+                        ->maxLength(200)
+                        ->columnSpanFull(), ['nl', 'fr', 'en']),
                 ]),
             Section::make(__('erp.settings.sections.reminders'))
                 ->schema([

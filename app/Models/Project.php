@@ -6,6 +6,7 @@ use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
+use App\Enums\SiteLocationType;
 use App\Support\ProjectProgress;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\DB;
  * teams assigned to it can see it (while the teams module is on).
  */
 #[Fillable([
-    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'short_description', 'status',
+    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'location_type', 'short_description', 'status',
     'intervention_subcategory_id', 'intervention_phase', 'intervention_tags',
     'client_name', 'client_company', 'client_email', 'client_phone',
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by', 'source_project_id',
@@ -323,10 +324,30 @@ class Project extends Model
     }
 
     /**
+     * Whether projects of this category can be at a third-party client: the charging stations category (608).
+     */
+    public static function allowsThirdParty(?ProjectCategory $category): bool
+    {
+        return $category !== null && $category->code === settings()->get('charging.project_category', '608');
+    }
+
+    /**
+     * At a third-party client with its own address, instead of a COW site.
+     */
+    public function isThirdParty(): bool
+    {
+        return $this->location_type === SiteLocationType::Other;
+    }
+
+    /**
      * The client line for private projects, the short description for the others.
      */
     public function subtitle(): ?string
     {
+        if ($this->isThirdParty()) {
+            return trim(implode(' · ', array_filter([$this->client_company ?: $this->client_name, $this->short_description]))) ?: null;
+        }
+
         if ($this->isIntervention()) {
             return trim(implode(' · ', array_filter([filled($this->work_order_number) ? 'WO '.$this->work_order_number : null, $this->short_description]))) ?: null;
         }
@@ -362,11 +383,19 @@ class Project extends Model
                 $project->work_site_id = null;
             }
 
+            // Only charging (608) projects can be at a third-party client instead of a COW site.
+            if (! self::allowsThirdParty($category)) {
+                $project->location_type = SiteLocationType::Cow;
+            } elseif ($project->isThirdParty()) {
+                $project->work_site_id = null;
+                $project->cow_code = null;
+            }
+
             if (! $category->has_short_description) {
                 $project->short_description = null;
             }
 
-            if ($project->isDirty('work_site_id') || blank($project->cow_code)) {
+            if (! $project->isThirdParty() && ($project->isDirty('work_site_id') || blank($project->cow_code))) {
                 $project->cow_code = $project->workSite?->cow_code ?? $project->cow_code;
             }
 
@@ -404,6 +433,7 @@ class Project extends Model
         return [
             'number' => 'integer',
             'status' => ProjectStatus::class,
+            'location_type' => SiteLocationType::class,
             'intervention_tags' => 'array',
             'archived_at' => 'datetime',
         ];

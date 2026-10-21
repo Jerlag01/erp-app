@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Enums\InterventionCategoryKind;
 use App\Enums\ProjectStatus;
+use App\Enums\SiteLocationType;
 use App\Filament\Admin\Resources\ProjectCategories\ProjectCategoryResource;
 use App\Models\Country;
 use App\Models\InterventionCategory;
@@ -16,6 +17,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -26,10 +28,24 @@ use Illuminate\Validation\Rule;
 
 class ProjectForm
 {
+    /**
+     * PO numbers on a new intervention (600): administrators and "projects.intervention_po".
+     */
+    public static function mayAddInterventionPo(): bool
+    {
+        $user = auth()->user();
+
+        return $user !== null && ($user->isAdmin() || $user->hasPermission('projects.intervention_po'));
+    }
+
     public static function configure(Schema $schema): Schema
     {
         $category = fn (Get $get): ?ProjectCategory => self::category($get('project_category_id'));
-        $usesWorkSite = fn (Get $get): bool => (bool) $category($get)?->numbering->usesWorkSite();
+        // 608 (charging) projects can be at a third-party client with its own address instead of a COW site.
+        $allowsThirdParty = fn (Get $get): bool => Project::allowsThirdParty($category($get));
+        $isThirdParty = fn (Get $get): bool => $allowsThirdParty($get) && in_array($get('location_type'), [SiteLocationType::Other, SiteLocationType::Other->value], true);
+        $usesWorkSite = fn (Get $get): bool => (bool) $category($get)?->numbering->usesWorkSite() && ! $isThirdParty($get);
+        $hasClient = fn (Get $get): bool => (bool) $category($get)?->numbering->hasClient() || $isThirdParty($get);
         $isIntervention = fn (Get $get): bool => (bool) $category($get)?->numbering->isIntervention();
         $interventionFields = fn (Get $get): bool => $isIntervention($get) && modules()->interventions();
         $subcategory = fn (Get $get): ?InterventionCategory => filled($get('intervention_subcategory_id')) ? InterventionCategory::find($get('intervention_subcategory_id')) : null;
@@ -90,6 +106,14 @@ class ProjectForm
                                     ->maxValue(999999)
                                     ->required(fn (string $operation): bool => $operation === 'edit')
                                     ->rule(fn (Get $get, ?Project $record) => Rule::unique('projects', 'number')->where('project_category_id', $get('project_category_id'))->ignore($record?->id)),
+                                ToggleButtons::make('location_type')
+                                    ->label(__('erp.projects.location_type'))
+                                    ->helperText(__('erp.projects.location_type_help'))
+                                    ->options(SiteLocationType::class)
+                                    ->default(SiteLocationType::Cow->value)
+                                    ->inline()
+                                    ->live()
+                                    ->visible($allowsThirdParty),
                                 Select::make('work_site_id')
                                     ->label(__('erp.resources.work_site.singular'))
                                     ->helperText(__('erp.projects.work_site_help'))
@@ -169,11 +193,13 @@ class ProjectForm
                             ->options(fn (Get $get): array => collect($subcategory($get)?->tagList() ?? [])->mapWithKeys(fn (string $tag): array => [$tag => $tag])->all())
                             ->visible(fn (Get $get): bool => (bool) $subcategory($get)?->tagList()),
                     ]),
-                // Interventions get their PO number when an administrator approves them.
+                // Interventions get their PO number when an administrator approves them; administrators and
+                // "projects.intervention_po" may already enter it when creating the intervention.
                 Section::make(__('erp.projects.po_numbers'))
-                    ->description(__('erp.projects.po_numbers_help'))
+                    ->description(fn (Get $get): string => $interventionFields($get) ? __('erp.projects.intervention_po_help') : __('erp.projects.po_numbers_help'))
                     ->columnSpanFull()
-                    ->visible(fn (Get $get): bool => (bool) $category($get)?->numbering->hasPoNumbers() && ! $interventionFields($get))
+                    ->visible(fn (Get $get, string $operation): bool => (bool) $category($get)?->numbering->hasPoNumbers()
+                        && (! $interventionFields($get) || ($operation === 'create' && self::mayAddInterventionPo())))
                     ->schema([
                         Repeater::make('poNumbers')
                             ->hiddenLabel()
@@ -192,15 +218,15 @@ class ProjectForm
                             ->addActionLabel(__('erp.projects.add_po_number'))
                             ->grid(['md' => 2, 'xl' => 3]),
                     ]),
-                Section::make(__('erp.projects.client'))
-                    ->description(__('erp.projects.client_help'))
+                Section::make(fn (Get $get): string => $isThirdParty($get) ? __('erp.projects.third_party') : __('erp.projects.client'))
+                    ->description(fn (Get $get): string => $isThirdParty($get) ? __('erp.projects.third_party_help') : __('erp.projects.client_help'))
                     ->columnSpanFull()
                     ->columns(6)
-                    ->visible(fn (Get $get): bool => (bool) $category($get)?->numbering->hasClient())
+                    ->visible($hasClient)
                     ->schema([
                         TextInput::make('client_name')
                             ->label(__('erp.projects.client_name'))
-                            ->required(fn (Get $get): bool => (bool) $category($get)?->numbering->hasClient())
+                            ->required($hasClient)
                             ->maxLength(255)
                             ->columnSpan(3),
                         TextInput::make('client_company')
@@ -219,6 +245,7 @@ class ProjectForm
                             ->columnSpan(3),
                         TextInput::make('street')
                             ->label(__('erp.fields.street_only'))
+                            ->required($isThirdParty)
                             ->maxLength(150)
                             ->columnSpan(4),
                         TextInput::make('house_number')
@@ -231,10 +258,12 @@ class ProjectForm
                             ->columnSpan(1),
                         TextInput::make('postal_code')
                             ->label(__('erp.fields.postal_code'))
+                            ->required($isThirdParty)
                             ->maxLength(20)
                             ->columnSpan(2),
                         TextInput::make('city')
                             ->label(__('erp.fields.city'))
+                            ->required($isThirdParty)
                             ->maxLength(100)
                             ->columnSpan(2),
                         Select::make('country_id')
@@ -292,7 +321,11 @@ class ProjectForm
             $data['intervention_tags'] = array_values(array_intersect((array) ($data['intervention_tags'] ?? []), $subcategory?->tagList() ?? [])) ?: null;
         }
 
-        if ($category && ! $category->numbering->hasClient()) {
+        // A 608 project at a third-party client keeps its client and installation address.
+        $thirdParty = Project::allowsThirdParty($category)
+            && in_array($data['location_type'] ?? $project?->location_type, [SiteLocationType::Other, SiteLocationType::Other->value], true);
+
+        if ($category && ! $category->numbering->hasClient() && ! $thirdParty) {
             foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {
                 $data[$field] = null;
             }

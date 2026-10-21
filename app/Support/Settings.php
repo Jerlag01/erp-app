@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
+    public const GROUPS = ['general', 'banner', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -44,6 +44,14 @@ class Settings
                 'name' => 'PI ERP',
                 'privacy_company' => null,
                 'privacy_email' => null,
+            ],
+            // A message for the employees, in the top bar of their side of the platform.
+            'banner' => [
+                'enabled' => false,
+                'color' => 'info',
+                'message_nl' => null,
+                'message_fr' => null,
+                'message_en' => null,
             ],
             'general' => [
                 'site_name' => 'ERP',

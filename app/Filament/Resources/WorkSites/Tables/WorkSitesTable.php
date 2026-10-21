@@ -28,7 +28,7 @@ class WorkSitesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['country', 'area.contact', 'contact']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['country', 'area.contacts', 'contact']))
             ->defaultSort('cow_code')
             ->searchPlaceholder(__('erp.work_sites.search'))
             ->columns([
@@ -78,7 +78,7 @@ class WorkSitesTable
                     ->sortable(),
                 TextColumn::make('contact')
                     ->label(__('erp.fields.contact_person'))
-                    ->state(fn (WorkSite $record): ?string => $record->effectiveContact()?->label())
+                    ->state(fn (WorkSite $record): ?string => $record->contactLabels())
                     ->description(fn (WorkSite $record): ?string => $record->effectiveContact()?->phone)
                     ->placeholder('—')
                     ->toggleable(),

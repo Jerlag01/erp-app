@@ -6,24 +6,26 @@ use Database\Factories\WorkSiteAreaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * A region the work sites are organised by, with its own contact person.
+ * A region the work sites are organised by, with its own contact persons (one or more).
  */
-#[Fillable(['name', 'description', 'work_site_contact_id'])]
+#[Fillable(['name', 'description'])]
 class WorkSiteArea extends Model
 {
     /** @use HasFactory<WorkSiteAreaFactory> */
     use HasFactory;
 
     /**
-     * @return BelongsTo<WorkSiteContact, $this>
+     * The area's contact persons, for its sites without a contact of their own.
+     *
+     * @return BelongsToMany<WorkSiteContact, $this>
      */
-    public function contact(): BelongsTo
+    public function contacts(): BelongsToMany
     {
-        return $this->belongsTo(WorkSiteContact::class, 'work_site_contact_id');
+        return $this->belongsToMany(WorkSiteContact::class, 'work_site_area_contact')->withTimestamps()->orderBy('first_name')->orderBy('last_name');
     }
 
     /**

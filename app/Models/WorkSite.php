@@ -6,6 +6,7 @@ use App\Enums\BuildingType;
 use App\Models\Concerns\DeletesStoredFiles;
 use Database\Factories\WorkSiteFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -71,7 +72,7 @@ class WorkSite extends Model
     }
 
     /**
-     * The site's own contact person (see effectiveContact() for the fallback to the area).
+     * The site's own contact person (see effectiveContacts() for the fallback to the area).
      *
      * @return BelongsTo<WorkSiteContact, $this>
      */
@@ -97,11 +98,33 @@ class WorkSite extends Model
     }
 
     /**
-     * The site's own contact person, or else the contact person of its area.
+     * The site's own contact person, or else the contact persons of its area.
+     *
+     * @return Collection<int, WorkSiteContact>
+     */
+    public function effectiveContacts(): Collection
+    {
+        if ($this->contact) {
+            return new Collection([$this->contact]);
+        }
+
+        return $this->area?->contacts ?? new Collection;
+    }
+
+    /**
+     * The first of effectiveContacts().
      */
     public function effectiveContact(): ?WorkSiteContact
     {
-        return $this->contact ?? $this->area?->contact;
+        return $this->effectiveContacts()->first();
+    }
+
+    /**
+     * "Jan Peeters (Proximus), An Claes", for lists and infolists.
+     */
+    public function contactLabels(): ?string
+    {
+        return $this->effectiveContacts()->map(fn (WorkSiteContact $contact): string => $contact->label())->implode(', ') ?: null;
     }
 
     public function isDecommissioned(): bool

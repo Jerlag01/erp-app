@@ -73,7 +73,7 @@ class ClientUser extends Authenticatable implements FilamentUser, HasLocalePrefe
 
     /**
      * Ids of the COW sites whose contact person is this user's contact: the site's own contact, or the
-     * area's contact for a site without one (as WorkSite::effectiveContact()).
+     * area's contacts for a site without one (as WorkSite::effectiveContacts()).
      *
      * @return Builder<WorkSite>
      */
@@ -88,7 +88,7 @@ class ClientUser extends Authenticatable implements FilamentUser, HasLocalePrefe
                 ->where('work_site_contact_id', $contactId)
                 ->orWhere(fn (Builder $query) => $query
                     ->whereNull('work_site_contact_id')
-                    ->whereHas('area', fn (Builder $query) => $query->where('work_site_contact_id', $contactId))));
+                    ->whereHas('area.contacts', fn (Builder $query) => $query->whereKey($contactId))));
     }
 
     /**

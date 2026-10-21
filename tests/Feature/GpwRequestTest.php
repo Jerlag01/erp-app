@@ -19,6 +19,7 @@ use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
+use App\Models\WorkSiteArea;
 use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
 use Filament\Facades\Filament;
@@ -233,5 +234,36 @@ class GpwRequestTest extends TestCase
         $this->get(URL::temporarySignedRoute('gpw.decide', now()->subMinute(), ['gpwRequest' => $gpw->id]))->assertForbidden();
         $this->post(route('gpw.decide', $gpw), ['decision' => 'approve'])->assertForbidden();
         $this->assertTrue($gpw->fresh()->isPending());
+    }
+
+    #[Test]
+    public function every_contact_of_the_area_gets_the_request_in_their_own_language(): void
+    {
+        Mail::fake();
+        $dutch = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Peeters', 'email' => 'marc@proximus.example', 'locale' => 'nl']);
+        $french = WorkSiteContact::factory()->create(['first_name' => 'Sophie', 'last_name' => 'Dubois', 'email' => 'sophie@proximus.example', 'locale' => 'fr']);
+        $noMail = WorkSiteContact::factory()->create(['email' => null]);
+        $area = WorkSiteArea::factory()->create();
+        $area->contacts()->attach([$dutch->id, $french->id, $noMail->id]);
+        $site = WorkSite::factory()->create(['work_site_contact_id' => null, 'work_site_area_id' => $area->id]);
+        $project = Project::factory()->inCategory('610')->for($site)->create(['status' => ProjectStatus::ToBeExecuted]);
+        $requester = $this->requester($project, email: 'jan@power.example');
+
+        $gpw = $this->gpw($project, $requester);
+
+        $this->assertSame('marc@proximus.example, sophie@proximus.example', $gpw->contact_email);
+        Mail::assertSent(SystemMail::class, 2);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('marc@proximus.example') && $mail->hasCc('jan@power.example') && str_starts_with($mail->rendered['subject'], 'GPW-aanvraag'));
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('sophie@proximus.example') && ! $mail->hasCc('jan@power.example') && str_starts_with($mail->rendered['subject'], 'Demande de GPW'));
+
+        // The French contact's link opens the page in French.
+        $this->get(RequestGpw::decisionUrl($gpw, 'fr'))->assertOk()->assertSee('Approuver');
+        $this->get(RequestGpw::decisionUrl($gpw, 'nl'))->assertOk()->assertSee('Goedkeuren');
+
+        // A client user linked to either contact sees the project.
+        $client = ClientUser::factory()->withPermissions([ClientPortal::PROJECTS, ClientPortal::GPW])->create(['work_site_contact_id' => $french->id]);
+        $this->actingAs($client, ClientPortal::GUARD);
+        Filament::setCurrentPanel(ClientPortal::PANEL);
+        Livewire::test(ListClientGpwRequests::class)->assertCanSeeTableRecords([$gpw]);
     }
 }

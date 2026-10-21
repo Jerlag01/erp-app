@@ -34,7 +34,8 @@ class AppPanelProvider extends PanelProvider
     {
         return $this->configureErpPanel($panel, 'app', '', 'ERP')
             ->default()
-            // The idea/complaint box sits in the top bar, left of the search field.
+            // The administrators' message and the idea/complaint box sit in the top bar, left of the search field.
+            ->renderHook(PanelsRenderHook::GLOBAL_SEARCH_BEFORE, fn () => view('filament.app.banner'))
             ->renderHook(PanelsRenderHook::GLOBAL_SEARCH_BEFORE, fn () => view('filament.app.suggestion-link'))
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')

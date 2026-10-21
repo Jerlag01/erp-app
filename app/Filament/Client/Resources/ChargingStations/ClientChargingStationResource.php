@@ -77,7 +77,8 @@ class ClientChargingStationResource extends ClientResource
                     ->label(__('erp.client_portal.cow_code'))
                     ->fontFamily(FontFamily::Mono)
                     ->weight(FontWeight::Bold)
-                    ->description(fn (ChargingStation $record): ?string => $record->workSite?->city)
+                    ->state(fn (ChargingStation $record): ?string => $record->locationLabel())
+                    ->description(fn (ChargingStation $record): ?string => $record->cityName())
                     ->searchable()
                     ->placeholder('—'),
                 TextColumn::make('project.reference')

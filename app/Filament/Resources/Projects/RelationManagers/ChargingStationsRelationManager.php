@@ -53,7 +53,7 @@ class ChargingStationsRelationManager extends RelationManager
             ->recordUrl(fn (ChargingStation $record): string => ChargingStationResource::getUrl('view', ['record' => $record]))
             ->emptyStateHeading(__('erp.charging.no_stations'))
             ->columns([
-                TextColumn::make('workSite.cow_code')->label(__('erp.charging.cow_code'))->fontFamily(FontFamily::Mono),
+                TextColumn::make('workSite.cow_code')->label(__('erp.charging.cow_code'))->state(fn (ChargingStation $record): ?string => $record->locationLabel())->description(fn (ChargingStation $record): ?string => $record->cityName()),
                 TextColumn::make('ace_number')->label(__('erp.charging.ace_number'))->fontFamily(FontFamily::Mono)->placeholder('—'),
                 TextColumn::make('type')->label(__('erp.charging.type'))->badge()->color('gray'),
                 TextColumn::make('cluster_number')->label(__('erp.charging.cluster_number'))->placeholder('—'),
