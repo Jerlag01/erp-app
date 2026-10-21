@@ -161,6 +161,10 @@ return [
             'label' => 'Dénudage de câbles',
             'help' => 'Suivi du dénudage de câbles : par ligne le chantier, qui, les heures et les pesées avant et après, avec totaux calculés et un aperçu PDF.',
         ],
+        'announcements' => [
+            'label' => 'Annonces',
+            'help' => 'Une courte annonce pour tous les employés dans la barre du haut, à gauche de la boîte à idées. Les employés ayant le droit adéquat la modifient.',
+        ],
         'toolbox' => [
             'label' => 'Toolbox meetings',
             'help' => 'Instructions de sécurité avec texte (images n\'importe où) et pièces jointes. Chaque employé les lit entièrement et les signe ; avec une liste de présence PDF et un suivi.',
@@ -438,6 +442,7 @@ return [
     ],
     'permissions' => [
         'areas' => [
+            'announcements' => 'Annonces',
             'toolbox' => 'Toolbox meetings',
             'teams' => 'Équipes',
             'vehicles' => 'Véhicules',
@@ -514,12 +519,6 @@ return [
         ],
     ],
     'settings' => [
-        'banner_colors' => [
-            'info' => 'Bleu (info)',
-            'success' => 'Vert',
-            'warning' => 'Orange (attention)',
-            'danger' => 'Rouge (urgent)',
-        ],
         'title' => 'Paramètres',
         'saved' => 'Paramètres enregistrés',
         'tabs' => [
@@ -534,7 +533,6 @@ return [
             'timesheets' => 'Prestations',
         ],
         'sections' => [
-            'banner' => 'Message pour les employés',
             'mobile_app_privacy' => 'Politique de confidentialité',
             'mobile_app_message' => 'Message sur le téléphone',
             'mobile_app' => 'Application Android',
@@ -560,11 +558,6 @@ return [
             'timesheet_mail' => 'E-mail hebdomadaire',
         ],
         'fields' => [
-            'banner_enabled' => 'Afficher le message',
-            'banner_color' => 'Couleur',
-            'banner_message_nl' => 'Message (néerlandais)',
-            'banner_message_fr' => 'Message (français)',
-            'banner_message_en' => 'Message (anglais)',
             'mobile_app_name' => 'Nom de l\'application',
             'mobile_app_privacy_email' => 'Contact vie privée',
             'mobile_app_privacy_company' => 'Responsable du traitement',
@@ -667,8 +660,6 @@ return [
             'timesheet_mobility_rate' => 'Indemnité de mobilité',
         ],
         'help' => [
-            'banner' => 'Un message dans la barre du haut côté employés, à gauche de la boîte à idées. Visible uniquement lorsqu\'il est activé.',
-            'banner_message' => '200 caractères maximum. Sans traduction, les employés francophones et anglophones voient le texte néerlandais.',
             'mobile_app_privacy' => 'La politique de confidentialité de l\'application est publique (aussi pour Google Play) :',
             'mobile_app_privacy_email' => 'Adresse e-mail pour les questions sur la vie privée et les droits. Vide = l\'adresse e-mail des Finances, sinon l\'administration.',
             'mobile_app_privacy_company' => 'Nom, adresse et numéro d\'entreprise. Vide = le bloc entreprise des documents batteries (gris).',
@@ -2401,6 +2392,26 @@ return [
             'charging_secrets' => 'Affiche aussi le mot de passe, le code de récupération et la clé de licence des bornes.',
             'routers' => 'Routeurs 4G par site COW, sans identifiants.',
             'router_secrets' => 'Affiche aussi le nom d\'utilisateur, le mot de passe et le fichier VPN des routeurs.',
+        ],
+    ],
+    'announcements' => [
+        'title' => 'Annonce',
+        'help' => 'Un court message pour tous les employés, dans la barre du haut à gauche de la boîte à idées. Visible uniquement lorsqu\'il est activé.',
+        'enabled' => 'Afficher l\'annonce',
+        'color' => 'Couleur',
+        'message_nl' => 'Message (néerlandais)',
+        'message_fr' => 'Message (français)',
+        'message_en' => 'Message (anglais)',
+        'message_help' => '200 caractères maximum. Sans traduction, les employés francophones et anglophones voient le texte néerlandais.',
+        'last_change' => 'Dernière modification par :name le :date.',
+        'save' => 'Enregistrer',
+        'saved' => 'Annonce enregistrée',
+        'edit' => 'Modifier l\'annonce',
+        'colors' => [
+            'info' => 'Bleu (info)',
+            'success' => 'Vert',
+            'warning' => 'Orange (attention)',
+            'danger' => 'Rouge (urgent)',
         ],
     ],
     'toolbox' => [

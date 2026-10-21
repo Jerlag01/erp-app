@@ -161,6 +161,10 @@ return [
             'label' => 'Kabel ontmantelen',
             'help' => 'Opvolging van het ontmantelen van kabel: per lijn de werf, wie, de uren en de wegingen vóór en na, met berekende totalen en een PDF-overzicht.',
         ],
+        'announcements' => [
+            'label' => 'Mededelingen',
+            'help' => 'Een korte mededeling voor alle werknemers in de bovenbalk, links van de ideeënbus. Werknemers met het juiste recht passen ze aan.',
+        ],
         'toolbox' => [
             'label' => 'Toolboxmeetings',
             'help' => 'Veiligheidsinstructies met tekst (afbeeldingen vrij in de tekst) en bijlagen. Elke werknemer leest ze volledig en ondertekent ze; met een PDF-aanwezigheidslijst en een opvolgingsoverzicht.',
@@ -438,6 +442,7 @@ return [
     ],
     'permissions' => [
         'areas' => [
+            'announcements' => 'Mededelingen',
             'toolbox' => 'Toolboxmeetings',
             'teams' => 'Ploegen',
             'vehicles' => 'Voertuigen',
@@ -514,12 +519,6 @@ return [
         ],
     ],
     'settings' => [
-        'banner_colors' => [
-            'info' => 'Blauw (info)',
-            'success' => 'Groen',
-            'warning' => 'Oranje (let op)',
-            'danger' => 'Rood (dringend)',
-        ],
         'title' => 'Instellingen',
         'saved' => 'Instellingen opgeslagen',
         'tabs' => [
@@ -534,7 +533,6 @@ return [
             'timesheets' => 'Prestaties',
         ],
         'sections' => [
-            'banner' => 'Mededeling voor werknemers',
             'mobile_app_privacy' => 'Privacybeleid',
             'mobile_app_message' => 'Melding op de telefoon',
             'mobile_app' => 'Android-app',
@@ -560,11 +558,6 @@ return [
             'timesheet_mail' => 'Wekelijkse e-mail',
         ],
         'fields' => [
-            'banner_enabled' => 'Mededeling tonen',
-            'banner_color' => 'Kleur',
-            'banner_message_nl' => 'Bericht (Nederlands)',
-            'banner_message_fr' => 'Bericht (Frans)',
-            'banner_message_en' => 'Bericht (Engels)',
             'mobile_app_name' => 'Naam van de app',
             'mobile_app_privacy_email' => 'Contact voor privacy',
             'mobile_app_privacy_company' => 'Verwerkingsverantwoordelijke',
@@ -667,8 +660,6 @@ return [
             'timesheet_mobility_rate' => 'Mobiliteitsvergoeding',
         ],
         'help' => [
-            'banner' => 'Een bericht in de bovenbalk van de werknemerskant, links van de ideeënbus. Alleen zichtbaar zolang het aan staat.',
-            'banner_message' => 'Maximaal 200 tekens. Zonder vertaling krijgen Franstalige en Engelstalige werknemers de Nederlandse tekst.',
             'mobile_app_privacy' => 'Het privacybeleid van de app is openbaar (ook voor Google Play):',
             'mobile_app_privacy_email' => 'E-mailadres voor vragen over privacy en rechten. Leeg = het e-mailadres van Financiën, anders de administratie.',
             'mobile_app_privacy_company' => 'Naam, adres en ondernemingsnummer van het bedrijf. Leeg = het bedrijfsblok van de batterijdocumenten (grijs).',
@@ -2401,6 +2392,26 @@ return [
             'charging_secrets' => 'Toont ook wachtwoord, herstelcode en licentiesleutel van de laadpalen.',
             'routers' => '4G-routers per COW-site, zonder login.',
             'router_secrets' => 'Toont ook gebruikersnaam, wachtwoord en het VPN-bestand van de routers.',
+        ],
+    ],
+    'announcements' => [
+        'title' => 'Mededeling',
+        'help' => 'Een kort bericht voor alle werknemers, in de bovenbalk links van de ideeënbus. Alleen zichtbaar zolang het aan staat.',
+        'enabled' => 'Mededeling tonen',
+        'color' => 'Kleur',
+        'message_nl' => 'Bericht (Nederlands)',
+        'message_fr' => 'Bericht (Frans)',
+        'message_en' => 'Bericht (Engels)',
+        'message_help' => 'Maximaal 200 tekens. Zonder vertaling krijgen Franstalige en Engelstalige werknemers de Nederlandse tekst.',
+        'last_change' => 'Laatst gewijzigd door :name op :date.',
+        'save' => 'Opslaan',
+        'saved' => 'Mededeling opgeslagen',
+        'edit' => 'Mededeling aanpassen',
+        'colors' => [
+            'info' => 'Blauw (info)',
+            'success' => 'Groen',
+            'warning' => 'Oranje (let op)',
+            'danger' => 'Rood (dringend)',
         ],
     ],
     'toolbox' => [

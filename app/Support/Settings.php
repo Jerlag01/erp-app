@@ -83,6 +83,7 @@ class Settings
                 Modules::CHARGING => true,
                 Modules::CABLE_STRIPPING => true,
                 Modules::TOOLBOX => true,
+                Modules::ANNOUNCEMENTS => true,
                 Modules::ENERSYS => true,
             ],
             'mail' => [

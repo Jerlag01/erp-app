@@ -161,6 +161,10 @@ return [
             'label' => 'Cable stripping',
             'help' => 'Follow-up of cable stripping: per line the site, who, the hours and the weighings before and after, with calculated totals and a PDF overview.',
         ],
+        'announcements' => [
+            'label' => 'Announcements',
+            'help' => 'A short announcement for all employees in the top bar, left of the idea box. Employees with the right permission edit it.',
+        ],
         'toolbox' => [
             'label' => 'Toolbox meetings',
             'help' => 'Safety instructions with text (pictures anywhere in it) and attachments. Every employee reads them fully and signs them; with a PDF attendance list and a follow-up overview.',
@@ -438,6 +442,7 @@ return [
     ],
     'permissions' => [
         'areas' => [
+            'announcements' => 'Announcements',
             'toolbox' => 'Toolbox meetings',
             'teams' => 'Teams',
             'vehicles' => 'Vehicles',
@@ -514,12 +519,6 @@ return [
         ],
     ],
     'settings' => [
-        'banner_colors' => [
-            'info' => 'Blue (info)',
-            'success' => 'Green',
-            'warning' => 'Orange (attention)',
-            'danger' => 'Red (urgent)',
-        ],
         'title' => 'Settings',
         'saved' => 'Settings saved',
         'tabs' => [
@@ -534,7 +533,6 @@ return [
             'timesheets' => 'Prestations',
         ],
         'sections' => [
-            'banner' => 'Message for employees',
             'mobile_app_privacy' => 'Privacy policy',
             'mobile_app_message' => 'Message on the phone',
             'mobile_app' => 'Android app',
@@ -560,11 +558,6 @@ return [
             'timesheet_mail' => 'Weekly e-mail',
         ],
         'fields' => [
-            'banner_enabled' => 'Show message',
-            'banner_color' => 'Colour',
-            'banner_message_nl' => 'Message (Dutch)',
-            'banner_message_fr' => 'Message (French)',
-            'banner_message_en' => 'Message (English)',
             'mobile_app_name' => 'App name',
             'mobile_app_privacy_email' => 'Privacy contact',
             'mobile_app_privacy_company' => 'Data controller',
@@ -667,8 +660,6 @@ return [
             'timesheet_mobility_rate' => 'Mobility allowance',
         ],
         'help' => [
-            'banner' => 'A message in the top bar of the employees\' side, left of the idea box. Only shown while switched on.',
-            'banner_message' => 'At most 200 characters. Without a translation, French and English speaking employees see the Dutch text.',
             'mobile_app_privacy' => 'The app\'s privacy policy is public (also for Google Play):',
             'mobile_app_privacy_email' => 'E-mail address for questions about privacy and rights. Empty = the Finance e-mail address, otherwise the administration.',
             'mobile_app_privacy_company' => 'Name, address and company number. Empty = the company block of the battery documents (grey).',
@@ -2401,6 +2392,26 @@ return [
             'charging_secrets' => 'Also shows the password, recovery code and licence key of the charging stations.',
             'routers' => '4G routers per COW site, without login.',
             'router_secrets' => 'Also shows the username, password and VPN file of the routers.',
+        ],
+    ],
+    'announcements' => [
+        'title' => 'Announcement',
+        'help' => 'A short message for all employees, in the top bar left of the idea box. Only shown while switched on.',
+        'enabled' => 'Show announcement',
+        'color' => 'Colour',
+        'message_nl' => 'Message (Dutch)',
+        'message_fr' => 'Message (French)',
+        'message_en' => 'Message (English)',
+        'message_help' => 'At most 200 characters. Without a translation, French and English speaking employees see the Dutch text.',
+        'last_change' => 'Last changed by :name on :date.',
+        'save' => 'Save',
+        'saved' => 'Announcement saved',
+        'edit' => 'Edit announcement',
+        'colors' => [
+            'info' => 'Blue (info)',
+            'success' => 'Green',
+            'warning' => 'Orange (attention)',
+            'danger' => 'Red (urgent)',
         ],
     ],
     'toolbox' => [

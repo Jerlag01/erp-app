@@ -56,7 +56,9 @@ class Modules
 
     public const ENERSYS = 'enersys';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX];
+    public const ANNOUNCEMENTS = 'announcements';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS];
 
     public function __construct(protected Settings $settings) {}
 
@@ -183,6 +185,11 @@ class Modules
     public function cableStripping(): bool
     {
         return $this->enabled(self::CABLE_STRIPPING);
+    }
+
+    public function announcements(): bool
+    {
+        return $this->enabled(self::ANNOUNCEMENTS);
     }
 
     public function toolbox(): bool
