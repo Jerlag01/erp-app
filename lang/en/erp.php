@@ -2939,6 +2939,13 @@ return [
         'notification_updated' => 'Training changed: :name',
     ],
     'charging' => [
+        'create_multiple' => 'Add several charging stations',
+        'create_multiple_help' => 'For several charging stations at the same COW site or address: enter the location and status once, and each station on its own row.',
+        'stations_rows_help' => 'One row per station. The copy icon duplicates a row to add similar stations quickly.',
+        'add_row' => 'Add station',
+        'status_for_all' => 'Applies to all stations above.',
+        'create_multiple_submit' => 'Create stations',
+        'created_multiple' => ':count charging stations created',
         'location_type' => 'Location',
         'client_name' => 'Client / contact name',
         'installation_street' => 'Street (installation address)',
@@ -2950,6 +2957,7 @@ return [
         'stations_export_title' => 'Charging stations overview',
         'routers_export_title' => '4G routers overview',
         'sections' => [
+            'stations' => 'Charging stations',
             'location' => 'Location',
             'station' => 'Charging station',
             'status' => 'Status',

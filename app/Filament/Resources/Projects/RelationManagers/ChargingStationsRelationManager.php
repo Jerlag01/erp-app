@@ -63,6 +63,12 @@ class ChargingStationsRelationManager extends RelationManager
                 IconColumn::make('in_service')->label(__('erp.charging.in_service'))->boolean(),
             ])
             ->headerActions([
+                Action::make('addMultiple')
+                    ->label(__('erp.charging.create_multiple'))
+                    ->icon(Heroicon::OutlinedSquare2Stack)
+                    ->color('gray')
+                    ->url(fn (): string => ChargingStationResource::getUrl('create-multiple', ['project' => $this->getOwnerRecord()->id]))
+                    ->visible(fn (): bool => Gate::allows('create', ChargingStation::class)),
                 Action::make('add')
                     ->label(__('erp.charging.add_station'))
                     ->icon(Heroicon::OutlinedPlus)

@@ -2939,6 +2939,13 @@ return [
         'notification_updated' => 'Formation modifiée : :name',
     ],
     'charging' => [
+        'create_multiple' => 'Ajouter plusieurs bornes',
+        'create_multiple_help' => 'Pour plusieurs bornes sur le même site COW ou à la même adresse : l\'emplacement et le statut sont saisis une seule fois, les bornes chacune sur sa ligne.',
+        'stations_rows_help' => 'Une ligne par borne. L\'icône de copie duplique une ligne pour ajouter rapidement des bornes similaires.',
+        'add_row' => 'Ajouter une borne',
+        'status_for_all' => 'S\'applique à toutes les bornes ci-dessus.',
+        'create_multiple_submit' => 'Créer les bornes',
+        'created_multiple' => ':count bornes créées',
         'location_type' => 'Emplacement',
         'client_name' => 'Nom du client / contact',
         'installation_street' => 'Rue (adresse d\'installation)',
@@ -2950,6 +2957,7 @@ return [
         'stations_export_title' => 'Aperçu des bornes de recharge',
         'routers_export_title' => 'Aperçu des routeurs 4G',
         'sections' => [
+            'stations' => 'Bornes',
             'location' => 'Emplacement',
             'station' => 'Borne',
             'status' => 'Statut',

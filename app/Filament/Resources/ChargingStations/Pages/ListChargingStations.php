@@ -5,8 +5,10 @@ namespace App\Filament\Resources\ChargingStations\Pages;
 use App\Filament\Resources\ChargingStations\ChargingStationResource;
 use App\Filament\Resources\Concerns\ExportsChargingList;
 use App\Support\ChargingExport;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Icons\Heroicon;
 
 class ListChargingStations extends ListRecords
 {
@@ -18,6 +20,12 @@ class ListChargingStations extends ListRecords
     {
         return [
             $this->exportAction(),
+            Action::make('createMultiple')
+                ->label(__('erp.charging.create_multiple'))
+                ->icon(Heroicon::OutlinedSquare2Stack)
+                ->color('gray')
+                ->visible(fn (): bool => ChargingStationResource::canCreate())
+                ->url(ChargingStationResource::getUrl('create-multiple')),
             CreateAction::make(),
         ];
     }

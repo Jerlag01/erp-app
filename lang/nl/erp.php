@@ -2939,6 +2939,13 @@ return [
         'notification_updated' => 'Opleiding gewijzigd: :name',
     ],
     'charging' => [
+        'create_multiple' => 'Meerdere laadpalen toevoegen',
+        'create_multiple_help' => 'Voor meerdere laadpalen op dezelfde COW-site of hetzelfde adres: de locatie en de status vul je één keer in, de laadpalen elk op een eigen rij.',
+        'stations_rows_help' => 'Eén rij per laadpaal. Met het kopieerpictogram dupliceer je een rij om snel gelijkaardige laadpalen toe te voegen.',
+        'add_row' => 'Laadpaal toevoegen',
+        'status_for_all' => 'Geldt voor alle laadpalen hierboven.',
+        'create_multiple_submit' => 'Laadpalen aanmaken',
+        'created_multiple' => ':count laadpalen aangemaakt',
         'location_type' => 'Locatie',
         'client_name' => 'Naam klant / contactpersoon',
         'installation_street' => 'Straat (installatieadres)',
@@ -2950,6 +2957,7 @@ return [
         'stations_export_title' => 'Overzicht laadpalen',
         'routers_export_title' => 'Overzicht 4G-routers',
         'sections' => [
+            'stations' => 'Laadpalen',
             'location' => 'Locatie',
             'station' => 'Laadpaal',
             'status' => 'Status',

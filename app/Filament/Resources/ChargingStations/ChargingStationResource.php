@@ -8,6 +8,7 @@ use App\Enums\ChargingSystem;
 use App\Enums\NavigationGroup;
 use App\Enums\SiteLocationType;
 use App\Filament\Resources\ChargingStations\Pages\CreateChargingStation;
+use App\Filament\Resources\ChargingStations\Pages\CreateChargingStations;
 use App\Filament\Resources\ChargingStations\Pages\EditChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\ListChargingStations;
 use App\Filament\Resources\ChargingStations\Pages\ViewChargingStation;
@@ -28,6 +29,7 @@ use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
@@ -141,100 +143,153 @@ class ChargingStationResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $isCluster = fn (Get $get): bool => in_array($get('type'), [ChargingStationType::Cluster, ChargingStationType::Cluster->value], true);
-        $isOther = fn (Get $get): bool => in_array($get('location_type'), [SiteLocationType::Other, SiteLocationType::Other->value], true);
-        $isCow = fn (Get $get): bool => ! $isOther($get);
-
         return $schema->components([
-            Section::make(__('erp.charging.sections.location'))
-                ->columns(6)
-                ->columnSpanFull()
-                ->schema([
-                    // "COW-code": only a site from the list. "Other": a third-party client with its own address.
-                    ToggleButtons::make('location_type')
-                        ->label(__('erp.charging.location_type'))
-                        ->options(SiteLocationType::class)
-                        ->default(SiteLocationType::Cow->value)
-                        ->inline()
-                        ->required()
-                        ->live()
-                        ->columnSpan(2),
-                    Select::make('project_id')
-                        ->label(__('erp.charging.project'))
-                        ->helperText(__('erp.charging.project_help'))
-                        ->options(fn (): array => self::projectOptions())
-                        ->searchable()
-                        ->live()
-                        ->afterStateUpdated(function (mixed $state, Set $set): void {
-                            $project = Project::query()->find($state);
-
-                            if ($project?->isThirdParty()) {
-                                $set('location_type', SiteLocationType::Other->value);
-
-                                foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {
-                                    $set($field, $project->{$field});
-                                }
-                            } elseif ($project?->work_site_id) {
-                                $set('location_type', SiteLocationType::Cow->value);
-                                $set('work_site_id', $project->work_site_id);
-                            }
-                        })
-                        ->columnSpan(2),
-                    Select::make('work_site_id')
-                        ->label(__('erp.charging.cow_code'))
-                        ->options(fn (): array => self::siteOptions())
-                        ->searchable()
-                        ->required($isCow)
-                        ->visible($isCow)
-                        ->live()
-                        ->columnSpan(2),
-                    Text::make(fn (Get $get): string => ($site = WorkSite::query()->find($get('work_site_id')))
-                        ? __('erp.charging.address').': '.((new ChargingStation)->setRelation('workSite', $site)->address() ?? '—')
-                        : __('erp.charging.address_help'))
-                        ->visible($isCow)
-                        ->columnSpanFull(),
-                    ...self::thirdPartyFields($isOther),
-                ]),
+            self::locationSection(),
             Section::make(__('erp.charging.sections.station'))
                 ->columns(4)
                 ->columnSpanFull()
-                ->schema([
-                    TextInput::make('ace_number')->label(__('erp.charging.ace_number'))->placeholder('ACE0682661')->maxLength(30)->unique(ignoreRecord: true),
-                    ToggleButtons::make('type')->label(__('erp.charging.type'))->options(ChargingStationType::class)->default(ChargingStationType::Standalone->value)->inline()->required()->live(),
-                    TextInput::make('cluster_number')->label(__('erp.charging.cluster_number'))->helperText(__('erp.charging.cluster_number_help'))->integer()->minValue(1)->maxValue(999)->visible($isCluster),
-                    ToggleButtons::make('system')->label(__('erp.charging.system'))->options(ChargingSystem::class)->inline(),
-                    TextInput::make('brand')->label(__('erp.charging.brand'))->datalist(fn (): array => self::suggestions('brand'))->maxLength(100),
-                    TextInput::make('quantity')->label(__('erp.charging.quantity'))->integer()->minValue(0)->maxValue(999),
-                    TextInput::make('installation_year')->label(__('erp.charging.installation_year'))->integer()->minValue(2000)->maxValue(2100)->default(now()->year),
-                    TextInput::make('backoffice')->label(__('erp.charging.backoffice'))->datalist(fn (): array => self::suggestions('backoffice'))->maxLength(100),
-                    Select::make('connectivity')->label(__('erp.charging.connectivity'))->options(ChargingConnectivity::class),
-                    TextInput::make('license_key')->label(__('erp.charging.license_key'))->maxLength(100)->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
-                    TextInput::make('sim_ean')->label(__('erp.charging.sim_ean'))->maxLength(30),
-                    TextInput::make('sim_ssn')->label(__('erp.charging.sim_ssn'))->maxLength(30),
-                ]),
-            Section::make(__('erp.charging.sections.status'))
-                ->columns(4)
-                ->columnSpanFull()
-                ->schema([
-                    Toggle::make('online')->label(__('erp.charging.online'))->helperText(__('erp.charging.online_help'))->default(true),
-                    Toggle::make('in_service')->label(__('erp.charging.in_service')),
-                    TextInput::make('commissioned_by')->label(__('erp.charging.commissioned_by'))->maxLength(100),
-                    DatePicker::make('onsite_warranty_end')->label(__('erp.charging.onsite_warranty_end')),
-                    Toggle::make('fully_executed')->label(__('erp.charging.fully_executed')),
-                    Toggle::make('plans_updated')->label(__('erp.charging.plans_updated')),
-                    Textarea::make('notes')->label(__('erp.fields.notes'))->rows(2)->maxLength(2000)->columnSpanFull(),
-                ]),
+                ->schema(self::stationFields(unique: fn (TextInput $field): TextInput => $field->unique(ignoreRecord: true))),
+            self::statusSection(),
             Section::make(__('erp.charging.sections.secrets'))
                 ->description(__('erp.charging.secrets_help'))
                 ->icon(Heroicon::OutlinedLockClosed)
                 ->columns(2)
                 ->columnSpanFull()
                 ->visible(fn (): bool => self::canSeeSecrets())
-                ->schema([
-                    TextInput::make('password')->label(__('erp.charging.password'))->password()->revealable()->maxLength(255),
-                    TextInput::make('recovery_code')->label(__('erp.charging.recovery_code'))->password()->revealable()->maxLength(255),
-                ]),
+                ->schema(self::secretFields()),
         ]);
+    }
+
+    /**
+     * The location of a station created from a 608 project: the project and its COW site, or its
+     * third-party client and installation address.
+     *
+     * @return array<string, mixed>
+     */
+    public static function projectDefaults(Project $project): array
+    {
+        $defaults = ['project_id' => $project->id, 'location_type' => $project->location_type->value, 'work_site_id' => $project->work_site_id];
+
+        if ($project->isThirdParty()) {
+            foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {
+                $defaults[$field] = $project->{$field};
+            }
+        }
+
+        return $defaults;
+    }
+
+    /**
+     * Where the station is: a COW site from the list, or a third-party client with its own address;
+     * optionally on a 608 project. Shared by every station added at once (see CreateChargingStations).
+     */
+    public static function locationSection(): Section
+    {
+        $isOther = fn (Get $get): bool => in_array($get('location_type'), [SiteLocationType::Other, SiteLocationType::Other->value], true);
+        $isCow = fn (Get $get): bool => ! $isOther($get);
+
+        return Section::make(__('erp.charging.sections.location'))
+            ->columns(6)
+            ->columnSpanFull()
+            ->schema([
+                // "COW-code": only a site from the list. "Other": a third-party client with its own address.
+                ToggleButtons::make('location_type')
+                    ->label(__('erp.charging.location_type'))
+                    ->options(SiteLocationType::class)
+                    ->default(SiteLocationType::Cow->value)
+                    ->inline()
+                    ->required()
+                    ->live()
+                    ->columnSpan(2),
+                Select::make('project_id')
+                    ->label(__('erp.charging.project'))
+                    ->helperText(__('erp.charging.project_help'))
+                    ->options(fn (): array => self::projectOptions())
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(function (mixed $state, Set $set): void {
+                        $project = Project::query()->find($state);
+
+                        if ($project?->isThirdParty()) {
+                            $set('location_type', SiteLocationType::Other->value);
+
+                            foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {
+                                $set($field, $project->{$field});
+                            }
+                        } elseif ($project?->work_site_id) {
+                            $set('location_type', SiteLocationType::Cow->value);
+                            $set('work_site_id', $project->work_site_id);
+                        }
+                    })
+                    ->columnSpan(2),
+                Select::make('work_site_id')
+                    ->label(__('erp.charging.cow_code'))
+                    ->options(fn (): array => self::siteOptions())
+                    ->searchable()
+                    ->required($isCow)
+                    ->visible($isCow)
+                    ->live()
+                    ->columnSpan(2),
+                Text::make(fn (Get $get): string => ($site = WorkSite::query()->find($get('work_site_id')))
+                    ? __('erp.charging.address').': '.((new ChargingStation)->setRelation('workSite', $site)->address() ?? '—')
+                    : __('erp.charging.address_help'))
+                    ->visible($isCow)
+                    ->columnSpanFull(),
+                ...self::thirdPartyFields($isOther),
+            ]);
+    }
+
+    /**
+     * The fields of one station; $unique adds the uniqueness rule of the ACE number for the page.
+     *
+     * @param  Closure(TextInput): TextInput  $unique
+     * @return list<Component>
+     */
+    public static function stationFields(Closure $unique): array
+    {
+        $isCluster = fn (Get $get): bool => in_array($get('type'), [ChargingStationType::Cluster, ChargingStationType::Cluster->value], true);
+
+        return [
+            $unique(TextInput::make('ace_number')->label(__('erp.charging.ace_number'))->placeholder('ACE0682661')->maxLength(30)),
+            ToggleButtons::make('type')->label(__('erp.charging.type'))->options(ChargingStationType::class)->default(ChargingStationType::Standalone->value)->inline()->required()->live(),
+            TextInput::make('cluster_number')->label(__('erp.charging.cluster_number'))->helperText(__('erp.charging.cluster_number_help'))->integer()->minValue(1)->maxValue(999)->visible($isCluster),
+            ToggleButtons::make('system')->label(__('erp.charging.system'))->options(ChargingSystem::class)->inline(),
+            TextInput::make('brand')->label(__('erp.charging.brand'))->datalist(fn (): array => self::suggestions('brand'))->maxLength(100),
+            TextInput::make('quantity')->label(__('erp.charging.quantity'))->integer()->minValue(0)->maxValue(999),
+            TextInput::make('installation_year')->label(__('erp.charging.installation_year'))->integer()->minValue(2000)->maxValue(2100)->default(now()->year),
+            TextInput::make('backoffice')->label(__('erp.charging.backoffice'))->datalist(fn (): array => self::suggestions('backoffice'))->maxLength(100),
+            Select::make('connectivity')->label(__('erp.charging.connectivity'))->options(ChargingConnectivity::class),
+            TextInput::make('license_key')->label(__('erp.charging.license_key'))->maxLength(100)->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+            TextInput::make('sim_ean')->label(__('erp.charging.sim_ean'))->maxLength(30),
+            TextInput::make('sim_ssn')->label(__('erp.charging.sim_ssn'))->maxLength(30),
+        ];
+    }
+
+    public static function statusSection(): Section
+    {
+        return Section::make(__('erp.charging.sections.status'))
+            ->columns(4)
+            ->columnSpanFull()
+            ->schema([
+                Toggle::make('online')->label(__('erp.charging.online'))->helperText(__('erp.charging.online_help'))->default(true),
+                Toggle::make('in_service')->label(__('erp.charging.in_service')),
+                TextInput::make('commissioned_by')->label(__('erp.charging.commissioned_by'))->maxLength(100),
+                DatePicker::make('onsite_warranty_end')->label(__('erp.charging.onsite_warranty_end')),
+                Toggle::make('fully_executed')->label(__('erp.charging.fully_executed')),
+                Toggle::make('plans_updated')->label(__('erp.charging.plans_updated')),
+                Textarea::make('notes')->label(__('erp.fields.notes'))->rows(2)->maxLength(2000)->columnSpanFull(),
+            ]);
+    }
+
+    /**
+     * @return list<TextInput>
+     */
+    public static function secretFields(): array
+    {
+        return [
+            TextInput::make('password')->label(__('erp.charging.password'))->password()->revealable()->maxLength(255),
+            TextInput::make('recovery_code')->label(__('erp.charging.recovery_code'))->password()->revealable()->maxLength(255),
+        ];
     }
 
     public static function infolist(Schema $schema): Schema
@@ -352,6 +407,7 @@ class ChargingStationResource extends Resource
         return [
             'index' => ListChargingStations::route('/'),
             'create' => CreateChargingStation::route('/create'),
+            'create-multiple' => CreateChargingStations::route('/create-multiple'),
             'view' => ViewChargingStation::route('/{record}'),
             'edit' => EditChargingStation::route('/{record}/edit'),
         ];

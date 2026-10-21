@@ -4,7 +4,9 @@ namespace App\Filament\Resources\ChargingStations\Pages;
 
 use App\Filament\Resources\ChargingStations\ChargingStationResource;
 use App\Models\Project;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Icons\Heroicon;
 
 class CreateChargingStation extends CreateRecord
 {
@@ -19,16 +21,19 @@ class CreateChargingStation extends CreateRecord
         $project = Project::query()->find(request()->integer('project'));
 
         if ($project && array_key_exists($project->id, ChargingStationResource::projectOptions())) {
-            $this->data['project_id'] = $project->id;
-            $this->data['location_type'] = $project->location_type->value;
-            $this->data['work_site_id'] = $project->work_site_id;
-
-            if ($project->isThirdParty()) {
-                foreach (['client_name', 'client_company', 'client_email', 'client_phone', 'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id'] as $field) {
-                    $this->data[$field] = $project->{$field};
-                }
-            }
+            $this->data = [...$this->data, ...ChargingStationResource::projectDefaults($project)];
         }
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('createMultiple')
+                ->label(__('erp.charging.create_multiple'))
+                ->icon(Heroicon::OutlinedSquare2Stack)
+                ->color('gray')
+                ->url(fn (): string => ChargingStationResource::getUrl('create-multiple', array_filter(['project' => request()->integer('project') ?: null]))),
+        ];
     }
 
     protected function getRedirectUrl(): string

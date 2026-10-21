@@ -6,7 +6,9 @@ use App\Enums\ChargingConnectivity;
 use App\Enums\ChargingStationType;
 use App\Enums\SiteLocationType;
 use App\Filament\Admin\Resources\Roles\Pages\EditRole;
+use App\Filament\Resources\ChargingStations\ChargingStationResource;
 use App\Filament\Resources\ChargingStations\Pages\CreateChargingStation;
+use App\Filament\Resources\ChargingStations\Pages\CreateChargingStations;
 use App\Filament\Resources\ChargingStations\Pages\EditChargingStation;
 use App\Filament\Resources\ChargingStations\Pages\ListChargingStations;
 use App\Filament\Resources\Projects\Pages\CreateProject;
@@ -301,5 +303,57 @@ class ChargingTest extends TestCase
             ->fillForm(['location_type' => 'cow', 'ace_number' => 'ACE0000002', 'type' => 'standalone'])
             ->call('create')
             ->assertHasFormErrors(['work_site_id' => 'required']);
+    }
+
+    #[Test]
+    public function several_stations_are_added_at_once_on_the_same_cow_site(): void
+    {
+        $site = $this->site();
+        ChargingStation::factory()->for($site)->create(['ace_number' => 'ACE0000009']);
+        $project = Project::factory()->inCategory('608')->for($site)->create();
+        $user = $this->user(secrets: true);
+        $project->teams()->attach($user->teams->first());
+        $this->actingAs($user);
+
+        $this->get(ChargingStationResource::getUrl('create-multiple'))->assertOk();
+
+        // Opened from the project: the project and its COW site are filled in.
+        Livewire::withQueryParams(['project' => $project->id])
+            ->test(CreateChargingStations::class)
+            ->assertSchemaStateSet(['project_id' => $project->id, 'work_site_id' => $site->id])
+            ->set('data.stations', [
+                ['ace_number' => 'ACE0000001', 'type' => 'standalone', 'brand' => 'ALFEN', 'password' => 'Geheim-1'],
+                ['ace_number' => 'ACE0000001', 'type' => 'standalone'],
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['stations.0.ace_number']);
+
+        Livewire::withQueryParams(['project' => $project->id])
+            ->test(CreateChargingStations::class)
+            ->set('data.stations', [['ace_number' => 'ACE0000009', 'type' => 'standalone']])
+            ->call('create')
+            ->assertHasFormErrors(['stations.0.ace_number' => 'unique']);
+
+        Livewire::withQueryParams(['project' => $project->id])
+            ->test(CreateChargingStations::class)
+            ->fillForm(['installation_year' => 2025, 'online' => true, 'in_service' => true])
+            ->set('data.stations', [
+                ['ace_number' => 'ACE0000001', 'type' => 'cluster', 'cluster_number' => 1, 'brand' => 'ALFEN', 'password' => 'Geheim-1'],
+                ['ace_number' => 'ACE0000002', 'type' => 'cluster', 'cluster_number' => 1, 'brand' => 'ALFEN'],
+                ['ace_number' => 'ACE0000003', 'type' => 'standalone', 'brand' => 'Wallbox'],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertRedirect(ChargingStationResource::getUrl('index'));
+
+        $created = ChargingStation::query()->whereIn('ace_number', ['ACE0000001', 'ACE0000002', 'ACE0000003'])->get();
+        $this->assertCount(3, $created);
+        $this->assertTrue($created->every(fn (ChargingStation $station): bool => $station->work_site_id === $site->id && $station->project_id === $project->id && $station->in_service));
+        $this->assertSame('Geheim-1', $created->firstWhere('ace_number', 'ACE0000001')->password);
+        $this->assertSame('Carlistraat 2, 1140 Evere', $created->firstWhere('ace_number', 'ACE0000003')->address());
+
+        // Without the right to create stations the page is closed.
+        $this->actingAs(User::factory()->withPermissions(['charging' => ['view']])->inTeam()->create());
+        $this->get(ChargingStationResource::getUrl('create-multiple'))->assertForbidden();
     }
 }
