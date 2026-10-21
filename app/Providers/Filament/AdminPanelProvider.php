@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Announcement;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FinanceOverview;
 use App\Filament\Pages\FinanceStatistics;
@@ -45,6 +46,7 @@ class AdminPanelProvider extends PanelProvider
                 Timesheet::class,
                 TimesheetOverview::class,
                 ToolboxOverview::class,
+                Announcement::class,
             ])
             ->widgets([
                 DashboardCountersWidget::class,

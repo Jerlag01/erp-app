@@ -6,7 +6,7 @@
         <x-filament::icon icon="heroicon-o-megaphone" style="flex: none; width: 1.125rem; height: 1.125rem; color: rgb({{ $banner->rgb() }});" />
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $message }}</span>
         @if ($banner->canEdit(auth()->user()))
-            <a href="{{ \App\Filament\App\Pages\Announcement::getUrl(panel: 'app') }}" title="{{ __('erp.announcements.edit') }}" aria-label="{{ __('erp.announcements.edit') }}" style="flex: none; display: inline-flex; opacity: .7;">
+            <a href="{{ \App\Filament\Pages\Announcement::getUrl(panel: 'app') }}" title="{{ __('erp.announcements.edit') }}" aria-label="{{ __('erp.announcements.edit') }}" style="flex: none; display: inline-flex; opacity: .7;">
                 <x-filament::icon icon="heroicon-o-pencil-square" style="width: 1rem; height: 1rem;" />
             </a>
         @endif

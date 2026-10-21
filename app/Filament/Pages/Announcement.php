@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Pages;
+namespace App\Filament\Pages;
 
 use App\Enums\NavigationGroup;
 use App\Support\EmployeeBanner;

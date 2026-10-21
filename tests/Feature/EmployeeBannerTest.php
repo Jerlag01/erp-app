@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\App\Pages\Announcement;
+use App\Filament\Pages\Announcement;
 use App\Models\User;
 use App\Support\ProjectProgress;
 use Filament\Facades\Filament;
@@ -55,6 +55,22 @@ class EmployeeBannerTest extends TestCase
         $this->setModules(['announcements' => true]);
         settings()->save('banner', [...settings('banner'), 'enabled' => false]);
         $this->actingAs(User::factory()->create())->get('/')->assertDontSee('Vrijdag kantoor gesloten');
+    }
+
+    #[Test]
+    public function the_announcement_is_also_edited_on_the_admin_side(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+
+        $this->get(Announcement::getUrl(panel: 'admin'))->assertOk();
+        $this->get('/admin')->assertSee(Announcement::getUrl(panel: 'admin'));
+
+        Livewire::test(Announcement::class)
+            ->fillForm(['enabled' => true, 'color' => 'info', 'message_nl' => 'Nieuwe werkkledij beschikbaar'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame('Nieuwe werkkledij beschikbaar', settings()->get('banner.message_nl'));
     }
 
     #[Test]
