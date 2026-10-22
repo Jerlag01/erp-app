@@ -869,7 +869,7 @@ With the knowledge base permissions:
 
 - **Knowledge base → Categories**: categories with a name and description per language; hidden categories are only seen by writers.
 - **Knowledge base → Articles**: title and text **per language**, as formatted text (with pictures) or in Markdown, with downloadable files. An article can stay a draft until it is ready.
-- Articles can also be downloaded as **PDF**.
+- Downloading PDF attachments needs the permission **Knowledge base → Download PDF files**.
 MD,
         ],
 

@@ -8,6 +8,7 @@ use App\Support\PdfAccess;
 use App\Support\WasteTotals;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
@@ -99,6 +100,14 @@ class WasteTotalsOverview extends Page
         return range((int) now()->year, min($first, (int) now()->year));
     }
 
+    /**
+     * The year shown, when the period is exactly one calendar year.
+     */
+    protected function shownYear(): ?int
+    {
+        return $this->from !== null && preg_match('/^(\d{4})-01-01$/', $this->from, $match) && $this->until === "{$match[1]}-12-31" ? (int) $match[1] : null;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -107,7 +116,26 @@ class WasteTotalsOverview extends Page
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
                 ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'waste'))
-                ->url(fn (): string => route('waste.totals-pdf', array_filter(['from' => $this->validDate($this->from), 'until' => $this->validDate($this->until), 'all' => $this->all ? 1 : null])), shouldOpenInNewTab: true),
+                ->modalHeading(__('erp.waste.export_pdf'))
+                ->modalSubmitActionLabel(__('erp.waste.export'))
+                // The period shown, or a whole year.
+                ->fillForm(fn (): array => ['year' => $this->shownYear()])
+                ->schema([
+                    Select::make('year')
+                        ->label(__('erp.waste.year'))
+                        ->placeholder(__('erp.waste.export_current_period'))
+                        ->options(fn (): array => collect($this->years())->mapWithKeys(fn (int $year): array => [$year => (string) $year])->all()),
+                ])
+                ->action(function (array $data): void {
+                    $year = filled($data['year'] ?? null) ? (int) $data['year'] : null;
+                    $url = route('waste.totals-pdf', array_filter([
+                        'from' => $year ? "{$year}-01-01" : $this->validDate($this->from),
+                        'until' => $year ? "{$year}-12-31" : $this->validDate($this->until),
+                        'all' => $this->all ? 1 : null,
+                    ]));
+
+                    $this->js('window.open('.json_encode($url).', "_blank")');
+                }),
         ];
     }
 }

@@ -869,7 +869,7 @@ Avec les droits de la base de connaissances :
 
 - **Base de connaissances → Catégories** : catégories avec nom et description par langue ; les catégories masquées ne sont visibles que par les rédacteurs.
 - **Base de connaissances → Articles** : titre et texte **par langue**, en texte mis en forme (avec images) ou en Markdown, avec des fichiers à télécharger. Un article peut rester en brouillon jusqu'à ce qu'il soit prêt.
-- Les articles se téléchargent aussi en **PDF**.
+- Télécharger les pièces jointes PDF nécessite le droit **Base de connaissances → Télécharger les fichiers PDF**.
 MD,
         ],
 

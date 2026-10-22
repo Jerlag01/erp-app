@@ -165,9 +165,16 @@ class ToolboxMeetingTest extends TestCase
         $this->actingAs($manager);
 
         $this->get(route('toolbox.pdf', $meeting))->assertOk()->assertHeader('content-type', 'application/pdf');
+        // In the reader's language; the subject stays in Dutch and French as entered.
         $html = view('toolbox.pdf', ['meeting' => $meeting, 'rows' => collect()])->render();
         $this->assertStringContainsString('September 2026', $html);
-        $this->assertStringContainsString('Septembre 2026', $html);
+        $this->assertStringContainsString(__('erp.pdf.toolbox.instructions_by', [], 'nl'), $html);
+        app()->setLocale('fr');
+        $french = view('toolbox.pdf', ['meeting' => $meeting, 'rows' => collect()])->render();
+        app()->setLocale('nl');
+        $this->assertStringContainsString('Septembre 2026', $french);
+        $this->assertStringContainsString('Instructions par', $french);
+        $this->assertStringNotContainsString('Instructies door', $french);
         $this->assertStringContainsString('Rudy Cools &amp; Alain Dubois', $html);
         $this->assertStringContainsString('Levage de charges lourdes', $html);
 

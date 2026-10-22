@@ -1,6 +1,6 @@
 {{-- A list of charging stations or 4G routers as PDF. --}}
 <!doctype html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <title>{{ $title }}</title>

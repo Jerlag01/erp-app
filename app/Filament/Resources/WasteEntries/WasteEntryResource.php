@@ -161,6 +161,21 @@ class WasteEntryResource extends Resource
         return WasteRegion::tryFrom((string) ($livewire->activeTab ?? '')) !== null;
     }
 
+    /**
+     * The years that have entries, newest first (and at least the current year).
+     *
+     * @return array<int, string>
+     */
+    public static function yearOptions(): array
+    {
+        $first = WasteEntry::query()->min('date');
+        $last = WasteEntry::query()->max('date');
+        $from = $first ? (int) substr((string) $first, 0, 4) : (int) now()->year;
+        $until = max((int) now()->year, $last ? (int) substr((string) $last, 0, 4) : 0);
+
+        return collect(range($until, min($from, $until)))->mapWithKeys(fn (int $year): array => [$year => (string) $year])->all();
+    }
+
     public static function table(Table $table): Table
     {
         $fullList = fn (Component $livewire): bool => ! self::onRegionTab($livewire);
@@ -216,6 +231,10 @@ class WasteEntryResource extends Resource
                     ->placeholder('—'),
             ])
             ->filters([
+                SelectFilter::make('year')
+                    ->label(__('erp.waste.year'))
+                    ->options(fn (): array => self::yearOptions())
+                    ->query(fn (Builder $query, array $data) => $query->when($data['value'] ?? null, fn (Builder $query, $year) => $query->whereYear('date', (int) $year))),
                 Filter::make('period')
                     ->schema([
                         DatePicker::make('from')->label(__('erp.incidents.from'))->native(false)->displayFormat('d/m/Y'),

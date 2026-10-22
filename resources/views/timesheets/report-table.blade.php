@@ -8,7 +8,7 @@
 @php
     $month = $block['month'];
     $daysInMonth = $month->daysInMonth;
-    $initials = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
+    $initials = explode(',', __('erp.pdf.report.initials'));
     $dec = fn (float $value) => \App\Support\TimesheetReport::number($value);
     $money = fn (float $value) => number_format($value, 2, ',', '.');
     $counted = count(\App\Support\TimesheetReport::COUNTED);
@@ -38,20 +38,20 @@
 <table class="erp-report rt" style="font-size: {{ $fontSize ?? '6.5pt' }};">
     <thead>
         <tr>
-            <th rowspan="2" class="h">{{ mb_strtoupper($month->locale('nl')->translatedFormat('F Y')) }}</th>
-            <th>Verlof<br>{{ $month->year }}</th>
+            <th rowspan="2" class="h">{{ mb_strtoupper($month->locale(app()->getLocale())->translatedFormat('F Y')) }}</th>
+            <th>{{ __('erp.pdf.report.leave') }}<br>{{ $month->year }}</th>
             @foreach (\App\Support\TimesheetReport::COUNTED as $code)
                 <th>{{ $code }}</th>
             @endforeach
             @for ($day = 1; $day <= $daysInMonth; $day++)
                 <th @class(['w' => $month->setDay($day)->isWeekend()])>{{ $day }}</th>
             @endfor
-            <th>Uren</th>
-            <th colspan="2">Totaal</th>
+            <th>{{ __('erp.pdf.report.hours') }}</th>
+            <th colspan="2">{{ __('erp.pdf.total') }}</th>
         </tr>
         <tr>
-            <th class="nw">Totaal</th>
-            <th colspan="{{ $counted }}" class="nw">dit jaar</th>
+            <th class="nw">{{ __('erp.pdf.total') }}</th>
+            <th colspan="{{ $counted }}" class="nw">{{ __('erp.pdf.report.this_year') }}</th>
             @for ($day = 1; $day <= $daysInMonth; $day++)
                 <th @class(['nw', 'w' => $month->setDay($day)->isWeekend()])>{{ $initials[$month->setDay($day)->dayOfWeekIso - 1] }}</th>
             @endfor
@@ -76,7 +76,7 @@
             </tr>
             {{-- Kilometres per day, total km of the month. --}}
             <tr>
-                <td class="n sub">Km</td>
+                <td class="n sub">{{ __('erp.pdf.report.km') }}</td>
                 <td colspan="{{ 1 + $counted }}"></td>
                 @foreach ($row['days'] as $day)
                     <td @class(['w' => $day['weekend']])>{{ $day['km'] ?: '' }}</td>
@@ -87,14 +87,14 @@
             </tr>
             {{-- Imputation (project category) per day, mobility allowance of the month. --}}
             <tr>
-                <td class="n sub bt">Imputatie</td>
+                <td class="n sub bt">{{ __('erp.pdf.report.imputation') }}</td>
                 <td colspan="{{ 1 + $counted }}" class="bt"></td>
                 @foreach ($row['days'] as $day)
                     <td @class(['bt s', 'w' => $day['weekend']])>{{ $day['imputation'] }}</td>
                 @endforeach
                 <td class="bt"></td>
                 <td class="bt r b">{{ $money($row['mobility']) }}</td>
-                <td class="bt l rl">mobiliteit</td>
+                <td class="bt l rl">{{ __('erp.pdf.report.mobility') }}</td>
             </tr>
         @empty
             <tr><td colspan="{{ 9 + $daysInMonth }}" style="padding: 8px;">—</td></tr>

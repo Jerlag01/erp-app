@@ -27,7 +27,7 @@ class IncidentPdfController
             : 'incidents-'.now()->format('Y-m-d').'.pdf';
 
         return Pdf::loadView('incidents.pdf', ['incidents' => $incidents])
-            ->setPaper('a4')
+            ->setPaper('a4', 'landscape')
             ->download($name);
     }
 }

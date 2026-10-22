@@ -26,14 +26,27 @@ class TimesheetPdf
 
     public function __construct(protected Timesheets $timesheets) {}
 
-    public function render(User $user, CarbonInterface $monday): string
+    /**
+     * The week as a PDF, in the given language (by default the current one: the reader's).
+     */
+    public function render(User $user, CarbonInterface $monday, ?string $locale = null): string
     {
-        $week = $this->timesheets->week($user, $monday);
+        $previous = app()->getLocale();
 
-        return Pdf::loadView('timesheets.week-pdf', $this->sheet($this->cells($user, $week)))
-            ->setPaper('a4', 'landscape')
-            ->setOption('isFontSubsettingEnabled', true)
-            ->output();
+        if ($locale !== null) {
+            app()->setLocale($locale);
+        }
+
+        try {
+            $week = $this->timesheets->week($user, $monday);
+
+            return Pdf::loadView('timesheets.week-pdf', $this->sheet($this->cells($user, $week)))
+                ->setPaper('a4', 'landscape')
+                ->setOption('isFontSubsettingEnabled', true)
+                ->output();
+        } finally {
+            app()->setLocale($previous);
+        }
     }
 
     public static function filename(User $user, CarbonInterface $monday): string
@@ -195,13 +208,14 @@ class TimesheetPdf
     {
         $hours = fn (?float $value): string => number_format((float) $value, 2, ',', '');
         $km = fn (?int $value): string => number_format((int) $value, 0, ',', '.');
+        $t = fn (string $key): string => __("erp.pdf.timesheet.{$key}");
 
         $cells = [
-            2 => ['A' => 'Naam:', 'D' => 'Nr plaat:', 'F' => 'Week van:', 'G' => $week['monday']->format('d/m/y'), 'H' => 'Week'],
-            3 => ['A' => $user->name, 'D' => (string) $week['plate'], 'F' => 'Tot:', 'G' => $week['friday']->format('d/m/y'), 'H' => (string) $week['number']],
-            4 => ['B' => 'Kilometerstand voertuig', 'F' => 'Uren', 'I' => 'Imputatie', 'J' => 'Omschrijving'],
-            5 => ['A' => 'Datum', 'B' => 'Vertrek', 'C' => 'Aankomst', 'D' => 'Totaal', 'F' => 'Aankomst', 'G' => 'Vertrek', 'H' => 'Totaal', 'I' => 'Voorbeeld', 'J' => 'Werfnaam'],
-            6 => ['D' => 'Km', 'H' => 'Uren', 'I' => '620/251', 'J' => 'VOORBEELD: 02STR'],
+            2 => ['A' => $t('name'), 'D' => $t('plate'), 'F' => $t('week_from'), 'G' => $week['monday']->format('d/m/y'), 'H' => $t('week')],
+            3 => ['A' => $user->name, 'D' => (string) $week['plate'], 'F' => $t('until'), 'G' => $week['friday']->format('d/m/y'), 'H' => (string) $week['number']],
+            4 => ['B' => $t('odometer'), 'F' => $t('hours'), 'I' => $t('imputation'), 'J' => $t('description')],
+            5 => ['A' => $t('date'), 'B' => $t('departure'), 'C' => $t('arrival'), 'D' => $t('total'), 'F' => $t('arrival'), 'G' => $t('departure'), 'H' => $t('total'), 'I' => $t('example'), 'J' => $t('site')],
+            6 => ['D' => $t('km'), 'H' => $t('hours'), 'I' => '620/251', 'J' => $t('example_site')],
         ];
 
         foreach ($week['days'] as $index => $day) {
@@ -227,20 +241,20 @@ class TimesheetPdf
             }
 
             $cells[$first + 3]['A'] = $day['date']->format('d/m/y');
-            $cells[$first + 4]['A'] = Timesheets::DAYS[$index];
+            $cells[$first + 4]['A'] = $day['date']->locale(app()->getLocale())->translatedFormat('l');
             $cells[$first + 6] = [
                 'D' => $km($day['km']),
-                'F' => 'Middagpauze',
-                'G' => $day['lunch'] ? 'Ja' : 'Neen',
+                'F' => $t('lunch'),
+                'G' => $day['lunch'] ? $t('yes') : $t('no'),
                 'H' => $hours($day['total']),
             ];
         }
 
-        $cells[42] = ['A' => 'Totaal:', 'B' => 'Report', 'D' => $km($week['km']), 'F' => 'Report', 'H' => $hours($week['hours'])];
-        $cells[43] = ['B' => 'Kilometers', 'C' => $km($week['km_carried']), 'F' => 'Meeruren', 'G' => $hours($week['overtime_carried']), 'H' => $hours($week['expected'])];
-        $cells[44] = ['B' => 'Nu', 'C' => $km($week['km']), 'F' => 'Nu', 'G' => $hours($week['overtime_now']), 'H' => $hours($week['overtime_now'])];
-        $cells[45] = ['B' => 'Nieuw', 'C' => $km($week['km_new']), 'F' => 'Nieuw', 'G' => $hours($week['overtime_new'])];
-        $cells[47] = ['A' => 'Opmerking:'];
+        $cells[42] = ['A' => $t('total_colon'), 'B' => $t('carried'), 'D' => $km($week['km']), 'F' => $t('carried'), 'H' => $hours($week['hours'])];
+        $cells[43] = ['B' => $t('kilometres'), 'C' => $km($week['km_carried']), 'F' => $t('overtime'), 'G' => $hours($week['overtime_carried']), 'H' => $hours($week['expected'])];
+        $cells[44] = ['B' => $t('now'), 'C' => $km($week['km']), 'F' => $t('now'), 'G' => $hours($week['overtime_now']), 'H' => $hours($week['overtime_now'])];
+        $cells[45] = ['B' => $t('new'), 'C' => $km($week['km_new']), 'F' => $t('new'), 'G' => $hours($week['overtime_new'])];
+        $cells[47] = ['A' => $t('remark')];
 
         // Five lines for remarks; more notes share the last line.
         $notes = $week['notes'];

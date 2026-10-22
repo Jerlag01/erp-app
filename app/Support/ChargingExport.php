@@ -25,7 +25,7 @@ class ChargingExport
      */
     public static function stationColumns(bool $withSecrets): array
     {
-        $yes = fn (bool $value): string => $value ? 'Ja' : 'Nee';
+        $yes = fn (bool $value): string => $value ? __('erp.pdf.yes') : __('erp.pdf.no');
 
         return array_filter([
             'Volledig uitgevoerd' => fn (ChargingStation $station): string => $yes($station->fully_executed),
@@ -119,7 +119,8 @@ class ChargingExport
 
         return Pdf::loadView('charging.export-pdf', [
             'title' => $title,
-            'headers' => array_keys($columns),
+            // The Excel keeps the client's column names; the PDF shows them in the reader's language.
+            'headers' => array_map(fn (string $header): string => trans()->has("erp.pdf.charging_columns.{$header}") ? __("erp.pdf.charging_columns.{$header}") : $header, array_keys($columns)),
             'rows' => $rows,
             // Many columns: smaller text.
             'fontSize' => count($columns) > 14 ? 5.5 : 7.5,

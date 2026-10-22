@@ -870,7 +870,7 @@ Met de kennisbankrechten:
 
 - **Kennisbank → Categorieën**: categorieën met naam en beschrijving per taal; verborgen categorieën zien enkel de schrijvers.
 - **Kennisbank → Artikels**: titel en tekst **per taal**, als opgemaakte tekst (met afbeeldingen) of in Markdown, met downloadbare bestanden. Een artikel kan je als concept bewaren tot het klaar is.
-- Artikels kan je ook als **PDF** downloaden.
+- Bijlagen in PDF downloaden vereist het recht **Kennisbank → PDF-bestanden downloaden**.
 MD,
         ],
 

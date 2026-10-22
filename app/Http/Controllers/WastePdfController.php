@@ -60,7 +60,7 @@ class WastePdfController
             'region' => $region,
             'period' => WasteTotals::periodLabel($export['from'], $export['until']),
         ])
-            ->setPaper('a4', $region ? 'portrait' : 'landscape')
+            ->setPaper('a4', 'landscape')
             ->download(Str::slug($title).'-'.now()->format('Y-m-d').'.pdf');
     }
 
@@ -78,7 +78,7 @@ class WastePdfController
             'totals' => WasteTotals::between($period['from'] ?? null, $period['until'] ?? null, (bool) ($period['all'] ?? false)),
             'period' => WasteTotals::periodLabel($period['from'] ?? null, $period['until'] ?? null),
         ])
-            ->setPaper('a4')
+            ->setPaper('a4', 'landscape')
             ->download('waste-totals-'.now()->format('Y-m-d').'.pdf');
     }
 }

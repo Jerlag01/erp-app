@@ -33,6 +33,7 @@ use App\Http\Controllers\ToolboxAttachmentController;
 use App\Http\Controllers\ToolboxPdfController;
 use App\Http\Controllers\WastePdfController;
 use App\Http\Controllers\WelcomeLinkController;
+use App\Http\Middleware\SetUserLocale;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 
@@ -52,7 +53,8 @@ Route::get('/privacy', PrivacyPolicyController::class)->name('privacy');
 // An attachment of a toolbox meeting through a short-lived signed link from the mobile app.
 Route::get('/toolbox-files/{meeting}/{index}', ToolboxAttachmentController::class)->whereNumber('index')->middleware('signed')->name('toolbox.attachment');
 
-Route::middleware('auth')->group(function (): void {
+// Downloads and PDFs in the signed-in user's language.
+Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::post('/locale', LocaleController::class)->name('locale.update');
     Route::get('/projects/{project}/archive', ProjectArchiveController::class)->whereNumber('project')->name('projects.archive');
     Route::get('/stock/labels', StockLabelController::class)->name('stock.labels');

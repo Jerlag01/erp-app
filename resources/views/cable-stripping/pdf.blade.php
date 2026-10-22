@@ -1,14 +1,14 @@
-{{-- Overview of cable stripping, laid out like the Excel "Kabel ontmantelen" (A4 landscape). --}}
+{{-- Overview of cable stripping, laid out like the Excel "Kabel ontmantelen" (A4 landscape), in the reader's language. --}}
 @php
     $kg = fn ($value) => $value === null ? '' : number_format((float) $value, 2, ',', '.');
     $date = fn ($value) => $value ? \Illuminate\Support\Carbon::parse($value)->format('d/m/Y') : null;
     $time = fn ($value) => $value ? substr((string) $value, 0, 5) : '';
 @endphp
 <!doctype html>
-<html lang="nl-BE">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
-    <title>Kabel ontmantelen</title>
+    <title>{{ __('erp.pdf.cable.title') }}</title>
     <style>
         @page { margin: 10mm; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 7.5pt; color: #111827; }
@@ -27,10 +27,10 @@
 <body>
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
-            <td><h1>Kabel ontmantelen:</h1></td>
+            <td><h1>{{ __('erp.pdf.cable.title') }}:</h1></td>
             <td class="meta" style="text-align: right;">
-                @if ($from || $until)Periode: {{ $date($from) ?? '…' }} – {{ $date($until) ?? '…' }}<br>@endif
-                {{ $lines->count() }} {{ $lines->count() === 1 ? 'lijn' : 'lijnen' }} · afgedrukt op {{ now()->format('d/m/Y H:i') }}
+                @if ($from || $until){{ __('erp.pdf.period', ['from' => $date($from) ?? '…', 'until' => $date($until) ?? '…']) }}<br>@endif
+                {{ trans_choice('erp.pdf.cable.lines', $lines->count(), ['count' => $lines->count()]) }} · {{ __('erp.pdf.printed_on', ['date' => now()->format('d/m/Y H:i')]) }}
             </td>
         </tr>
     </table>
@@ -38,19 +38,19 @@
     <table class="lines">
         <thead>
             <tr>
-                <th>Datum</th>
-                <th>Imputatie - Werf</th>
-                <th>Werknemer ('s)</th>
-                <th>Begin werken</th>
-                <th>Einde werken</th>
-                <th>Totaal uren</th>
-                <th>Totaal gewicht met bak en kabel VOOR ontmanteling</th>
-                <th>Gewicht lege bak voor ontmantelde kabel</th>
-                <th>Totaal gewicht van kabel met bak NA ontmanteling</th>
-                <th>Totaal gewicht kabel VOOR ontmanteling</th>
-                <th>Gewicht afval</th>
-                <th>PI bak nummer</th>
-                <th>Totaal KG ontmantelde kabel</th>
+                <th>{{ __('erp.pdf.cable.date') }}</th>
+                <th>{{ __('erp.pdf.cable.imputation') }}</th>
+                <th>{{ __('erp.pdf.cable.workers') }}</th>
+                <th>{{ __('erp.pdf.cable.start') }}</th>
+                <th>{{ __('erp.pdf.cable.end') }}</th>
+                <th>{{ __('erp.pdf.cable.hours') }}</th>
+                <th>{{ __('erp.pdf.cable.before') }}</th>
+                <th>{{ __('erp.pdf.cable.empty_bin') }}</th>
+                <th>{{ __('erp.pdf.cable.after') }}</th>
+                <th>{{ __('erp.pdf.cable.cable_before') }}</th>
+                <th>{{ __('erp.pdf.cable.waste') }}</th>
+                <th>{{ __('erp.pdf.cable.bin') }}</th>
+                <th>{{ __('erp.pdf.cable.stripped') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -71,13 +71,13 @@
                     <td class="num strong">{{ $kg($line->strippedCable()) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="13">Geen lijnen</td></tr>
+                <tr><td colspan="13">{{ __('erp.pdf.cable.none') }}</td></tr>
             @endforelse
         </tbody>
         @if ($lines->isNotEmpty())
             <tfoot>
                 <tr>
-                    <td colspan="5">Totaal</td>
+                    <td colspan="5">{{ __('erp.pdf.total') }}</td>
                     <td class="num">{{ $kg($totals['hours']) }}</td>
                     <td class="num">{{ $kg($totals['weight_before']) }}</td>
                     <td></td>

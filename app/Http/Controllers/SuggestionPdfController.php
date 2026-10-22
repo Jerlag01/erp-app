@@ -27,7 +27,7 @@ class SuggestionPdfController
             : 'idea-box-'.now()->format('Y-m-d').'.pdf';
 
         return Pdf::loadView('suggestions.pdf', ['suggestions' => $suggestions])
-            ->setPaper('a4')
+            ->setPaper('a4', 'landscape')
             ->download($name);
     }
 }

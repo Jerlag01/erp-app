@@ -100,19 +100,21 @@ class TimesheetMonthlyOverview extends Page
     }
 
     /**
-     * "Prestaties oktober 2026", "Prestaties oktober – november 2026", "Prestaties 2026".
+     * "Prestaties oktober 2026", "Prestaties oktober – november 2026", "Prestaties 2026", in the reader's language.
      *
      * @param  list<CarbonImmutable>  $months
      */
     public static function title(array $months): string
     {
-        $name = fn (CarbonImmutable $month): string => $month->locale('nl')->translatedFormat('F');
+        $name = fn (CarbonImmutable $month): string => $month->locale(app()->getLocale())->translatedFormat('F');
 
-        return match (count($months)) {
-            1 => 'Prestaties '.$name($months[0]).' '.$months[0]->year,
-            12 => 'Prestaties '.$months[0]->year,
-            default => 'Prestaties '.$name($months[0]).($months[0]->year !== end($months)->year ? ' '.$months[0]->year : '').' – '.$name(end($months)).' '.end($months)->year,
+        $period = match (count($months)) {
+            1 => $name($months[0]).' '.$months[0]->year,
+            12 => (string) $months[0]->year,
+            default => $name($months[0]).($months[0]->year !== end($months)->year ? ' '.$months[0]->year : '').' – '.$name(end($months)).' '.end($months)->year,
         };
+
+        return __('erp.pdf.report.title', ['period' => $period]);
     }
 
     /**

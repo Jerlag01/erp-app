@@ -7,12 +7,11 @@ use App\Models\InterventionReport;
 use App\Support\Interventions;
 use App\Support\PdfAccess;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The PDF of a closed intervention, for administrators (approval) and those who see the
- * project's finance (invoicing).
+ * project's finance (invoicing), in the reader's language.
  */
 class InterventionPdfController extends Controller
 {
@@ -20,15 +19,11 @@ class InterventionPdfController extends Controller
     {
         abort_unless($interventions->canDownloadPdf($request->user(), $report->project) && PdfAccess::canGenerate($request->user(), 'projects'), 403);
 
-        $disk = Storage::disk(InterventionReport::DISK);
-
-        if (blank($report->pdf_path) || ! $disk->exists($report->pdf_path)) {
-            $pdf->store($report);
-        }
-
-        return $disk->response($report->fresh()->pdf_path, InterventionPdf::filename($report), [
+        // Rendered for the reader, in their language; the stored copy stays for the project archive.
+        return response($pdf->render($report), 200, [
             'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.InterventionPdf::filename($report).'"',
             'X-Content-Type-Options' => 'nosniff',
-        ], 'inline');
+        ]);
     }
 }

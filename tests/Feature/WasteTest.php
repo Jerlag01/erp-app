@@ -6,6 +6,7 @@ use App\Enums\WasteRegion;
 use App\Filament\Pages\WasteTotalsOverview;
 use App\Filament\Resources\WasteCategories\Pages\ManageWasteCategories;
 use App\Filament\Resources\WasteEntries\Pages\ManageWasteEntries;
+use App\Filament\Resources\WasteEntries\WasteEntryResource;
 use App\Http\Controllers\WastePdfController;
 use App\Models\User;
 use App\Models\WasteCategory;
@@ -18,6 +19,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -204,7 +206,7 @@ class WasteTest extends TestCase
             ->assertDontSee('16 06 01*')
             ->set('all', true)
             ->assertSee('16 06 01*')
-            ->assertSee("Loodaccu&#039;s", false)
+            ->assertSee('Loodaccu&#039;s', false)
             ->call('setYear', 2025)
             ->assertSee('999,00 kg');
     }
@@ -265,5 +267,47 @@ class WasteTest extends TestCase
         $this->actingAs($admin)->get('/waste-totals')->assertForbidden();
         $this->actingAs($admin)->get('/waste-processors')->assertForbidden();
         $this->actingAs($admin)->get(route('waste.totals-pdf'))->assertForbidden();
+    }
+
+    #[Test]
+    public function entries_are_filtered_and_exported_per_year(): void
+    {
+        $this->registrar();
+        $old = WasteEntry::factory()->create(['date' => '2025-05-10']);
+        $new = WasteEntry::factory()->create(['date' => '2026-02-01']);
+
+        $this->assertSame([2026 => '2026', 2025 => '2025'], array_slice(WasteEntryResource::yearOptions(), -2, null, true) + [], 'Newest first.');
+
+        Livewire::test(ManageWasteEntries::class)
+            ->filterTable('year', 2025)
+            ->assertCanSeeTableRecords([$old])
+            ->assertCanNotSeeTableRecords([$new]);
+
+        // The export window proposes the filtered year; choosing a year exports all of that year.
+        $page = Livewire::test(ManageWasteEntries::class)
+            ->filterTable('year', 2026)
+            ->mountAction('exportPdf')
+            ->assertSchemaStateSet(['year' => 2026])
+            ->setActionData(['year' => 2025])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        $this->assertSame([$old->id], $this->exportedIds($page), 'The year chosen in the window wins over the list.');
+
+        $page = Livewire::test(ManageWasteEntries::class)->callAction('exportPdf', ['year' => null]);
+        $this->assertEqualsCanonicalizing([$old->id, $new->id], $this->exportedIds($page), 'Empty: the list as shown.');
+    }
+
+    /**
+     * The entries of the PDF a page just opened (through its token).
+     *
+     * @return list<int>
+     */
+    protected function exportedIds(mixed $page): array
+    {
+        preg_match('#waste-pdf/([A-Za-z0-9]+)#', str_replace('\\', '', json_encode($page->effects['xjs'] ?? [], JSON_UNESCAPED_SLASHES)), $match);
+        $this->assertNotEmpty($match, 'The PDF was opened.');
+
+        return Cache::get("waste-pdf:{$match[1]}")['ids'];
     }
 }

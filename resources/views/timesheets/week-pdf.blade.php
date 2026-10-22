@@ -3,10 +3,10 @@
     black and white). Positions come from App\Actions\Timesheets\TimesheetPdf::sheet().
 --}}
 <!doctype html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
-    <title>Prestatiefiche</title>
+    <title>{{ __('erp.pdf.timesheet.title') }}</title>
     <style>
         @page { margin: 0; }
         body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #000; }

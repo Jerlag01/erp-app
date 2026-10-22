@@ -56,7 +56,8 @@ class SendWeeklyTimesheets
 
         foreach ($users as $user) {
             $week = $this->timesheets->week($user, $monday);
-            $pdf = $this->pdf->render($user, $monday);
+            // The administration's copy in the platform's language; the employee's own in theirs (below).
+            $pdf = $this->pdf->render($user, $monday, config('app.locale'));
             $name = TimesheetPdf::filename($user, $monday);
             $path = "timesheets/{$user->id}/{$name}";
             Storage::disk(TimesheetWeek::DISK)->put($path, $pdf);
@@ -117,8 +118,14 @@ class SendWeeklyTimesheets
                 continue;
             }
 
+            $locale = $user->preferredLocale() ?? config('app.locale');
+
+            if ($locale !== config('app.locale')) {
+                $file = [...$file, 'data' => $this->pdf->render($user, $monday, $locale)];
+            }
+
             try {
-                Mail::to($user->email, $user->name)->send(new SystemMail(MailTemplateKey::TimesheetEmployee, $user->preferredLocale() ?? config('app.locale'), [
+                Mail::to($user->email, $user->name)->send(new SystemMail(MailTemplateKey::TimesheetEmployee, $locale, [
                     'name' => $user->name,
                     'week' => (string) $monday->isoWeek(),
                     'from' => $monday->format('d/m/Y'),

@@ -1,9 +1,9 @@
-{{-- The delivery overview, printed like the Excel "Overzicht Levering Batterijen", in Dutch (Belgium). --}}
+{{-- The delivery overview, printed like the Excel "Overzicht Levering Batterijen", in the reader's language. --}}
 <!doctype html>
-<html lang="nl-BE">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
-    <title>Overzicht levering batterijen</title>
+    <title>{{ __('erp.pdf.deliveries.title') }}</title>
     <style>
         @page { margin: 12mm; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 8.5pt; color: #111827; }
@@ -19,20 +19,20 @@
 <body>
     <table style="margin: 0; border: 0;">
         <tr>
-            <td style="border: 0; padding: 0;"><h1>Overzicht bestellingen {{ settings()->get('batteries.supplier_location') }}</h1></td>
-            <td style="border: 0; padding: 0; text-align: right;">Afgedrukt op {{ today()->format('d/m/Y') }}</td>
+            <td style="border: 0; padding: 0;"><h1>{{ __('erp.pdf.deliveries.orders', ['location' => settings()->get('batteries.supplier_location')]) }}</h1></td>
+            <td style="border: 0; padding: 0; text-align: right;">{{ __('erp.pdf.printed_on', ['date' => today()->format('d/m/Y')]) }}</td>
         </tr>
     </table>
     <table>
         <thead>
             <tr>
-                <th>Locatie</th>
-                <th>Bestelnr.</th>
-                <th>Nr. orderbevestiging</th>
-                <th>Type batterij</th>
-                <th class="num">Aantal</th>
-                <th>Geplande leverdatum BAE Berlin</th>
-                <th>Werkelijke leverdatum</th>
+                <th>{{ __('erp.pdf.deliveries.location') }}</th>
+                <th>{{ __('erp.pdf.deliveries.order') }}</th>
+                <th>{{ __('erp.pdf.deliveries.confirmation') }}</th>
+                <th>{{ __('erp.pdf.deliveries.type') }}</th>
+                <th class="num">{{ __('erp.pdf.deliveries.pieces') }}</th>
+                <th>{{ __('erp.pdf.deliveries.planned', ['supplier' => 'BAE Berlin']) }}</th>
+                <th>{{ __('erp.pdf.deliveries.actual') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@
                     <td>{{ $delivery->delivered_at?->format('d/m/Y') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7">Geen leveringen</td></tr>
+                <tr><td colspan="7">{{ __('erp.pdf.deliveries.none') }}</td></tr>
             @endforelse
         </tbody>
     </table>
