@@ -539,7 +539,7 @@ Alle projecten per **categorie** (600, 604, 605, 606, 608, 610, …) met hun PO-
 
 ## Status
 
-Offerte → Te plannen → Ingepland → Uit te voeren → In uitvoering → Uitgevoerd → Te factureren → Gefactureerd → Afgesloten. Wijzig de status met **"Status wijzigen"**. Een **afgesloten** project wordt gearchiveerd met een ZIP van alle bestanden.
+Offerte → Wacht op PO → Te plannen → Ingepland → Uit te voeren → In uitvoering → Uitgevoerd → Te factureren → Gefactureerd → Afgesloten. Wijzig de status met **"Status wijzigen"**. Een **afgesloten** project wordt gearchiveerd met een ZIP van alle bestanden.
 
 ## Op een project
 

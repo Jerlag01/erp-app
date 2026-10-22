@@ -15,6 +15,11 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     case Offer = 'offer';
 
     /**
+     * The offer is accepted; the client's PO number is still to come.
+     */
+    case WaitingForPo = 'waiting_for_po';
+
+    /**
      * The client approved a GPW request: to be planned in the approved period.
      */
     case ToBePlanned = 'to_be_planned';
@@ -61,6 +66,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Offer => 'gray',
+            self::WaitingForPo => 'warning',
             self::ToBePlanned => 'warning',
             self::Planned => 'info',
             self::ToBeExecuted => 'primary',
@@ -76,6 +82,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Offer => Heroicon::OutlinedDocumentText,
+            self::WaitingForPo => Heroicon::OutlinedDocumentMagnifyingGlass,
             self::ToBePlanned => Heroicon::OutlinedCalendar,
             self::Planned => Heroicon::OutlinedCalendarDays,
             self::ToBeExecuted => Heroicon::OutlinedClock,

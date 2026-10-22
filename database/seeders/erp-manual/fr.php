@@ -538,7 +538,7 @@ Tous les projets par **catégorie** (600, 604, 605, 606, 608, 610, …) avec leu
 
 ## Statut
 
-Offre → À planifier → Planifié → À exécuter → En cours → Exécuté → À facturer → Facturé → Clôturé. Changez le statut avec **« Changer le statut »**. Un projet **clôturé** est archivé avec un ZIP de tous les fichiers.
+Offre → En attente du PO → À planifier → Planifié → À exécuter → En cours → Exécuté → À facturer → Facturé → Clôturé. Changez le statut avec **« Changer le statut »**. Un projet **clôturé** est archivé avec un ZIP de tous les fichiers.
 
 ## Sur un projet
 

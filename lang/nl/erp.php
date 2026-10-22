@@ -881,6 +881,7 @@ return [
         ],
         'project_status' => [
             'offer' => 'Offerte',
+            'waiting_for_po' => 'Wacht op PO',
             'to_be_planned' => 'Te plannen',
             'planned' => 'Ingepland',
             'to_be_executed' => 'Uit te voeren',

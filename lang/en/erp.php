@@ -881,6 +881,7 @@ return [
         ],
         'project_status' => [
             'offer' => 'Offer',
+            'waiting_for_po' => 'Waiting for PO',
             'to_be_planned' => 'To be planned',
             'planned' => 'Planned',
             'to_be_executed' => 'To be executed',

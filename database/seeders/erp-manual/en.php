@@ -538,7 +538,7 @@ All projects per **category** (600, 604, 605, 606, 608, 610, …) with their PO 
 
 ## Status
 
-Offer → To be planned → Planned → To be executed → In progress → Executed → Invoicing to do → Invoiced → Closed. Change the status with **"Change status"**. A **closed** project is archived with a ZIP of all its files.
+Offer → Waiting for PO → To be planned → Planned → To be executed → In progress → Executed → Invoicing to do → Invoiced → Closed. Change the status with **"Change status"**. A **closed** project is archived with a ZIP of all its files.
 
 ## On a project
 
