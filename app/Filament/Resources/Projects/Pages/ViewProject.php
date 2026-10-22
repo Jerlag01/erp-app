@@ -64,7 +64,8 @@ class ViewProject extends ViewRecord
     }
 
     /**
-     * Ticks or unticks a step of the progress bar (610–650 projects).
+     * Ticks or unticks a step of the progress bar (610–650 projects). Ticking "PO received" on a project
+     * without PO number opens the window to add one.
      */
     public function toggleStep(int $step): void
     {
@@ -72,20 +73,34 @@ class ViewProject extends ViewRecord
         abort_unless(ProjectProgress::appliesTo($project) && Gate::allows('update', $project), 403);
 
         ProjectProgress::toggle($project, $step, auth()->user());
+
+        if ($step === ProjectProgress::PO_STEP && $project->steps()->where('step', $step)->exists() && $project->poNumbers()->doesntExist() && $this->mayAddPoNumber($project)) {
+            $this->mountAction('addPoNumber');
+        }
     }
 
     /**
-     * Adding a PO number to a 600 project: administrators and "projects.intervention_po", on a project
-     * they see that is not archived (administrators also on archived ones).
+     * Adding a PO number at any moment, from the project page:
+     * - 600 projects: administrators and "projects.intervention_po";
+     * - 610–650 projects once the step "PO received" is ticked: those who may edit the project, and
+     *   "projects.intervention_po".
+     * Only on a project they see that is not archived (administrators also on archived ones).
      */
     protected function mayAddPoNumber(Project $project): bool
     {
         $user = auth()->user();
 
-        return $project->category?->numbering->isIntervention()
-            && ProjectForm::mayAddInterventionPo()
-            && Gate::allows('view', $project)
-            && (! $project->isArchived() || $user->isAdmin());
+        if (! Gate::allows('view', $project) || ($project->isArchived() && ! $user->isAdmin())) {
+            return false;
+        }
+
+        if ($project->category?->numbering->isIntervention()) {
+            return ProjectForm::mayAddInterventionPo();
+        }
+
+        return ProjectProgress::appliesTo($project)
+            && $project->steps()->where('step', ProjectProgress::PO_STEP)->exists()
+            && (Gate::allows('update', $project) || ProjectForm::mayAddInterventionPo());
     }
 
     protected function getHeaderActions(): array
@@ -175,7 +190,7 @@ class ViewProject extends ViewRecord
                 ->url(fn (Project $record): string => ($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first())
                     ? EnersysDossierResource::getUrl('edit', ['record' => $dossier])
                     : EnersysDossierResource::getUrl('create', ['project' => $record->id])),
-            // 600 projects: a PO number can be added at any moment, whatever the status.
+            // 600 projects at any moment, 610–650 once "PO received" is ticked (see mayAddPoNumber()).
             Action::make('addPoNumber')
                 ->label(__('erp.projects.add_po_number'))
                 ->icon(Heroicon::OutlinedHashtag)

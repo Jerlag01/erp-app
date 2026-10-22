@@ -545,7 +545,7 @@ Offre → En attente du PO → À planifier → Planifié → À exécuter → E
 - **Numéros PO** du client (10 chiffres, plusieurs possibles).
 - Onglets **documents, photos, plans, schémas, fichiers supplémentaires, pièces, offres et factures**. Les fichiers ont des versions.
 - Les **chefs de projet** et les **équipes affectées** déterminent qui voit le projet.
-- Pour 610–650, une **barre d'avancement** montre les étapes (demande, visite, offre, PO, … jusqu'à la remise) ; cochez les étapes ou elles se cochent automatiquement.
+- Pour 610–650, une **barre d'avancement** montre les étapes (demande, visite, offre, PO, … jusqu'à la remise) ; cochez les étapes ou elles se cochent automatiquement. Quand **PO reçu** est coché, **« Ajouter un numéro PO »** ajoute un numéro PO à tout moment (en cochant l'étape sans numéro PO, cette fenêtre s'ouvre directement).
 - **Copier** démarre un nouveau projet à partir de celui-ci.
 - Pour 608, choisissez l'**emplacement** : un code COW ou un **client tiers** avec sa propre adresse d'installation.
 - Depuis un projet, demandez un **GPW** (voir « Demandes de GPW »).

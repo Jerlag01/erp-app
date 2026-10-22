@@ -513,7 +513,7 @@ return [
             'download_pdf' => 'Télécharger des fichiers PDF',
             'edit_finished' => 'Modifier les dossiers clôturés (facturation) / rouvrir',
             'copy' => 'Copier des projets',
-            'intervention_po' => 'Saisir des numéros de PO pour les interventions (600), à tout moment',
+            'intervention_po' => 'Saisir des numéros PO à tout moment (interventions 600, et 610–650 dès « PO reçu »)',
             'gpw' => 'Demander des GPW',
             'input' => 'Voir et modifier l\'onglet Saisie (données du projet)',
         ],

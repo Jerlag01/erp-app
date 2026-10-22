@@ -513,7 +513,7 @@ return [
             'download_pdf' => 'PDF-bestanden downloaden',
             'edit_finished' => 'Afgeronde dossiers wijzigen (facturatie) / heropenen',
             'copy' => 'Projecten kopiëren',
-            'intervention_po' => 'PO-nummers ingeven bij interventies (600), op elk moment',
+            'intervention_po' => 'PO-nummers ingeven op elk moment (interventies 600, en 610–650 vanaf "PO ontvangen")',
             'gpw' => 'GPW aanvragen',
             'input' => 'Invoertab (projectgegevens) zien en wijzigen',
         ],

@@ -545,7 +545,7 @@ Offer → Waiting for PO → To be planned → Planned → To be executed → In
 - The client's **PO numbers** (10 digits, several possible).
 - Tabs for **documents, photos, plans, schematics, extra files, parts, offers and invoices**. Files have versions.
 - **Project leaders** and **assigned teams** decide who sees the project.
-- For 610–650 a **progress bar** shows the steps (request, site visit, offer, PO, … up to handed over); tick steps yourself or they are ticked automatically.
+- For 610–650 a **progress bar** shows the steps (request, site visit, offer, PO, … up to handed over); tick steps yourself or they are ticked automatically. Once **PO received** is ticked, **"Add PO number"** adds a PO number at any moment (ticking the step without a PO number opens that window straight away).
 - **Copy** starts a new project from this one.
 - For 608 you choose the **location**: a COW code or a **third-party client** with its own installation address.
 - From a project you request a **GPW** (see "GPW requests").

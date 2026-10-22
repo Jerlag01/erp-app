@@ -546,7 +546,7 @@ Offerte → Wacht op PO → Te plannen → Ingepland → Uit te voeren → In ui
 - **PO-nummers** van de klant (10 cijfers, meerdere mogelijk).
 - Tabbladen voor **documenten, foto's, plannen, schema's, extra bestanden, onderdelen, offertes en facturen**. Bestanden hebben versies.
 - **Projectleiders** en **toegewezen ploegen** bepalen wie het project ziet.
-- Voor 610–650 toont een **voortgangsbalk** de stappen (aanvraag, werfbezoek, offerte, PO, … tot overgedragen); vink stappen aan of ze worden automatisch aangevinkt.
+- Voor 610–650 toont een **voortgangsbalk** de stappen (aanvraag, werfbezoek, offerte, PO, … tot overgedragen); vink stappen aan of ze worden automatisch aangevinkt. Is **PO ontvangen** aangevinkt, dan voeg je met **"PO-nummer toevoegen"** op elk moment een PO-nummer toe (bij het aanvinken zonder PO-nummer opent dat venster meteen).
 - **Kopiëren** start een nieuw project vanuit dit project.
 - Bij 608 kies je de **locatie**: een COW-code of een **derde klant** met een eigen installatieadres.
 - Vanuit een project vraag je een **GPW** aan (zie "GPW-aanvragen").

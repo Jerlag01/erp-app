@@ -513,7 +513,7 @@ return [
             'download_pdf' => 'Download PDF files',
             'edit_finished' => 'Change finished dossiers (invoicing) / reopen',
             'copy' => 'Copy projects',
-            'intervention_po' => 'Enter PO numbers on interventions (600), at any moment',
+            'intervention_po' => 'Enter PO numbers at any moment (interventions 600, and 610–650 from "PO received")',
             'gpw' => 'Request GPW',
             'input' => 'See and change the Input tab (project data)',
         ],

@@ -215,4 +215,34 @@ class ProjectWorkflowTest extends TestCase
         Livewire::test(ListProjects::class)->set('activeTab', '620')->assertTableColumnVisible('progress');
         Livewire::test(ListProjects::class)->set('activeTab', '607')->assertTableColumnHidden('progress');
     }
+
+    #[Test]
+    public function a_610_to_650_project_gets_po_numbers_once_po_received_is_ticked(): void
+    {
+        $project = $this->project('620');
+        $this->actingAs($this->employee());
+
+        // Before "PO received" there is no button.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('addPoNumber');
+
+        // Ticking the step without a PO number opens the window straight away.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->call('toggleStep', ProjectProgress::PO_STEP)
+            ->assertActionMounted('addPoNumber')
+            ->setActionData(['number' => '4500123456'])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->assertActionVisible('addPoNumber')
+            ->callAction('addPoNumber', ['number' => '4500654321'])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(['4500123456', '4500654321'], $project->poNumbers()->orderBy('number')->pluck('number')->all());
+        $this->assertTrue($project->steps()->where('step', ProjectProgress::PO_STEP)->exists());
+
+        // Other categories keep their own rules: no button on a 604 project.
+        $other = $this->project('604');
+        Livewire::test(ViewProject::class, ['record' => $other->getRouteKey()])->assertActionHidden('addPoNumber');
+    }
 }
