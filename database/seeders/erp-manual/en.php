@@ -985,6 +985,7 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 
 - By default only **their own projects**; projects of other clients only with **"🔒 All projects"**.
 - Passwords, recovery codes, router logins and VPN files only with the 🔒 permissions.
+- Charging stations and routers without a COW code (e.g. at a third-party client) never appear in the portal.
 - Under **GPW requests** they approve or refuse requests.
 
 The mails (welcome, new password) are edited under **E-mail templates**.

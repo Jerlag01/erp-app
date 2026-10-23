@@ -55,7 +55,8 @@ class ClientRouterResource extends ClientResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = Router::query()->with('workSite');
+        // Only routers at a COW site.
+        $query = Router::query()->with('workSite')->whereNotNull('routers.work_site_id');
 
         return ClientPortal::user()?->restrictToOwnSites($query) ?? $query->whereRaw('1 = 0');
     }

@@ -986,6 +986,7 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 
 - Standaard enkel **zijn eigen projecten**; projecten van andere klanten enkel met **"🔒 Alle projecten"**.
 - Wachtwoorden, herstelcodes, routerlogins en VPN-bestanden enkel met de 🔒-rechten.
+- Laadpalen en routers zonder COW-code (bv. bij een derde klant) verschijnen nooit in het portaal.
 - Bij **GPW-aanvragen** keurt hij aanvragen goed of weigert hij ze.
 
 De mails (welkom, nieuw wachtwoord) pas je aan bij **E-mailsjablonen**.

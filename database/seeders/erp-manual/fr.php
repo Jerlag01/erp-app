@@ -985,6 +985,7 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 
 - Par défaut uniquement **ses propres projets** ; les projets d'autres clients seulement avec **« 🔒 Tous les projets »**.
 - Mots de passe, codes de récupération, identifiants de routeur et fichiers VPN uniquement avec les droits 🔒.
+- Les bornes et routeurs sans code COW (p. ex. chez un client tiers) n'apparaissent jamais dans le portail.
 - Dans **Demandes de GPW**, il approuve ou refuse les demandes.
 
 Les mails (bienvenue, nouveau mot de passe) se modifient dans **Modèles d'e-mail**.

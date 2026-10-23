@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
+use App\Enums\SiteLocationType;
 use App\Filament\Admin\Resources\ClientUsers\ClientUserResource;
 use App\Filament\Admin\Resources\ClientUsers\Pages\ManageClientUsers;
 use App\Filament\Client\Resources\BatteryDeliveries\ClientBatteryDeliveryResource;
@@ -335,5 +336,23 @@ class ClientPortalTest extends TestCase
         $this->assertSame($contact->id, $client->work_site_contact_id);
         $this->assertTrue($client->projects->contains($project));
         $this->assertFalse($client->seesAllProjects());
+    }
+
+    #[Test]
+    public function charging_stations_without_a_cow_code_never_show_on_the_portal(): void
+    {
+        $atSite = ChargingStation::factory()->create();
+        $thirdParty = ChargingStation::factory()->create(['location_type' => SiteLocationType::Other, 'client_company' => 'Fluvius', 'street' => 'Brusselsesteenweg', 'postal_code' => '9090', 'city' => 'Melle']);
+        $this->assertNull($thirdParty->fresh()->work_site_id);
+
+        // Not even with "all projects".
+        $this->client([ClientPortal::CHARGING_STATIONS, ClientPortal::ROUTERS, ClientPortal::ALL_PROJECTS]);
+        Livewire::test(ListClientChargingStations::class)
+            ->assertCanSeeTableRecords([$atSite])
+            ->assertCanNotSeeTableRecords([$thirdParty])
+            ->assertDontSee('Fluvius');
+
+        $this->get('/client')->assertOk();
+        $this->assertSame(1, ClientChargingStationResource::getEloquentQuery()->count());
     }
 }

@@ -58,7 +58,8 @@ class ClientChargingStationResource extends ClientResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = ChargingStation::query()->with(['workSite', 'project']);
+        // Only stations at a COW site: those of third-party clients never show on the portal.
+        $query = ChargingStation::query()->with(['workSite', 'project'])->whereNotNull('charging_stations.work_site_id');
 
         return ClientPortal::user()?->restrictToOwnSites($query, orOwnProject: true) ?? $query->whereRaw('1 = 0');
     }
