@@ -317,6 +317,37 @@ What you work beyond the expected hours goes to your **overtime balance**, which
 MD,
         ],
 
+        'hr-calculations' => [
+            'title' => 'HR calculations: advances',
+            'body' => <<<'MD'
+## What is it for?
+
+Calculating the **monthly advance** of workers and servants.
+
+## Where?
+
+**Personnel → HR calculations: advances**. Only for roles with the permission **HR calculations → View**; administrators don't get it automatically, it has to be ticked.
+
+## The calculation
+
+Advance = **start value × days worked ÷ working days** of the period (weekends not counted).
+
+- Start value: **€620** for workers, **€1000** for servants (and managers).
+- Period: by default the **1st up to and including the 15th** of the month.
+- **Counted as worked**: normal prestations, sickness, public holidays, IR days, overtime recuperation and trainings.
+- **Not counted**: unpaid leave, family leave and approved vacation. If there is only **one vacation day** in the period, it does count as worked.
+
+## Everything can be changed
+
+- Choose the **month** and adjust the **period** (from – until).
+- Adjust the **start value** per statute, or per employee in the list.
+- With the permission **HR calculations → Manage** you save the start values and the last day of the period as **default** for the next months.
+- Export the overview to **PDF**.
+
+Unpaid leave is registered under **Personnel → Absences** (type *Unpaid leave*).
+MD,
+        ],
+
         'planning' => [
             'title' => 'Planning and trainings',
             'body' => <<<'MD'
@@ -702,6 +733,52 @@ Export the list to **Excel** or **PDF**, with or without confidential data (only
 ## 4G routers
 
 Per COW site the type, serial number, SIM numbers, login and the **VPN file**. Login and VPN file are only visible with the permission **See confidential data** for routers.
+MD,
+        ],
+
+        'asbuilt' => [
+            'title' => 'As-builts',
+            'body' => <<<'MD'
+## What is it for?
+
+Per project an **as-built** with all files per category, the inspection by **Normec BTV** and at the end one ZIP for the client.
+
+## Where?
+
+- **Projects → As-builts**: the overview per status (in progress, planned for Normec BTV, finished).
+- **Projects → As-built standard files**: the register of standard files.
+- On a project: the **As-built** button.
+
+## How is an as-built made?
+
+As soon as a project gets the status **Executed**, the as-built is made automatically with the status **In progress**. Not for the excluded categories (by default 600, 604, 605, 606, 607 and 608.1; set under Settings → General). The **standard files** of the project's COW code (and the general standard files) are added straight away.
+
+## Categories
+
+Plans, electrical schematics, evacuation routes, external influences, technical documents, cable dimensions, BTV reports, ICC and Lmax calculations. Any file format is allowed.
+
+- **Evacuation routes** and **external influences** belong to a **COW code** and are reused in every as-built of that COW code.
+- **Technical documents** are a **register**: pick from it per as-built and upload new ones (they go into the register too).
+
+## How it works
+
+1. Add files per category (the upload button of each category, or **Add files**).
+2. **Plan Normec BTV inspection**: choose the date. The status becomes *Planned for Normec BTV*.
+3. After the inspection: **Upload BTV report**. The as-built closes automatically into a ZIP named *"610-012-02GAM - ASBUILT"* with a folder per category (0 - BTV control, 1 - cable dimensions, … 8 - evacuation routes).
+4. The client gets an **e-mail** and downloads the ZIP in the Global overview for Client.
+
+With the **Reopen** permission you reopen a finished as-built.
+
+## The client
+
+In the client portal (permission **As-builts**) the client follows the status, downloads the ZIP and hands in files: evacuation routes, plans, external influences, ICC and Lmax, or everything in one ZIP in the **general zone**. The project leaders are notified.
+
+## Permissions
+
+- **As-built → View**: the overview of all as-builts.
+- **As-built → Manage**: add and remove files, plan the inspection, upload the BTV report.
+- **As-built → Manage standard files** and **Reopen**.
+- Whoever is on the project (project leader or assigned team) can always open and download that project's as-built.
 MD,
         ],
 

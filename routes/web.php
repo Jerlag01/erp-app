@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbsenceDocumentController;
+use App\Http\Controllers\AsbuiltDownloadController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\ClientRouterVpnController;
@@ -44,6 +45,8 @@ Route::get('/q/{item}', StockQrController::class)->name('stock.qr');
 Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
 
 // The VPN file of a router for the client portal (its own guard; checked in the controller).
+Route::get('/client-files/asbuilts/{asbuilt}/zip', [AsbuiltDownloadController::class, 'clientZip'])->whereNumber('asbuilt')->name('client.asbuilt.zip');
+Route::get('/client-files/asbuilt-files/{file}', [AsbuiltDownloadController::class, 'clientFile'])->whereNumber('file')->name('client.asbuilt.file');
 Route::get('/client-files/routers/{router}/vpn', ClientRouterVpnController::class)->whereNumber('router')->name('client.routers.vpn');
 // The link in a client portal user's welcome mail: signed, valid for 7 days, and only until the password is set.
 Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->whereNumber('clientUser')->middleware('signed')->name('client.welcome');
@@ -63,6 +66,9 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/incidents/{incident}/photos/{index}', IncidentPhotoController::class)->whereNumber('index')->name('incidents.photo');
     Route::get('/incident-pdf', IncidentPdfController::class)->name('incidents.pdf');
     Route::get('/idea-box/{suggestion}/photos/{index}', SuggestionPhotoController::class)->whereNumber('index')->name('suggestions.photo');
+    Route::get('/asbuilt-files/{file}', [AsbuiltDownloadController::class, 'file'])->whereNumber('file')->name('asbuilt.file');
+    Route::get('/asbuilt-standard-files/{file}', [AsbuiltDownloadController::class, 'library'])->whereNumber('file')->name('asbuilt.library-file');
+    Route::get('/asbuilts/{asbuilt}/zip', [AsbuiltDownloadController::class, 'zip'])->whereNumber('asbuilt')->name('asbuilt.zip');
     Route::get('/idea-box-pdf', SuggestionPdfController::class)->name('suggestions.pdf');
     Route::get('/idea-box-replies/{response}/photos/{index}', SuggestionResponsePhotoController::class)->whereNumber(['response', 'index'])->name('suggestions.response-photo');
     Route::get('/projects/{project}/files/{file}/{version?}', ProjectFileController::class)->whereNumber(['project', 'file', 'version'])->name('projects.file');

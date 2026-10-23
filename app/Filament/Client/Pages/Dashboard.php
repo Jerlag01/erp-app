@@ -3,6 +3,7 @@
 namespace App\Filament\Client\Pages;
 
 use App\Enums\ProjectStatus;
+use App\Filament\Client\Resources\Asbuilts\ClientAsbuiltResource;
 use App\Filament\Client\Resources\BatteryDeliveries\ClientBatteryDeliveryResource;
 use App\Filament\Client\Resources\ChargingStations\ClientChargingStationResource;
 use App\Filament\Client\Resources\GpwRequests\ClientGpwRequestResource;
@@ -30,7 +31,7 @@ class Dashboard extends BaseDashboard
     {
         $tiles = [];
 
-        foreach ([ClientProjectResource::class, ClientGpwRequestResource::class, ClientBatteryDeliveryResource::class, ClientChargingStationResource::class, ClientRouterResource::class] as $resource) {
+        foreach ([ClientProjectResource::class, ClientGpwRequestResource::class, ClientAsbuiltResource::class, ClientBatteryDeliveryResource::class, ClientChargingStationResource::class, ClientRouterResource::class] as $resource) {
             if ($resource::canViewAny()) {
                 $tiles[] = ['label' => $resource::getPluralModelLabel(), 'count' => $resource::getEloquentQuery()->count(), 'url' => $resource::getUrl()];
             }

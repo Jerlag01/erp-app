@@ -317,6 +317,37 @@ Ce que vous prestez au-delà des heures prévues s'ajoute à votre **solde d'heu
 MD,
         ],
 
+        'hr-calculations' => [
+            'title' => 'Calculs RH : avances',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Calculer l'**avance mensuelle** des ouvriers et employés.
+
+## Où ?
+
+**Personnel → Calculs RH : avances**. Uniquement pour les rôles ayant le droit **Calculs RH → Voir** ; les administrateurs ne l'ont pas automatiquement, il faut le cocher.
+
+## Le calcul
+
+Avance = **valeur de départ × jours travaillés ÷ jours ouvrables** de la période (week-ends non comptés).
+
+- Valeur de départ : **620 €** pour les ouvriers, **1000 €** pour les employés (et cadres).
+- Période : par défaut du **1er au 15** du mois inclus.
+- **Comptent comme travaillés** : prestations normales, maladie, jours fériés, jours de récupération (IR), récupération d'heures supplémentaires et formations.
+- **Ne comptent pas** : congé sans solde, congé familial et congé approuvé. S'il n'y a qu'**un seul jour de congé** dans la période, il compte comme travaillé.
+
+## Tout est modifiable
+
+- Choisissez le **mois** et adaptez la **période** (du – jusqu'au).
+- Adaptez la **valeur de départ** par statut, ou par travailleur dans la liste.
+- Avec le droit **Calculs RH → Gérer**, enregistrez les valeurs de départ et le dernier jour de la période comme **défaut** pour les mois suivants.
+- Exportez l'aperçu en **PDF**.
+
+Le congé sans solde s'enregistre dans **Personnel → Absences** (type *Congé sans solde*).
+MD,
+        ],
+
         'planning' => [
             'title' => 'Planning et formations',
             'body' => <<<'MD'
@@ -702,6 +733,52 @@ Exportez la liste en **Excel** ou **PDF**, avec ou sans données confidentielles
 ## Routeurs 4G
 
 Par site COW : type, numéro de série, numéros SIM, identifiants et **fichier VPN**. Identifiants et fichier VPN ne sont visibles qu'avec le droit **Voir les données confidentielles** des routeurs.
+MD,
+        ],
+
+        'asbuilt' => [
+            'title' => 'As-builts',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Par projet, un **as-built** avec tous les fichiers par catégorie, le contrôle par **Normec BTV** et au final un ZIP pour le client.
+
+## Où ?
+
+- **Projets → As-builts** : l'aperçu par statut (en cours, planifié pour Normec BTV, terminé).
+- **Projets → Fichiers standard as-built** : le registre des fichiers standard.
+- Sur un projet : le bouton **As-built**.
+
+## Comment naît un as-built ?
+
+Dès qu'un projet passe au statut **Exécuté**, l'as-built est créé automatiquement avec le statut **En cours**. Pas pour les catégories exclues (par défaut 600, 604, 605, 606, 607 et 608.1 ; réglable dans Paramètres → Général). Les **fichiers standard** du code COW du projet (et les fichiers standard généraux) sont ajoutés directement.
+
+## Catégories
+
+Plans, schémas électriques, voies d'évacuation, influences externes, documents techniques, dimensionnement des câbles, rapports BTV, calculs ICC et Lmax. Tout format de fichier est accepté.
+
+- Les **voies d'évacuation** et **influences externes** appartiennent à un **code COW** et sont réutilisées dans chaque as-built de ce code.
+- Les **documents techniques** forment un **registre** : choisissez-en par as-built et téléversez-en de nouveaux (ils rejoignent aussi le registre).
+
+## Déroulement
+
+1. Ajoutez des fichiers par catégorie (le bouton de téléversement de chaque catégorie ou **Ajouter des fichiers**).
+2. **Planifier le contrôle Normec BTV** : choisissez la date. Le statut devient *Planifié pour Normec BTV*.
+3. Après le contrôle : **Téléverser le rapport BTV**. L'as-built se clôture automatiquement en un ZIP nommé *« 610-012-02GAM - ASBUILT »* avec un dossier par catégorie (0 - BTV control, 1 - cable dimensions, … 8 - evacuation routes).
+4. Le client reçoit un **e-mail** et télécharge le ZIP dans le Global overview for Client.
+
+Avec le droit **Rouvrir**, vous rouvrez un as-built terminé.
+
+## Le client
+
+Dans le portail client (droit **As-builts**), le client suit le statut, télécharge le ZIP et fournit des fichiers : voies d'évacuation, plans, influences externes, ICC et Lmax, ou tout en un ZIP dans la **zone générale**. Les chefs de projet en sont avertis.
+
+## Droits
+
+- **As-built → Voir** : l'aperçu de tous les as-builts.
+- **As-built → Gérer** : ajouter et supprimer des fichiers, planifier le contrôle, téléverser le rapport BTV.
+- **As-built → Gérer les fichiers standard** et **Rouvrir**.
+- Qui est sur le projet (chef de projet ou équipe affectée) peut toujours ouvrir et télécharger l'as-built de ce projet.
 MD,
         ],
 

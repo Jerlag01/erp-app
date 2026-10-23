@@ -6,6 +6,7 @@ use App\Actions\Gpw\RequestGpw;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CopyProject;
 use App\Enums\ProjectStatus;
+use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
@@ -216,6 +217,12 @@ class ViewProject extends ViewRecord
                     $record->load('poNumbers');
                 })
                 ->successNotificationTitle(__('erp.projects.po_number_added')),
+            Action::make('asbuilt')
+                ->label(__('erp.asbuilt.singular'))
+                ->icon(Heroicon::OutlinedArchiveBox)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => $record->asbuilt !== null && Gate::allows('view', $record->asbuilt))
+                ->url(fn (Project $record): string => AsbuiltResource::getUrl('view', ['record' => $record->asbuilt])),
             Action::make('requestGpw')
                 ->label(__('erp.gpw.request'))
                 ->icon(Heroicon::OutlinedCalendarDateRange)

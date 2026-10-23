@@ -136,6 +136,7 @@ class MailTemplateResource extends Resource
             'from' => today()->addWeek()->format('d/m/Y'), 'until' => today()->addWeek()->addDays(2)->format('d/m/Y'), 'remarks' => 'Toegang via achterpoort',
             'requested_by' => 'Jan Janssens', 'requester_email' => 'jan@example.com', 'approve_url' => url('/'), 'portal_url' => url('/client'),
             'decided_by' => 'Marc Janssens', 'note' => '—', 'project_url' => url('/'),
+            'file_name' => '610-012-02GAM - ASBUILT.zip',
             'author' => 'Jan Janssens', 'type' => 'idee', 'submitted_on' => today()->format('d/m/Y'), 'message' => 'Goed idee, we nemen het mee in het volgende overleg.', 'url' => url('/'),
             'overviews' => new HtmlString("- Projecten (600, 604, 605)\n- Batterijleveringen"),
             'previous' => new HtmlString('- **'.today()->format('d/m/Y').' 07:30–12:00** · 604-001-02GAM'),

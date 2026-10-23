@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'banner', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
+    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -44,6 +44,16 @@ class Settings
                 'name' => 'PI ERP',
                 'privacy_company' => null,
                 'privacy_email' => null,
+            ],
+            // HR calculations: the monthly advance (start value per statute, counted up to this day of the month).
+            'hr' => [
+                'advance_worker' => 620,
+                'advance_servant' => 1000,
+                'advance_until_day' => 15,
+            ],
+            // As-built files: project categories without as-built.
+            'asbuilt' => [
+                'excluded_categories' => ['600', '604', '605', '606', '607', '608.1'],
             ],
             // A message for the employees, in the top bar of their side of the platform.
             'banner' => [
@@ -84,6 +94,8 @@ class Settings
                 Modules::CABLE_STRIPPING => true,
                 Modules::TOOLBOX => true,
                 Modules::ANNOUNCEMENTS => true,
+                Modules::ASBUILT => true,
+                Modules::HR_CALCULATIONS => true,
                 Modules::ENERSYS => true,
             ],
             'mail' => [

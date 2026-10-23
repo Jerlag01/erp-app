@@ -7,12 +7,14 @@ use App\Enums\ProjectStatus;
 use App\Http\Controllers\PeppolInboundController;
 use App\Models\Client;
 use App\Models\Employee;
+use App\Models\ProjectCategory;
 use App\Support\MobileApp;
 use App\Support\Modules;
 use App\Support\OutlookCalendar;
 use App\Support\Settings as SiteSettings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
@@ -285,6 +287,15 @@ class Settings extends Page
                         ->label(__('erp.settings.fields.company_name'))
                         ->maxLength(150),
                 ]),
+            Section::make(__('erp.asbuilt.settings.section'))
+                ->description(__('erp.asbuilt.settings.help'))
+                ->visible(fn (): bool => modules()->asbuilt())
+                ->schema([
+                    CheckboxList::make('asbuilt.excluded_categories')
+                        ->label(__('erp.asbuilt.settings.excluded'))
+                        ->options(fn (): array => ProjectCategory::query()->orderBy('code')->pluck('code', 'code')->all())
+                        ->columns(['default' => 3, 'md' => 6]),
+                ]),
             Section::make(__('erp.settings.sections.reminders'))
                 ->schema([
                     TextInput::make('general.warning_days')
@@ -339,6 +350,8 @@ class Settings extends Page
             Modules::ENERSYS => Heroicon::OutlinedBattery50,
             Modules::TOOLBOX => Heroicon::OutlinedPresentationChartLine,
             Modules::ANNOUNCEMENTS => Heroicon::OutlinedMegaphone,
+            Modules::ASBUILT => Heroicon::OutlinedArchiveBox,
+            Modules::HR_CALCULATIONS => Heroicon::OutlinedCalculator,
         ];
 
         return [

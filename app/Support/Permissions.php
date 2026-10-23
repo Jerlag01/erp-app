@@ -82,6 +82,8 @@ class Permissions
         'enersys' => ['module' => Modules::ENERSYS, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished']],
         'cable_stripping' => ['module' => Modules::CABLE_STRIPPING, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'announcements' => ['module' => Modules::ANNOUNCEMENTS, 'abilities' => ['update']],
+        'asbuilt' => ['module' => Modules::ASBUILT, 'abilities' => ['view', 'manage', 'library', 'reopen']],
+        'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
     ];
@@ -91,7 +93,7 @@ class Permissions
      *
      * @var list<string>
      */
-    public const EXPLICIT = ['routers.secrets'];
+    public const EXPLICIT = ['routers.secrets', 'hr_calculations.view', 'hr_calculations.manage'];
 
     public static function isExplicit(string $permission): bool
     {

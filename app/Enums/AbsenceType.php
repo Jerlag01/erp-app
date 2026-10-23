@@ -8,8 +8,8 @@ use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Icons\Heroicon;
 
 /**
- * Absences an administrator records: medical leave, overtime taken as paid leave and family
- * leave (unpaid leave for compelling family reasons, "dwingende redenen").
+ * Absences an administrator records: medical leave, overtime taken as paid leave, family leave
+ * (unpaid leave for compelling family reasons, "dwingende redenen") and other unpaid leave.
  */
 enum AbsenceType: string implements HasColor, HasIcon, HasLabel
 {
@@ -18,6 +18,8 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
     case Overtime = 'overtime';
 
     case Family = 'family';
+
+    case Unpaid = 'unpaid';
 
     public function getLabel(): string
     {
@@ -30,6 +32,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Medical => 'danger',
             self::Overtime => 'info',
             self::Family => 'warning',
+            self::Unpaid => 'gray',
         };
     }
 
@@ -39,6 +42,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Medical => Heroicon::OutlinedHeart,
             self::Overtime => Heroicon::OutlinedClock,
             self::Family => Heroicon::OutlinedHome,
+            self::Unpaid => Heroicon::OutlinedMinusCircle,
         };
     }
 
@@ -59,6 +63,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Medical => '#dc2626',
             self::Overtime => '#0284c7',
             self::Family => '#d97706',
+            self::Unpaid => '#64748b',
         };
     }
 }

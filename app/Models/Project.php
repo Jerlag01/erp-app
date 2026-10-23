@@ -7,6 +7,7 @@ use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Enums\SiteLocationType;
+use App\Support\Asbuilts;
 use App\Support\ProjectProgress;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -258,6 +259,14 @@ class Project extends Model
     }
 
     /**
+     * @return HasOne<Asbuilt, $this>
+     */
+    public function asbuilt(): HasOne
+    {
+        return $this->hasOne(Asbuilt::class);
+    }
+
+    /**
      * GPW requests, newest first.
      *
      * @return HasMany<GpwRequest, $this>
@@ -405,6 +414,11 @@ class Project extends Model
         static::created(function (self $project): void {
             ProjectProgress::sync($project);
             app(CreateFollowUpProject::class)->handle($project);
+
+            // Executed: the as-built of the project starts (not for the excluded categories).
+            if ($project->status === ProjectStatus::Executed) {
+                app(Asbuilts::class)->createFor($project);
+            }
         });
 
         // Status changes: closing (and "invoiced" on 610–650 projects) archives the project; an executed
@@ -422,6 +436,10 @@ class Project extends Model
 
             ProjectProgress::sync($project);
             app(CreateFollowUpProject::class)->handle($project);
+
+            if ($project->status === ProjectStatus::Executed) {
+                app(Asbuilts::class)->createFor($project);
+            }
         });
     }
 

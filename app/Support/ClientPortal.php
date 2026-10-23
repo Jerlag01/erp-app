@@ -28,6 +28,9 @@ class ClientPortal
     /** See and approve (or refuse) the GPW requests of the projects the user sees. */
     public const GPW = 'gpw';
 
+    /** Follow the as-builts of the projects the user sees, download them when finished and hand in files. */
+    public const ASBUILT = 'asbuilt';
+
     public const BATTERY_DELIVERIES = 'battery_deliveries';
 
     public const CHARGING_STATIONS = 'charging_stations';
@@ -39,7 +42,7 @@ class ClientPortal
     public const ROUTER_SECRETS = 'router_secrets';
 
     public const PERMISSIONS = [
-        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
+        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::ASBUILT, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
     ];
 
     /**

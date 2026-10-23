@@ -43,6 +43,8 @@ enum MailTemplateKey: string implements HasLabel
 
     case SuggestionResponse = 'suggestion_response';
 
+    case AsbuiltAvailable = 'asbuilt_available';
+
     public function getLabel(): string
     {
         return __('erp.enums.mail_template.'.$this->value);
@@ -67,6 +69,7 @@ enum MailTemplateKey: string implements HasLabel
             self::TimesheetEmployee => [...$company, 'name', 'week', 'from', 'until', 'hours', 'overtime', 'balance', 'km'],
             self::ClientWelcome => [...$company, 'name', 'email', 'company', 'portal_name', 'portal_url', 'password_link', 'link_days', 'overviews'],
             self::GpwRequest => [...$company, 'contact_name', 'project', 'cow_code', 'address', 'description', 'period', 'from', 'until', 'remarks', 'requested_by', 'requester_email', 'approve_url', 'portal_url'],
+            self::AsbuiltAvailable => [...$company, 'name', 'project', 'cow_code', 'file_name', 'portal_url'],
             self::SuggestionResponse => [...$company, 'name', 'author', 'type', 'submitted_on', 'message', 'url'],
             self::GpwApproved, self::GpwRejected => [...$company, 'name', 'project', 'cow_code', 'period', 'decided_by', 'note', 'project_url'],
             self::ClientPasswordReset => [...$company, 'name', 'email', 'portal_name', 'portal_url', 'reset_link', 'minutes'],

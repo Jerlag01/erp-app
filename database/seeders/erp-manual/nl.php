@@ -318,6 +318,37 @@ Wat je meer werkt dan de te werken uren, komt bij je **meeruren-saldo**. Dat sal
 MD,
         ],
 
+        'hr-calculations' => [
+            'title' => 'HR-berekeningen: voorschotten',
+            'body' => <<<'MD'
+## Waarvoor?
+
+Het **maandelijkse voorschot** van arbeiders en bedienden berekenen.
+
+## Waar?
+
+**Personeel → HR-berekeningen: voorschotten**. Enkel voor rollen met het recht **HR-berekeningen → Bekijken**; beheerders krijgen dit recht niet automatisch, het moet aangevinkt worden.
+
+## De berekening
+
+Voorschot = **startwaarde × gewerkte dagen ÷ werkdagen** in de periode (weekends tellen niet mee).
+
+- Startwaarde: **€ 620** voor arbeiders, **€ 1000** voor bedienden (en kaderleden).
+- Periode: standaard de **1ste tot en met de 15de** van de maand.
+- **Telt als gewerkt**: gewone prestaties, ziekte, feestdagen, inhaalrustdagen (IR), recuperatie overuren en opleidingen.
+- **Telt niet**: onbetaald verlof, familiaal verlof en goedgekeurd verlof. Is er maar **één verlofdag** in de periode, dan telt die wel als gewerkt.
+
+## Alles aanpasbaar
+
+- Kies de **maand**, pas de **periode** (van – tot en met) aan.
+- Pas de **startwaarde** per statuut aan, of per werknemer in de lijst.
+- Met het recht **HR-berekeningen → Beheren** bewaar je de startwaarden en de laatste dag van de periode als **standaard** voor de volgende maanden.
+- Exporteer het overzicht naar **PDF**.
+
+Onbetaald verlof registreer je bij **Personeel → Afwezigheden** (soort *Onbetaald verlof*).
+MD,
+        ],
+
         'planning' => [
             'title' => 'Planning en opleidingen',
             'body' => <<<'MD'
@@ -703,6 +734,52 @@ Exporteer de lijst naar **Excel** of **PDF**, met of zonder vertrouwelijke gegev
 ## 4G-routers
 
 Per COW-site het type, serienummer, SIM-nummers, login en het **VPN-bestand**. Login en VPN-bestand zijn enkel zichtbaar met het recht **Vertrouwelijke gegevens zien** voor routers.
+MD,
+        ],
+
+        'asbuilt' => [
+            'title' => 'As-builts',
+            'body' => <<<'MD'
+## Waarvoor?
+
+Per project een **as-built** met alle bestanden per categorie, de keuring door **Normec BTV** en op het einde één ZIP voor de klant.
+
+## Waar?
+
+- **Projecten → As-builts**: het overzicht per status (in uitvoering, gepland voor Normec BTV, afgerond).
+- **Projecten → As-built standaardbestanden**: het register van standaardbestanden.
+- Op een project: de knop **As-built**.
+
+## Hoe ontstaat een as-built?
+
+Zodra een project de status **Uitgevoerd** krijgt, wordt de as-built automatisch aangemaakt met de status **In uitvoering**. Niet voor de uitgesloten categorieën (standaard 600, 604, 605, 606, 607 en 608.1; in te stellen bij Instellingen → Algemeen). De **standaardbestanden** van de COW-code van het project (en de algemene standaardbestanden) worden meteen toegevoegd.
+
+## Categorieën
+
+Plannen, elektrische schema's, evacuatiewegen, externe invloeden, technische documenten, kabeldimensionering, BTV-keuringsverslagen, ICC- en Lmax-berekeningen. Elk bestandsformaat is toegelaten.
+
+- **Evacuatiewegen** en **externe invloeden** horen bij een **COW-code** en worden hergebruikt in elke as-built van die COW-code.
+- **Technische documenten** vormen een **register**: kies er per as-built uit en upload nieuwe (die komen ook in het register).
+
+## Werkwijze
+
+1. Voeg bestanden toe per categorie (de uploadknop bij elke categorie of **Bestanden toevoegen**).
+2. **Keuring Normec BTV plannen**: kies de datum. De status wordt *Gepland voor Normec BTV*.
+3. Na de keuring: **Keuringsverslag BTV uploaden**. De as-built sluit automatisch af en wordt een ZIP met de naam *"610-012-02GAM - ASBUILT"* met een map per categorie (0 - BTV control, 1 - cable dimensions, … 8 - evacuation routes).
+4. De klant krijgt een **e-mail** en downloadt de ZIP in de Global overview for Client.
+
+Met het recht **Heropenen** zet je een afgeronde as-built terug open.
+
+## De klant
+
+In het klantenportaal (recht **As-builts**) volgt de klant de status op, downloadt hij de ZIP en levert hij bestanden aan: evacuatiewegen, plannen, externe invloeden, ICC en Lmax, of alles in één ZIP in de **algemene zone**. De projectleiders krijgen daarvan een melding.
+
+## Rechten
+
+- **As-built → Bekijken**: het overzicht van alle as-builts.
+- **As-built → Beheren**: bestanden toevoegen en verwijderen, keuring plannen, BTV-verslag uploaden.
+- **As-built → Standaardbestanden beheren** en **Heropenen**.
+- Wie op het project staat (projectleider of toegewezen ploeg), kan de as-built van dat project altijd openen en downloaden.
 MD,
         ],
 
