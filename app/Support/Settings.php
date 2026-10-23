@@ -138,6 +138,11 @@ class Settings
                 ],
                 'mail_default' => true,
                 'notify_emails' => [],
+                // Planning items in the employees' Outlook calendars (Microsoft 365, see OutlookCalendar).
+                'outlook_enabled' => false,
+                'outlook_tenant_id' => null,
+                'outlook_client_id' => null,
+                'outlook_client_secret' => null,
             ],
             // Charging stations and 4G routers belong to the projects of this category.
             'charging' => [

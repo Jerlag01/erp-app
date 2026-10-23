@@ -349,6 +349,10 @@ Days with **leave, an absence or a training** are blocked; overlapping time slot
 
 Every change in your planning is notified in the platform and on your phone (mobile app), and optionally by e-mail.
 
+## Outlook calendar
+
+When the Microsoft 365 link is on (**Settings → Planning → Outlook calendar**), every planning item is also put in the employee's **Outlook calendar**, with the project, hours, address and remarks. When the item is changed, moved to a colleague or removed, that happens in Outlook too.
+
 ## Permissions
 
 - **Plan everyone** (projects and warehouse), **plan other items**, **see everyone's planning** and **plan trainings** are separate permissions.

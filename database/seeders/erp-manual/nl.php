@@ -350,6 +350,10 @@ Dagen met **verlof, een afwezigheid of een opleiding** zijn geblokkeerd; overlap
 
 Elke wijziging in je planning krijg je als melding in het platform en op je telefoon (mobiele app), en naar keuze per e-mail.
 
+## Outlook-agenda
+
+Staat de koppeling met Microsoft 365 aan (**Instellingen → Planning → Outlook-agenda**), dan komt elk planningsitem ook in de **Outlook-agenda** van de werknemer, met het project, de uren, het adres en de opmerkingen. Wordt het item gewijzigd, verplaatst naar een collega of verwijderd, dan gebeurt dat ook in Outlook.
+
 ## Rechten
 
 - **Iedereen inplannen** (projecten en magazijn), **andere items inplannen**, **ieders planning zien** en **opleidingen plannen** zijn aparte rechten.

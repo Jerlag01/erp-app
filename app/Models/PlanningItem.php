@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PlanningKind;
+use App\Support\OutlookCalendar;
 use App\Support\Planning;
 use Carbon\CarbonInterface;
 use Database\Factories\PlanningItemFactory;
@@ -166,6 +167,18 @@ class PlanningItem extends Model
 
     protected static function booted(): void
     {
+        // Mirrored in the employee's Outlook calendar, after the response (see OutlookCalendar).
+        static::created(fn (self $item) => defer(fn () => app(OutlookCalendar::class)->sync($item->fresh() ?? $item)));
+        static::updated(function (self $item): void {
+            if ($item->wasChanged(['user_id', 'date', 'start_time', 'end_time', 'kind', 'project_id', 'title', 'description', 'tasks', 'notes'])) {
+                defer(fn () => app(OutlookCalendar::class)->sync($item->fresh() ?? $item));
+            }
+        });
+        static::deleted(function (self $item): void {
+            [$mailbox, $event] = [$item->outlook_mailbox, $item->outlook_event_id];
+            defer(fn () => app(OutlookCalendar::class)->remove($mailbox, $event));
+        });
+
         static::saving(function (self $item): void {
             // Projects have no task list; warehouse jobs and other items have no project.
             if ($item->kind === PlanningKind::Project) {

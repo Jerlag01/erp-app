@@ -349,6 +349,10 @@ Les jours de **congé, d'absence ou de formation** sont bloqués ; les créneaux
 
 Chaque changement de votre planning vous est notifié dans la plateforme et sur votre téléphone (application mobile), et au choix par e-mail.
 
+## Agenda Outlook
+
+Si la liaison avec Microsoft 365 est activée (**Paramètres → Planning → Agenda Outlook**), chaque élément du planning est aussi ajouté à l'**agenda Outlook** de l'employé, avec le projet, les heures, l'adresse et les remarques. Si l'élément est modifié, déplacé vers un collègue ou supprimé, c'est aussi le cas dans Outlook.
+
 ## Droits
 
 - **Planifier tout le monde** (projets et magasin), **planifier d'autres éléments**, **voir le planning de chacun** et **planifier des formations** sont des droits distincts.

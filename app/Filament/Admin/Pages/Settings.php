@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Employee;
 use App\Support\MobileApp;
 use App\Support\Modules;
+use App\Support\OutlookCalendar;
 use App\Support\Settings as SiteSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -81,6 +82,7 @@ class Settings extends Page
         $values = $settings->all();
         $values['mail']['password'] = null;
         $values['finance']['peppol_api_key'] = null;
+        $values['planning']['outlook_client_secret'] = null;
 
         $this->form->fill($values);
     }
@@ -201,6 +203,11 @@ class Settings extends Page
                 'end' => substr((string) $slot['end'], 0, 5),
             ], $data['planning']['slots'] ?? []));
             $data['planning']['notify_emails'] = array_values(array_unique(array_map('strtolower', $data['planning']['notify_emails'] ?? [])));
+            // The client secret is stored encrypted; empty keeps the current one.
+            $data['planning']['outlook_enabled'] = (bool) ($data['planning']['outlook_enabled'] ?? false);
+            $data['planning']['outlook_client_secret'] = filled($data['planning']['outlook_client_secret'] ?? null)
+                ? Crypt::encryptString($data['planning']['outlook_client_secret'])
+                : $settings->get('planning.outlook_client_secret');
         }
 
         $data['modules'] = collect(Modules::ALL)
@@ -215,6 +222,7 @@ class Settings extends Page
 
         $this->data['mail']['password'] = null;
         $this->data['finance']['peppol_api_key'] = null;
+        $this->data['planning']['outlook_client_secret'] = null;
 
         Notification::make()
             ->title(__('erp.settings.saved'))
@@ -690,6 +698,48 @@ class Settings extends Page
                         ->helperText(__('erp.settings.help.planning_notify_emails'))
                         ->placeholder('planning@example.com')
                         ->nestedRecursiveRules(['email:rfc', 'max:255']),
+                ]),
+            Section::make(__('erp.planning.outlook.section'))
+                ->description(__('erp.planning.outlook.help'))
+                ->icon(Heroicon::OutlinedCalendarDays)
+                ->columns(2)
+                ->schema([
+                    Toggle::make('planning.outlook_enabled')
+                        ->label(__('erp.planning.outlook.enabled'))
+                        ->live()
+                        ->columnSpanFull(),
+                    TextInput::make('planning.outlook_tenant_id')
+                        ->label(__('erp.planning.outlook.tenant_id'))
+                        ->placeholder('00000000-0000-0000-0000-000000000000')
+                        ->required(fn (Get $get): bool => (bool) $get('planning.outlook_enabled'))
+                        ->maxLength(100),
+                    TextInput::make('planning.outlook_client_id')
+                        ->label(__('erp.planning.outlook.client_id'))
+                        ->placeholder('00000000-0000-0000-0000-000000000000')
+                        ->required(fn (Get $get): bool => (bool) $get('planning.outlook_enabled'))
+                        ->maxLength(100),
+                    TextInput::make('planning.outlook_client_secret')
+                        ->label(__('erp.planning.outlook.client_secret'))
+                        ->helperText(fn (): string => filled(settings()->get('planning.outlook_client_secret')) ? __('erp.planning.outlook.secret_saved') : __('erp.planning.outlook.secret_help'))
+                        ->password()
+                        ->revealable()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+                    Actions::make([
+                        Action::make('testOutlook')
+                            ->label(__('erp.planning.outlook.test'))
+                            ->icon(Heroicon::OutlinedSignal)
+                            ->color('gray')
+                            ->modalDescription(fn (): string => __('erp.planning.outlook.test_help', ['email' => auth()->user()->email]))
+                            ->requiresConfirmation()
+                            ->action(function (): void {
+                                $error = app(OutlookCalendar::class)->test(auth()->user()->email);
+
+                                $error === null
+                                    ? Notification::make()->title(__('erp.planning.outlook.test_ok'))->success()->send()
+                                    : Notification::make()->title(__('erp.planning.outlook.test_failed'))->body($error)->danger()->persistent()->send();
+                            }),
+                    ])->key('outlookActions')->columnSpanFull(),
                 ]),
         ];
     }
