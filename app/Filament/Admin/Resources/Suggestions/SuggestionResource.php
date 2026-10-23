@@ -122,11 +122,16 @@ class SuggestionResource extends Resource
                                     ->label(__('erp.incidents.handled_by'))
                                     ->helperText(fn (Suggestion $record): ?string => $record->handled_at?->format('d/m/Y H:i'))
                                     ->placeholder('—'),
-                                TextEntry::make('response')
-                                    ->label(__('erp.suggestions.response'))
-                                    ->extraAttributes(['style' => 'white-space: pre-wrap;'])
-                                    ->placeholder('—'),
                             ]),
+                    ]),
+                Section::make(__('erp.suggestions.responses.title'))
+                    ->description(__('erp.suggestions.responses.help'))
+                    ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                    ->columnSpanFull()
+                    ->schema([
+                        ViewEntry::make('conversation')
+                            ->hiddenLabel()
+                            ->view('filament.suggestions.thread-entry'),
                     ]),
                 Section::make(__('erp.incidents.photos'))
                     ->columnSpanFull()

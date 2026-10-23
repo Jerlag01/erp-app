@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Serves a photo from the idea/complaint box to administrators.
+ * Serves a photo from the idea/complaint box to administrators and to the employee who submitted it.
  */
 class SuggestionPhotoController
 {
     public function __invoke(Suggestion $suggestion, int $index): StreamedResponse
     {
-        abort_unless(Gate::allows('view', $suggestion), 403);
+        abort_unless(Gate::allows('view', $suggestion) || Gate::allows('respond', $suggestion), 403);
 
         $path = $suggestion->photoPath($index);
         abort_if($path === null || ! Storage::disk(PrivatePhotos::DISK)->exists($path), 404);

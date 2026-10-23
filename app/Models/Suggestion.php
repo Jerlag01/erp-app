@@ -10,9 +10,11 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * An entry in the idea/complaint box. Name and time come from the system, not from the form.
+ * Administrators and the submitter talk about it in its responses.
  */
 #[Fillable([
     'user_id', 'first_name', 'last_name', 'submitter_name', 'submitted_at', 'type', 'may_be_public', 'description',
@@ -37,6 +39,16 @@ class Suggestion extends Model
     public function handler(): BelongsTo
     {
         return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    /**
+     * The conversation: replies of administrators and of the submitter, oldest first.
+     *
+     * @return HasMany<SuggestionResponse, $this>
+     */
+    public function responses(): HasMany
+    {
+        return $this->hasMany(SuggestionResponse::class)->oldest()->oldest('id');
     }
 
     protected static function booted(): void

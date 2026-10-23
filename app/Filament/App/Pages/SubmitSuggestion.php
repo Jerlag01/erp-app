@@ -52,6 +52,17 @@ class SubmitSuggestion extends Page
         return __('erp.suggestions.intro');
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('mine')
+                ->label(__('erp.suggestions.responses.mine'))
+                ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                ->color('gray')
+                ->url(MySuggestions::getUrl(panel: 'app')),
+        ];
+    }
+
     public function mount(): void
     {
         $this->form->fill();

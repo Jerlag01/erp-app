@@ -160,6 +160,11 @@ class MailTemplates
                 'fr' => ['subject' => 'GPW refusé : {project} ({period})', 'body' => "Bonjour {name},\n\n{decided_by} a refusé le GPW du projet **{project}** ({cow_code}) pour **{period}**.\n\nRaison : {note}\n\nDemandez éventuellement une nouvelle période.\n\n[Ouvrir le projet]({project_url})\n\nCordialement,\n{company_name}"],
                 'en' => ['subject' => 'GPW refused: {project} ({period})', 'body' => "Hello {name},\n\n{decided_by} refused the GPW for project **{project}** ({cow_code}) for **{period}**.\n\nReason: {note}\n\nYou may request a new period.\n\n[Open the project]({project_url})\n\nKind regards,\n{company_name}"],
             ],
+            MailTemplateKey::SuggestionResponse->value => [
+                'nl' => ['subject' => 'Nieuwe reactie in de ideeënbus: {type} van {submitted_on}', 'body' => "Hallo {name},\n\n{author} heeft gereageerd op het/de {type} van {submitted_on}:\n\n{message}\n\n[Bekijk het gesprek en reageer]({url})\n\nMet vriendelijke groeten,\n{company_name}"],
+                'fr' => ['subject' => 'Nouvelle réponse dans la boîte à idées : {type} du {submitted_on}', 'body' => "Bonjour {name},\n\n{author} a répondu à : {type} du {submitted_on} :\n\n{message}\n\n[Voir la conversation et répondre]({url})\n\nCordialement,\n{company_name}"],
+                'en' => ['subject' => 'New reply in the idea box: {type} of {submitted_on}', 'body' => "Hello {name},\n\n{author} replied to the {type} of {submitted_on}:\n\n{message}\n\n[View the conversation and reply]({url})\n\nKind regards,\n{company_name}"],
+            ],
             MailTemplateKey::PlanningCreated->value => [
                 'nl' => ['subject' => 'Nieuw in je planning', 'body' => "Hallo {name},\n\n{changed_by} heeft het volgende in je planning gezet:\n\n{items}\n\n[Bekijk je planning]({planning_url})\n\nMet vriendelijke groeten,\n{company_name}"],
                 'fr' => ['subject' => 'Nouveau dans votre planning', 'body' => "Bonjour {name},\n\n{changed_by} a ajouté ceci à votre planning :\n\n{items}\n\n[Voir votre planning]({planning_url})\n\nCordialement,\n{company_name}"],

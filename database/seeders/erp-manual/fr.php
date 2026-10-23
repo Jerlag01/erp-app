@@ -814,9 +814,16 @@ Soumettre des **idées, plaintes et autres remarques** à la direction.
 2. Choisissez **idée, plainte ou autre**, écrivez votre message et ajoutez éventuellement des photos.
 3. Activez **« Peut être partagé au sein de l'entreprise »** si votre message peut être partagé avec les collègues.
 
+## La conversation
+
+- Vos soumissions et les réponses se trouvent dans **« Mes soumissions »** (bouton sur la page de la boîte à idées). Cliquez sur une soumission pour ouvrir la conversation.
+- Les administrateurs répondent dans **Sécurité → Boîte à idées** avec **« Répondre »** ; vous répondez de la même manière. Une réponse contient du texte et éventuellement des **photos**.
+- À chaque nouvelle réponse, l'autre partie reçoit une **notification dans la plateforme** et un **e-mail** dans sa langue (modèle *Boîte à idées : nouvelle réponse*).
+- Seuls vous et les administrateurs voyez la conversation et les photos.
+
 ## Suivi
 
-Les administrateurs consultent les messages dans **Sécurité → Boîte à idées**, par type, donnent une **réponse** et les exportent en **PDF**.
+Les administrateurs fixent le **statut** (nouveau, en cours, terminé) avec **Assurer le suivi** et exportent les soumissions en **PDF**. La première réponse d'un administrateur met une nouvelle soumission *en cours*.
 MD,
         ],
 

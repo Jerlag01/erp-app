@@ -27,6 +27,7 @@ use App\Http\Controllers\StockLabelController;
 use App\Http\Controllers\StockQrController;
 use App\Http\Controllers\SuggestionPdfController;
 use App\Http\Controllers\SuggestionPhotoController;
+use App\Http\Controllers\SuggestionResponsePhotoController;
 use App\Http\Controllers\TimesheetPdfController;
 use App\Http\Controllers\TimesheetReportPdfController;
 use App\Http\Controllers\ToolboxAttachmentController;
@@ -63,6 +64,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/incident-pdf', IncidentPdfController::class)->name('incidents.pdf');
     Route::get('/idea-box/{suggestion}/photos/{index}', SuggestionPhotoController::class)->whereNumber('index')->name('suggestions.photo');
     Route::get('/idea-box-pdf', SuggestionPdfController::class)->name('suggestions.pdf');
+    Route::get('/idea-box-replies/{response}/photos/{index}', SuggestionResponsePhotoController::class)->whereNumber(['response', 'index'])->name('suggestions.response-photo');
     Route::get('/projects/{project}/files/{file}/{version?}', ProjectFileController::class)->whereNumber(['project', 'file', 'version'])->name('projects.file');
     Route::get('/routers/{router}/vpn', RouterVpnController::class)->whereNumber('router')->name('routers.vpn');
     Route::get('/timesheet-report-pdf', TimesheetReportPdfController::class)->name('timesheets.report-pdf');

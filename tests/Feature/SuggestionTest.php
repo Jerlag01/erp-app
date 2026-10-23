@@ -2,19 +2,26 @@
 
 namespace Tests\Feature;
 
+use App\Actions\RespondToSuggestion;
+use App\Enums\MailTemplateKey;
 use App\Enums\SuggestionStatus;
 use App\Enums\SuggestionType;
 use App\Filament\Admin\Resources\Suggestions\Pages\ListSuggestions;
 use App\Filament\Admin\Resources\Suggestions\Pages\ViewSuggestion;
+use App\Filament\App\Pages\MySuggestions;
 use App\Filament\App\Pages\SubmitSuggestion;
+use App\Mail\SystemMail;
 use App\Models\Suggestion;
+use App\Models\SuggestionResponse;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class SuggestionTest extends TestCase
@@ -120,7 +127,7 @@ class SuggestionTest extends TestCase
         Filament::setCurrentPanel('admin');
 
         Livewire::test(ViewSuggestion::class, ['record' => $suggestion->getRouteKey()])
-            ->callAction('handle', ['status' => 'done', 'response' => 'Tweede machine besteld.'])
+            ->callAction('handle', ['status' => 'done'])
             ->assertHasNoActionErrors();
 
         $suggestion->refresh();
@@ -138,9 +145,10 @@ class SuggestionTest extends TestCase
         $photo = route('suggestions.photo', ['suggestion' => $suggestions[0], 'index' => 0]);
         $pdf = route('suggestions.pdf', ['suggestions' => $suggestions->modelKeys()]);
 
-        // Not even the submitter can reopen their entry: the box is read by administrators only.
-        $this->actingAs($submitter)->get($photo)->assertForbidden();
+        // The submitter sees their own photos (in the conversation), not the PDF; colleagues see nothing.
+        $this->actingAs($submitter)->get($photo)->assertOk();
         $this->actingAs($submitter)->get($pdf)->assertForbidden();
+        $this->actingAs(User::factory()->create())->get($photo)->assertForbidden();
 
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->get($photo)->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
@@ -160,5 +168,61 @@ class SuggestionTest extends TestCase
         $this->actingAs($employee)->get('/')->assertOk()->assertDontSee('data-suggestion-link', escape: false);
         $this->actingAs($employee)->get('/idea-box')->assertForbidden();
         $this->actingAs($admin)->get('/admin/idea-box')->assertForbidden();
+    }
+
+    #[Test]
+    public function administrators_and_the_submitter_reply_to_each_other_with_photos(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+        $submitter = User::factory()->create(['locale' => 'fr', 'email' => 'piet@power.example', 'name' => 'Piet Peeters']);
+        $admin = User::factory()->admin()->create(['email' => 'chef@power.example', 'name' => 'Ann Admin']);
+        $suggestion = Suggestion::factory()->for($submitter)->create(['type' => SuggestionType::Complaint, 'status' => SuggestionStatus::New]);
+
+        // An administrator replies with a photo: the submitter is told in the platform and by mail, in French.
+        $this->actingAs($admin);
+        Filament::setCurrentPanel('admin');
+        Livewire::test(ViewSuggestion::class, ['record' => $suggestion->getRouteKey()])
+            ->callAction('respond', ['body' => 'We bekijken het deze week.', 'photos' => [UploadedFile::fake()->image('plan.jpg')]])
+            ->assertHasNoActionErrors();
+
+        $reply = SuggestionResponse::query()->sole();
+        $this->assertTrue($reply->from_admin);
+        $this->assertCount(1, $reply->photos);
+        $this->assertSame(SuggestionStatus::InProgress, $suggestion->fresh()->status);
+        $this->assertSame(1, $submitter->notifications()->count());
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('piet@power.example')
+            && $mail->key === MailTemplateKey::SuggestionResponse
+            && str_starts_with($mail->rendered['subject'], 'Nouvelle réponse')
+            && str_contains($mail->rendered['html'], 'We bekijken het deze week.')
+            && str_contains($mail->rendered['html'], '/idea-box/mine?suggestion='.$suggestion->id));
+
+        // The submitter reads it on "My submissions" and replies; the administrators are told.
+        $this->actingAs($submitter);
+        Filament::setCurrentPanel('app');
+        $this->get(MySuggestions::getUrl(['suggestion' => $suggestion->id]))->assertOk()->assertSee('We bekijken het deze week.')->assertSee('Ann Admin');
+        $this->get(route('suggestions.response-photo', ['response' => $reply, 'index' => 0]))->assertOk();
+
+        Livewire::withQueryParams(['suggestion' => $suggestion->id])
+            ->test(MySuggestions::class)
+            ->fillForm(['body' => 'Merci, la machine est toujours en panne.'])
+            ->call('reply')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(2, $suggestion->responses()->count());
+        $this->assertFalse($suggestion->responses()->get()->last()->from_admin);
+        $this->assertSame(1, $admin->notifications()->count());
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('chef@power.example') && str_contains($mail->rendered['html'], '/admin/idea-box/'.$suggestion->id));
+
+        // Both see the whole conversation on the administration side.
+        $this->actingAs($admin)->get("/admin/idea-box/{$suggestion->id}")->assertOk()->assertSee('Merci, la machine est toujours en panne.');
+
+        // A colleague can neither read nor reply.
+        $colleague = User::factory()->create();
+        $this->actingAs($colleague);
+        Livewire::withQueryParams(['suggestion' => $suggestion->id])->test(MySuggestions::class)->assertDontSee('We bekijken het deze week.');
+        $this->get(route('suggestions.response-photo', ['response' => $reply, 'index' => 0]))->assertForbidden();
+        $this->expectException(HttpException::class);
+        app(RespondToSuggestion::class)->handle($suggestion, $colleague, ['body' => 'Ik ook']);
     }
 }

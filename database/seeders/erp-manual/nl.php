@@ -815,9 +815,16 @@ MD,
 2. Kies **idee, klacht of andere**, schrijf je bericht en voeg eventueel foto's toe.
 3. Zet **"Mag binnen het bedrijf gedeeld worden"** aan als je inzending met collega's gedeeld mag worden.
 
+## Het gesprek
+
+- Je inzendingen en de antwoorden vind je bij **"Mijn inzendingen"** (knop op de pagina van de ideeënbus). Klik op een inzending om het gesprek te openen.
+- Beheerders reageren bij **Veiligheid → Ideeënbus** met **"Reageren"**; jij antwoordt op dezelfde manier. Een reactie bevat tekst en eventueel **foto's**.
+- Bij elke nieuwe reactie krijgt de andere kant een **melding in het platform** en een **e-mail** in zijn eigen taal (sjabloon *Ideeënbus: nieuwe reactie*).
+- Enkel jij en de beheerders zien het gesprek en de foto's.
+
 ## Opvolgen
 
-Beheerders bekijken de inzendingen bij **Veiligheid → Ideeënbus**, per soort, geven een **antwoord** en exporteren ze naar **PDF**.
+Beheerders zetten de **status** (nieuw, in behandeling, afgerond) met **Opvolgen** en exporteren de inzendingen naar **PDF**. De eerste reactie van een beheerder zet een nieuwe inzending op *in behandeling*.
 MD,
         ],
 

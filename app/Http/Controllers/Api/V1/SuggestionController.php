@@ -32,14 +32,15 @@ class SuggestionController extends Controller
             'max_photos' => self::MAX_PHOTOS,
             'labels' => collect(['title', 'intro', 'type', 'description', 'description_placeholder', 'may_be_public', 'may_be_public_help', 'submit', 'response'])
                 ->mapWithKeys(fn (string $key): array => [$key => __("erp.suggestions.{$key}")]),
-            'mine' => Suggestion::query()->where('user_id', $user->id)->latest('submitted_at')->limit(10)->get()->map(fn (Suggestion $suggestion): array => [
+            'mine' => Suggestion::query()->where('user_id', $user->id)->with(['responses' => fn ($query) => $query->where('from_admin', true)])->latest('submitted_at')->limit(10)->get()->map(fn (Suggestion $suggestion): array => [
                 'id' => $suggestion->id,
                 'submitted_at' => $suggestion->submitted_at->toIso8601String(),
                 'type' => $suggestion->type->getLabel(),
                 'description' => $suggestion->description,
                 'status' => $suggestion->status->getLabel(),
                 'status_value' => $suggestion->status->value,
-                'response' => $suggestion->response,
+                // The latest answer of management (the replies are read and answered on the platform).
+                'response' => $suggestion->responses->last()?->body ?? $suggestion->response,
             ])->values(),
         ]]);
     }

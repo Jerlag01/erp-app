@@ -814,9 +814,16 @@ Submitting **ideas, complaints and other remarks** to management.
 2. Choose **idea, complaint or other**, write your message and optionally add photos.
 3. Switch on **"May be shared within the company"** if your message may be shared with colleagues.
 
+## The conversation
+
+- Your submissions and the answers are under **"My submissions"** (button on the idea box page). Click a submission to open the conversation.
+- Administrators reply under **Safety → Idea box** with **"Reply"**; you answer the same way. A reply holds text and optionally **photos**.
+- With every new reply the other side gets a **notification in the platform** and an **e-mail** in their own language (template *Idea box: new reply*).
+- Only you and the administrators see the conversation and the photos.
+
 ## Following up
 
-Administrators read the submissions under **Safety → Idea box**, per kind, give a **response** and export them to **PDF**.
+Administrators set the **status** (new, in progress, done) with **Follow up** and export the submissions to **PDF**. An administrator's first reply puts a new submission *in progress*.
 MD,
         ],
 
