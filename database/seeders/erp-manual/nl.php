@@ -333,6 +333,7 @@ Het **maandelijkse voorschot** van arbeiders en bedienden berekenen.
 
 Voorschot = **startwaarde × gewerkte dagen ÷ werkdagen** in de periode (weekends tellen niet mee).
 
+- Enkel werknemers uit het **personeelsregister**, in dienst en **niet als interim**.
 - Startwaarde: **€ 620** voor arbeiders, **€ 1000** voor bedienden (en kaderleden).
 - Periode: standaard de **1ste tot en met de 15de** van de maand.
 - **Telt als gewerkt**: gewone prestaties, ziekte, feestdagen, inhaalrustdagen (IR), recuperatie overuren en opleidingen.

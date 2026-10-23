@@ -18,6 +18,8 @@ use Illuminate\Support\Collection;
  * €1000 by default) × the days worked in the period (by default the 1st up to the 15th of the month)
  * ÷ the working days of that period. Weekends never count.
  *
+ * Only employees of the register, in service and not on interim.
+ *
  * Counted as worked: normal prestations, medical leave, public holidays, IR days, overtime
  * recuperation and trainings. Not counted: unpaid leave, family leave and approved vacation — but a
  * single vacation day in the period still counts as worked.
@@ -56,7 +58,8 @@ class HrAdvances
     }
 
     /**
-     * Employees in service of a group, by name.
+     * Employees of a group in the employee register, in service and not on interim, by name. Users
+     * who are not in the register are never part of the calculation.
      *
      * @return Collection<int, Employee>
      */
@@ -64,6 +67,7 @@ class HrAdvances
     {
         return Employee::query()
             ->employed()
+            ->where(fn ($query) => $query->where('is_interim', false)->orWhereNull('is_interim'))
             ->whereIn('employment_category', array_map(fn (EmploymentCategory $category): string => $category->value, self::categories($group)))
             ->orderBy('last_name')
             ->orderBy('first_name')

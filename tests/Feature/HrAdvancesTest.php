@@ -101,4 +101,19 @@ class HrAdvancesTest extends TestCase
         $this->assertEquals(650, settings()->get('hr.advance_worker'));
         $this->assertSame(14, settings()->get('hr.advance_until_day'));
     }
+
+    #[Test]
+    public function interim_employees_and_users_outside_the_register_are_left_out(): void
+    {
+        $worker = $this->worker();
+        $interim = Employee::factory()->create(['employment_category' => EmploymentCategory::Worker, 'is_interim' => true]);
+        $left = Employee::factory()->create(['employment_category' => EmploymentCategory::Worker, 'left_on' => '2026-01-31']);
+        User::factory()->create(['name' => 'Niet In Register']);
+
+        $ids = app(HrAdvances::class)->employees(HrAdvances::WORKERS)->pluck('id')->all();
+
+        $this->assertSame([$worker->id], $ids);
+        $this->assertNotContains($interim->id, $ids);
+        $this->assertNotContains($left->id, $ids);
+    }
 }

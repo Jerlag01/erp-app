@@ -332,6 +332,7 @@ Calculer l'**avance mensuelle** des ouvriers et employés.
 
 Avance = **valeur de départ × jours travaillés ÷ jours ouvrables** de la période (week-ends non comptés).
 
+- Uniquement les travailleurs du **registre du personnel**, en service et **pas en intérim**.
 - Valeur de départ : **620 €** pour les ouvriers, **1000 €** pour les employés (et cadres).
 - Période : par défaut du **1er au 15** du mois inclus.
 - **Comptent comme travaillés** : prestations normales, maladie, jours fériés, jours de récupération (IR), récupération d'heures supplémentaires et formations.

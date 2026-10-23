@@ -332,6 +332,7 @@ Calculating the **monthly advance** of workers and servants.
 
 Advance = **start value × days worked ÷ working days** of the period (weekends not counted).
 
+- Only employees of the **employee register**, in service and **not on interim**.
 - Start value: **€620** for workers, **€1000** for servants (and managers).
 - Period: by default the **1st up to and including the 15th** of the month.
 - **Counted as worked**: normal prestations, sickness, public holidays, IR days, overtime recuperation and trainings.
