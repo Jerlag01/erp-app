@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
  * The as-built of a project: made when the project is executed, filled per category, inspected by
  * Normec BTV on the planned date and closed with the BTV report into a ZIP for the client.
  */
-#[Fillable(['project_id', 'status', 'btv_date', 'closed_at', 'zip_path', 'client_notified_at'])]
+#[Fillable(['project_id', 'status', 'origin', 'created_by', 'btv_date', 'closed_at', 'zip_path', 'client_notified_at'])]
 class Asbuilt extends Model
 {
     /** @use HasFactory<AsbuiltFactory> */
@@ -30,6 +30,25 @@ class Asbuilt extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public const ORIGIN_AUTOMATIC = 'automatic';
+
+    public const ORIGIN_MANUAL = 'manual';
+
+    /**
+     * Who made it by hand with the button on the project (empty when made automatically).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function wasCreatedManually(): bool
+    {
+        return $this->origin === self::ORIGIN_MANUAL;
     }
 
     /**

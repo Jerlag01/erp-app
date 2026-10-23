@@ -56,21 +56,28 @@ class Asbuilts
     /**
      * The as-built of a project, made when it does not exist yet, with the standard files: those of
      * its COW-code and the general ones (not the technical documents, which are picked by hand).
+     * A project has one as-built: made by hand with the button ($by) or automatically when it is
+     * executed, whichever comes first; the other way then returns the existing one.
      */
-    public function createFor(Project $project): ?Asbuilt
+    public function createFor(Project $project, ?User $by = null): ?Asbuilt
     {
         if (! $this->appliesTo($project)) {
             return null;
         }
 
-        return DB::transaction(function () use ($project): Asbuilt {
+        return DB::transaction(function () use ($project, $by): Asbuilt {
             $existing = Asbuilt::query()->where('project_id', $project->id)->lockForUpdate()->first();
 
             if ($existing) {
                 return $existing;
             }
 
-            $asbuilt = Asbuilt::query()->create(['project_id' => $project->id, 'status' => AsbuiltStatus::InProgress]);
+            $asbuilt = Asbuilt::query()->create([
+                'project_id' => $project->id,
+                'status' => AsbuiltStatus::InProgress,
+                'origin' => $by ? Asbuilt::ORIGIN_MANUAL : Asbuilt::ORIGIN_AUTOMATIC,
+                'created_by' => $by?->id,
+            ]);
             $this->attach($asbuilt, $this->defaultFiles($project)->pluck('id')->all());
 
             return $asbuilt;

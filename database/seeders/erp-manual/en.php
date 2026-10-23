@@ -754,6 +754,8 @@ Per project an **as-built** with all files per category, the inspection by **Nor
 
 As soon as a project gets the status **Executed**, the as-built is made automatically with the status **In progress**. Not for the excluded categories (by default 600, 604, 605, 606, 607 and 608.1; set under Settings → General). The **standard files** of the project's COW code (and the general standard files) are added straight away.
 
+The **Create as-built** button on the project (permission *As-built → Manage*) makes the as-built earlier, with the same standard files and workflow. When the project then becomes *Executed*, no second one is made. Each as-built shows whether it was made automatically or by hand (and by whom).
+
 ## Categories
 
 Plans, electrical schematics, evacuation routes, external influences, technical documents, cable dimensions, BTV reports, ICC and Lmax calculations. Any file format is allowed.

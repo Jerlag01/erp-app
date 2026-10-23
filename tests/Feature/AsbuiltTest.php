@@ -11,6 +11,7 @@ use App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt;
 use App\Filament\Resources\AsbuiltLibraryFiles\Pages\ManageAsbuiltLibraryFiles;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Filament\Resources\Asbuilts\Pages\ViewAsbuilt;
+use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Mail\SystemMail;
 use App\Models\Asbuilt;
 use App\Models\AsbuiltLibraryFile;
@@ -213,5 +214,41 @@ class AsbuiltTest extends TestCase
 
         $this->assertSame(2, AsbuiltLibraryFile::query()->where('work_site_id', $this->site->id)->count());
         $this->assertSame(2, $asbuilt->files()->where('category', 'external_influences')->count());
+    }
+
+    #[Test]
+    public function an_asbuilt_made_with_the_button_is_not_made_again_when_the_project_is_executed(): void
+    {
+        $evacuation = $this->library(AsbuiltCategory::EvacuationRoutes, $this->site, 'evacuatie.pdf');
+        $project = Project::factory()->inCategory('620')->for($this->site)->create(['status' => ProjectStatus::ToBeExecuted]);
+        $project->teams()->attach($this->team);
+        $manager = $this->manager();
+
+        // Without "asbuilt.manage" there is no button.
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view']])->inTeam($this->team)->create());
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('createAsbuilt');
+
+        $this->actingAs($manager);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('createAsbuilt')
+            ->assertRedirect(AsbuiltResource::getUrl('view', ['record' => $project->fresh()->asbuilt]));
+
+        $asbuilt = $project->fresh()->asbuilt;
+        $this->assertTrue($asbuilt->wasCreatedManually());
+        $this->assertTrue($asbuilt->creator->is($manager));
+        $this->assertSame([$evacuation->id], $asbuilt->files()->pluck('asbuilt_library_file_id')->all());
+
+        // The button is gone, and executing the project keeps that one as-built.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('createAsbuilt')->assertActionVisible('asbuilt');
+        $project->refresh()->update(['status' => ProjectStatus::Executed]);
+        $this->assertSame(1, Asbuilt::query()->where('project_id', $project->id)->count());
+        $this->assertSame($asbuilt->id, $project->fresh()->asbuilt->id);
+        $this->assertSame(Asbuilt::ORIGIN_MANUAL, $asbuilt->fresh()->origin);
+
+        // Automatically made ones are marked as such; excluded categories get no button.
+        $this->assertSame(Asbuilt::ORIGIN_AUTOMATIC, $this->executedProject()->asbuilt->origin);
+        $excluded = Project::factory()->inCategory('604')->for($this->site)->create();
+        $excluded->teams()->attach($this->team);
+        Livewire::test(ViewProject::class, ['record' => $excluded->getRouteKey()])->assertActionHidden('createAsbuilt');
     }
 }

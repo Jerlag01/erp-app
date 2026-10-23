@@ -17,6 +17,7 @@ use App\Models\EnersysDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectPoNumber;
+use App\Support\Asbuilts;
 use App\Support\Interventions;
 use App\Support\PdfAccess;
 use App\Support\ProjectProgress;
@@ -217,6 +218,20 @@ class ViewProject extends ViewRecord
                     $record->load('poNumbers');
                 })
                 ->successNotificationTitle(__('erp.projects.po_number_added')),
+            // Made by hand before the project is executed; the automatic step then finds it and makes no second one.
+            Action::make('createAsbuilt')
+                ->label(__('erp.asbuilt.create'))
+                ->icon(Heroicon::OutlinedArchiveBox)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => $record->asbuilt === null && app(Asbuilts::class)->appliesTo($record) && Gate::allows('view', $record) && (bool) auth()->user()?->hasPermission('asbuilt.manage'))
+                ->authorize(fn (Project $record): bool => app(Asbuilts::class)->appliesTo($record) && (bool) auth()->user()?->hasPermission('asbuilt.manage'))
+                ->requiresConfirmation()
+                ->modalDescription(__('erp.asbuilt.create_help'))
+                ->action(function (Project $record): void {
+                    $asbuilt = app(Asbuilts::class)->createFor($record, auth()->user());
+                    Notification::make()->title(__('erp.asbuilt.created_done'))->success()->send();
+                    $this->redirect(AsbuiltResource::getUrl('view', ['record' => $asbuilt]));
+                }),
             Action::make('asbuilt')
                 ->label(__('erp.asbuilt.singular'))
                 ->icon(Heroicon::OutlinedArchiveBox)

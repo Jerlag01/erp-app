@@ -2498,6 +2498,11 @@ return [
         ],
     ],
     'asbuilt' => [
+        'create' => 'Créer l\'as-built',
+        'create_help' => 'L\'as-built est créé dès maintenant, avec les fichiers standard du code COW. Quand le projet passera à « Exécuté », aucun deuxième ne sera créé.',
+        'created_done' => 'As-built créé',
+        'origin_manual' => 'Créé manuellement par :name',
+        'origin_automatic' => 'Créé automatiquement (projet exécuté)',
         'title' => 'As-builts',
         'singular' => 'As-built',
         'project' => 'Projet',

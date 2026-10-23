@@ -754,6 +754,8 @@ Par projet, un **as-built** avec tous les fichiers par catégorie, le contrôle 
 
 Dès qu'un projet passe au statut **Exécuté**, l'as-built est créé automatiquement avec le statut **En cours**. Pas pour les catégories exclues (par défaut 600, 604, 605, 606, 607 et 608.1 ; réglable dans Paramètres → Général). Les **fichiers standard** du code COW du projet (et les fichiers standard généraux) sont ajoutés directement.
 
+Le bouton **Créer l'as-built** sur le projet (droit *As-built → Gérer*) crée l'as-built plus tôt, avec les mêmes fichiers standard et le même déroulement. Quand le projet passe ensuite à *Exécuté*, aucun deuxième n'est créé. Chaque as-built indique s'il a été créé automatiquement ou manuellement (et par qui).
+
 ## Catégories
 
 Plans, schémas électriques, voies d'évacuation, influences externes, documents techniques, dimensionnement des câbles, rapports BTV, calculs ICC et Lmax. Tout format de fichier est accepté.

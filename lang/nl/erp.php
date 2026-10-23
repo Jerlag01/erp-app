@@ -2499,6 +2499,11 @@ return [
         ],
     ],
     'asbuilt' => [
+        'create' => 'As-built aanmaken',
+        'create_help' => 'De as-built wordt nu al aangemaakt, met de standaardbestanden van de COW-code. Wordt het project later "Uitgevoerd", dan wordt er geen tweede aangemaakt.',
+        'created_done' => 'As-built aangemaakt',
+        'origin_manual' => 'Manueel aangemaakt door :name',
+        'origin_automatic' => 'Automatisch aangemaakt (project uitgevoerd)',
         'title' => 'As-builts',
         'singular' => 'As-built',
         'project' => 'Project',
