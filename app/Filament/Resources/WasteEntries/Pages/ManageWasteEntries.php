@@ -6,6 +6,7 @@ use App\Enums\WasteRegion;
 use App\Filament\Resources\WasteEntries\WasteEntryResource;
 use App\Http\Controllers\WastePdfController;
 use App\Models\WasteEntry;
+use App\Models\WasteEntryLine;
 use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -78,7 +79,7 @@ class ManageWasteEntries extends ManageRecords
             'all' => Tab::make(__('erp.waste.registry'))->icon(Heroicon::OutlinedListBullet),
         ];
 
-        $counts = WasteEntry::query()->whereNotNull('region')->selectRaw('region, count(*) as total')->groupBy('region')->pluck('total', 'region');
+        $counts = WasteEntryLine::query()->selectRaw('region, count(distinct waste_entry_id) as total')->groupBy('region')->pluck('total', 'region');
 
         foreach (WasteRegion::cases() as $region) {
             $tabs[$region->value] = Tab::make($region->getLabel())
@@ -91,13 +92,13 @@ class ManageWasteEntries extends ManageRecords
     }
 
     /**
-     * Battery waste of one region.
+     * Battery waste with lines in one region.
      *
      * @param  Builder<WasteEntry>  $query
      * @return Builder<WasteEntry>
      */
     public static function regionQuery(Builder $query, WasteRegion $region): Builder
     {
-        return $query->where('region', $region->value)->whereHas('category', fn (Builder $query) => $query->where('is_batteries', true));
+        return $query->whereHas('lines', fn (Builder $query) => $query->where('region', $region->value))->whereHas('category', fn (Builder $query) => $query->where('is_batteries', true));
     }
 }

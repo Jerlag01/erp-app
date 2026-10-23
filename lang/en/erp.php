@@ -1658,6 +1658,10 @@ return [
         ],
     ],
     'waste' => [
+        'lines_help' => 'Per destruction certificate: the region, the COW code, the PO number and the weight. The total weight is the sum of the lines; the regional lists use the lines.',
+        'add_line' => 'Add destruction certificate',
+        'certificate_label' => 'Certificate :number',
+        'lines_total' => 'Total weight: :weight (sum of the lines below)',
         'year' => 'Year',
         'export' => 'Export',
         'export_current_list' => 'The list as shown',

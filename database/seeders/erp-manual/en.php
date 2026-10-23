@@ -818,7 +818,7 @@ The legal **register of disposed waste** per category and EURAL waste code, with
 ## How it works
 
 1. Register every disposal: date, **kind of waste** (category with EURAL code; an asterisk means hazardous waste), **weight**, the **waste processor** and its reference (e.g. consignment note number).
-2. For **battery waste** also fill in the **region**, the **destruction certificate**, the COW code and the PO number.
+2. For **battery waste** fill in a line per **destruction certificate** with the **region**, the COW code, the PO number and the **weight**. One entry can have several lines (several certificates, COW codes and PO numbers); the total weight is the sum of the lines. The **regional lists** (and their PDF) only show the lines of that region.
 3. **Totals per category** shows the totals per period.
 4. Export each list to **PDF**, e.g. for an inspection or the yearly declaration.
 

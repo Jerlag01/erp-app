@@ -1658,6 +1658,10 @@ return [
         ],
     ],
     'waste' => [
+        'lines_help' => 'Par attestation de destruction : la région, le code COW, le numéro PO et le poids. Le poids total est la somme des lignes ; les listes régionales utilisent les lignes.',
+        'add_line' => 'Ajouter une attestation de destruction',
+        'certificate_label' => 'Attestation :number',
+        'lines_total' => 'Poids total : :weight (somme des lignes ci-dessous)',
         'year' => 'Année',
         'export' => 'Exporter',
         'export_current_list' => 'La liste affichée',

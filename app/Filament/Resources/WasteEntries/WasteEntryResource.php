@@ -7,6 +7,7 @@ use App\Enums\WasteRegion;
 use App\Filament\Resources\WasteEntries\Pages\ManageWasteEntries;
 use App\Models\WasteCategory;
 use App\Models\WasteEntry;
+use App\Models\WasteEntryLine;
 use App\Models\WasteProcessor;
 use App\Models\WorkSite;
 use BackedEnum;
@@ -14,22 +15,26 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Summarizers\Sum;
+use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Livewire\Component;
 use UnitEnum;
 
@@ -80,6 +85,7 @@ class WasteEntryResource extends Resource
                     ->default(today())
                     ->maxDate(today()->addDay())
                     ->required(),
+                // Battery waste weighs the sum of its lines (below).
                 TextInput::make('weight_kg')
                     ->label(__('erp.waste.weight'))
                     ->numeric()
@@ -87,7 +93,11 @@ class WasteEntryResource extends Resource
                     ->maxValue(9999999)
                     ->step(0.01)
                     ->suffix('kg')
-                    ->required(),
+                    ->required(fn (Get $get): bool => ! $batteries($get))
+                    ->visible(fn (Get $get): bool => ! $batteries($get))
+                    ->dehydrated(fn (Get $get): bool => ! $batteries($get)),
+                Text::make(fn (Get $get): string => __('erp.waste.lines_total', ['weight' => WasteEntry::formatKg(collect((array) $get('lines'))->sum(fn ($line): float => (float) str_replace(',', '.', (string) ($line['weight_kg'] ?? 0))))]))
+                    ->visible($batteries),
                 Select::make('waste_category_id')
                     ->label(__('erp.waste.type'))
                     ->options(fn (?WasteEntry $record): array => WasteCategory::selectOptions($record?->waste_category_id))
@@ -107,43 +117,66 @@ class WasteEntryResource extends Resource
                     ->helperText(__('erp.waste.processor_reference_help'))
                     ->maxLength(100),
                 Section::make(__('erp.waste.batteries'))
-                    ->description(__('erp.waste.batteries_help'))
+                    ->description(__('erp.waste.lines_help'))
                     ->icon(Heroicon::OutlinedBattery50)
                     ->columns(2)
                     ->columnSpanFull()
                     ->visible($batteries)
                     ->schema([
-                        ToggleButtons::make('region')
-                            ->label(__('erp.waste.region'))
-                            ->options(WasteRegion::class)
-                            ->inline()
+                        Repeater::make('lines')
+                            ->hiddenLabel()
+                            ->relationship()
+                            ->orderColumn('sort')
+                            ->schema([
+                                ToggleButtons::make('region')
+                                    ->label(__('erp.waste.region'))
+                                    ->options(WasteRegion::class)
+                                    ->inline()
+                                    ->required()
+                                    ->columnSpanFull(),
+                                TextInput::make('destruction_certificate')
+                                    ->label(__('erp.waste.destruction_certificate'))
+                                    ->helperText(__('erp.waste.destruction_certificate_help'))
+                                    ->placeholder('001')
+                                    ->required()
+                                    ->length(3)
+                                    ->regex(WasteEntry::CERTIFICATE_PATTERN)
+                                    ->extraInputAttributes(['inputmode' => 'numeric', 'style' => 'font-family: var(--erp-mono);']),
+                                TextInput::make('weight_kg')
+                                    ->label(__('erp.waste.weight'))
+                                    ->numeric()
+                                    ->minValue(0.01)
+                                    ->maxValue(9999999)
+                                    ->step(0.01)
+                                    ->suffix('kg')
+                                    ->required()
+                                    ->live(onBlur: true),
+                                Select::make('work_site_id')
+                                    ->label(__('erp.fields.cow_code'))
+                                    ->options(fn (): array => WorkSite::query()->orderBy('cow_code')->get()->mapWithKeys(fn (WorkSite $site): array => [$site->id => trim($site->cow_code.' · '.$site->city, ' ·')])->all())
+                                    ->searchable()
+                                    ->visible(fn (): bool => modules()->workSites()),
+                                // Without the work sites module the COW code is typed in.
+                                TextInput::make('cow_code')
+                                    ->label(__('erp.fields.cow_code'))
+                                    ->placeholder('02GAM')
+                                    ->maxLength(5)
+                                    ->regex(WorkSite::COW_CODE_PATTERN)
+                                    ->visible(fn (): bool => ! modules()->workSites())
+                                    ->extraInputAttributes(['style' => 'text-transform: uppercase; font-family: var(--erp-mono);']),
+                                TextInput::make('po_number')
+                                    ->label(__('erp.waste.po_number'))
+                                    ->maxLength(30)
+                                    ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(1)
+                            ->minItems(1)
                             ->required($batteries)
+                            ->live()
+                            ->itemLabel(fn (array $state): ?string => filled($state['destruction_certificate'] ?? null) ? __('erp.waste.certificate_label', ['number' => $state['destruction_certificate']]) : null)
+                            ->addActionLabel(__('erp.waste.add_line'))
                             ->columnSpanFull(),
-                        TextInput::make('destruction_certificate')
-                            ->label(__('erp.waste.destruction_certificate'))
-                            ->helperText(__('erp.waste.destruction_certificate_help'))
-                            ->placeholder('001')
-                            ->required($batteries)
-                            ->length(3)
-                            ->regex(WasteEntry::CERTIFICATE_PATTERN)
-                            ->extraInputAttributes(['inputmode' => 'numeric', 'style' => 'font-family: var(--erp-mono);']),
-                        TextInput::make('po_number')
-                            ->label(__('erp.waste.po_number'))
-                            ->maxLength(30)
-                            ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
-                        Select::make('work_site_id')
-                            ->label(__('erp.fields.cow_code'))
-                            ->options(fn (): array => WorkSite::query()->orderBy('cow_code')->get()->mapWithKeys(fn (WorkSite $site): array => [$site->id => trim($site->cow_code.' · '.$site->city, ' ·')])->all())
-                            ->searchable()
-                            ->visible(fn (): bool => modules()->workSites()),
-                        // Without the work sites module the COW code is typed in.
-                        TextInput::make('cow_code')
-                            ->label(__('erp.fields.cow_code'))
-                            ->placeholder('02GAM')
-                            ->maxLength(5)
-                            ->regex(WorkSite::COW_CODE_PATTERN)
-                            ->visible(fn (): bool => ! modules()->workSites())
-                            ->extraInputAttributes(['style' => 'text-transform: uppercase; font-family: var(--erp-mono);']),
                     ]),
                 Textarea::make('notes')
                     ->label(__('erp.fields.notes'))
@@ -158,7 +191,12 @@ class WasteEntryResource extends Resource
      */
     public static function onRegionTab(Component $livewire): bool
     {
-        return WasteRegion::tryFrom((string) ($livewire->activeTab ?? '')) !== null;
+        return self::tabRegion($livewire) !== null;
+    }
+
+    public static function tabRegion(Component $livewire): ?WasteRegion
+    {
+        return WasteRegion::tryFrom((string) ($livewire->activeTab ?? ''));
     }
 
     /**
@@ -181,7 +219,7 @@ class WasteEntryResource extends Resource
         $fullList = fn (Component $livewire): bool => ! self::onRegionTab($livewire);
 
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category.parent', 'processor']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category.parent', 'processor', 'lines']))
             ->defaultSort('date', 'desc')
             ->columns([
                 TextColumn::make('date')
@@ -194,40 +232,56 @@ class WasteEntryResource extends Resource
                     ->description(fn (WasteEntry $record): string => trim(($record->category->waste_code ?? '').($record->category->parent ? ' · '.$record->category->parent->name : ''), ' ·'))
                     ->wrap()
                     ->visible($fullList),
+                // On a regional list only the lines of that region count.
                 TextColumn::make('weight_kg')
                     ->label(__('erp.waste.weight'))
-                    ->formatStateUsing(fn (string $state): string => WasteEntry::formatKg($state))
+                    ->state(fn (WasteEntry $record, Component $livewire): float => ($region = self::tabRegion($livewire))
+                        ? (float) $record->lines->where('region', $region)->sum('weight_kg')
+                        : (float) $record->weight_kg)
+                    ->formatStateUsing(fn ($state): string => WasteEntry::formatKg($state))
                     ->fontFamily(FontFamily::Mono)
                     ->alignEnd()
                     ->sortable()
-                    ->summarize(Sum::make()->label(__('erp.waste.total'))->formatStateUsing(fn ($state): string => WasteEntry::formatKg($state))),
+                    ->summarize(Summarizer::make()
+                        ->label(__('erp.waste.total'))
+                        ->using(fn (QueryBuilder $query, Component $livewire): float => ($region = self::tabRegion($livewire))
+                            ? (float) WasteEntryLine::query()->whereIn('waste_entry_id', (clone $query)->select('waste_entries.id'))->where('region', $region->value)->sum('weight_kg')
+                            : (float) (clone $query)->sum('weight_kg'))
+                        ->formatStateUsing(fn ($state): string => WasteEntry::formatKg($state))),
                 TextColumn::make('processor.name')
                     ->label(__('erp.resources.waste_processor.singular'))
                     ->description(fn (WasteEntry $record): ?string => $record->processor_reference ? __('erp.waste.ref', ['reference' => $record->processor_reference]) : null)
                     ->searchable(['processor_reference'])
                     ->visible($fullList),
-                TextColumn::make('region')
+                TextColumn::make('regions')
                     ->label(__('erp.waste.region'))
+                    ->state(fn (WasteEntry $record): array => $record->lineValues('region'))
                     ->badge()
                     ->color('gray')
                     ->placeholder('—')
                     ->visible($fullList)
                     ->toggleable(),
-                TextColumn::make('destruction_certificate')
+                TextColumn::make('certificates')
                     ->label(__('erp.waste.destruction_certificate_short'))
+                    ->state(fn (WasteEntry $record, Component $livewire): array => $record->lineValues('destruction_certificate', self::tabRegion($livewire)))
+                    ->listWithLineBreaks()
                     ->fontFamily(FontFamily::Mono)
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search) => $query->orWhereHas('lines', fn (Builder $query) => $query->where('destruction_certificate', 'like', '%'.addcslashes($search, '%_\\').'%')))
                     ->placeholder('—'),
-                TextColumn::make('cow_code')
+                TextColumn::make('cow_codes')
                     ->label(__('erp.fields.cow_code'))
+                    ->state(fn (WasteEntry $record, Component $livewire): array => $record->lineValues('cow_code', self::tabRegion($livewire)))
+                    ->listWithLineBreaks()
                     ->fontFamily(FontFamily::Mono)
                     ->weight('bold')
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search) => $query->orWhereHas('lines', fn (Builder $query) => $query->where('cow_code', 'like', '%'.addcslashes($search, '%_\\').'%')))
                     ->placeholder('—'),
-                TextColumn::make('po_number')
+                TextColumn::make('po_numbers')
                     ->label(__('erp.waste.po_number'))
+                    ->state(fn (WasteEntry $record, Component $livewire): array => $record->lineValues('po_number', self::tabRegion($livewire)))
+                    ->listWithLineBreaks()
                     ->fontFamily(FontFamily::Mono)
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search) => $query->orWhereHas('lines', fn (Builder $query) => $query->where('po_number', 'like', '%'.addcslashes($search, '%_\\').'%')))
                     ->placeholder('—'),
             ])
             ->filters([

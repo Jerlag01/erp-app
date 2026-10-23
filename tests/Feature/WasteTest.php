@@ -11,6 +11,7 @@ use App\Http\Controllers\WastePdfController;
 use App\Models\User;
 use App\Models\WasteCategory;
 use App\Models\WasteEntry;
+use App\Models\WasteEntryLine;
 use App\Models\WasteProcessor;
 use App\Models\WorkSite;
 use App\Support\Eural;
@@ -18,8 +19,10 @@ use App\Support\WasteTotals;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -87,8 +90,6 @@ class WasteTest extends TestCase
                 'weight_kg' => 125.5,
                 'waste_processor_id' => $processor->id,
                 'processor_reference' => 'VB-2026-0042',
-                // Battery fields are ignored for other waste.
-                'destruction_certificate' => '123',
             ])
             ->assertHasNoActionErrors();
 
@@ -96,36 +97,87 @@ class WasteTest extends TestCase
         $this->assertSame('125.50', $entry->weight_kg);
         $this->assertSame('VB-2026-0042', $entry->processor_reference);
         $this->assertTrue($entry->creator->is($user));
-        $this->assertNull($entry->destruction_certificate);
-        $this->assertNull($entry->region);
+        $this->assertSame(0, $entry->lines()->count(), 'Other waste has no battery lines.');
     }
 
     #[Test]
-    public function batteries_need_a_region_and_a_three_digit_certificate_while_po_and_cow_code_are_optional(): void
+    public function battery_lines_need_a_region_a_three_digit_certificate_and_a_weight(): void
     {
+        Repeater::fake();
         $this->registrar();
         $site = WorkSite::factory()->create(['cow_code' => '02GAM']);
         $data = [
             'date' => '2026-10-05',
             'waste_category_id' => $this->category('16 06 01*')->id,
-            'weight_kg' => 40,
             'waste_processor_id' => WasteProcessor::factory()->create()->id,
         ];
 
         Livewire::test(ManageWasteEntries::class)
-            ->callAction('create', [...$data, 'destruction_certificate' => '12'])
-            ->assertHasActionErrors(['region' => 'required', 'destruction_certificate']);
+            ->callAction('create', [...$data, 'lines' => [['destruction_certificate' => '12', 'weight_kg' => 10]]])
+            ->assertHasActionErrors(['lines.0.region' => 'required', 'lines.0.destruction_certificate']);
 
         Livewire::test(ManageWasteEntries::class)
-            ->callAction('create', [...$data, 'region' => 'brussels', 'destruction_certificate' => '007'])
+            ->callAction('create', [...$data, 'lines' => [['region' => 'brussels', 'destruction_certificate' => '007', 'weight_kg' => 40]]])
             ->assertHasNoActionErrors();
 
         Livewire::test(ManageWasteEntries::class)
-            ->callAction('create', [...$data, 'region' => 'flanders', 'destruction_certificate' => '008', 'work_site_id' => $site->id, 'po_number' => '4500123456'])
+            ->callAction('create', [...$data, 'lines' => [['region' => 'flanders', 'destruction_certificate' => '008', 'work_site_id' => $site->id, 'po_number' => '4500123456', 'weight_kg' => 12.5]]])
             ->assertHasNoActionErrors();
 
-        $this->assertSame([null, '02GAM'], WasteEntry::query()->orderBy('id')->pluck('cow_code')->all());
-        $this->assertSame('4500123456', WasteEntry::query()->latest('id')->value('po_number'));
+        $lines = WasteEntryLine::query()->orderBy('id')->get();
+        $this->assertSame([null, '02GAM'], $lines->pluck('cow_code')->all());
+        $this->assertSame('4500123456', $lines->last()->po_number);
+        $this->assertSame(['40.00', '12.50'], WasteEntry::query()->orderBy('id')->pluck('weight_kg')->all());
+    }
+
+    #[Test]
+    public function one_battery_entry_has_several_certificates_cow_codes_and_po_numbers_split_over_the_regions(): void
+    {
+        Repeater::fake();
+        $this->registrar();
+        $gam = WorkSite::factory()->create(['cow_code' => '02GAM']);
+        $lie = WorkSite::factory()->create(['cow_code' => '04LIE']);
+
+        Livewire::test(ManageWasteEntries::class)
+            ->callAction('create', [
+                'date' => '2026-10-05',
+                'waste_category_id' => $this->category('16 06 01*')->id,
+                'waste_processor_id' => WasteProcessor::factory()->create()->id,
+                'lines' => [
+                    ['region' => 'flanders', 'destruction_certificate' => '101', 'work_site_id' => $gam->id, 'po_number' => '4500000001', 'weight_kg' => 120.25],
+                    ['region' => 'wallonia', 'destruction_certificate' => '102', 'work_site_id' => $lie->id, 'po_number' => '4500000002', 'weight_kg' => 80],
+                    ['region' => 'flanders', 'destruction_certificate' => '103', 'work_site_id' => $gam->id, 'weight_kg' => 10],
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        // The entry weighs the sum of its lines, also after a line changes.
+        $entry = WasteEntry::sole();
+        $this->assertSame('210.25', $entry->weight_kg);
+        $entry->lines()->where('destruction_certificate', '103')->first()->update(['weight_kg' => 20]);
+        $this->assertSame('220.25', $entry->fresh()->weight_kg);
+
+        // Each regional list holds only its own lines and their weight.
+        Livewire::test(ManageWasteEntries::class)
+            ->set('activeTab', 'wallonia')
+            ->assertCanSeeTableRecords([$entry])
+            ->assertTableColumnStateSet('weight_kg', 80.0, $entry)
+            ->assertTableColumnStateSet('certificates', ['102'], $entry)
+            ->assertTableColumnStateSet('cow_codes', ['04LIE'], $entry)
+            ->set('activeTab', 'flanders')
+            ->assertTableColumnStateSet('weight_kg', 140.25, $entry)
+            ->assertTableColumnStateSet('certificates', ['101', '103'], $entry)
+            ->set('activeTab', 'all')
+            ->assertTableColumnStateSet('weight_kg', 220.25, $entry)
+            ->assertTableColumnStateSet('po_numbers', ['4500000001', '4500000002'], $entry);
+
+        // The regional PDF lists the lines of that region.
+        $locales = [];
+        Event::listen('composing: waste.list-pdf', function ($view) use (&$locales): void {
+            $locales[] = $view->getData()['rows']->map(fn ($row) => $row['line']->destruction_certificate)->all();
+        });
+        $this->get(WastePdfController::urlFor('flanders', [$entry->id]))->assertOk();
+        $this->assertSame([['101', '103']], $locales);
     }
 
     #[Test]
@@ -141,7 +193,7 @@ class WasteTest extends TestCase
             ->set('activeTab', 'flanders')
             ->assertCanSeeTableRecords([$flanders])
             ->assertCanNotSeeTableRecords([$wallonia, $copper])
-            ->assertTableColumnVisible('destruction_certificate')
+            ->assertTableColumnVisible('certificates')
             ->assertTableColumnHidden('processor.name')
             ->set('activeTab', 'wallonia')
             ->assertCanSeeTableRecords([$wallonia])

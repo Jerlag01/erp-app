@@ -1658,6 +1658,10 @@ return [
         ],
     ],
     'waste' => [
+        'lines_help' => 'Per vernietigingsattest: het gewest, de COW-code, het PO-nummer en het gewicht. Het totale gewicht is de som van de lijnen; de gewestlijsten gebruiken de lijnen.',
+        'add_line' => 'Vernietigingsattest toevoegen',
+        'certificate_label' => 'Attest :number',
+        'lines_total' => 'Totaal gewicht: :weight (som van de lijnen hieronder)',
         'year' => 'Jaar',
         'export' => 'Exporteren',
         'export_current_list' => 'De lijst zoals getoond',

@@ -818,7 +818,7 @@ Le **registre légal des déchets évacués** par catégorie et code déchet EUR
 ## Comment ça marche
 
 1. Enregistrez chaque évacuation : date, **type de déchet** (catégorie avec code EURAL ; un astérisque signifie déchet dangereux), **poids**, le **collecteur** et sa référence (p. ex. numéro de lettre de voiture).
-2. Pour les **déchets de batteries**, complétez aussi la **région**, l'**attestation de destruction**, le code COW et le numéro PO.
+2. Pour les **déchets de batteries**, complétez par **attestation de destruction** une ligne avec la **région**, le code COW, le numéro PO et le **poids**. Un enregistrement peut avoir plusieurs lignes (plusieurs attestations, codes COW et numéros PO) ; le poids total est la somme des lignes. Les **listes régionales** (et leur PDF) ne montrent par région que les lignes de cette région.
 3. **Totaux par catégorie** montre les totaux par période.
 4. Exportez chaque liste en **PDF**, p. ex. pour un contrôle ou la déclaration annuelle.
 

@@ -819,7 +819,7 @@ Het wettelijke **register van afgevoerd afval** per categorie en EURAL-afvalcode
 ## Zo werkt het
 
 1. Registreer elke afvoer: datum, **soort afval** (categorie met EURAL-code; een sterretje betekent gevaarlijk afval), **gewicht**, de **afvalverwerker** en zijn referentie (bv. vrachtbriefnummer).
-2. Bij **batterijafval** vul je ook het **gewest**, het **vernietigingsattest**, de COW-code en het PO-nummer in.
+2. Bij **batterijafval** vul je per **vernietigingsattest** een lijn in met het **gewest**, de COW-code, het PO-nummer en het **gewicht**. Eén registratie kan meerdere lijnen hebben (meerdere attesten, COW-codes en PO-nummers); het totale gewicht is de som van de lijnen. De **gewestlijsten** (en hun PDF) tonen per gewest enkel de lijnen van dat gewest.
 3. Bij **Totalen per categorie** zie je de totalen per periode.
 4. Exporteer elke lijst naar **PDF**, bv. voor een controle of de jaarlijkse aangifte.
 

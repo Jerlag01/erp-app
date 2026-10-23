@@ -8,14 +8,16 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One line in the waste registry: what went to which processor on which date, in kilograms.
- * Only battery waste keeps a region, certificate of destruction number, COW code and PO number.
+ * Battery waste has lines (WasteEntryLine): per destruction certificate its region, COW code, PO
+ * number and weight; the entry then weighs the sum of its lines.
  */
 #[Fillable([
     'date', 'waste_category_id', 'weight_kg', 'waste_processor_id', 'processor_reference',
-    'region', 'destruction_certificate', 'po_number', 'work_site_id', 'cow_code', 'notes', 'created_by',
+    'notes', 'created_by',
 ])]
 class WasteEntry extends Model
 {
@@ -41,11 +43,45 @@ class WasteEntry extends Model
     }
 
     /**
-     * @return BelongsTo<WorkSite, $this>
+     * The battery lines, in the order entered.
+     *
+     * @return HasMany<WasteEntryLine, $this>
      */
-    public function workSite(): BelongsTo
+    public function lines(): HasMany
     {
-        return $this->belongsTo(WorkSite::class);
+        return $this->hasMany(WasteEntryLine::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * Battery waste weighs the sum of its lines.
+     */
+    public function syncWeightFromLines(): void
+    {
+        if (! $this->isBatteries() || ! $this->lines()->exists()) {
+            return;
+        }
+
+        $total = round((float) $this->lines()->sum('weight_kg'), 2);
+
+        if ((float) $this->weight_kg !== $total) {
+            $this->forceFill(['weight_kg' => $total])->saveQuietly();
+        }
+    }
+
+    /**
+     * Distinct values of a line field, for the lists and the PDF.
+     *
+     * @return list<string>
+     */
+    public function lineValues(string $field, ?WasteRegion $region = null): array
+    {
+        return $this->lines
+            ->when($region, fn ($lines) => $lines->where('region', $region))
+            ->map(fn (WasteEntryLine $line): ?string => $line->{$field} instanceof WasteRegion ? $line->{$field}->getLabel() : $line->{$field})
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -69,19 +105,14 @@ class WasteEntry extends Model
     protected static function booted(): void
     {
         static::saving(function (self $entry): void {
-            // The battery-only fields are cleared for other waste, so the regional lists stay clean.
-            if (! $entry->isBatteries()) {
-                $entry->region = null;
-                $entry->destruction_certificate = null;
-                $entry->po_number = null;
-                $entry->work_site_id = null;
-                $entry->cow_code = null;
-            } elseif ($entry->isDirty('work_site_id') && $entry->work_site_id !== null) {
-                $entry->cow_code = $entry->workSite?->cow_code;
-            }
+            // Battery waste gets its weight from its lines (filled in once they are saved).
+            $entry->weight_kg ??= 0;
+        });
 
-            if (filled($entry->cow_code)) {
-                $entry->cow_code = strtoupper(trim($entry->cow_code));
+        // Other waste has no battery lines.
+        static::saved(function (self $entry): void {
+            if (! $entry->isBatteries()) {
+                $entry->lines()->delete();
             }
         });
     }
@@ -94,7 +125,6 @@ class WasteEntry extends Model
         return [
             'date' => 'date',
             'weight_kg' => 'decimal:2',
-            'region' => WasteRegion::class,
         ];
     }
 }

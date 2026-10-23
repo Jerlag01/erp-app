@@ -47,15 +47,21 @@ class WastePdfController
         abort_if($export === null || $export['user'] !== $request->user()->id, 404);
 
         $order = array_flip($export['ids']);
-        $entries = WasteEntry::query()->whereKey($export['ids'])->with(['category.parent', 'processor'])->get()
+        $entries = WasteEntry::query()->whereKey($export['ids'])->with(['category.parent', 'processor', 'lines'])->get()
             ->sortBy(fn (WasteEntry $entry): int => $order[$entry->id] ?? 0)
             ->values();
 
         $region = WasteRegion::tryFrom($export['list']);
         $title = $region ? __('erp.waste.batteries_region', ['region' => $region->getLabel()]) : __('erp.waste.registry');
 
+        // A regional list has a row per line of that region.
+        $rows = $region
+            ? $entries->flatMap(fn (WasteEntry $entry) => $entry->lines->where('region', $region)->map(fn ($line) => ['entry' => $entry, 'line' => $line]))->values()
+            : collect();
+
         return Pdf::loadView('waste.list-pdf', [
             'entries' => $entries,
+            'rows' => $rows,
             'title' => $title,
             'region' => $region,
             'period' => WasteTotals::periodLabel($export['from'], $export['until']),

@@ -33,9 +33,13 @@ class WasteEntryFactory extends Factory
     {
         return $this->state(fn (): array => [
             'waste_category_id' => WasteCategory::query()->where('waste_code', '16 06 01*')->value('id'),
-            'region' => $region,
-            'destruction_certificate' => fake()->numerify('###'),
-            'cow_code' => '02GAM',
-        ]);
+        ])->afterCreating(function (WasteEntry $entry) use ($region): void {
+            $entry->lines()->create([
+                'region' => $region,
+                'destruction_certificate' => fake()->numerify('###'),
+                'cow_code' => '02GAM',
+                'weight_kg' => $entry->weight_kg,
+            ]);
+        });
     }
 }
