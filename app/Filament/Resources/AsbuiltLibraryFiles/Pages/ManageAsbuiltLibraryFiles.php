@@ -42,7 +42,7 @@ class ManageAsbuiltLibraryFiles extends ManageRecords
                         ->helperText(fn (Get $get): string => $category($get)?->perCowCode() ? __('erp.asbuilt.library.cow_required') : __('erp.asbuilt.library.cow_optional'))
                         ->options(fn (): array => AsbuiltLibraryFileResource::siteOptions())
                         ->searchable()
-                        ->visible(fn (Get $get): bool => $category($get) !== null && ! $category($get)->isRegister())
+                        ->visible(fn (Get $get): bool => $category($get) !== null && ! $category($get)->isRegister() && ! $category($get)->isGlobal())
                         ->required(fn (Get $get): bool => (bool) $category($get)?->perCowCode()),
                     ViewAsbuilt::upload('files', 'asbuilt-library')->label(__('erp.asbuilt.files'))->required(),
                 ])
@@ -55,7 +55,7 @@ class ManageAsbuiltLibraryFiles extends ManageRecords
                         $name = (string) ($names[$path] ?? basename($path));
                         $file = AsbuiltLibraryFile::query()->create([
                             'category' => $type,
-                            'work_site_id' => $type->isRegister() ? null : ($data['work_site_id'] ?? null),
+                            'work_site_id' => $type->isRegister() || $type->isGlobal() ? null : ($data['work_site_id'] ?? null),
                             'title' => pathinfo($name, PATHINFO_FILENAME),
                             'path' => $path,
                             'original_name' => $name,

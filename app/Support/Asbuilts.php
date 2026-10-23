@@ -29,7 +29,7 @@ use ZipArchive;
 
 /**
  * The as-built workflow: an as-built is made when a project becomes "executed" (not for the
- * excluded categories) with the standard files of its COW-code; employees and the client add files;
+ * excluded categories) with the standard files of its COW-code and the global ones; employees and the client add files;
  * the Normec BTV inspection is planned; uploading the BTV report closes it into a ZIP with a folder
  * per category, which the client of the project downloads (and is told about by e-mail).
  */
@@ -97,7 +97,7 @@ class Asbuilts
                 ->when($siteId, fn (Builder $query) => $query->orWhere('work_site_id', $siteId))
                 ->orWhere(fn (Builder $query) => $query
                     ->whereNull('work_site_id')
-                    ->whereNotIn('category', [AsbuiltCategory::EvacuationRoutes->value, AsbuiltCategory::ExternalInfluences->value])))
+                    ->where('category', '!=', AsbuiltCategory::EvacuationRoutes->value)))
             ->get();
     }
 
@@ -141,8 +141,9 @@ class Asbuilts
 
     /**
      * Adds uploaded files (already stored on the private disk) to a category, or to the client's
-     * general zone. Evacuation routes and external influences also go to the register of the COW-code,
-     * technical documents to the register, so later as-builts reuse them.
+     * general zone. Evacuation routes also go to the register of the COW-code, external influences to
+     * the global register (and every open as-built), technical documents to the register, so later
+     * as-builts reuse them.
      *
      * @param  list<string>  $paths
      * @param  array<string, string>  $names  original file names by path
@@ -169,7 +170,7 @@ class Asbuilts
             $size = $disk->exists($path) ? (int) $disk->size($path) : 0;
             $owner = ['uploaded_by' => $user?->id, 'uploaded_by_client_user_id' => $client?->id];
 
-            if ($type !== null && $type->isReusable() && ($type->isRegister() || $site !== null)) {
+            if ($type !== null && $type->isReusable() && ($type->isRegister() || $type->isGlobal() || $site !== null)) {
                 $library = AsbuiltLibraryFile::query()->create([
                     'category' => $type,
                     'work_site_id' => $type->perCowCode() ? $site : null,
@@ -180,6 +181,11 @@ class Asbuilts
                     ...$owner,
                 ]);
                 $files[] = AsbuiltFile::query()->create(['asbuilt_id' => $asbuilt->id, 'category' => $type->value, 'asbuilt_library_file_id' => $library->id]);
+
+                // Global files (external influences) also go to every other as-built still open.
+                if ($type->isGlobal()) {
+                    $this->spreadToOpen($library);
+                }
 
                 continue;
             }

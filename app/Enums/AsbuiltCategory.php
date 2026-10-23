@@ -8,8 +8,8 @@ use Filament\Support\Icons\Heroicon;
 
 /**
  * The categories of an as-built, in the order of the ZIP ("0 - BTV control" … "8 - evacuation
- * routes"). Evacuation routes and external influences belong to a COW-code; technical documents are a
- * register picked from per as-built. The client may hand in evacuation routes, plans, external
+ * routes"). Evacuation routes belong to a COW-code; external influences are global (in every
+ * as-built); technical documents are a register picked from per as-built. The client may hand in evacuation routes, plans, external
  * influences and the ICC and Lmax calculations.
  */
 enum AsbuiltCategory: string implements HasIcon, HasLabel
@@ -77,7 +77,15 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
      */
     public function perCowCode(): bool
     {
-        return in_array($this, [self::EvacuationRoutes, self::ExternalInfluences], true);
+        return $this === self::EvacuationRoutes;
+    }
+
+    /**
+     * Global over all projects: never tied to a COW-code, part of every as-built.
+     */
+    public function isGlobal(): bool
+    {
+        return $this === self::ExternalInfluences;
     }
 
     /**
@@ -93,7 +101,7 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
      */
     public function isReusable(): bool
     {
-        return $this->perCowCode() || $this->isRegister();
+        return $this->perCowCode() || $this->isGlobal() || $this->isRegister();
     }
 
     public function clientMayUpload(): bool

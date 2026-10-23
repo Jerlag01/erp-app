@@ -76,7 +76,8 @@ class AsbuiltTest extends TestCase
     public function an_executed_project_gets_an_asbuilt_with_the_standard_files_of_its_cow_code(): void
     {
         $evacuation = $this->library(AsbuiltCategory::EvacuationRoutes, $this->site, 'evacuatie-02GAM.pdf');
-        $otherSite = $this->library(AsbuiltCategory::ExternalInfluences, WorkSite::factory()->create(), 'extern-ander.pdf');
+        $otherSite = $this->library(AsbuiltCategory::EvacuationRoutes, WorkSite::factory()->create(), 'evacuatie-ander.pdf');
+        $external = $this->library(AsbuiltCategory::ExternalInfluences, WorkSite::factory()->create(), 'extern.pdf');
         $general = $this->library(AsbuiltCategory::CableDimensions, null, 'kabeltabel.xlsx');
         $technical = $this->library(AsbuiltCategory::TechnicalDocuments, null, 'datasheet.pdf');
 
@@ -84,7 +85,9 @@ class AsbuiltTest extends TestCase
         $asbuilt = $project->asbuilt;
 
         $this->assertSame(AsbuiltStatus::InProgress, $asbuilt->status);
-        $this->assertEqualsCanonicalizing([$evacuation->id, $general->id], $asbuilt->files()->pluck('asbuilt_library_file_id')->all());
+        // External influences are global: never tied to a COW-code, in every as-built.
+        $this->assertNull($external->fresh()->work_site_id);
+        $this->assertEqualsCanonicalizing([$evacuation->id, $general->id, $external->id], $asbuilt->files()->pluck('asbuilt_library_file_id')->all());
         $this->assertNotContains($otherSite->id, $asbuilt->files()->pluck('asbuilt_library_file_id')->all());
         $this->assertNotContains($technical->id, $asbuilt->files()->pluck('asbuilt_library_file_id')->all(), 'Technical documents are picked by hand.');
 
@@ -202,18 +205,37 @@ class AsbuiltTest extends TestCase
     public function standard_files_are_uploaded_into_the_register_and_reach_the_open_asbuilts(): void
     {
         $asbuilt = $this->executedProject()->asbuilt;
+        $elsewhere = Project::factory()->inCategory('630')->for(WorkSite::factory()->create())->create();
+        $elsewhere->update(['status' => ProjectStatus::Executed]);
         $this->actingAs($this->manager());
 
+        // Evacuation routes need a COW-code.
         Livewire::test(ManageAsbuiltLibraryFiles::class)
-            ->callAction('upload', ['category' => AsbuiltCategory::ExternalInfluences->value, 'work_site_id' => null, 'files' => [UploadedFile::fake()->create('extern.pdf', 5)]])
+            ->callAction('upload', ['category' => AsbuiltCategory::EvacuationRoutes->value, 'work_site_id' => null, 'files' => [UploadedFile::fake()->create('evacuatie.pdf', 5)]])
             ->assertHasActionErrors(['work_site_id' => 'required']);
 
         Livewire::test(ManageAsbuiltLibraryFiles::class)
-            ->callAction('upload', ['category' => AsbuiltCategory::ExternalInfluences->value, 'work_site_id' => $this->site->id, 'files' => [UploadedFile::fake()->create('extern.pdf', 5), UploadedFile::fake()->create('foto.heic', 5)]])
+            ->callAction('upload', ['category' => AsbuiltCategory::EvacuationRoutes->value, 'work_site_id' => $this->site->id, 'files' => [UploadedFile::fake()->create('evacuatie.pdf', 5), UploadedFile::fake()->create('foto.heic', 5)]])
             ->assertHasNoActionErrors();
 
         $this->assertSame(2, AsbuiltLibraryFile::query()->where('work_site_id', $this->site->id)->count());
-        $this->assertSame(2, $asbuilt->files()->where('category', 'external_influences')->count());
+        $this->assertSame(2, $asbuilt->files()->where('category', 'evacuation_routes')->count());
+        $this->assertSame(0, $elsewhere->asbuilt->files()->where('category', 'evacuation_routes')->count());
+
+        // External influences are global: no COW-code, and they reach every open as-built.
+        Livewire::test(ManageAsbuiltLibraryFiles::class)
+            ->callAction('upload', ['category' => AsbuiltCategory::ExternalInfluences->value, 'work_site_id' => $this->site->id, 'files' => [UploadedFile::fake()->create('extern.pdf', 5)]])
+            ->assertHasNoActionErrors();
+
+        $this->assertNull(AsbuiltLibraryFile::query()->where('category', 'external_influences')->value('work_site_id'));
+        $this->assertSame(1, $asbuilt->files()->where('category', 'external_influences')->count());
+        $this->assertSame(1, $elsewhere->asbuilt->files()->where('category', 'external_influences')->count());
+
+        // One uploaded inside an as-built goes to the other open as-builts too.
+        Livewire::test(ViewAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
+            ->callAction('upload', ['category' => AsbuiltCategory::ExternalInfluences->value, 'files' => [UploadedFile::fake()->create('trillingen.pdf', 5)]])
+            ->assertHasNoActionErrors();
+        $this->assertSame(2, $elsewhere->asbuilt->files()->where('category', 'external_influences')->count());
     }
 
     #[Test]

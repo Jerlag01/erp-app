@@ -752,7 +752,7 @@ Per project an **as-built** with all files per category, the inspection by **Nor
 
 ## How is an as-built made?
 
-As soon as a project gets the status **Executed**, the as-built is made automatically with the status **In progress**. Not for the excluded categories (by default 600, 604, 605, 606, 607 and 608.1; set under Settings → General). The **standard files** of the project's COW code (and the general standard files) are added straight away.
+As soon as a project gets the status **Executed**, the as-built is made automatically with the status **In progress**. Not for the excluded categories (by default 600, 604, 605, 606, 607 and 608.1; set under Settings → General). The **standard files** of the project's COW code, the external influences and the general standard files are added straight away.
 
 The **Create as-built** button on the project (permission *As-built → Manage*) makes the as-built earlier, with the same standard files and workflow. When the project then becomes *Executed*, no second one is made. Each as-built shows whether it was made automatically or by hand (and by whom).
 
@@ -760,7 +760,8 @@ The **Create as-built** button on the project (permission *As-built → Manage*)
 
 Plans, electrical schematics, evacuation routes, external influences, technical documents, cable dimensions, BTV reports, ICC and Lmax calculations. Any file format is allowed.
 
-- **Evacuation routes** and **external influences** belong to a **COW code** and are reused in every as-built of that COW code.
+- **Evacuation routes** belong to a **COW code** and are reused in every as-built of that COW code.
+- **External influences** apply to **all projects**: they belong to no COW code and go into every as-built.
 - **Technical documents** are a **register**: pick from it per as-built and upload new ones (they go into the register too).
 
 ## How it works

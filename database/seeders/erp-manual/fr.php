@@ -752,7 +752,7 @@ Par projet, un **as-built** avec tous les fichiers par catégorie, le contrôle 
 
 ## Comment naît un as-built ?
 
-Dès qu'un projet passe au statut **Exécuté**, l'as-built est créé automatiquement avec le statut **En cours**. Pas pour les catégories exclues (par défaut 600, 604, 605, 606, 607 et 608.1 ; réglable dans Paramètres → Général). Les **fichiers standard** du code COW du projet (et les fichiers standard généraux) sont ajoutés directement.
+Dès qu'un projet passe au statut **Exécuté**, l'as-built est créé automatiquement avec le statut **En cours**. Pas pour les catégories exclues (par défaut 600, 604, 605, 606, 607 et 608.1 ; réglable dans Paramètres → Général). Les **fichiers standard** du code COW du projet, les influences externes et les fichiers standard généraux sont ajoutés directement.
 
 Le bouton **Créer l'as-built** sur le projet (droit *As-built → Gérer*) crée l'as-built plus tôt, avec les mêmes fichiers standard et le même déroulement. Quand le projet passe ensuite à *Exécuté*, aucun deuxième n'est créé. Chaque as-built indique s'il a été créé automatiquement ou manuellement (et par qui).
 
@@ -760,7 +760,8 @@ Le bouton **Créer l'as-built** sur le projet (droit *As-built → Gérer*) cré
 
 Plans, schémas électriques, voies d'évacuation, influences externes, documents techniques, dimensionnement des câbles, rapports BTV, calculs ICC et Lmax. Tout format de fichier est accepté.
 
-- Les **voies d'évacuation** et **influences externes** appartiennent à un **code COW** et sont réutilisées dans chaque as-built de ce code.
+- Les **voies d'évacuation** appartiennent à un **code COW** et sont réutilisées dans chaque as-built de ce code.
+- Les **influences externes** valent pour **tous les projets** : elles n'appartiennent à aucun code COW et rejoignent chaque as-built.
 - Les **documents techniques** forment un **registre** : choisissez-en par as-built et téléversez-en de nouveaux (ils rejoignent aussi le registre).
 
 ## Déroulement

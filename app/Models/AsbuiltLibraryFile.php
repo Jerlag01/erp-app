@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * A standard file of the as-built register, reused by several as-builts: per COW-code (evacuation
- * routes, external influences; optional for the other categories) or general. Technical documents
+ * routes; optional for the other categories) or general (always for external influences). Technical documents
  * are a register to pick from. Any file format, on the private disk.
  */
 #[Fillable(['category', 'work_site_id', 'title', 'path', 'original_name', 'size', 'uploaded_by', 'uploaded_by_client_user_id'])]
@@ -52,6 +52,12 @@ class AsbuiltLibraryFile extends Model
 
     protected static function booted(): void
     {
+        // Global files (external influences) and the register (technical documents) have no COW-code.
+        static::saving(function (self $file): void {
+            if ($file->category->isGlobal() || $file->category->isRegister()) {
+                $file->work_site_id = null;
+            }
+        });
         static::deleted(fn (self $file) => Storage::disk(self::DISK)->delete($file->path));
     }
 

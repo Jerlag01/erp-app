@@ -753,7 +753,7 @@ Per project een **as-built** met alle bestanden per categorie, de keuring door *
 
 ## Hoe ontstaat een as-built?
 
-Zodra een project de status **Uitgevoerd** krijgt, wordt de as-built automatisch aangemaakt met de status **In uitvoering**. Niet voor de uitgesloten categorieën (standaard 600, 604, 605, 606, 607 en 608.1; in te stellen bij Instellingen → Algemeen). De **standaardbestanden** van de COW-code van het project (en de algemene standaardbestanden) worden meteen toegevoegd.
+Zodra een project de status **Uitgevoerd** krijgt, wordt de as-built automatisch aangemaakt met de status **In uitvoering**. Niet voor de uitgesloten categorieën (standaard 600, 604, 605, 606, 607 en 608.1; in te stellen bij Instellingen → Algemeen). De **standaardbestanden** van de COW-code van het project, de externe invloeden en de algemene standaardbestanden worden meteen toegevoegd.
 
 Met de knop **As-built aanmaken** op het project (recht *As-built → Beheren*) maak je de as-built al vroeger aan, met dezelfde standaardbestanden en werkwijze. Wordt het project daarna *Uitgevoerd*, dan wordt er geen tweede aangemaakt. Bij elke as-built staat of hij automatisch of manueel (en door wie) werd aangemaakt.
 
@@ -761,7 +761,8 @@ Met de knop **As-built aanmaken** op het project (recht *As-built → Beheren*) 
 
 Plannen, elektrische schema's, evacuatiewegen, externe invloeden, technische documenten, kabeldimensionering, BTV-keuringsverslagen, ICC- en Lmax-berekeningen. Elk bestandsformaat is toegelaten.
 
-- **Evacuatiewegen** en **externe invloeden** horen bij een **COW-code** en worden hergebruikt in elke as-built van die COW-code.
+- **Evacuatiewegen** horen bij een **COW-code** en worden hergebruikt in elke as-built van die COW-code.
+- **Externe invloeden** gelden voor **alle projecten**: ze horen bij geen COW-code en komen in elke as-built.
 - **Technische documenten** vormen een **register**: kies er per as-built uit en upload nieuwe (die komen ook in het register).
 
 ## Werkwijze

@@ -75,7 +75,7 @@ class AsbuiltLibraryFileResource extends Resource
                 ->label(__('erp.client_portal.cow_code'))
                 ->options(fn (): array => self::siteOptions())
                 ->searchable()
-                ->visible(fn (?AsbuiltLibraryFile $record): bool => ! $record?->category->isRegister())
+                ->visible(fn (?AsbuiltLibraryFile $record): bool => ! $record?->category->isRegister() && ! $record?->category->isGlobal())
                 ->required(fn (?AsbuiltLibraryFile $record): bool => (bool) $record?->category->perCowCode()),
         ]);
     }
