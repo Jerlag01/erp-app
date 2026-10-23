@@ -991,6 +991,10 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 - Dans **Demandes de GPW**, il approuve ou refuse les demandes.
 
 Les mails (bienvenue, nouveau mot de passe) se modifient dans **Modèles d'e-mail**.
+
+## Supprimer le compte
+
+Un client peut supprimer son propre compte via son **profil → Supprimer mon compte**. Il reçoit d'abord l'avertissement qu'il n'aura ensuite plus accès aux informations et téléchargements, coche qu'il le comprend et confirme avec son mot de passe. Ce qu'il a fourni reste avec les projets. Les administrateurs reçoivent une notification.
 MD,
         ],
 

@@ -992,6 +992,10 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 - Bij **GPW-aanvragen** keurt hij aanvragen goed of weigert hij ze.
 
 De mails (welkom, nieuw wachtwoord) pas je aan bij **E-mailsjablonen**.
+
+## Account verwijderen
+
+Een klant kan zijn eigen account verwijderen via zijn **profiel → Mijn account verwijderen**. Hij krijgt eerst de waarschuwing dat hij daarna geen toegang meer heeft tot de informatie en downloads, vinkt aan dat hij dat begrijpt en bevestigt met zijn wachtwoord. Wat hij aanleverde blijft bij de projecten. De beheerders krijgen een melding.
 MD,
         ],
 

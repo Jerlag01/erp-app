@@ -2619,6 +2619,16 @@ return [
         ],
     ],
     'client_portal' => [
+        'account_deleted' => [
+            'button' => 'Delete my account',
+            'heading' => 'Permanently delete your account?',
+            'warning' => 'After deletion you will no longer have access to the information and downloads in this portal: projects, GPW requests, as-builts and their files. This cannot be undone; for new access an administrator has to make a new account.',
+            'understood' => 'I understand that I will no longer have access to the information and downloads afterwards.',
+            'password' => 'Your password to confirm',
+            'confirm' => 'Permanently delete account',
+            'done' => 'Your account has been deleted.',
+            'notification' => ':name deleted their account in the client portal',
+        ],
         'brand' => 'Global overview for Client',
         'projects' => 'Projects',
         'project' => 'project',

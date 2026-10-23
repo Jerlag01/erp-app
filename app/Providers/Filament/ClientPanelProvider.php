@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Client\Pages\Dashboard;
+use App\Filament\Client\Pages\EditClientProfile;
 use App\Http\Middleware\SetClientLocale;
 use App\Support\ClientPortal;
 use Filament\Http\Middleware\Authenticate;
@@ -35,7 +36,7 @@ class ClientPanelProvider extends PanelProvider
             ->authPasswordBroker('client_users')
             ->login()
             ->passwordReset()
-            ->profile(isSimple: false)
+            ->profile(EditClientProfile::class, isSimple: false)
             ->brandName(fn (): string => __('erp.client_portal.brand'))
             ->brandLogo(fn () => view('filament.brand', ['label' => __('erp.client_portal.brand')]))
             ->brandLogoHeight('2.5rem')

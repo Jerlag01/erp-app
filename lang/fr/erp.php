@@ -2619,6 +2619,16 @@ return [
         ],
     ],
     'client_portal' => [
+        'account_deleted' => [
+            'button' => 'Supprimer mon compte',
+            'heading' => 'Supprimer définitivement votre compte ?',
+            'warning' => 'Après la suppression, vous n\'aurez plus accès aux informations et téléchargements de ce portail : projets, demandes de GPW, as-builts et leurs fichiers. Cette action est irréversible ; pour un nouvel accès, un administrateur doit créer un nouveau compte.',
+            'understood' => 'Je comprends que je n\'aurai ensuite plus accès aux informations et téléchargements.',
+            'password' => 'Votre mot de passe pour confirmer',
+            'confirm' => 'Supprimer définitivement le compte',
+            'done' => 'Votre compte a été supprimé.',
+            'notification' => ':name a supprimé son compte du portail client',
+        ],
         'brand' => 'Global overview for Client',
         'projects' => 'Projets',
         'project' => 'projet',

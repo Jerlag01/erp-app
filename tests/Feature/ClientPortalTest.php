@@ -7,6 +7,7 @@ use App\Enums\ProjectStatus;
 use App\Enums\SiteLocationType;
 use App\Filament\Admin\Resources\ClientUsers\ClientUserResource;
 use App\Filament\Admin\Resources\ClientUsers\Pages\ManageClientUsers;
+use App\Filament\Client\Pages\EditClientProfile;
 use App\Filament\Client\Resources\BatteryDeliveries\ClientBatteryDeliveryResource;
 use App\Filament\Client\Resources\BatteryDeliveries\Pages\ListClientBatteryDeliveries;
 use App\Filament\Client\Resources\ChargingStations\ClientChargingStationResource;
@@ -28,6 +29,7 @@ use App\Models\WorkSiteContact;
 use App\Notifications\Client\ClientResetPassword;
 use App\Notifications\Client\ClientWelcome;
 use App\Support\ClientPortal;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -354,5 +356,39 @@ class ClientPortalTest extends TestCase
 
         $this->get('/client')->assertOk();
         $this->assertSame(1, ClientChargingStationResource::getEloquentQuery()->count());
+    }
+
+    #[Test]
+    public function a_client_removes_their_own_account_after_a_warning_and_their_password(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $client = ClientUser::factory()->create(['password' => 'Geheim-wachtwoord-1', 'name' => 'Ex Manager']);
+        $project = Project::factory()->inCategory('604')->create();
+        $client->projects()->attach($project);
+        $this->actingAs($client, ClientPortal::GUARD);
+        Filament::setCurrentPanel(ClientPortal::PANEL);
+
+        $this->get('/client/profile')->assertOk()->assertSee(__('erp.client_portal.account_deleted.button'));
+
+        // The warning must be accepted and the password must be right.
+        Livewire::test(EditClientProfile::class)
+            ->assertActionExists('deleteAccount', fn (Action $action): bool => $action->getModalDescription() === __('erp.client_portal.account_deleted.warning'))
+            ->mountAction('deleteAccount')
+            ->setActionData(['understood' => false, 'password' => 'fout'])
+            ->callMountedAction()
+            ->assertHasActionErrors(['understood', 'password']);
+        $this->assertModelExists($client);
+
+        Livewire::test(EditClientProfile::class)
+            ->callAction('deleteAccount', ['understood' => true, 'password' => 'Geheim-wachtwoord-1'])
+            ->assertHasNoActionErrors()
+            ->assertRedirect('/client/login');
+
+        $this->assertModelMissing($client);
+        $this->assertDatabaseMissing('client_user_project', ['client_user_id' => $client->id]);
+        $this->assertModelExists($project);
+        $this->assertFalse(auth()->guard(ClientPortal::GUARD)->check());
+        $this->assertSame(1, $admin->notifications()->count());
+        $this->get('/client')->assertRedirect('/client/login');
     }
 }

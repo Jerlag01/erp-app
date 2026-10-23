@@ -2620,6 +2620,16 @@ return [
         ],
     ],
     'client_portal' => [
+        'account_deleted' => [
+            'button' => 'Mijn account verwijderen',
+            'heading' => 'Uw account definitief verwijderen?',
+            'warning' => 'Na het verwijderen heeft u geen toegang meer tot de informatie en downloads in dit portaal: projecten, GPW-aanvragen, as-builts en hun bestanden. Dit kan niet ongedaan gemaakt worden; voor nieuwe toegang moet een beheerder een nieuw account aanmaken.',
+            'understood' => 'Ik begrijp dat ik daarna geen toegang meer heb tot de informatie en downloads.',
+            'password' => 'Uw wachtwoord ter bevestiging',
+            'confirm' => 'Account definitief verwijderen',
+            'done' => 'Uw account is verwijderd.',
+            'notification' => ':name heeft zijn account in het klantenportaal verwijderd',
+        ],
         'brand' => 'Global overview for Client',
         'projects' => 'Projecten',
         'project' => 'project',

@@ -991,6 +991,10 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 - Under **GPW requests** they approve or refuse requests.
 
 The mails (welcome, new password) are edited under **E-mail templates**.
+
+## Deleting the account
+
+A client can delete their own account through their **profile → Delete my account**. They first get the warning that they will no longer have access to the information and downloads, tick that they understand and confirm with their password. What they handed in stays with the projects. The administrators get a notification.
 MD,
         ],
 
