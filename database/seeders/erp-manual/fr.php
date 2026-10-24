@@ -680,6 +680,8 @@ Le dossier complet pour le remplacement de batteries sur les **projets 604** : i
 
 Dans **Livraisons de batteries**, suivez par projet la confirmation de commande, le type, la quantité et la date de livraison prévue, et cochez **livré**.
 
+Dans le portail client, le client voit par livraison si elle est **livrée** avec la **date de livraison effective** (le jour de la coche), quand l'**installation est planifiée** (la date d'exécution du dossier batteries, ou sinon le premier jour au planning) et une coche **exécuté** avec la date à laquelle le projet est passé à *exécuté*.
+
 Avec **Documents**, ajoutez par livraison trois fichiers : la **commande** au fournisseur, la **confirmation de commande** du fournisseur et le **bon de livraison** à l'arrivée. Ils figurent aussi sur le projet (onglet *Livraisons de batteries*). Ils sont internes : jamais visibles dans le portail client, et uniquement avec les droits **Voir et télécharger les documents de livraison** et **Téléverser les documents de livraison**.
 
 ## Commande BAE

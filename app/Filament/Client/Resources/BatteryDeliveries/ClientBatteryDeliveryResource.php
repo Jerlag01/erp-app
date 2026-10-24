@@ -16,8 +16,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * The battery deliveries: project, order confirmation, battery model, pieces, planned date and whether
- * delivered. The cost and the internal notes are never shown.
+ * The battery deliveries: project, order confirmation, battery model, pieces, planned and actual delivery
+ * date, when the installation is planned and whether (and when) the project was executed. The cost, the
+ * internal notes and the delivery documents are never shown.
  */
 class ClientBatteryDeliveryResource extends ClientResource
 {
@@ -60,7 +61,7 @@ class ClientBatteryDeliveryResource extends ClientResource
 
         // Deliveries follow their project: only those of the projects the user sees.
         return BatteryDelivery::query()
-            ->with(['project.workSite', 'batteryModel'])
+            ->with(['project' => fn ($query) => $query->with(['workSite', 'batteryDossier'])->withMin('planningItems', 'date'), 'batteryModel'])
             ->whereHas('project', fn (Builder $query) => $user ? $user->restrictProjects($query) : $query->whereRaw('1 = 0'));
     }
 
@@ -101,12 +102,35 @@ class ClientBatteryDeliveryResource extends ClientResource
                     ->date('d/m/Y')
                     ->sortable()
                     ->placeholder('—'),
-                IconColumn::make('executed')
+                // Ticked in the employees' delivery overview ("delivered"), with the date it was ticked.
+                IconColumn::make('delivered')
                     ->label(__('erp.client_portal.delivered'))
                     ->boolean(),
+                TextColumn::make('delivered_at')
+                    ->label(__('erp.client_portal.actual_delivery'))
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->placeholder('—'),
+                TextColumn::make('installation_planned')
+                    ->label(__('erp.client_portal.installation_planned'))
+                    ->state(fn (BatteryDelivery $record): ?string => $record->plannedInstallationDate()?->format('d/m/Y'))
+                    ->placeholder('—'),
+                // A check mark with the date the project went to "executed".
+                TextColumn::make('project.executed_at')
+                    ->label(__('erp.client_portal.installation_executed'))
+                    ->date('d/m/Y')
+                    ->icon(Heroicon::CheckCircle)
+                    ->iconColor('success')
+                    ->placeholder('—'),
             ])
             ->filters([
-                TernaryFilter::make('executed')->label(__('erp.client_portal.delivered')),
+                TernaryFilter::make('delivered')->label(__('erp.client_portal.delivered')),
+                TernaryFilter::make('project_executed')
+                    ->label(__('erp.client_portal.installation_executed'))
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereHas('project', fn (Builder $query) => $query->whereNotNull('executed_at')),
+                        false: fn (Builder $query) => $query->whereHas('project', fn (Builder $query) => $query->whereNull('executed_at')),
+                    ),
             ]);
     }
 

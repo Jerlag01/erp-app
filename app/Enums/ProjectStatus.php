@@ -62,6 +62,16 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
         return [self::ToBePlanned, self::Planned, self::ToBeExecuted, self::InProgress];
     }
 
+    /**
+     * The work is done: executed, and the invoicing after it.
+     *
+     * @return list<self>
+     */
+    public static function executedOrLater(): array
+    {
+        return [self::Executed, self::InvoicingToDo, self::Invoiced];
+    }
+
     public function getColor(): string
     {
         return match ($this) {

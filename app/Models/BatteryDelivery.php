@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\ProjectStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\BatteryDeliveryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -115,6 +117,30 @@ class BatteryDelivery extends Model
         $project = $this->project;
 
         return $project?->category ? $project->category->numbering->formatNumber((int) $project->number) : (string) $project?->number;
+    }
+
+    /**
+     * When the batteries are planned to be installed: the execution date of the battery dossier, or else
+     * the first day the project is in the planning.
+     */
+    public function plannedInstallationDate(): ?CarbonInterface
+    {
+        $project = $this->project;
+
+        if (! $project) {
+            return null;
+        }
+
+        if ($date = $project->batteryDossier?->execution_date) {
+            return $date;
+        }
+
+        // Loaded with withMin('planningItems', 'date') in lists, else asked here.
+        $first = array_key_exists('planning_items_min_date', $project->getAttributes())
+            ? $project->getAttribute('planning_items_min_date')
+            : $project->planningItems()->min('date');
+
+        return $first ? Carbon::parse($first) : null;
     }
 
     public function markDelivered(User $user): void

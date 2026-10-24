@@ -680,6 +680,8 @@ The complete dossier for replacing batteries on **604 projects**: input, deliver
 
 Under **Battery deliveries** you follow up per project the order confirmation, type, quantity and planned delivery date, and tick **delivered**.
 
+In the client portal the client sees per delivery whether it is **delivered** with the **actual delivery date** (the day of the tick), when the **installation is planned** (the execution date of the battery dossier, or else the first day in the planning) and an **executed** check mark with the date the project went to *executed*.
+
 With **Documents** you add three files per delivery: the **order** to the supplier, the supplier's **order confirmation** and the **delivery note** on arrival. They are also on the project (tab *Battery deliveries*). They are internal: never visible in the client portal, and only with the permissions **See and download delivery documents** and **Upload delivery documents**.
 
 ## BAE order

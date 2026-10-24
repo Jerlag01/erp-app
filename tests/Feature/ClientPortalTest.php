@@ -17,9 +17,11 @@ use App\Filament\Client\Resources\Projects\Pages\ListClientProjects;
 use App\Filament\Client\Resources\Routers\ClientRouterResource;
 use App\Filament\Client\Resources\Routers\Pages\ListClientRouters;
 use App\Models\BatteryDelivery;
+use App\Models\BatteryDossier;
 use App\Models\ChargingStation;
 use App\Models\ClientUser;
 use App\Models\MailTemplate;
+use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\Router;
 use App\Models\User;
@@ -112,6 +114,48 @@ class ClientPortalTest extends TestCase
         // Without the permission the overview is closed.
         $this->client([ClientPortal::PROJECTS]);
         $this->get(ClientBatteryDeliveryResource::getUrl())->assertForbidden();
+    }
+
+    #[Test]
+    public function battery_deliveries_show_delivery_planned_installation_and_execution_as_the_employees_record_them(): void
+    {
+        $this->travelTo('2026-10-12 09:15:00');
+        $delivery = BatteryDelivery::factory()->create(['order_confirmation' => '4141234']);
+        $project = $delivery->project;
+        $this->client([ClientPortal::BATTERY_DELIVERIES, ClientPortal::ALL_PROJECTS]);
+
+        Livewire::test(ListClientBatteryDeliveries::class)
+            ->assertTableColumnStateSet('delivered', false, $delivery)
+            ->assertTableColumnStateSet('delivered_at', null, $delivery)
+            ->assertTableColumnStateSet('installation_planned', null, $delivery)
+            ->assertTableColumnStateSet('project.executed_at', null, $delivery);
+
+        // Ticked "delivered" in the employees' overview: delivered with that day (this was not shown before).
+        $delivery->markDelivered(User::factory()->create());
+        // Planned: first day in the planning, until the dossier has an execution date.
+        PlanningItem::factory()->forProject($project)->create(['date' => '2026-10-20']);
+        PlanningItem::factory()->forProject($project)->create(['date' => '2026-10-21']);
+
+        Livewire::test(ListClientBatteryDeliveries::class)
+            ->assertTableColumnStateSet('delivered', true, $delivery)
+            ->assertTableColumnFormattedStateSet('delivered_at', '12/10/2026', $delivery)
+            ->assertTableColumnStateSet('installation_planned', '20/10/2026', $delivery)
+            ->filterTable('delivered', true)
+            ->assertCanSeeTableRecords([$delivery]);
+
+        BatteryDossier::factory()->create(['project_id' => $project->id, 'execution_date' => '2026-10-22']);
+        $this->travelTo('2026-10-22 16:30:00');
+        $project->refresh()->update(['status' => ProjectStatus::Executed]);
+
+        Livewire::test(ListClientBatteryDeliveries::class)
+            ->assertTableColumnStateSet('installation_planned', '22/10/2026', $delivery)
+            ->assertTableColumnFormattedStateSet('project.executed_at', '22/10/2026', $delivery);
+
+        // The date stays while invoicing, and goes when the project is set back.
+        $project->refresh()->update(['status' => ProjectStatus::InvoicingToDo]);
+        $this->assertSame('2026-10-22 16:30:00', $project->refresh()->executed_at->format('Y-m-d H:i:s'));
+        $project->update(['status' => ProjectStatus::InProgress]);
+        $this->assertNull($project->refresh()->executed_at);
     }
 
     #[Test]

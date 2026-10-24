@@ -437,6 +437,15 @@ class Project extends Model
             }
 
             $project->reference = $project->buildReference();
+
+            // The moment it went to "executed": kept while it moves on (invoicing, closed), cleared when it goes back.
+            if ($project->isDirty('status')) {
+                if (in_array($project->status, ProjectStatus::executedOrLater(), true)) {
+                    $project->executed_at ??= now();
+                } elseif ($project->status !== ProjectStatus::Closed) {
+                    $project->executed_at = null;
+                }
+            }
         });
 
         static::created(function (self $project): void {
@@ -486,6 +495,7 @@ class Project extends Model
             'location_type' => SiteLocationType::class,
             'intervention_tags' => 'array',
             'archived_at' => 'datetime',
+            'executed_at' => 'datetime',
         ];
     }
 }

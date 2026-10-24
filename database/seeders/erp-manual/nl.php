@@ -681,6 +681,8 @@ Het volledige dossier voor het vervangen van batterijen op **604-projecten**: in
 
 Bij **Overzicht levering batterijen** volg je per project de orderbevestiging, het type, het aantal en de geplande leveringsdatum op, en vink je **geleverd** aan.
 
+In het klantenportaal ziet de klant per levering of ze **geleverd** is met de **werkelijke leverdatum** (de dag van het vinkje), wanneer de **installatie gepland** is (de datum uitvoering van het batterijdossier, of anders de eerste dag in de planning) en een vinkje **uitgevoerd** met de datum waarop het project naar *uitgevoerd* ging.
+
 Met **Documenten** voeg je per levering drie bestanden toe: de **bestelling** aan de leverancier, de **orderbevestiging** van de leverancier en de **leveringsbon** bij aankomst. Ze staan ook op het project (tabblad *Batterijleveringen*). Ze zijn intern: nooit zichtbaar in het klantenportaal, en enkel met de rechten **Leveringsdocumenten zien en downloaden** en **Leveringsdocumenten uploaden**.
 
 ## BAE-bestelling
