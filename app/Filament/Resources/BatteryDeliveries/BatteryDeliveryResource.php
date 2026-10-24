@@ -158,6 +158,7 @@ class BatteryDeliveryResource extends Resource
 
                         return $state;
                     }),
+                DeliveryDocuments::column(),
                 TextColumn::make('total_cost')
                     ->label(__('erp.batteries.total_cost'))
                     ->money('EUR', locale: 'nl_BE')
@@ -166,6 +167,7 @@ class BatteryDeliveryResource extends Resource
                     ->visible(fn (): bool => Gate::allows('viewPrices', BatteryDelivery::class)),
             ])
             ->recordActions([
+                DeliveryDocuments::action(),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

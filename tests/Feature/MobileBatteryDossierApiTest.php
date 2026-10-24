@@ -142,4 +142,51 @@ class MobileBatteryDossierApiTest extends TestCase
 
         $this->getJson("/api/v1/dossiers/bae/{$dossier->id}", $this->technician())->assertForbidden();
     }
+
+    #[Test]
+    public function the_floor_plan_is_drawn_in_the_platform_editor_and_saved_through_the_api(): void
+    {
+        $auth = $this->technician();
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id]);
+
+        $plan = $this->getJson("/api/v1/dossiers/bae/{$dossier->id}", $auth)->assertOk()->json('data.floor_plan');
+        $this->assertFalse($plan['has_drawing']);
+        $this->assertNull($plan['image_path']);
+
+        // The signed link opens the editor page, editable for this technician.
+        $this->get($plan['editor_url'])->assertOk()->assertSee('data-mobile-floor-plan', false)->assertSee(__('erp.batteries.plan.pen'))->assertSee('data-editable="yes"', false);
+        $this->get(route('mobile.floor-plan', ['dossier' => $dossier->id, 'user' => 1]))->assertForbidden();
+
+        // The app saves what the page hands back: the shapes (cleaned) and the PNG for the PDF.
+        $png = 'data:image/png;base64,'.base64_encode(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='));
+        $this->putJson("/api/v1/dossiers/bae/{$dossier->id}/floor-plan", [
+            'shapes' => [['t' => 'rect', 'x' => 10, 'y' => 20, 'wd' => 300, 'ht' => 120, 'c' => '#dc2626', 'w' => 3, 'label' => 'Batterijkast'], ['t' => 'hack']],
+            'png' => $png,
+        ], $auth)->assertOk()->assertJsonPath('data.floor_plan.has_drawing', true);
+
+        $dossier->refresh();
+        $this->assertCount(1, $dossier->floor_plan);
+        $this->assertSame('Batterijkast', $dossier->floor_plan[0]['label']);
+        $this->assertNotNull($dossier->floorPlanDataUri());
+
+        $image = $this->getJson("/api/v1/dossiers/bae/{$dossier->id}", $auth)->json('data.floor_plan.image_path');
+        $this->get('/api/v1'.$image, $auth)->assertOk()->assertHeader('content-type', 'image/png');
+
+        // A broken picture is refused; an empty drawing removes the picture.
+        $this->putJson("/api/v1/dossiers/bae/{$dossier->id}/floor-plan", ['shapes' => [['t' => 'pen', 'pts' => [[1, 1], [5, 5]]]], 'png' => 'data:image/png;base64,bm9wZQ=='], $auth)->assertUnprocessable();
+        $this->putJson("/api/v1/dossiers/bae/{$dossier->id}/floor-plan", ['shapes' => [], 'png' => null], $auth)->assertOk()->assertJsonPath('data.floor_plan.has_drawing', false);
+        $this->assertNull($dossier->fresh()->floor_plan_png);
+
+        // Read-only for someone who may only look, and not for Enersys dossiers.
+        $viewer = User::factory()->withPermissions(['projects' => ['view'], 'batteries' => ['view']])->inTeam($this->team)->create();
+        $viewerAuth = $this->mobileAuth($viewer);
+        $url = $this->getJson("/api/v1/dossiers/bae/{$dossier->id}", $viewerAuth)->json('data.floor_plan.editor_url');
+        $this->get($url)->assertOk()->assertSee('data-editable="no"', false);
+        $this->putJson("/api/v1/dossiers/bae/{$dossier->id}/floor-plan", ['shapes' => []], $viewerAuth)->assertForbidden();
+
+        $enersysProject = Project::factory()->inCategory('605')->create();
+        $enersysProject->teams()->attach($this->team);
+        $enersys = EnersysDossier::factory()->create(['project_id' => $enersysProject->id]);
+        $this->getJson("/api/v1/dossiers/enersys/{$enersys->id}", $this->technician('enersys'))->assertOk()->assertJsonPath('data.floor_plan', null);
+    }
 }

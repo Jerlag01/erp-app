@@ -679,6 +679,8 @@ Het volledige dossier voor het vervangen van batterijen op **604-projecten**: in
 
 Bij **Overzicht levering batterijen** volg je per project de orderbevestiging, het type, het aantal en de geplande leveringsdatum op, en vink je **geleverd** aan.
 
+Met **Documenten** voeg je per levering drie bestanden toe: de **bestelling** aan de leverancier, de **orderbevestiging** van de leverancier en de **leveringsbon** bij aankomst. Ze staan ook op het project (tabblad *Batterijleveringen*). Ze zijn intern: nooit zichtbaar in het klantenportaal, en enkel met de rechten **Leveringsdocumenten zien en downloaden** en **Leveringsdocumenten uploaden**.
+
 ## Rechten
 
 Bekijken, aanmaken, bewerken, verwijderen, het **input**-tabblad, **prijzen & factuuraanvraag**, PDF's en het wijzigen van afgeronde dossiers zijn aparte rechten.
@@ -1019,7 +1021,7 @@ De app **PI ERP** brengt het belangrijkste van het platform naar je telefoon, oo
 - **Prestaties**: je prestatiefiche invullen; het wordt meteen in het platform bewaard.
 - **Verlof**: verlof en **overuren als verlof** aanvragen, **ziekte melden** en een attest toevoegen (foto, bestand of meteen een foto nemen).
 - **Controles**: de **jaarlijkse controle** van het materieel van je ploeg invullen (enkel als er een lijst openstaat).
-- **Meer**: je gegevens, **toolboxmeetings** lezen en ondertekenen, **incident melden**, de **ideeënbus** en de **batterijdossiers** (604/605) invullen en ondertekenen.
+- **Meer**: je gegevens, **toolboxmeetings** lezen en ondertekenen, **incident melden**, de **ideeënbus** en de **batterijdossiers** (604/605) invullen en ondertekenen, met de **plattegrond** die je tekent zoals op het platform (604).
 
 ## Meldingen
 

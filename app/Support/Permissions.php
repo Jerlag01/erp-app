@@ -78,7 +78,7 @@ class Permissions
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
-        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished']],
+        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'documents', 'documents_upload', 'generate_pdf', 'edit_finished']],
         'enersys' => ['module' => Modules::ENERSYS, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished']],
         'cable_stripping' => ['module' => Modules::CABLE_STRIPPING, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'announcements' => ['module' => Modules::ANNOUNCEMENTS, 'abilities' => ['update']],

@@ -678,6 +678,8 @@ Le dossier complet pour le remplacement de batteries sur les **projets 604** : i
 
 Dans **Livraisons de batteries**, suivez par projet la confirmation de commande, le type, la quantité et la date de livraison prévue, et cochez **livré**.
 
+Avec **Documents**, ajoutez par livraison trois fichiers : la **commande** au fournisseur, la **confirmation de commande** du fournisseur et le **bon de livraison** à l'arrivée. Ils figurent aussi sur le projet (onglet *Livraisons de batteries*). Ils sont internes : jamais visibles dans le portail client, et uniquement avec les droits **Voir et télécharger les documents de livraison** et **Téléverser les documents de livraison**.
+
 ## Droits
 
 Voir, créer, modifier, supprimer, l'onglet **input**, **prix & demande de facturation**, les PDF et la modification de dossiers terminés sont des droits distincts.
@@ -1018,7 +1020,7 @@ L'application **PI ERP** apporte l'essentiel de la plateforme sur votre téléph
 - **Prestations** : remplir votre fiche de prestations ; elle est enregistrée directement dans la plateforme.
 - **Congés** : demander un congé ou des **heures supplémentaires en congé**, **signaler une maladie** et ajouter un certificat (photo, fichier ou photo prise sur le moment).
 - **Contrôles** : compléter le **contrôle annuel** du matériel de votre équipe (seulement quand une liste est ouverte).
-- **Plus** : vos données, lire et signer les **toolbox meetings**, **signaler un incident**, la **boîte à idées** et compléter et signer les **dossiers batteries** (604/605).
+- **Plus** : vos données, lire et signer les **toolbox meetings**, **signaler un incident**, la **boîte à idées** et compléter et signer les **dossiers batteries** (604/605), avec le **plan** que vous dessinez comme sur la plateforme (604).
 
 ## Notifications
 

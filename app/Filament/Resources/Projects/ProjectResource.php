@@ -8,6 +8,7 @@ use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\RelationManagers\BatteryDeliveriesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ExtraFilesRelationManager;
@@ -95,6 +96,7 @@ class ProjectResource extends Resource
             GpwRequestsRelationManager::class,
             PartsRelationManager::class,
             ChargingStationsRelationManager::class,
+            BatteryDeliveriesRelationManager::class,
             DocumentsRelationManager::class,
             ImagesRelationManager::class,
             PlansRelationManager::class,

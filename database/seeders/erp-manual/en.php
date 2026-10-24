@@ -678,6 +678,8 @@ The complete dossier for replacing batteries on **604 projects**: input, deliver
 
 Under **Battery deliveries** you follow up per project the order confirmation, type, quantity and planned delivery date, and tick **delivered**.
 
+With **Documents** you add three files per delivery: the **order** to the supplier, the supplier's **order confirmation** and the **delivery note** on arrival. They are also on the project (tab *Battery deliveries*). They are internal: never visible in the client portal, and only with the permissions **See and download delivery documents** and **Upload delivery documents**.
+
 ## Permissions
 
 Viewing, creating, editing, deleting, the **input** tab, **prices & invoice request**, PDFs and changing finished dossiers are separate permissions.
@@ -1018,7 +1020,7 @@ The **PI ERP** app brings the essentials of the platform to your phone, also on 
 - **Timesheet**: fill in your prestation sheet; it is saved straight away in the platform.
 - **Leave**: request leave or **overtime as leave**, **report sickness** and add a certificate (photo, file or a picture taken on the spot).
 - **Checks**: fill in the **yearly control** of your team's equipment (only while a list is open).
-- **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605).
+- **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605), with the **floor plan** you draw as on the platform (604).
 
 ## Notifications
 

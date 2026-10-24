@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Batteries\SaveBatteryDossier;
+use App\Actions\Batteries\SaveFloorPlan;
 use App\Http\Controllers\Controller;
 use App\Models\BatteryCable;
 use App\Models\BatteryDossier;
@@ -15,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -22,8 +24,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Battery (604, "bae") and Enersys (605, "enersys") dossiers in the mobile app: what the technician
  * fills in on site (delivery note, measurement report, visual inspection, single-line values, shipping
- * note), the written signatures, the photos and finishing. The Input tab, floor plan and prices stay
- * on the platform. The form is described by the ERP (sections, fields, labels, locks), so the app
+ * note), the written signatures, the photos, the floor plan (battery dossiers, drawn in the platform's
+ * editor shown in the app) and finishing. The Input tab and prices stay on the platform. The form is described by the ERP (sections, fields, labels, locks), so the app
  * shows the same fields with the same rules as the dossier page.
  */
 class BatteryDossierController extends Controller
@@ -184,6 +186,38 @@ class BatteryDossierController extends Controller
         abort_unless(is_string($path) && Storage::disk(PrivatePhotos::DISK)->exists($path), 404);
 
         return Storage::disk(PrivatePhotos::DISK)->response($path, null, ['Cache-Control' => 'private, max-age=86400']);
+    }
+
+    /**
+     * Saves the floor plan drawn in the editor page: the shapes and the PNG the editor made of them.
+     */
+    public function saveFloorPlan(Request $request, string $kind, int $id, SaveFloorPlan $save): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $dossier = $this->find($user, $kind, $id);
+        abort_if($this->isEnersys($dossier), 404);
+        $this->authorizeEdit($user, $dossier);
+
+        $data = $request->validate([
+            'shapes' => ['present', 'array', 'max:2000'],
+            'png' => ['nullable', 'string', 'max:'.SaveFloorPlan::MAX_PNG_BYTES],
+        ]);
+
+        $save->handle($dossier, $data['shapes'], $data['png'] ?? null);
+
+        return response()->json(['message' => __('erp.mobile.saved'), 'data' => $this->payload($this->find($user, $kind, $id), $user)]);
+    }
+
+    /**
+     * The floor plan as image, for the preview in the app.
+     */
+    public function floorPlanImage(Request $request, string $kind, int $id): StreamedResponse
+    {
+        $dossier = $this->find($request->user(), $kind, $id);
+        abort_unless(filled($dossier->floor_plan_png) && Storage::disk(BatteryDossier::DISK)->exists($dossier->floor_plan_png), 404);
+
+        return Storage::disk(BatteryDossier::DISK)->response($dossier->floor_plan_png, 'floor-plan.png', ['Content-Type' => 'image/png', 'Cache-Control' => 'private, max-age=86400']);
     }
 
     /**
@@ -396,6 +430,13 @@ class BatteryDossierController extends Controller
                 'path' => '/dossiers/'.($enersys ? 'enersys' : 'bae')."/{$dossier->id}/photos/{$index}?v=".substr(md5($path), 0, 10),
             ], array_keys($photos = array_values((array) $dossier->photos)), $photos),
             'max_photos' => BatteryDossier::MAX_PHOTOS,
+            // Battery dossiers only: the platform's editor, opened in the app through a short-lived signed link.
+            'floor_plan' => $enersys ? null : [
+                'has_drawing' => filled($dossier->floor_plan),
+                'image_path' => filled($dossier->floor_plan_png) ? "/dossiers/bae/{$dossier->id}/floor-plan?v=".substr(md5((string) $dossier->updated_at?->timestamp), 0, 10) : null,
+                'editor_url' => URL::temporarySignedRoute('mobile.floor-plan', now()->addHours(2), ['dossier' => $dossier->id, 'user' => $user->id, 'lang' => app()->getLocale()]),
+                'title' => __('erp.batteries.tabs.floor_plan'),
+            ],
         ];
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AbsenceDocumentController;
 use App\Http\Controllers\AsbuiltDownloadController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
+use App\Http\Controllers\BatteryDeliveryDocumentController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\ClientWelcomeLinkController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\KbDownloadController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MobileAppDismissController;
 use App\Http\Controllers\MobileAppDownloadController;
+use App\Http\Controllers\MobileFloorPlanController;
 use App\Http\Controllers\PeppolInboundController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\ProjectArchiveController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\ToolboxPdfController;
 use App\Http\Controllers\WastePdfController;
 use App\Http\Controllers\WelcomeLinkController;
 use App\Http\Middleware\SetUserLocale;
+use App\Models\BatteryDelivery;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +56,9 @@ Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->
 
 // The privacy policy of the mobile app: public (Google Play and the app link to it).
 Route::get('/privacy', PrivacyPolicyController::class)->name('privacy');
+
+// The floor plan editor of a battery dossier for the mobile app (signed link from the API).
+Route::get('/mobile/floor-plan/{dossier}', MobileFloorPlanController::class)->whereNumber('dossier')->middleware('signed')->name('mobile.floor-plan');
 
 // An attachment of a toolbox meeting through a short-lived signed link from the mobile app.
 Route::get('/toolbox-files/{meeting}/{index}', ToolboxAttachmentController::class)->whereNumber('index')->middleware('signed')->name('toolbox.attachment');
@@ -76,6 +82,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/timesheet-report-pdf', TimesheetReportPdfController::class)->name('timesheets.report-pdf');
     Route::get('/timesheet-pdf/{user}/{week}', TimesheetPdfController::class)->whereNumber('user')->where('week', '\d{4}-\d{2}-\d{2}')->name('timesheets.pdf');
     Route::get('/battery-deliveries-pdf', BatteryDeliveriesPdfController::class)->name('batteries.deliveries-pdf');
+    Route::get('/battery-deliveries/{delivery}/documents/{kind}', BatteryDeliveryDocumentController::class)->whereNumber('delivery')->whereIn('kind', BatteryDelivery::DOCUMENTS)->name('batteries.delivery-document');
     Route::get('/battery-dossiers/{dossier}/documents/{document}', BatteryDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('batteries.document');
     Route::get('/enersys-dossiers/{dossier}/documents/{document}', EnersysDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('enersys.document');
     Route::get('/interventions/{report}/pdf', InterventionPdfController::class)->whereNumber('report')->name('interventions.pdf');

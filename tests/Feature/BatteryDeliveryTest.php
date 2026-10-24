@@ -4,16 +4,22 @@ namespace Tests\Feature;
 
 use App\Enums\ProjectStatus;
 use App\Filament\Admin\Pages\Settings;
+use App\Filament\Client\Resources\BatteryDeliveries\ClientBatteryDeliveryResource;
 use App\Filament\Resources\BatteryDeliveries\Pages\ManageBatteryDeliveries;
+use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Models\BatteryDelivery;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\ClientUser;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
+use App\Support\ClientPortal;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -171,5 +177,62 @@ class BatteryDeliveryTest extends TestCase
         $this->assertSame('planned', settings()->get('batteries.delivered_project_status'));
         $this->assertEquals(70.5, settings()->get('batteries.hourly_rate'));
         $this->assertSame('BAE', settings()->get('batteries.brand'), 'Untouched values are kept.');
+    }
+
+    #[Test]
+    public function the_order_confirmation_and_delivery_note_are_uploaded_and_seen_only_with_the_permissions(): void
+    {
+        Storage::fake('local');
+        $project = $this->project();
+        $delivery = BatteryDelivery::factory()->create(['project_id' => $project->id, 'order_confirmation' => '4141234']);
+
+        // Without the document permissions: no column, no upload, no download, no tab on the project.
+        $this->actingAs($this->user());
+        Livewire::test(ManageBatteryDeliveries::class)
+            ->assertTableColumnHidden('documents')
+            ->assertTableActionHidden('documents', $delivery);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertDontSee(__('erp.batteries.delivery_documents.tab'));
+
+        // Uploading: one zone per document.
+        $this->actingAs($this->user(['view', 'update', 'documents', 'documents_upload']));
+        Livewire::test(ManageBatteryDeliveries::class)
+            ->callTableAction('documents', $delivery, [
+                'order' => UploadedFile::fake()->create('bestelling-BAE.pdf', 30, 'application/pdf'),
+                'confirmation' => UploadedFile::fake()->create('bevestiging.pdf', 30, 'application/pdf'),
+            ])
+            ->assertHasNoTableActionErrors();
+
+        $delivery->refresh();
+        $this->assertSame('bestelling-BAE.pdf', $delivery->documentName('order'));
+        $this->assertTrue($delivery->hasDocument('confirmation'));
+        $this->assertFalse($delivery->hasDocument('delivery_note'));
+
+        // The delivery note comes later; the order can be removed again.
+        $order = $delivery->order_document;
+        Livewire::test(ManageBatteryDeliveries::class)
+            ->callTableAction('documents', $delivery, ['delivery_note' => UploadedFile::fake()->create('leveringsbon.pdf', 30, 'application/pdf'), 'order_remove' => true])
+            ->assertHasNoTableActionErrors();
+        $delivery->refresh();
+        $this->assertTrue($delivery->hasDocument('delivery_note'));
+        $this->assertFalse($delivery->hasDocument('order'));
+        Storage::disk('local')->assertMissing($order);
+
+        // Linked to the project: a tab with the deliveries and their documents.
+        $this->get(route('batteries.delivery-document', ['delivery' => $delivery, 'kind' => 'delivery_note']))->assertOk()->assertDownload('leveringsbon.pdf');
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertSee(__('erp.batteries.delivery_documents.tab'));
+
+        // Seeing without uploading.
+        $this->actingAs($this->user(['view', 'documents']));
+        Livewire::test(ManageBatteryDeliveries::class)->assertTableColumnVisible('documents')->assertTableActionHidden('documents', $delivery);
+        $this->get(route('batteries.delivery-document', ['delivery' => $delivery, 'kind' => 'confirmation']))->assertOk();
+
+        // Others are refused, and the client portal never shows them.
+        $this->actingAs($this->user());
+        $this->get(route('batteries.delivery-document', ['delivery' => $delivery, 'kind' => 'confirmation']))->assertForbidden();
+        $client = ClientUser::factory()->withPermissions([ClientPortal::BATTERY_DELIVERIES, ClientPortal::ALL_PROJECTS])->create();
+        $this->actingAs($client, ClientPortal::GUARD);
+        Filament::setCurrentPanel(ClientPortal::PANEL);
+        $this->get(ClientBatteryDeliveryResource::getUrl())->assertOk()->assertSee('4141234')->assertDontSee('leveringsbon')->assertDontSee('bevestiging.pdf');
+        $this->get(route('batteries.delivery-document', ['delivery' => $delivery, 'kind' => 'confirmation']))->assertForbidden();
     }
 }

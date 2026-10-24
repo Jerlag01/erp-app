@@ -259,6 +259,16 @@ class Project extends Model
     }
 
     /**
+     * Battery orders of a 604 project ("Overzicht levering batterijen").
+     *
+     * @return HasMany<BatteryDelivery, $this>
+     */
+    public function batteryDeliveries(): HasMany
+    {
+        return $this->hasMany(BatteryDelivery::class)->orderBy('planned_delivery_date')->orderBy('id');
+    }
+
+    /**
      * @return HasOne<Asbuilt, $this>
      */
     public function asbuilt(): HasOne

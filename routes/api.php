@@ -73,6 +73,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('/{id}/photos/{index}', [BatteryDossierController::class, 'photo'])->whereNumber(['id', 'index'])->name('photos.show');
             Route::delete('/{id}/photos/{index}', [BatteryDossierController::class, 'removePhoto'])->whereNumber(['id', 'index'])->name('photos.remove');
             Route::post('/{id}/finish', [BatteryDossierController::class, 'finish'])->whereNumber('id')->name('finish');
+            Route::put('/{id}/floor-plan', [BatteryDossierController::class, 'saveFloorPlan'])->whereNumber('id')->name('floor-plan.save');
+            Route::get('/{id}/floor-plan', [BatteryDossierController::class, 'floorPlanImage'])->whereNumber('id')->name('floor-plan.show');
         });
     });
 });

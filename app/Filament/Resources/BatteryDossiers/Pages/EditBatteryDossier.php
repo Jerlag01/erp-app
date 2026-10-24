@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\BatteryDossiers\Pages;
 
 use App\Actions\Batteries\SaveBatteryDossier;
-use App\Filament\Forms\FloorPlanEditor;
+use App\Actions\Batteries\SaveFloorPlan;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Models\BatteryDossier;
 use App\Models\BatteryDossierBattery;
@@ -16,8 +16,6 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 /**
  * @property BatteryDossier $record
@@ -29,7 +27,7 @@ class EditBatteryDossier extends EditRecord
     /**
      * Largest floor plan image accepted from the editor.
      */
-    public const MAX_PNG_BYTES = 6_000_000;
+    public const MAX_PNG_BYTES = SaveFloorPlan::MAX_PNG_BYTES;
 
     public function getTitle(): string
     {
@@ -168,19 +166,11 @@ class EditBatteryDossier extends EditRecord
         // Input fields without the input permission and signed documents are left out.
         $data = app(SaveBatteryDossier::class)->allowedData($this->record, $data, auth()->user());
 
-        $png = $data['floor_plan_png'] ?? null;
-        $data['floor_plan'] = FloorPlanEditor::sanitize($data['floor_plan'] ?? []);
+        $plan = app(SaveFloorPlan::class)->values($this->record, $data['floor_plan'] ?? [], $data['floor_plan_png'] ?? null);
 
         unset($data['strings'], $data['floor_plan_png'], $data['project_id']);
 
-        if ($data['floor_plan'] === []) {
-            $this->deleteFloorPlanPng();
-            $data['floor_plan_png'] = null;
-        } elseif (filled($png)) {
-            $data['floor_plan_png'] = $this->storeFloorPlanPng((string) $png);
-        }
-
-        return $data;
+        return [...$data, ...$plan];
     }
 
     /** @var array<int|string, mixed> */
@@ -192,28 +182,5 @@ class EditBatteryDossier extends EditRecord
 
         // Rows were added or removed when the number of batteries changed: show them.
         $this->fillForm();
-    }
-
-    protected function storeFloorPlanPng(string $dataUrl): ?string
-    {
-        $png = str_starts_with($dataUrl, 'data:image/png;base64,') && strlen($dataUrl) <= self::MAX_PNG_BYTES
-            ? base64_decode(substr($dataUrl, strlen('data:image/png;base64,')), true)
-            : false;
-
-        if ($png === false || ! str_starts_with($png, "\x89PNG")) {
-            throw ValidationException::withMessages(['data.floor_plan' => __('erp.batteries.errors.floor_plan')]);
-        }
-
-        $path = "batteries/{$this->record->id}/floor-plan.png";
-        Storage::disk(BatteryDossier::DISK)->put($path, $png);
-
-        return $path;
-    }
-
-    protected function deleteFloorPlanPng(): void
-    {
-        if (filled($this->record->floor_plan_png)) {
-            Storage::disk(BatteryDossier::DISK)->delete($this->record->floor_plan_png);
-        }
     }
 }

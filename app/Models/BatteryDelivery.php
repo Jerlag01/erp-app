@@ -10,17 +10,59 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * One line of the "Overzicht Levering Batterijen": a battery order for a 604 project. The location
  * and order number come from the project. Ticking "delivered" stamps the system date and time and
  * moves the project to the status set in Settings > Batteries (to be executed, i.e. ready to plan).
+ * Three internal documents (DOCUMENTS) belong to it: never shown in the client portal, and only with
+ * "batteries.documents" (and "batteries.documents_upload" to change them).
  */
-#[Fillable(['project_id', 'order_confirmation', 'battery_model_id', 'pieces', 'planned_delivery_date', 'executed', 'total_cost', 'notes'])]
+#[Fillable([
+    'project_id', 'order_confirmation', 'battery_model_id', 'pieces', 'planned_delivery_date', 'executed', 'total_cost', 'notes',
+    'order_document', 'order_document_name', 'confirmation_document', 'confirmation_document_name', 'delivery_note_document', 'delivery_note_document_name',
+])]
 class BatteryDelivery extends Model
 {
     /** @use HasFactory<BatteryDeliveryFactory> */
     use HasFactory;
+
+    public const DISK = 'local';
+
+    /** The documents: the order to the supplier, the supplier's confirmation, the delivery note. */
+    public const DOCUMENTS = ['order', 'confirmation', 'delivery_note'];
+
+    public function documentPath(string $kind): ?string
+    {
+        return in_array($kind, self::DOCUMENTS, true) ? $this->getAttribute($kind.'_document') : null;
+    }
+
+    public function documentName(string $kind): ?string
+    {
+        return $this->getAttribute($kind.'_document_name') ?: (($path = $this->documentPath($kind)) ? basename($path) : null);
+    }
+
+    public function hasDocument(string $kind): bool
+    {
+        return filled($this->documentPath($kind));
+    }
+
+    protected static function booted(): void
+    {
+        // Replaced or removed documents go from the disk too.
+        static::updated(function (self $delivery): void {
+            foreach (self::DOCUMENTS as $kind) {
+                if ($delivery->wasChanged($kind.'_document') && filled($old = $delivery->getOriginal($kind.'_document'))) {
+                    Storage::disk(self::DISK)->delete($old);
+                }
+            }
+        });
+
+        static::deleted(function (self $delivery): void {
+            Storage::disk(self::DISK)->delete(array_values(array_filter(array_map(fn (string $kind): ?string => $delivery->documentPath($kind), self::DOCUMENTS))));
+        });
+    }
 
     /**
      * @return BelongsTo<Project, $this>
