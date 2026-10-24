@@ -2570,6 +2570,7 @@ return [
         'closed_done_body' => ':name is klaar en de klant is verwittigd.',
         'reopen' => 'Heropenen',
         'reopen_help' => 'De ZIP wordt verwijderd tot de as-built opnieuw afgesloten wordt.',
+        'delete_help' => 'De as-built en zijn eigen bestanden (ook die van de klant) en de ZIP worden definitief verwijderd. Standaardbestanden uit het register blijven. Het project kan daarna opnieuw een as-built krijgen.',
         'reopened' => 'As-built heropend',
         'file_removed' => 'Bestand verwijderd',
         'general_zone' => 'Aangeleverd door de klant (algemeen)',

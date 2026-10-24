@@ -164,7 +164,10 @@ class ViewAsbuilt extends ViewRecord
                 ->modalDescription(__('erp.asbuilt.reopen_help'))
                 ->action(fn (Asbuilt $record) => $service->reopen($record))
                 ->successNotificationTitle(__('erp.asbuilt.reopened')),
-            DeleteAction::make(),
+            // Only on the admin side, with the explicit permission "asbuilt.delete".
+            DeleteAction::make()
+                ->modalDescription(__('erp.asbuilt.delete_help'))
+                ->visible(fn (Asbuilt $record): bool => AsbuiltResource::deletableHere($record)),
         ];
     }
 

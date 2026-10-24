@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Gate;
 /**
  * As-builts: the overview with "asbuilt.view"; adding and removing files and planning the BTV
  * inspection with "asbuilt.manage"; reopening a closed one with "asbuilt.reopen"; the register of
- * standard files with "asbuilt.library". The employees on the project (who see it) can always open
+ * standard files with "asbuilt.library". Removing an as-built needs "asbuilt.delete", an explicit
+ * permission (administrators only have it when ticked), and is only offered on the admin side. The employees on the project (who see it) can always open
  * and download its as-built.
  */
 class AsbuiltPolicy
@@ -41,7 +42,7 @@ class AsbuiltPolicy
 
     public function delete(User $user, Asbuilt $asbuilt): bool
     {
-        return modules()->asbuilt() && $user->isAdmin();
+        return modules()->asbuilt() && $user->hasPermission('asbuilt.delete');
     }
 
     public function library(User $user): bool

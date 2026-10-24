@@ -9,7 +9,9 @@ use App\Models\Asbuilt;
 use App\Models\ProjectCategory;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
+use Filament\Facades\Filament;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Resources\Resource;
@@ -22,6 +24,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
@@ -123,7 +126,23 @@ class AsbuiltResource extends Resource
                     ->visible(fn (Asbuilt $record): bool => $record->isClosed())
                     ->url(fn (Asbuilt $record): string => route('asbuilt.zip', $record)),
                 ViewAction::make(),
+                DeleteAction::make()
+                    ->modalDescription(__('erp.asbuilt.delete_help'))
+                    ->visible(fn (Asbuilt $record): bool => self::deletableHere($record)),
             ]);
+    }
+
+    /**
+     * As-builts are removed on the admin side only, with "asbuilt.delete".
+     */
+    public static function deletableHere(Asbuilt $record): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'admin' && Gate::allows('delete', $record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return $record instanceof Asbuilt && self::deletableHere($record);
     }
 
     public static function getPages(): array

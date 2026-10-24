@@ -2569,6 +2569,7 @@ return [
         'closed_done_body' => ':name is ready and the client has been told.',
         'reopen' => 'Reopen',
         'reopen_help' => 'The ZIP is removed until the as-built closes again.',
+        'delete_help' => 'The as-built, its own files (also the client\'s) and the ZIP are removed for good. Standard files of the register stay. The project can then get a new as-built.',
         'reopened' => 'As-built reopened',
         'file_removed' => 'File removed',
         'general_zone' => 'Handed in by the client (general)',

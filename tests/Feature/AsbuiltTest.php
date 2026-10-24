@@ -17,6 +17,7 @@ use App\Models\Asbuilt;
 use App\Models\AsbuiltLibraryFile;
 use App\Models\ClientUser;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
@@ -272,5 +273,36 @@ class AsbuiltTest extends TestCase
         $excluded = Project::factory()->inCategory('604')->for($this->site)->create();
         $excluded->teams()->attach($this->team);
         Livewire::test(ViewProject::class, ['record' => $excluded->getRouteKey()])->assertActionHidden('createAsbuilt');
+    }
+
+    #[Test]
+    public function asbuilts_are_removed_on_the_admin_side_only_with_the_explicit_permission(): void
+    {
+        $asbuilt = $this->executedProject()->asbuilt;
+        Storage::disk('local')->put('asbuilts/own.pdf', 'own');
+        $own = $asbuilt->files()->create(['category' => AsbuiltCategory::Plans, 'path' => 'asbuilts/own.pdf', 'original_name' => 'own.pdf', 'size' => 3]);
+
+        // An administrator without the ticked permission cannot remove it.
+        $admin = User::factory()->admin()->create();
+        $this->assertFalse($admin->can('delete', $asbuilt));
+
+        $allowed = User::factory()->create(['role_id' => Role::factory()->create(['is_admin' => true, 'permissions' => ['asbuilt' => ['view', 'delete']]])->id]);
+        $this->actingAs($allowed);
+
+        // The employees' side never offers it.
+        Livewire::test(ViewAsbuilt::class, ['record' => $asbuilt->getRouteKey()])->assertActionHidden('delete');
+
+        Filament::setCurrentPanel('admin');
+        Livewire::test(ViewAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
+            ->assertActionVisible('delete')
+            ->callAction('delete');
+
+        $this->assertModelMissing($asbuilt);
+        $this->assertModelMissing($own);
+        Storage::disk('local')->assertMissing('asbuilts/own.pdf');
+
+        $this->actingAs($admin);
+        $other = $this->executedProject('620')->asbuilt;
+        Livewire::test(ViewAsbuilt::class, ['record' => $other->getRouteKey()])->assertActionHidden('delete');
     }
 }

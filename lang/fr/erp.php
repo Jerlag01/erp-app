@@ -2569,6 +2569,7 @@ return [
         'closed_done_body' => ':name est prêt et le client est averti.',
         'reopen' => 'Rouvrir',
         'reopen_help' => 'Le ZIP est supprimé jusqu\'à la prochaine clôture.',
+        'delete_help' => 'L\'as-built, ses propres fichiers (aussi ceux du client) et le ZIP sont supprimés définitivement. Les fichiers standard du registre restent. Le projet peut ensuite recevoir un nouvel as-built.',
         'reopened' => 'As-built rouvert',
         'file_removed' => 'Fichier supprimé',
         'general_zone' => 'Fourni par le client (général)',
