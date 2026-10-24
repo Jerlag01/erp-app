@@ -383,7 +383,9 @@ Chaque changement de votre planning vous est notifié dans la plateforme et sur 
 
 ## Agenda Outlook
 
-Si la liaison avec Microsoft 365 est activée (**Paramètres → Planning → Agenda Outlook**), chaque élément du planning est aussi ajouté à l'**agenda Outlook** de l'employé, avec le projet, les heures, l'adresse et les remarques. Si l'élément est modifié, déplacé vers un collègue ou supprimé, c'est aussi le cas dans Outlook.
+Si la liaison avec Microsoft 365 est activée (**Paramètres → Planning → Agenda Outlook**), chaque élément du planning est aussi ajouté à l'**agenda Outlook** de l'employé, en **journée entière** (sans heures), avec le projet, l'adresse et les remarques. Si l'élément est modifié, déplacé vers un collègue ou supprimé, c'est aussi le cas dans Outlook.
+
+Pour un **projet 604**, le planning et Outlook indiquent aussi les batteries retirées et placées, p. ex. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (du dossier batteries ; tant qu'il n'y a pas de dossier, uniquement les nouvelles batteries de la commande BAE).
 
 ## Droits
 
@@ -679,6 +681,17 @@ Le dossier complet pour le remplacement de batteries sur les **projets 604** : i
 Dans **Livraisons de batteries**, suivez par projet la confirmation de commande, le type, la quantité et la date de livraison prévue, et cochez **livré**.
 
 Avec **Documents**, ajoutez par livraison trois fichiers : la **commande** au fournisseur, la **confirmation de commande** du fournisseur et le **bon de livraison** à l'arrivée. Ils figurent aussi sur le projet (onglet *Livraisons de batteries*). Ils sont internes : jamais visibles dans le portail client, et uniquement avec les droits **Voir et télécharger les documents de livraison** et **Téléverser les documents de livraison**.
+
+## Commande BAE
+
+Chaque nouveau projet 604 reçoit d'emblée sa **commande BAE** (l'ancien *calc.xlsx*). Ouvrez-la via **Batteries → Commandes BAE** ou avec le bouton **Commande BAE** sur le projet (les projets plus anciens la reçoivent alors aussi).
+
+1. Choisissez le **type de batterie** et le **montage** : les lignes de commande (connecteurs intercell, step, tier et row), le rack avec son prix et le prix BAE par élément sont remplis à partir des **types de batteries**.
+2. Indiquez le **nombre de batteries**, les éléments par batterie et la capacité, ou reprenez-les avec **Reprendre du dossier batteries**.
+3. Vérifiez l'**aperçu** en bas : il calcule comme la feuille Excel *Order* (batteries × éléments × prix par élément, plus les racks).
+4. **Exporter en PDF** enregistre et ouvre la commande, prête à être envoyée à BAE. Avec **Joindre aux documents de livraison**, le PDF est ajouté à la livraison comme *Commande au fournisseur*.
+
+Les valeurs par défaut (contrat, adresse de livraison, personne de contact, facturation) se trouvent dans **Paramètres → Batteries → Commande BAE**. Les prix BAE et les connecteurs se modifient dans les **types de batteries**. Uniquement avec le droit **Commandes BAE : voir, remplir et exporter** (et *générer des PDF* pour l'export).
 
 ## Droits
 

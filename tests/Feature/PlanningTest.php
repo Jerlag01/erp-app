@@ -10,6 +10,8 @@ use App\Enums\VacationStatus;
 use App\Filament\Pages\Planning;
 use App\Mail\SystemMail;
 use App\Models\Absence;
+use App\Models\BatteryDossier;
+use App\Models\BatteryModel;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\Team;
@@ -293,5 +295,27 @@ class PlanningTest extends TestCase
 
         $this->actingAs($admin)->get('/planning')->assertForbidden();
         $this->actingAs($admin)->get('/admin/planning')->assertForbidden();
+    }
+
+    #[Test]
+    public function a_604_project_in_the_planning_shows_the_batteries_that_go_out_and_come_in(): void
+    {
+        $planner = User::factory()->withPermissions(['planning' => ['plan']])->inTeam()->create();
+        $project = Project::factory()->inCategory('604')->create(['status' => ProjectStatus::InProgress]);
+        $item = PlanningItem::factory()->forProject($project)->create(['user_id' => $planner->id, 'date' => '2026-10-12']);
+
+        // Without a dossier: only the new batteries of the BAE order.
+        $this->assertNull($item->batteries());
+        $project->baeOrder->update(['battery_model_id' => BatteryModel::query()->where('name', '7 OPzV 490')->value('id'), 'battery_count' => 2, 'capacity_ah' => 490, 'technology' => 'OPzV']);
+        $this->assertSame('-> 2 x 490Ah OPzV', $item->fresh()->batteries());
+
+        BatteryDossier::factory()->create(['project_id' => $project->id, 'old_count' => 3, 'old_capacity_ah' => 500, 'old_technology' => 'OPzS', 'new_count' => 2, 'new_capacity_ah' => 490, 'new_technology' => 'OPzV']);
+        $this->assertSame('3 x 500Ah OPzS -> 2 x 490Ah OPzV', $item->fresh()->batteries());
+
+        $this->actingAs($planner);
+        Livewire::withQueryParams(['date' => '2026-10-12'])->test(Planning::class)->assertSee('3 x 500Ah OPzS -&gt; 2 x 490Ah OPzV', false);
+
+        // Other projects have no battery line.
+        $this->assertNull(PlanningItem::factory()->forProject(Project::factory()->inCategory('600')->create())->create()->batteries());
     }
 }

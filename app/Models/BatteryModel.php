@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * A battery cell type such as "7 OPzV 490", with weight and dimensions and a rack per mounting.
  */
-#[Fillable(['name', 'technology', 'weight_kg', 'length_mm', 'width_mm', 'height_mm', 'is_active'])]
+#[Fillable(['name', 'technology', 'weight_kg', 'length_mm', 'width_mm', 'height_mm', 'bae_cell_price', 'is_active'])]
 class BatteryModel extends Model
 {
     /** @use HasFactory<BatteryModelFactory> */
@@ -50,6 +50,7 @@ class BatteryModel extends Model
         return [
             'technology' => BatteryTechnology::class,
             'weight_kg' => 'decimal:2',
+            'bae_cell_price' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }

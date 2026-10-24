@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BatteryTechnology;
 use App\Enums\PlanningKind;
 use App\Support\OutlookCalendar;
 use App\Support\Planning;
@@ -119,6 +120,28 @@ class PlanningItem extends Model
     public function subtitle(): ?string
     {
         return $this->kind === PlanningKind::Project ? $this->project?->subtitle() : null;
+    }
+
+    /**
+     * On a 604 project: the batteries that are removed and placed, "2 x 500Ah OPzS -> 2 x 490Ah OPzV",
+     * from its battery dossier (or only the new ones from its BAE order while there is no dossier).
+     */
+    public function batteries(): ?string
+    {
+        $project = $this->kind === PlanningKind::Project ? $this->project : null;
+
+        if (! $project || ! modules()->batteries() || $project->category?->code !== settings()->get(BatteryDossier::CATEGORY_SETTING)) {
+            return null;
+        }
+
+        if ($summary = $project->batteryDossier?->swapSummary()) {
+            return $summary;
+        }
+
+        $order = $project->baeOrder;
+        $placed = $order?->battery_model_id ? BatteryDossier::batteryText($order->battery_count, $order->capacity_ah, BatteryTechnology::tryFrom((string) $order->technology)) : null;
+
+        return $placed ? '-> '.$placed : null;
     }
 
     /**

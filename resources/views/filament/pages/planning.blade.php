@@ -249,6 +249,9 @@
                                                 @if ($item->subtitle())
                                                     <div class="erp-plan-sub" style="white-space: normal;">{{ $item->subtitle() }}</div>
                                                 @endif
+                                                @if ($batteries = $item->batteries())
+                                                    <div class="erp-plan-sub" style="white-space: normal;" data-planning-batteries>{{ $batteries }}</div>
+                                                @endif
                                                 @if (filled($item->description))
                                                     <div style="color: var(--plan-muted); white-space: pre-line;">{{ \Illuminate\Support\Str::limit($item->description, 200) }}</div>
                                                 @endif

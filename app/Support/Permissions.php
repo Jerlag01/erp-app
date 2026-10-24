@@ -22,7 +22,8 @@ namespace App\Support;
  * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
  * and edits prices and the invoice request; "batteries.input" sees and fills in the Input tab (the others get
  * a short overview of the project instead); "batteries.edit_finished" changes (and reopens) dossiers the
- * technician finished, e.g. for the invoicing.
+ * technician finished, e.g. for the invoicing. "batteries.bae_orders" sees, fills in and exports the BAE orders
+ * of the 604 projects (with purchase prices).
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
  * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
@@ -78,7 +79,7 @@ class Permissions
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
-        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'documents', 'documents_upload', 'generate_pdf', 'edit_finished']],
+        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'documents', 'documents_upload', 'bae_orders', 'generate_pdf', 'edit_finished']],
         'enersys' => ['module' => Modules::ENERSYS, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished']],
         'cable_stripping' => ['module' => Modules::CABLE_STRIPPING, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'announcements' => ['module' => Modules::ANNOUNCEMENTS, 'abilities' => ['update']],

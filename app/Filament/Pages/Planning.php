@@ -204,7 +204,7 @@ class Planning extends Page
             ->visibleTo($viewer)
             ->between($gridFrom, $gridUntil)
             ->when($this->person || $this->team, fn (Builder $query) => $query->whereIn('user_id', $people->keys()))
-            ->with(['user', 'project.category', 'project.leaders'])
+            ->with(['user', 'project.category', 'project.leaders', 'project.batteryDossier', 'project.baeOrder'])
             ->orderBy('date')
             ->orderBy('start_time')
             ->get();
@@ -543,6 +543,7 @@ class Planning extends Page
             __('erp.planning.employee').': '.$item->user->name,
             $item->date->locale(app()->getLocale())->translatedFormat('l d/m/Y').' · '.$item->timeRange(),
             $item->kind->getLabel().($item->subtitle() ? ' · '.$item->subtitle() : ''),
+            $item->batteries(),
             $item->kind === PlanningKind::Project ? $item->project?->addressLine() : null,
         ]);
 
@@ -578,7 +579,7 @@ class Planning extends Page
      */
     protected function itemFrom(array $arguments, string $ability): PlanningItem
     {
-        $item = PlanningItem::query()->with(['user', 'project.category'])->findOrFail((int) ($arguments['item'] ?? 0));
+        $item = PlanningItem::query()->with(['user', 'project.category', 'project.batteryDossier', 'project.baeOrder'])->findOrFail((int) ($arguments['item'] ?? 0));
         abort_unless($this->user()->can($ability, $item), 403);
 
         return $item;

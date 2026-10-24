@@ -383,7 +383,9 @@ Every change in your planning is notified in the platform and on your phone (mob
 
 ## Outlook calendar
 
-When the Microsoft 365 link is on (**Settings → Planning → Outlook calendar**), every planning item is also put in the employee's **Outlook calendar**, with the project, hours, address and remarks. When the item is changed, moved to a colleague or removed, that happens in Outlook too.
+When the Microsoft 365 link is on (**Settings → Planning → Outlook calendar**), every planning item is also put in the employee's **Outlook calendar**, as a **full day** (without hours), with the project, address and remarks. When the item is changed, moved to a colleague or removed, that happens in Outlook too.
+
+For a **604 project**, the planning and Outlook also show the batteries that go out and come in, e.g. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (from the battery dossier; while there is no dossier, only the new batteries of the BAE order).
 
 ## Permissions
 
@@ -679,6 +681,17 @@ The complete dossier for replacing batteries on **604 projects**: input, deliver
 Under **Battery deliveries** you follow up per project the order confirmation, type, quantity and planned delivery date, and tick **delivered**.
 
 With **Documents** you add three files per delivery: the **order** to the supplier, the supplier's **order confirmation** and the **delivery note** on arrival. They are also on the project (tab *Battery deliveries*). They are internal: never visible in the client portal, and only with the permissions **See and download delivery documents** and **Upload delivery documents**.
+
+## BAE order
+
+Every new 604 project gets its **BAE order** straight away (the former *calc.xlsx*). Open it via **Batteries → BAE orders** or with the **BAE order** button on the project (older projects then get one too).
+
+1. Choose the **battery type** and the **mounting**: the order lines (intercell, step, tier and row connectors), the rack with its price and the BAE price per cell are filled in from the **battery types**.
+2. Enter the **number of batteries**, the cells per battery and the capacity, or take them over with **Take over from battery dossier**.
+3. Check the **overview** at the bottom: it calculates like the Excel sheet *Order* (batteries × cells × price per cell, plus the racks).
+4. **Export to PDF** saves and opens the order, ready to send to BAE. With **Save with delivery documents** the PDF is added to the delivery as *Order to the supplier*.
+
+The defaults (contract, delivery address, contact person, billing) are in **Settings → Batteries → BAE order**. The BAE prices and connectors are changed under **battery types**. Only with the permission **BAE orders: see, fill in and export** (and *generate PDF* for the export).
 
 ## Permissions
 

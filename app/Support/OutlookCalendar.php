@@ -111,13 +111,15 @@ class OutlookCalendar
     }
 
     /**
-     * The event as Outlook gets it: topic, time in Belgian time, the place, and the details.
+     * The event as Outlook gets it: topic (with the batteries of a 604 project), a full day, the place,
+     * and the details.
      *
      * @return array<string, mixed>
      */
     public function payload(PlanningItem $item): array
     {
-        $item->loadMissing('project.workSite');
+        $item->loadMissing(['project.workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder']);
+        $batteries = $item->batteries();
         $date = $item->date->format('Y-m-d');
         $subtitle = $item->subtitle();
         $location = $item->kind === PlanningKind::Project
@@ -126,6 +128,7 @@ class OutlookCalendar
 
         $lines = array_filter([
             $subtitle ? '<p><strong>'.e($subtitle).'</strong></p>' : null,
+            $batteries ? '<p><strong>'.e($batteries).'</strong></p>' : null,
             filled($item->description) ? '<p>'.nl2br(e($item->description)).'</p>' : null,
             $item->taskList() !== [] ? '<ul>'.implode('', array_map(fn (array $task): string => '<li>'.e($task['text']).'</li>', $item->taskList())).'</ul>' : null,
             filled($item->notes) ? '<p>'.nl2br(e($item->notes)).'</p>' : null,
@@ -133,14 +136,17 @@ class OutlookCalendar
         ]);
 
         return [
-            'subject' => trim($item->topic().($subtitle ? ' · '.$subtitle : '')),
+            'subject' => implode(' · ', array_filter([$item->topic(), $subtitle, $batteries])),
             'body' => ['contentType' => 'HTML', 'content' => implode('', $lines)],
-            'start' => ['dateTime' => $date.'T'.$item->startsAt().':00', 'timeZone' => self::TIME_ZONE],
-            'end' => ['dateTime' => $date.'T'.$item->endsAt().':00', 'timeZone' => self::TIME_ZONE],
+            // Always a full day in Outlook: the hours of the planning are not sent.
+            'isAllDay' => true,
+            'start' => ['dateTime' => $date.'T00:00:00', 'timeZone' => self::TIME_ZONE],
+            'end' => ['dateTime' => $item->date->copy()->addDay()->format('Y-m-d').'T00:00:00', 'timeZone' => self::TIME_ZONE],
             'location' => ['displayName' => (string) $location],
             'showAs' => 'busy',
             'isReminderOn' => true,
-            'reminderMinutesBeforeStart' => 60,
+            // The evening before, at 18:00.
+            'reminderMinutesBeforeStart' => 360,
         ];
     }
 

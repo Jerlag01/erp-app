@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -259,8 +261,24 @@ class Project extends Model
     }
 
     /**
-     * Battery orders of a 604 project ("Overzicht levering batterijen").
+     * The latest battery dossier (BAE, 604) of the project.
      *
+     * @return HasOne<BatteryDossier, $this>
+     */
+    public function batteryDossier(): HasOne
+    {
+        return $this->hasOne(BatteryDossier::class)->latestOfMany();
+    }
+
+    /**
+     * @return HasOne<BaeOrder, $this>
+     */
+    public function baeOrder(): HasOne
+    {
+        return $this->hasOne(BaeOrder::class);
+    }
+
+    /**
      * @return HasMany<BatteryDelivery, $this>
      */
     public function batteryDeliveries(): HasMany
@@ -429,6 +447,10 @@ class Project extends Model
             if ($project->status === ProjectStatus::Executed) {
                 app(Asbuilts::class)->createFor($project);
             }
+
+            // A 604 project starts with its BAE order (Excel calc.xlsx).
+            $by = Auth::guard('web')->user();
+            app(CreateBaeOrder::class)->handle($project, $by instanceof User ? $by : null);
         });
 
         // Status changes: closing (and "invoiced" on 610–650 projects) archives the project; an executed

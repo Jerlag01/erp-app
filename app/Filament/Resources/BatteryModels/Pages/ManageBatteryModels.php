@@ -5,6 +5,7 @@ namespace App\Filament\Resources\BatteryModels\Pages;
 use App\Filament\Resources\BatteryModels\BatteryModelResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
+use Filament\Support\Enums\Width;
 
 class ManageBatteryModels extends ManageRecords
 {
@@ -13,7 +14,7 @@ class ManageBatteryModels extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()->modalWidth(Width::SevenExtraLarge),
         ];
     }
 }

@@ -369,6 +369,34 @@ class BatteryDossier extends Model
         return $this->project?->reference ?? '—';
     }
 
+    /**
+     * The batteries that go out and come in: "2 x 500Ah OPzS -> 2 x 490Ah OPzV" (for the planning and
+     * Outlook). A side without batteries is left out; null when neither side is filled in.
+     */
+    public function swapSummary(): ?string
+    {
+        $removed = self::batteryText($this->old_count, $this->old_capacity_ah, $this->old_technology);
+        $placed = self::batteryText($this->new_count, $this->new_capacity_ah, $this->new_technology);
+
+        return match (true) {
+            $removed !== null && $placed !== null => $removed.' -> '.$placed,
+            $placed !== null => '-> '.$placed,
+            default => $removed,
+        };
+    }
+
+    /**
+     * "2 x 500Ah OPzV", or null without a count or without capacity and type.
+     */
+    public static function batteryText(?int $count, ?int $capacity, ?BatteryTechnology $technology): ?string
+    {
+        if ((int) $count < 1 || (! $capacity && ! $technology)) {
+            return null;
+        }
+
+        return trim($count.' x '.($capacity ? $capacity.'Ah ' : '').$technology?->getLabel());
+    }
+
     public function cowCode(): ?string
     {
         return $this->project?->workSite?->cow_code ?? $this->project?->cow_code;

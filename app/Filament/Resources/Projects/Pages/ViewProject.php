@@ -2,16 +2,19 @@
 
 namespace App\Filament\Resources\Projects\Pages;
 
+use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Gpw\RequestGpw;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CopyProject;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
+use App\Filament\Resources\BaeOrders\BaeOrderResource;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\Projects\Schemas\ProjectForm;
+use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
 use App\Models\EnersysDossier;
 use App\Models\Project;
@@ -182,6 +185,18 @@ class ViewProject extends ViewRecord
                 ->url(fn (Project $record): string => ($dossier = $this->batteryDossier($record))
                     ? BatteryDossierResource::getUrl('edit', ['record' => $dossier])
                     : BatteryDossierResource::getUrl('create', ['project' => $record->id])),
+            // Every 604 project has its BAE order (made with the project; older projects get it here).
+            Action::make('baeOrder')
+                ->label(__('erp.batteries.bae_order.button'))
+                ->icon(Heroicon::OutlinedShoppingCart)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => app(CreateBaeOrder::class)->appliesTo($record)
+                    && ($record->baeOrder ? Gate::allows('view', $record->baeOrder) : Gate::allows('create', BaeOrder::class)))
+                ->authorize(fn (Project $record): bool => app(CreateBaeOrder::class)->appliesTo($record) && Gate::allows('create', BaeOrder::class) && Gate::allows('view', $record))
+                ->action(function (Project $record): void {
+                    $order = $record->baeOrder ?? app(CreateBaeOrder::class)->handle($record, auth()->user());
+                    $this->redirect(BaeOrderResource::getUrl('edit', ['record' => $order]));
+                }),
             Action::make('enersysDossier')
                 ->label(__('erp.enersys.dossier_button'))
                 ->icon(Heroicon::OutlinedBattery50)

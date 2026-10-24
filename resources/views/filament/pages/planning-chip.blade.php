@@ -30,4 +30,7 @@
     @elseif ($item->subtitle())
         <span class="erp-plan-sub">{{ $item->subtitle() }}</span>
     @endif
+    @if ($batteries = $item->batteries())
+        <span class="erp-plan-sub" data-planning-batteries>{{ $batteries }}</span>
+    @endif
 </div>

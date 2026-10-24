@@ -15,8 +15,10 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -63,18 +65,36 @@ class BatteryModelResource extends Resource
                 TextInput::make('length_mm')->label('l')->integer()->minValue(0)->suffix('mm'),
                 TextInput::make('width_mm')->label('b')->integer()->minValue(0)->suffix('mm'),
                 TextInput::make('height_mm')->label('h')->integer()->minValue(0)->suffix('mm'),
+                TextInput::make('bae_cell_price')
+                    ->label(__('erp.batteries.bae_cell_price'))
+                    ->helperText(__('erp.batteries.bae_cell_price_help'))
+                    ->numeric()
+                    ->minValue(0)
+                    ->step('any')
+                    ->prefix('€')
+                    ->columnSpan(3),
+                // The rack per mounting; its BAE price and connectors fill in the lines of the BAE order.
                 Repeater::make('racks')
                     ->label(__('erp.batteries.racks'))
                     ->relationship()
-                    ->table([
-                        Repeater\TableColumn::make(__('erp.batteries.mounting')),
-                        Repeater\TableColumn::make(__('erp.batteries.rack_code')),
-                        Repeater\TableColumn::make(__('erp.batteries.rack_price')),
-                    ])
+                    ->columns(4)
+                    ->itemLabel(fn (array $state): ?string => BatteryMounting::tryFrom((string) ($state['mounting'] ?? ''))?->getLabel())
+                    ->collapsible()
                     ->schema([
-                        Select::make('mounting')->options(BatteryMounting::class)->required()->distinct(),
-                        TextInput::make('code')->maxLength(30),
-                        TextInput::make('price')->numeric()->minValue(0)->step('any')->prefix('€'),
+                        Select::make('mounting')->label(__('erp.batteries.mounting'))->options(BatteryMounting::class)->required()->distinct(),
+                        TextInput::make('code')->label(__('erp.batteries.rack_code'))->maxLength(30),
+                        TextInput::make('price')->label(__('erp.batteries.rack_price'))->numeric()->minValue(0)->step('any')->prefix('€'),
+                        TextInput::make('bae_price')->label(__('erp.batteries.bae_rack_price'))->numeric()->minValue(0)->step('any')->prefix('€'),
+                        Fieldset::make(__('erp.batteries.bae_parts'))
+                            ->columns(['default' => 2, 'xl' => 9])
+                            ->columnSpanFull()
+                            ->schema([
+                                ...collect(['intercell', 'step', 'tier70', 'tier50'])->flatMap(fn (string $part): array => [
+                                    TextInput::make("{$part}_count")->label(__("erp.batteries.part_{$part}"))->integer()->minValue(0)->default(0)->required(),
+                                    TextInput::make("{$part}_code")->label(__('erp.batteries.part_code'))->maxLength(40),
+                                ])->all(),
+                                TextInput::make('row_count')->label(__('erp.batteries.part_row'))->integer()->minValue(0)->default(0)->required(),
+                            ]),
                     ])
                     ->maxItems(count(BatteryMounting::cases()))
                     ->defaultItems(0)
@@ -103,7 +123,7 @@ class BatteryModelResource extends Resource
                 SelectFilter::make('technology')->label(__('erp.batteries.technology'))->options(BatteryTechnology::class),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()->modalWidth(Width::SevenExtraLarge),
                 DeleteAction::make(),
             ]);
     }

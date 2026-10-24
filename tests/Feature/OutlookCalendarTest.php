@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Admin\Pages\Settings;
+use App\Models\BatteryDossier;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\User;
@@ -45,6 +46,7 @@ class OutlookCalendarTest extends TestCase
         $this->enable();
         $employee = User::factory()->create(['email' => 'jan@power.example']);
         $project = Project::factory()->inCategory('604')->create();
+        BatteryDossier::factory()->create(['project_id' => $project->id, 'old_count' => 2, 'old_capacity_ah' => 500, 'old_technology' => 'OPzS', 'new_count' => 2, 'new_capacity_ah' => 490, 'new_technology' => 'OPzV']);
 
         $item = PlanningItem::factory()->forProject($project)->create(['user_id' => $employee->id, 'date' => '2026-11-05', 'start_time' => '07:30', 'end_time' => '16:00', 'notes' => 'Sleutel bij de buren']);
 
@@ -52,14 +54,17 @@ class OutlookCalendarTest extends TestCase
             && str_ends_with($request->url(), '/users/jan%40power.example/events')
             && $request->hasHeader('Authorization', 'Bearer token-123')
             && str_starts_with($request['subject'], $project->reference)
-            && $request['start'] === ['dateTime' => '2026-11-05T07:30:00', 'timeZone' => 'Romance Standard Time']
-            && $request['end']['dateTime'] === '2026-11-05T16:00:00'
+            && str_ends_with($request['subject'], ' · 2 x 500Ah OPzS -> 2 x 490Ah OPzV')
+            // Always a full day, without the hours of the planning.
+            && $request['isAllDay'] === true
+            && $request['start'] === ['dateTime' => '2026-11-05T00:00:00', 'timeZone' => 'Romance Standard Time']
+            && $request['end']['dateTime'] === '2026-11-06T00:00:00'
             && str_contains($request['body']['content'], 'Sleutel bij de buren'));
         $this->assertSame(['event-1', 'jan@power.example'], [$item->fresh()->outlook_event_id, $item->fresh()->outlook_mailbox]);
 
-        // Changing the time changes the event.
-        $item->refresh()->update(['end_time' => '12:00']);
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH' && str_ends_with($request->url(), '/events/event-1') && $request['end']['dateTime'] === '2026-11-05T12:00:00');
+        // Moving the day changes the event.
+        $item->refresh()->update(['date' => '2026-11-06']);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH' && str_ends_with($request->url(), '/events/event-1') && $request['start']['dateTime'] === '2026-11-06T00:00:00');
 
         // Moved to a colleague: out of the old calendar, into the new one.
         $colleague = User::factory()->create(['email' => 'piet@power.example']);

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AbsenceDocumentController;
 use App\Http\Controllers\AsbuiltDownloadController;
+use App\Http\Controllers\BaeOrderPdfController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDeliveryDocumentController;
 use App\Http\Controllers\BatteryDocumentController;
@@ -81,6 +82,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/routers/{router}/vpn', RouterVpnController::class)->whereNumber('router')->name('routers.vpn');
     Route::get('/timesheet-report-pdf', TimesheetReportPdfController::class)->name('timesheets.report-pdf');
     Route::get('/timesheet-pdf/{user}/{week}', TimesheetPdfController::class)->whereNumber('user')->where('week', '\d{4}-\d{2}-\d{2}')->name('timesheets.pdf');
+    Route::get('/bae-orders/{order}/pdf', BaeOrderPdfController::class)->whereNumber('order')->name('batteries.bae-order-pdf');
     Route::get('/battery-deliveries-pdf', BatteryDeliveriesPdfController::class)->name('batteries.deliveries-pdf');
     Route::get('/battery-deliveries/{delivery}/documents/{kind}', BatteryDeliveryDocumentController::class)->whereNumber('delivery')->whereIn('kind', BatteryDelivery::DOCUMENTS)->name('batteries.delivery-document');
     Route::get('/battery-dossiers/{dossier}/documents/{document}', BatteryDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('batteries.document');

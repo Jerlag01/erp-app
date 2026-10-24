@@ -72,7 +72,7 @@ class PlanningController extends Controller
         abort_unless($this->planning->canSeePlanningOf($viewer, $employee), 403);
 
         $items = PlanningItem::query()
-            ->with(['project.category', 'project.workSite'])
+            ->with(['project.category', 'project.workSite', 'project.batteryDossier', 'project.baeOrder'])
             ->where('user_id', $employee->id)
             ->between($from, $until)
             ->orderBy('date')
@@ -120,6 +120,7 @@ class PlanningController extends Controller
             'kind_label' => $item->kind->getLabel(),
             'topic' => $item->topic(),
             'subtitle' => $item->subtitle(),
+            'batteries' => $item->batteries(),
             'description' => $item->description,
             'notes' => $item->notes,
             'tasks' => $item->taskList(),

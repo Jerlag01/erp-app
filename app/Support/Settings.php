@@ -232,6 +232,17 @@ class Settings
                 'shipping_adr' => 'Vervoer volgens 1.1.3.4.1 van het ADR: niet onderworpen aan de voorschriften van het ADR gelet op de bijzondere bepaling 598',
                 'shipping_eural' => '16 06 01*',
                 'shipping_rd_code' => 'R13',
+                // The BAE order (Excel calc.xlsx, sheet Order): defaults of every new order.
+                'bae_contract' => 'Belgacom CSL/PUR/GAE/4600001931',
+                'bae_delivery_date' => 'PRIO ASAP',
+                'bae_delivery_address' => 'Power Installation NV - Galileilaan 90 Unit A11 - 2845 Niel',
+                'bae_contact_name' => 'Jeroen Lagaet',
+                'bae_contact_phone' => '00 32 3 844 44 32',
+                'bae_contact_fax' => '00 32 3 844 47 55',
+                'bae_contact_mobile' => '00 32 77 62 77 63',
+                'bae_contact_email' => 'j.lagaet@power-installation.be',
+                'bae_billing_block' => "Power Installation nv\nDrukpersstraat 4\n1000  Brussel\nBelgium\nVAT    BE - 0462 401 968",
+                'bae_remarks' => 'Orders will be checked by BAE',
             ],
         ];
     }

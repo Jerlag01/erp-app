@@ -384,7 +384,9 @@ Elke wijziging in je planning krijg je als melding in het platform en op je tele
 
 ## Outlook-agenda
 
-Staat de koppeling met Microsoft 365 aan (**Instellingen → Planning → Outlook-agenda**), dan komt elk planningsitem ook in de **Outlook-agenda** van de werknemer, met het project, de uren, het adres en de opmerkingen. Wordt het item gewijzigd, verplaatst naar een collega of verwijderd, dan gebeurt dat ook in Outlook.
+Staat de koppeling met Microsoft 365 aan (**Instellingen → Planning → Outlook-agenda**), dan komt elk planningsitem ook in de **Outlook-agenda** van de werknemer, als **volledige dag** (zonder uren), met het project, het adres en de opmerkingen. Wordt het item gewijzigd, verplaatst naar een collega of verwijderd, dan gebeurt dat ook in Outlook.
+
+Bij een **604-project** tonen de planning en Outlook ook de batterijen die weggaan en bijkomen, bv. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (uit het batterijdossier; zolang er geen dossier is, enkel de nieuwe batterijen uit de BAE-bestelling).
 
 ## Rechten
 
@@ -680,6 +682,17 @@ Het volledige dossier voor het vervangen van batterijen op **604-projecten**: in
 Bij **Overzicht levering batterijen** volg je per project de orderbevestiging, het type, het aantal en de geplande leveringsdatum op, en vink je **geleverd** aan.
 
 Met **Documenten** voeg je per levering drie bestanden toe: de **bestelling** aan de leverancier, de **orderbevestiging** van de leverancier en de **leveringsbon** bij aankomst. Ze staan ook op het project (tabblad *Batterijleveringen*). Ze zijn intern: nooit zichtbaar in het klantenportaal, en enkel met de rechten **Leveringsdocumenten zien en downloaden** en **Leveringsdocumenten uploaden**.
+
+## BAE-bestelling
+
+Elk nieuw 604-project krijgt meteen zijn **BAE-bestelling** (de vroegere *calc.xlsx*). Open ze via **Batterijen → BAE-bestellingen** of met de knop **BAE-bestelling** op het project (oudere projecten krijgen ze dan ook).
+
+1. Kies het **type batterij** en de **stelling**: de bestellijnen (intercell-, step-, tier- en row-connectoren), het rek met zijn prijs en de BAE-prijs per element worden ingevuld uit **Batterijtypes**.
+2. Vul het **aantal batterijen**, de elementen per batterij en het vermogen in, of neem ze over met **Overnemen uit batterijdossier**.
+3. Kijk het **overzicht** onderaan na: het rekent zoals het Excel-blad *Order* (batterijen × elementen × prijs per element, plus de rekken).
+4. **Exporteren naar PDF** slaat op en opent de bestelling, klaar om naar BAE te sturen. Met **Bewaren bij leveringsdocumenten** komt de PDF bij de levering als *Bestelling aan de leverancier*.
+
+De standaardwaarden (contract, leveradres, contactpersoon, facturatie) staan in **Instellingen → Batterijen → BAE-bestelling**. De BAE-prijzen en connectoren pas je aan bij **Batterijtypes**. Enkel met het recht **BAE-bestellingen: zien, invullen en exporteren** (en *PDF genereren* voor de export).
 
 ## Rechten
 

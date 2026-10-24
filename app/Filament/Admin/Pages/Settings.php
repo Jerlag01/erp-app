@@ -628,6 +628,24 @@ class Settings extends Page
                     TagsInput::make('batteries.contacts')->label(__('erp.settings.fields.battery_contacts')),
                     TagsInput::make('batteries.waste_types')->label(__('erp.settings.fields.battery_waste_types'))->columnSpanFull(),
                 ]),
+            // Defaults of every new BAE order (Excel calc.xlsx, sheet Order); each order can change them.
+            Section::make(__('erp.settings.sections.battery_bae_order'))
+                ->description(__('erp.settings.help.battery_bae_order'))
+                ->columns(4)
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    $text('bae_contract')->columnSpan(2),
+                    $text('bae_delivery_date'),
+                    $text('bae_contact_name'),
+                    $text('bae_delivery_address')->columnSpanFull(),
+                    $text('bae_contact_phone'),
+                    $text('bae_contact_mobile'),
+                    $text('bae_contact_fax'),
+                    $text('bae_contact_email'),
+                    $lines('bae_billing_block', 5)->columnSpan(2),
+                    $lines('bae_remarks', 5)->columnSpan(2),
+                ]),
             // The Enersys dossiers (605) share the client, documents and shipping texts above.
             Section::make(__('erp.settings.sections.enersys'))
                 ->description(__('erp.settings.help.enersys'))
