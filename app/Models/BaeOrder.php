@@ -15,12 +15,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * The battery order to BAE of a 604 project: the Excel "calc.xlsx" (sheet Input, printed as sheet
  * Order). Every new 604 project gets one; the amounts follow the Excel formulas: the batteries are
  * count × cells × the BAE price per cell, the rack count × the rack price, the other lines "incl.".
+ * Once complete it is mailed to its supplier with a button (SendBaeOrder), never automatically.
  */
 #[Fillable([
-    'project_id', 'order_number', 'order_date', 'contract', 'battery_model_id', 'mounting', 'capacity_ah', 'technology',
+    'project_id', 'battery_supplier_id', 'order_number', 'order_date', 'contract', 'battery_model_id', 'mounting', 'capacity_ah', 'technology',
     'battery_count', 'cells_per_battery', 'volts_per_cell', 'cell_price', 'lines', 'delivery_date', 'delivery_address',
     'contact_name', 'contact_phone', 'contact_fax', 'contact_mobile', 'contact_email', 'billing_block', 'remarks',
-    'exported_at', 'created_by',
+    'exported_at', 'sent_at', 'sent_by', 'sent_to', 'created_by',
 ])]
 class BaeOrder extends Model
 {
@@ -67,6 +68,22 @@ class BaeOrder extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * @return BelongsTo<BatterySupplier, $this>
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(BatterySupplier::class, 'battery_supplier_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sent_by');
     }
 
     /**
@@ -265,6 +282,20 @@ class BaeOrder extends Model
         return implode('/', array_filter([$order->dossierNumber(), ($order->order_date ?? now())->format('my'), $initials]));
     }
 
+    /**
+     * Filled in enough to be ordered: number, date, type, mounting, batteries, cells and price per cell.
+     */
+    public function isComplete(): bool
+    {
+        return filled($this->order_number) && $this->order_date !== null && $this->battery_model_id !== null && $this->mounting !== null
+            && $this->batteryCount() > 0 && (int) $this->cells_per_battery > 0 && $this->cell_price !== null;
+    }
+
+    public function isSent(): bool
+    {
+        return $this->sent_at !== null;
+    }
+
     public function isExported(): bool
     {
         return $this->exported_at !== null;
@@ -285,6 +316,7 @@ class BaeOrder extends Model
             'cell_price' => 'decimal:2',
             'lines' => 'array',
             'exported_at' => 'datetime',
+            'sent_at' => 'datetime',
         ];
     }
 }

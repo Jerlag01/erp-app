@@ -645,6 +645,11 @@ class Settings extends Page
                     $text('bae_contact_email'),
                     $lines('bae_billing_block', 5)->columnSpan(2),
                     $lines('bae_remarks', 5)->columnSpan(2),
+                    TagsInput::make('batteries.bae_order_cc')
+                        ->label(__('erp.settings.fields.battery_bae_order_cc'))
+                        ->helperText(__('erp.settings.help.battery_bae_order_cc'))
+                        ->nestedRecursiveRules(['email', 'max:150'])
+                        ->columnSpanFull(),
                 ]),
             // The Enersys dossiers (605) share the client, documents and shipping texts above.
             Section::make(__('erp.settings.sections.enersys'))

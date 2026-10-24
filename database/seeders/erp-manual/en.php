@@ -693,6 +693,10 @@ Every new 604 project gets its **BAE order** straight away (the former *calc.xls
 3. Check the **overview** at the bottom: it calculates like the Excel sheet *Order* (batteries × cells × price per cell, plus the racks).
 4. **Export to PDF** saves and opens the order, ready to send to BAE. With **Save with delivery documents** the PDF is added to the delivery as *Order to the supplier*.
 
+5. **Send to supplier** mails the order as PDF to the chosen **supplier**, with an optional extra message. This only happens with this button, never automatically, and only once the order is complete. The list shows when and to whom it was sent.
+
+Suppliers are managed under **Batteries → Suppliers** (permission **Manage battery suppliers**): the e-mail address for orders, extra addresses in copy, the language of the mail and which supplier is the default. Every order also goes in copy to the addresses under **Settings → Batteries → BAE order → Orders in copy to**. The text of the mail is edited per language under **E-mail templates → BAE order (to supplier)**.
+
 The defaults (contract, delivery address, contact person, billing) are in **Settings → Batteries → BAE order**. The BAE prices and connectors are changed under **battery types**. Only with the permission **BAE orders: see, fill in and export** (and *generate PDF* for the export).
 
 ## Permissions

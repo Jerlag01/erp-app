@@ -8,6 +8,7 @@ use App\Enums\BatteryTechnology;
 use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\BatterySupplier;
 use App\Models\Project;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -57,6 +58,15 @@ class BaeOrderForm
                             ->extraInputAttributes($mono),
                         DatePicker::make('order_date')->label(__('erp.batteries.bae_order.fields.order_date'))->native(false)->displayFormat('d/m/Y')->required()->live(),
                         TextInput::make('contract')->label(__('erp.batteries.bae_order.fields.contract'))->maxLength(100)->live(onBlur: true)->columnSpan(2),
+                        Select::make('battery_supplier_id')
+                            ->label(__('erp.batteries.bae_order.fields.supplier'))
+                            ->options(fn (?BaeOrder $record): array => BatterySupplier::query()
+                                ->where(fn (Builder $query) => $query->where('is_active', true)->when($record?->battery_supplier_id, fn (Builder $query, int $id) => $query->orWhere('id', $id)))
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn (BatterySupplier $supplier): array => [$supplier->id => $supplier->name.' ('.$supplier->email.')'])
+                                ->all())
+                            ->columnSpan(2),
                     ]),
                 Section::make(__('erp.batteries.bae_order.sections.batteries'))
                     ->columns(4)

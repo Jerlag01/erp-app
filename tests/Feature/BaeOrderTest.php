@@ -4,21 +4,29 @@ namespace Tests\Feature;
 
 use App\Actions\Batteries\BaeOrderDocument;
 use App\Actions\Batteries\CreateBaeOrder;
+use App\Actions\Batteries\SendBaeOrder;
 use App\Enums\BatteryMounting;
+use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BaeOrders\BaeOrderResource;
 use App\Filament\Resources\BaeOrders\Pages\EditBaeOrder;
+use App\Filament\Resources\BatterySuppliers\BatterySupplierResource;
+use App\Filament\Resources\BatterySuppliers\Pages\ManageBatterySuppliers;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Mail\SystemMail;
 use App\Models\BaeOrder;
 use App\Models\BatteryDelivery;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\BatterySupplier;
+use App\Models\MailTemplate;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -211,5 +219,83 @@ class BaeOrderTest extends TestCase
 
         $this->actingAs($this->user(['view']));
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('baeOrder');
+    }
+
+    #[Test]
+    public function a_complete_order_is_mailed_to_its_supplier_with_the_copies_only_with_the_button(): void
+    {
+        Mail::fake();
+        settings()->save('batteries', [...settings('batteries'), 'bae_order_cc' => ['office@power.example']]);
+        $supplier = BatterySupplier::factory()->create(['email' => 'orders@bae.example', 'cc_emails' => ['purchase@bae.example'], 'contact_name' => 'Herr Schmidt', 'is_default' => true]);
+        $user = $this->user();
+        $this->actingAs($user);
+
+        $order = $this->project()->baeOrder;
+        // New orders start with the default supplier; nothing is mailed by itself.
+        $this->assertSame($supplier->id, $order->battery_supplier_id);
+        Mail::assertNothingSent();
+
+        // Not filled in yet: refused.
+        Livewire::test(EditBaeOrder::class, ['record' => $order->getRouteKey()])
+            ->callAction('send')
+            ->assertNotified(__('erp.batteries.bae_order.send_incomplete'));
+        Mail::assertNothingSent();
+
+        Livewire::test(EditBaeOrder::class, ['record' => $order->getRouteKey()])
+            ->fillForm(['battery_model_id' => BatteryModel::query()->where('name', '7 OPzV 490')->value('id'), 'mounting' => 'u_vorm', 'battery_count' => 2])
+            ->callAction('send', ['message' => 'Graag levering voor eind november.'])
+            ->assertHasNoActionErrors();
+
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::BaeOrder
+            && $mail->templateLocale === 'en'
+            && $mail->hasTo('orders@bae.example')
+            && $mail->hasCc('purchase@bae.example')
+            && $mail->hasCc('office@power.example')
+            && $mail->hasReplyTo($user->email)
+            && str_contains($mail->rendered['html'], 'Herr Schmidt')
+            && str_contains($mail->rendered['html'], 'Graag levering voor eind november.')
+            && str_contains($mail->rendered['subject'], 'Prox Batt BAE 604/923 - 83HVR')
+            && $mail->files[0]['mime'] === 'application/pdf');
+
+        $order->refresh();
+        $this->assertTrue($order->isSent());
+        $this->assertSame($user->id, $order->sent_by);
+        $this->assertSame('orders@bae.example; cc: purchase@bae.example, office@power.example', $order->sent_to);
+    }
+
+    #[Test]
+    public function the_order_mail_uses_the_edited_template_in_the_language_of_the_supplier(): void
+    {
+        Mail::fake();
+        MailTemplate::query()->create(['key' => MailTemplateKey::BaeOrder->value, 'locale' => 'nl', 'subject' => 'Onze bestelling {order_number}', 'body' => 'Beste {contact_name}, zie bijlage.', 'is_active' => true]);
+        BatterySupplier::factory()->create(['email' => 'orders@bae.example', 'locale' => 'nl', 'contact_name' => 'Jan', 'is_default' => true]);
+        $this->actingAs($user = $this->user());
+        $order = $this->project()->baeOrder;
+        $order->update(CreateBaeOrder::fromCatalogue(BatteryModel::query()->where('name', '7 OPzV 490')->value('id'), 'u_vorm') + ['mounting' => 'u_vorm', 'battery_model_id' => BatteryModel::query()->where('name', '7 OPzV 490')->value('id')]);
+
+        app(SendBaeOrder::class)->handle($order->refresh(), $user);
+
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->rendered['subject'] === 'Onze bestelling '.$order->order_number && str_contains($mail->rendered['html'], 'Beste Jan, zie bijlage.'));
+    }
+
+    #[Test]
+    public function suppliers_are_managed_with_their_own_permission_and_one_is_the_default(): void
+    {
+        $first = BatterySupplier::factory()->create(['is_default' => true]);
+        $second = BatterySupplier::factory()->create(['is_default' => true]);
+        $this->assertFalse($first->refresh()->is_default);
+        $this->assertSame($second->id, BatterySupplier::defaultSupplier()->id);
+
+        $this->actingAs($this->user())->get(BatterySupplierResource::getUrl('index'))->assertForbidden();
+        $this->actingAs($this->user(['view', 'suppliers']));
+        $this->get(BatterySupplierResource::getUrl('index'))->assertOk();
+
+        Livewire::test(ManageBatterySuppliers::class)
+            ->callAction('create', ['name' => 'Hoppecke', 'email' => 'order@hoppecke.example', 'cc_emails' => ['geen-adres'], 'locale' => 'fr'])
+            ->assertHasActionErrors();
+        Livewire::test(ManageBatterySuppliers::class)
+            ->callAction('create', ['name' => 'Hoppecke', 'email' => 'order@hoppecke.example', 'cc_emails' => ['sales@hoppecke.example'], 'locale' => 'fr'])
+            ->assertHasNoActionErrors();
+        $this->assertSame(['sales@hoppecke.example'], BatterySupplier::query()->where('name', 'Hoppecke')->sole()->ccEmails());
     }
 }

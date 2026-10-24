@@ -693,6 +693,10 @@ Chaque nouveau projet 604 reçoit d'emblée sa **commande BAE** (l'ancien *calc.
 3. Vérifiez l'**aperçu** en bas : il calcule comme la feuille Excel *Order* (batteries × éléments × prix par élément, plus les racks).
 4. **Exporter en PDF** enregistre et ouvre la commande, prête à être envoyée à BAE. Avec **Joindre aux documents de livraison**, le PDF est ajouté à la livraison comme *Commande au fournisseur*.
 
+5. **Envoyer au fournisseur** envoie la commande en PDF au **fournisseur** choisi, avec un message supplémentaire facultatif. Cela se fait uniquement avec ce bouton, jamais automatiquement, et seulement quand la commande est complète. La liste indique quand et à qui elle a été envoyée.
+
+Les fournisseurs se gèrent dans **Batteries → Fournisseurs** (droit **Gérer les fournisseurs de batteries**) : l'adresse e-mail pour les commandes, des adresses en copie, la langue du mail et le fournisseur par défaut. Chaque commande part aussi en copie aux adresses de **Paramètres → Batteries → Commande BAE → Commandes en copie à**. Le texte du mail se modifie par langue dans **Modèles d'e-mail → Commande BAE (au fournisseur)**.
+
 Les valeurs par défaut (contrat, adresse de livraison, personne de contact, facturation) se trouvent dans **Paramètres → Batteries → Commande BAE**. Les prix BAE et les connecteurs se modifient dans les **types de batteries**. Uniquement avec le droit **Commandes BAE : voir, remplir et exporter** (et *générer des PDF* pour l'export).
 
 ## Droits

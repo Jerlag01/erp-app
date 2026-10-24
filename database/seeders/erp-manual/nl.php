@@ -694,6 +694,10 @@ Elk nieuw 604-project krijgt meteen zijn **BAE-bestelling** (de vroegere *calc.x
 3. Kijk het **overzicht** onderaan na: het rekent zoals het Excel-blad *Order* (batterijen × elementen × prijs per element, plus de rekken).
 4. **Exporteren naar PDF** slaat op en opent de bestelling, klaar om naar BAE te sturen. Met **Bewaren bij leveringsdocumenten** komt de PDF bij de levering als *Bestelling aan de leverancier*.
 
+5. **Versturen naar leverancier** mailt de bestelling als PDF naar de gekozen **leverancier**, met een optioneel extra bericht. Dat gebeurt enkel met deze knop, nooit automatisch, en pas als de bestelling volledig is ingevuld. In de lijst zie je wanneer en naar wie ze verstuurd werd.
+
+Leveranciers beheer je bij **Batterijen → Leveranciers** (recht **Batterijleveranciers beheren**): het e-mailadres voor bestellingen, extra adressen in kopie, de taal van de mail en welke leverancier standaard is. Elke bestelling gaat ook in kopie naar de adressen bij **Instellingen → Batterijen → BAE-bestelling → Bestellingen in kopie naar**. De tekst van de mail pas je per taal aan bij **E-mailsjablonen → BAE-bestelling (aan leverancier)**.
+
 De standaardwaarden (contract, leveradres, contactpersoon, facturatie) staan in **Instellingen → Batterijen → BAE-bestelling**. De BAE-prijzen en connectoren pas je aan bij **Batterijtypes**. Enkel met het recht **BAE-bestellingen: zien, invullen en exporteren** (en *PDF genereren* voor de export).
 
 ## Rechten

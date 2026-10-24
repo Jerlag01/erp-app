@@ -6,6 +6,7 @@ use App\Enums\BatteryMounting;
 use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\BatterySupplier;
 use App\Models\Project;
 use App\Models\User;
 
@@ -33,6 +34,7 @@ class CreateBaeOrder
         $settings = (array) settings()->get('batteries');
         $order = new BaeOrder([
             'project_id' => $project->id,
+            'battery_supplier_id' => BatterySupplier::defaultSupplier()?->id,
             'order_date' => today(),
             'contract' => $settings['bae_contract'] ?? null,
             'delivery_date' => $settings['bae_delivery_date'] ?? null,

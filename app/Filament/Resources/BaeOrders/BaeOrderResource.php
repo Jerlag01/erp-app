@@ -26,7 +26,7 @@ use UnitEnum;
 
 /**
  * BAE orders (Excel "calc.xlsx"): one per 604 project, made when the project is created, filled in
- * here and exported to PDF for the supplier. Only with "batteries.bae_orders".
+ * here, exported to PDF and mailed to the supplier with a button. Only with "batteries.bae_orders".
  */
 class BaeOrderResource extends Resource
 {
@@ -62,7 +62,7 @@ class BaeOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['project.workSite', 'project.category', 'batteryModel']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['project.workSite', 'project.category', 'batteryModel', 'supplier']))
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('project.reference')
@@ -82,15 +82,26 @@ class BaeOrderResource extends Resource
                     ->state(fn (BaeOrder $record): float => $record->total())
                     ->money('EUR', locale: 'nl_BE')
                     ->alignEnd(),
+                TextColumn::make('sent_at')
+                    ->label(__('erp.batteries.bae_order.fields.sent_at'))
+                    ->dateTime('d/m/Y H:i')
+                    ->description(fn (BaeOrder $record): ?string => $record->supplier?->name)
+                    ->tooltip(fn (BaeOrder $record): ?string => $record->sent_to)
+                    ->placeholder(__('erp.batteries.bae_order.not_sent'))
+                    ->badge()
+                    ->color(fn (BaeOrder $record): string => $record->isSent() ? 'success' : 'warning')
+                    ->sortable(),
                 TextColumn::make('exported_at')
                     ->label(__('erp.batteries.bae_order.fields.exported_at'))
                     ->dateTime('d/m/Y H:i')
                     ->placeholder(__('erp.batteries.bae_order.not_exported'))
                     ->badge()
                     ->color(fn (BaeOrder $record): string => $record->isExported() ? 'success' : 'gray')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                TernaryFilter::make('sent_at')->label(__('erp.batteries.bae_order.fields.sent_at'))->nullable(),
                 TernaryFilter::make('exported_at')->label(__('erp.batteries.bae_order.fields.exported_at'))->nullable(),
             ])
             ->recordActions([

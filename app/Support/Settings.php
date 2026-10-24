@@ -243,6 +243,8 @@ class Settings
                 'bae_contact_email' => 'j.lagaet@power-installation.be',
                 'bae_billing_block' => "Power Installation nv\nDrukpersstraat 4\n1000  Brussel\nBelgium\nVAT    BE - 0462 401 968",
                 'bae_remarks' => 'Orders will be checked by BAE',
+                // Every BAE order that is mailed to the supplier also goes in copy to these addresses.
+                'bae_order_cc' => [],
             ],
         ];
     }
