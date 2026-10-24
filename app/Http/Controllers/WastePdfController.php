@@ -94,14 +94,14 @@ class WastePdfController
     }
 
     /**
-     * The PDF attached to a battery entry.
+     * The PDF of a battery line.
      */
-    public function entryPdf(Request $request, WasteEntry $entry): Response
+    public function linePdf(Request $request, WasteEntryLine $line): Response
     {
         abort_unless(Gate::allows('viewAny', WasteEntry::class), 403);
-        abort_unless($entry->hasPdf(), 404);
+        abort_unless($line->hasPdf(), 404);
 
-        return Storage::disk(WasteEntry::DISK)->response($entry->pdf_path, $entry->pdf_name ?: basename($entry->pdf_path), [
+        return Storage::disk(WasteEntryLine::DISK)->response($line->pdf_path, $line->pdf_name ?: basename($line->pdf_path), [
             'Content-Type' => 'application/pdf',
             'X-Content-Type-Options' => 'nosniff',
         ]);
@@ -109,7 +109,7 @@ class WastePdfController
 
     /**
      * The battery list of a region for one year: a row per line with its own weight (landscape),
-     * followed by the PDF of each entry in it (as uploaded, portrait). Without the qpdf program to
+     * followed by the PDF of each line in it (as uploaded, portrait), in the same order. Without the qpdf program to
      * join PDFs, a ZIP with the list and the PDFs is downloaded instead.
      */
     public function regional(Request $request, PdfMerger $merger): Response
@@ -143,14 +143,14 @@ class WastePdfController
             'period' => WasteTotals::periodLabel("{$year}-01-01", "{$year}-12-31"),
         ])->setPaper('a4', 'landscape')->setOption('isFontSubsettingEnabled', true)->output();
 
-        $attachments = $lines->pluck('entry')->unique('id')->filter(fn (WasteEntry $entry): bool => $entry->hasPdf())->values();
+        $attachments = $lines->filter(fn (WasteEntryLine $line): bool => $line->hasPdf())->values();
         $name = Str::slug($title);
 
         if ($attachments->isEmpty()) {
             return response($overview, 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="'.$name.'.pdf"']);
         }
 
-        $disk = Storage::disk(WasteEntry::DISK);
+        $disk = Storage::disk(WasteEntryLine::DISK);
         $directory = sys_get_temp_dir().'/waste-export-'.Str::random(12);
         mkdir($directory, 0700, true);
 
@@ -158,7 +158,7 @@ class WastePdfController
             file_put_contents("{$directory}/0-overview.pdf", $overview);
 
             if ($merger->available()) {
-                $merger->merge(["{$directory}/0-overview.pdf", ...$attachments->map(fn (WasteEntry $entry): string => $disk->path($entry->pdf_path))->all()], "{$directory}/export.pdf");
+                $merger->merge(["{$directory}/0-overview.pdf", ...$attachments->map(fn (WasteEntryLine $line): string => $disk->path($line->pdf_path))->all()], "{$directory}/export.pdf");
 
                 return response((string) file_get_contents("{$directory}/export.pdf"), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="'.$name.'.pdf"']);
             }
@@ -168,8 +168,8 @@ class WastePdfController
             $zip->open("{$directory}/export.zip", ZipArchive::CREATE);
             $zip->addFile("{$directory}/0-overview.pdf", '0 - '.$name.'.pdf');
 
-            foreach ($attachments->values() as $index => $entry) {
-                $zip->addFile($disk->path($entry->pdf_path), ($index + 1).' - '.$entry->date->format('Y-m-d').' - '.Str::slug(pathinfo($entry->pdf_name ?: 'document', PATHINFO_FILENAME)).'.pdf');
+            foreach ($attachments->values() as $index => $line) {
+                $zip->addFile($disk->path($line->pdf_path), ($index + 1).' - '.$line->entry->date->format('Y-m-d').' - '.($line->destruction_certificate ?? '').' - '.Str::slug(pathinfo($line->pdf_name ?: 'document', PATHINFO_FILENAME)).'.pdf');
             }
 
             $zip->close();

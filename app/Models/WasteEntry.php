@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * One line in the waste registry: what went to which processor on which date, in kilograms.
@@ -18,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
  */
 #[Fillable([
     'date', 'waste_category_id', 'weight_kg', 'waste_processor_id', 'processor_reference',
-    'notes', 'pdf_path', 'pdf_name', 'created_by',
+    'notes', 'created_by',
 ])]
 class WasteEntry extends Model
 {
@@ -26,14 +25,6 @@ class WasteEntry extends Model
     use HasFactory;
 
     public const CERTIFICATE_PATTERN = '/^\d{3}$/';
-
-    /** The PDF of a battery entry, on the private disk. */
-    public const DISK = 'local';
-
-    public function hasPdf(): bool
-    {
-        return filled($this->pdf_path) && Storage::disk(self::DISK)->exists($this->pdf_path);
-    }
 
     /**
      * @return BelongsTo<WasteCategory, $this>
@@ -116,19 +107,6 @@ class WasteEntry extends Model
         static::saving(function (self $entry): void {
             // Battery waste gets its weight from its lines (filled in once they are saved).
             $entry->weight_kg ??= 0;
-        });
-
-        // A replaced or removed PDF goes from the disk too.
-        static::updated(function (self $entry): void {
-            if ($entry->wasChanged('pdf_path') && filled($old = $entry->getOriginal('pdf_path'))) {
-                Storage::disk(self::DISK)->delete($old);
-            }
-        });
-
-        static::deleted(function (self $entry): void {
-            if (filled($entry->pdf_path)) {
-                Storage::disk(self::DISK)->delete($entry->pdf_path);
-            }
         });
 
         // Other waste has no battery lines.

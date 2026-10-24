@@ -8,16 +8,25 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * A line of a battery waste entry: one destruction certificate with its region, COW code, PO number,
- * project reference (of the platform or typed in freely) and weight. The entry weighs the sum of its lines; the regional battery lists are made of lines.
+ * project reference (of the platform or typed in freely), weight and its own PDF. The entry weighs the sum of its lines; the regional battery lists are made of lines.
  */
-#[Fillable(['waste_entry_id', 'region', 'destruction_certificate', 'work_site_id', 'cow_code', 'po_number', 'project_reference', 'project_id', 'weight_kg', 'sort'])]
+#[Fillable(['waste_entry_id', 'region', 'destruction_certificate', 'work_site_id', 'cow_code', 'po_number', 'project_reference', 'project_id', 'weight_kg', 'pdf_path', 'pdf_name', 'sort'])]
 class WasteEntryLine extends Model
 {
     /** @use HasFactory<WasteEntryLineFactory> */
     use HasFactory;
+
+    /** The PDF of the line, on the private disk. */
+    public const DISK = 'local';
+
+    public function hasPdf(): bool
+    {
+        return filled($this->pdf_path) && Storage::disk(self::DISK)->exists($this->pdf_path);
+    }
 
     /**
      * @return BelongsTo<WasteEntry, $this>
@@ -61,7 +70,20 @@ class WasteEntryLine extends Model
 
         // The entry always weighs the sum of its lines.
         static::saved(fn (self $line) => $line->entry?->syncWeightFromLines());
-        static::deleted(fn (self $line) => $line->entry?->syncWeightFromLines());
+        static::deleted(function (self $line): void {
+            $line->entry?->syncWeightFromLines();
+
+            if (filled($line->pdf_path)) {
+                Storage::disk(self::DISK)->delete($line->pdf_path);
+            }
+        });
+
+        // A replaced or removed PDF goes from the disk too.
+        static::updated(function (self $line): void {
+            if ($line->wasChanged('pdf_path') && filled($old = $line->getOriginal('pdf_path'))) {
+                Storage::disk(self::DISK)->delete($old);
+            }
+        });
     }
 
     /**

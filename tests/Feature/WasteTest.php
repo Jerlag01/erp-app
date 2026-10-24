@@ -200,9 +200,8 @@ class WasteTest extends TestCase
                 'waste_category_id' => $this->category('16 06 01*')->id,
                 'waste_processor_id' => WasteProcessor::factory()->create()->id,
                 'processor_reference' => 'VB-77',
-                'pdf_path' => UploadedFile::fake()->create('vrachtbrief.pdf', 40, 'application/pdf'),
                 'lines' => [
-                    ['region' => 'flanders', 'destruction_certificate' => '201', 'project_reference' => $project->reference, 'weight_kg' => 50],
+                    ['region' => 'flanders', 'destruction_certificate' => '201', 'project_reference' => $project->reference, 'weight_kg' => 50, 'pdf_path' => UploadedFile::fake()->create('attest-201.pdf', 40, 'application/pdf')],
                     ['region' => 'flanders', 'destruction_certificate' => '202', 'project_reference' => 'EXTERN-2026-14', 'weight_kg' => 30],
                 ],
             ])
@@ -213,8 +212,25 @@ class WasteTest extends TestCase
         $this->assertSame($project->id, $lines[0]->project_id, 'A reference of the platform is linked to its project.');
         $this->assertNull($lines[1]->project_id);
         $this->assertSame('EXTERN-2026-14', $lines[1]->project_reference);
-        $this->assertSame('vrachtbrief.pdf', $entry->pdf_name);
-        $this->get(route('waste.entry-pdf', $entry))->assertOk()->assertHeader('content-type', 'application/pdf');
+        // Each line (destruction certificate) has its own PDF.
+        $this->assertSame('attest-201.pdf', $lines[0]->pdf_name);
+        $this->assertNull($lines[1]->pdf_path);
+        $this->get(route('waste.line-pdf', $lines[0]))->assertOk()->assertHeader('content-type', 'application/pdf');
+
+        // The missing one is uploaded afterwards from the regional list, and can be replaced or removed.
+        Livewire::test(ListWasteEntryLines::class)
+            ->callTableAction('uploadPdf', $lines[1], ['pdf' => UploadedFile::fake()->create('attest-202.pdf', 20, 'application/pdf')])
+            ->assertHasNoTableActionErrors();
+        $this->assertSame('attest-202.pdf', $lines[1]->fresh()->pdf_name);
+        $old = $lines[1]->fresh()->pdf_path;
+        Livewire::test(ListWasteEntryLines::class)->callTableAction('uploadPdf', $lines[1], ['pdf' => UploadedFile::fake()->create('attest-202-v2.pdf', 20, 'application/pdf')]);
+        Storage::disk('local')->assertMissing($old);
+        Livewire::test(ListWasteEntryLines::class)->callTableAction('removePdf', $lines[1]);
+        $this->assertNull($lines[1]->fresh()->pdf_path);
+
+        // Only with the right to change the registry.
+        $this->actingAs(User::factory()->withPermissions(['waste' => ['view']])->inTeam()->create());
+        Livewire::test(ListWasteEntryLines::class)->assertTableActionHidden('uploadPdf', $lines[1]);
 
         // Two lines under the same reference: two rows in the regional list, each with its own weight.
         Livewire::test(ListWasteEntryLines::class)
@@ -232,7 +248,7 @@ class WasteTest extends TestCase
         $this->registrar();
         $withPdf = WasteEntry::factory()->batteries(WasteRegion::Brussels)->create(['date' => '2026-02-01', 'weight_kg' => 10]);
         Storage::disk('local')->put('waste/2026/a.pdf', '%PDF-1.4 test');
-        $withPdf->update(['pdf_path' => 'waste/2026/a.pdf', 'pdf_name' => 'a.pdf']);
+        $withPdf->lines()->first()->update(['pdf_path' => 'waste/2026/a.pdf', 'pdf_name' => 'a.pdf']);
         $otherYear = WasteEntry::factory()->batteries(WasteRegion::Brussels)->create(['date' => '2025-06-01', 'weight_kg' => 5]);
 
         $rows = [];

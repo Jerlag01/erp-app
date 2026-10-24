@@ -7,7 +7,9 @@ use App\Filament\Resources\WasteEntries\WasteEntryResource;
 use App\Models\WasteEntry;
 use App\Models\WasteEntryLine;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
@@ -18,12 +20,14 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
 /**
  * The battery list of each region: a row per line of a battery entry (destruction certificate),
- * with its own weight, also when several lines share the same entry and reference. Exported per
- * year with the PDFs of the entries behind it.
+ * with its own weight and its own PDF (uploaded here or with the entry), also when several lines
+ * share the same entry and reference. Exported per
+ * year with the PDF of each line behind it.
  */
 class WasteEntryLineResource extends Resource
 {
@@ -84,11 +88,11 @@ class WasteEntryLineResource extends Resource
                     ->summarize(Sum::make()->label(__('erp.waste.total'))->formatStateUsing(fn ($state): string => WasteEntry::formatKg($state))),
                 IconColumn::make('pdf')
                     ->label(__('erp.waste.pdf_short'))
-                    ->state(fn (WasteEntryLine $record): bool => filled($record->entry?->pdf_path))
+                    ->state(fn (WasteEntryLine $record): bool => filled($record->pdf_path))
                     ->boolean()
                     ->trueIcon(Heroicon::OutlinedDocumentText)
                     ->falseIcon(Heroicon::OutlinedMinus)
-                    ->url(fn (WasteEntryLine $record): ?string => filled($record->entry?->pdf_path) ? route('waste.entry-pdf', $record->entry) : null, shouldOpenInNewTab: true),
+                    ->url(fn (WasteEntryLine $record): ?string => filled($record->pdf_path) ? route('waste.line-pdf', $record) : null, shouldOpenInNewTab: true),
             ])
             ->filters([
                 SelectFilter::make('year')
@@ -103,6 +107,37 @@ class WasteEntryLineResource extends Resource
                     ->query(fn (Builder $query, array $data) => $query
                         ->when($data['from'] ?? null, fn (Builder $query, $date) => $query->whereDate('waste_entries.date', '>=', $date))
                         ->when($data['until'] ?? null, fn (Builder $query, $date) => $query->whereDate('waste_entries.date', '<=', $date))),
+            ])
+            ->recordActions([
+                // The PDF of this line, also added or replaced later.
+                Action::make('uploadPdf')
+                    ->label(fn (WasteEntryLine $record): string => filled($record->pdf_path) ? __('erp.waste.replace_pdf') : __('erp.waste.upload_pdf'))
+                    ->icon(Heroicon::OutlinedArrowUpTray)
+                    ->color(fn (WasteEntryLine $record): string => filled($record->pdf_path) ? 'gray' : 'primary')
+                    ->visible(fn (WasteEntryLine $record): bool => $record->entry !== null && Gate::allows('update', $record->entry))
+                    ->modalHeading(fn (WasteEntryLine $record): string => __('erp.waste.upload_pdf_heading', ['certificate' => $record->destruction_certificate ?? '—', 'date' => $record->entry?->date?->format('d/m/Y')]))
+                    ->schema([
+                        FileUpload::make('pdf')
+                            ->label(__('erp.waste.pdf'))
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk(WasteEntryLine::DISK)
+                            ->directory(fn (): string => 'waste/'.now()->format('Y'))
+                            ->visibility('private')
+                            ->storeFileNamesIn('pdf_name')
+                            ->maxSize(51200)
+                            ->required(),
+                    ])
+                    ->action(fn (WasteEntryLine $record, array $data) => $record->update(['pdf_path' => $data['pdf'], 'pdf_name' => $data['pdf_name'] ?? basename((string) $data['pdf'])]))
+                    ->successNotificationTitle(__('erp.waste.pdf_saved')),
+                Action::make('removePdf')
+                    ->label(__('erp.waste.remove_pdf'))
+                    ->icon(Heroicon::OutlinedTrash)
+                    ->color('danger')
+                    ->iconButton()
+                    ->visible(fn (WasteEntryLine $record): bool => filled($record->pdf_path) && $record->entry !== null && Gate::allows('update', $record->entry))
+                    ->requiresConfirmation()
+                    ->action(fn (WasteEntryLine $record) => $record->update(['pdf_path' => null, 'pdf_name' => null]))
+                    ->successNotificationTitle(__('erp.waste.pdf_removed')),
             ])
             ->recordUrl(null);
     }

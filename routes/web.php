@@ -88,7 +88,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');
     Route::get('/waste-totals-pdf', [WastePdfController::class, 'totals'])->name('waste.totals-pdf');
     Route::get('/waste-regional-pdf', [WastePdfController::class, 'regional'])->name('waste.regional-pdf');
-    Route::get('/waste-entries/{entry}/pdf', [WastePdfController::class, 'entryPdf'])->whereNumber('entry')->name('waste.entry-pdf');
+    Route::get('/waste-lines/{line}/pdf', [WastePdfController::class, 'linePdf'])->whereNumber('line')->name('waste.line-pdf');
     Route::get('/knowledge-base/{article}/files/{index}', KbDownloadController::class)->whereNumber(['article', 'index'])->name('kb.download');
     Route::get('/employee-documents/{employee}/{kind}/{id}/{file?}', EmployeeDocumentController::class)->whereIn('kind', ['certificate', 'medical', 'request', 'license'])->whereNumber(['employee', 'id', 'file'])->name('employees.document');
 });

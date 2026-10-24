@@ -29,7 +29,6 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\TextColumn;
@@ -178,6 +177,17 @@ class WasteEntryResource extends Resource
                                     ->datalist(fn (): array => self::projectReferences())
                                     ->maxLength(60)
                                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+                                FileUpload::make('pdf_path')
+                                    ->label(__('erp.waste.pdf'))
+                                    ->helperText(__('erp.waste.pdf_help'))
+                                    ->acceptedFileTypes(['application/pdf'])
+                                    ->disk(WasteEntryLine::DISK)
+                                    ->directory(fn (): string => 'waste/'.now()->format('Y'))
+                                    ->visibility('private')
+                                    ->storeFileNamesIn('pdf_name')
+                                    ->maxSize(51200)
+                                    ->downloadable()
+                                    ->columnSpanFull(),
                             ])
                             ->columns(3)
                             ->defaultItems(1)
@@ -186,17 +196,6 @@ class WasteEntryResource extends Resource
                             ->live()
                             ->itemLabel(fn (array $state): ?string => filled($state['destruction_certificate'] ?? null) ? __('erp.waste.certificate_label', ['number' => $state['destruction_certificate']]) : null)
                             ->addActionLabel(__('erp.waste.add_line'))
-                            ->columnSpanFull(),
-                        FileUpload::make('pdf_path')
-                            ->label(__('erp.waste.pdf'))
-                            ->helperText(__('erp.waste.pdf_help'))
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->disk(WasteEntry::DISK)
-                            ->directory(fn (): string => 'waste/'.now()->format('Y'))
-                            ->visibility('private')
-                            ->storeFileNamesIn('pdf_name')
-                            ->maxSize(51200)
-                            ->downloadable()
                             ->columnSpanFull(),
                     ]),
                 Textarea::make('notes')
@@ -322,13 +321,13 @@ class WasteEntryResource extends Resource
                     ->searchable(query: fn (Builder $query, string $search) => $query->orWhereHas('lines', fn (Builder $query) => $query->where('project_reference', 'like', '%'.addcslashes($search, '%_\\').'%')))
                     ->placeholder('—')
                     ->toggleable(),
-                IconColumn::make('pdf_path')
+                TextColumn::make('pdfs')
                     ->label(__('erp.waste.pdf_short'))
-                    ->state(fn (WasteEntry $record): bool => filled($record->pdf_path))
-                    ->boolean()
-                    ->trueIcon(Heroicon::OutlinedDocumentText)
-                    ->falseIcon(Heroicon::OutlinedMinus)
-                    ->url(fn (WasteEntry $record): ?string => filled($record->pdf_path) ? route('waste.entry-pdf', $record) : null, shouldOpenInNewTab: true),
+                    ->state(fn (WasteEntry $record): ?string => ($count = $record->lines->whereNotNull('pdf_path')->count()) > 0 ? $count.' / '.$record->lines->count() : null)
+                    ->badge()
+                    ->color(fn (WasteEntry $record): string => $record->lines->whereNull('pdf_path')->isEmpty() ? 'success' : 'warning')
+                    ->placeholder('—')
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('year')
