@@ -10,6 +10,7 @@ use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\BatteryDeliveriesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\DeliveryFollowUpsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ExtraFilesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\GpwRequestsRelationManager;
@@ -97,6 +98,7 @@ class ProjectResource extends Resource
             PartsRelationManager::class,
             ChargingStationsRelationManager::class,
             BatteryDeliveriesRelationManager::class,
+            DeliveryFollowUpsRelationManager::class,
             DocumentsRelationManager::class,
             ImagesRelationManager::class,
             PlansRelationManager::class,

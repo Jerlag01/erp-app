@@ -720,9 +720,40 @@ Les dossiers des **batteries Enersys** sur les **projets 605** : input, bon de l
 
 Comme les dossiers batteries (604) : ouvrez le dossier depuis le projet, complétez l'input, les mesures et l'inspection, faites-le signer (aussi dans l'application mobile) et générez les PDF.
 
+
+## Suivi des livraisons
+
+Le client commande lui-même les batteries Enersys. Dans **Batteries → Livraisons Enersys**, suivez par projet 605 le **numéro de PO** et la **date de livraison**, et cochez **livré** à l'arrivée. Le projet passe alors à **À planifier** (sauf s'il est déjà plus loin, p. ex. planifié). Le numéro de PO est repris du projet. Les livraisons figurent aussi sur le projet (onglet *Suivi des livraisons*).
+
 ## Droits
 
 Le même type de droits que pour les dossiers batteries, à régler séparément sous **Batteries Enersys**.
+MD,
+        ],
+
+        'board_deliveries' => [
+            'title' => 'Suivi des tableaux électriques (610–650)',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Le suivi des **tableaux électriques** des projets 610, 620, 630, 640 et 650, avec une liste par **fournisseur** : ELP, P&V panels, CE+T et Automation LP (Halle). C'est un module séparé, à activer ou désactiver dans **Paramètres → Modules**.
+
+## Où ?
+
+- **Tableaux → Suivi des tableaux** : un onglet par fournisseur.
+- **Tableaux → Fournisseurs de tableaux** : ajouter des fournisseurs, choisir l'ordre et le type de liste.
+- Sur le projet : onglet *Suivi des livraisons*.
+
+## Fonctionnement
+
+- **ELP et P&V panels** (liste simple) : projet, numéro de PO, date de livraison et une coche **livré** (le jour de la coche devient la date de livraison effective).
+- **CE+T et Automation LP** (liste avec configuration) : numéro de PO, projet, **livraison prévue**, **livraison effective**, **date de configuration** et une coche **installé & configuré**. Les dates se remplissent directement dans la liste.
+
+Une nouvelle ligne se crée avec **Nouveau** : choisissez le fournisseur et un projet 610–650 ; le numéro de PO est repris du projet. Le statut du projet ne change jamais automatiquement ici.
+
+## Droits
+
+**Suivi des tableaux électriques** : voir, créer, modifier, supprimer et **gérer les fournisseurs**.
 MD,
         ],
 

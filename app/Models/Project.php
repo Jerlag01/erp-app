@@ -279,6 +279,16 @@ class Project extends Model
     }
 
     /**
+     * Followed-up deliveries: Enersys batteries (605) or electrical boards (610–650).
+     *
+     * @return HasMany<DeliveryFollowUp, $this>
+     */
+    public function deliveryFollowUps(): HasMany
+    {
+        return $this->hasMany(DeliveryFollowUp::class);
+    }
+
+    /**
      * @return HasMany<BatteryDelivery, $this>
      */
     public function batteryDeliveries(): HasMany

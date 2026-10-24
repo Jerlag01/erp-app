@@ -24,6 +24,7 @@ return [
         'interventions' => 'Interventions',
         'batteries' => 'Batteries',
         'charging' => 'Bornes de recharge',
+        'board_deliveries' => 'Tableaux',
     ],
     'resources' => [
         'user' => ['singular' => 'utilisateur', 'plural' => 'Utilisateurs'],
@@ -164,6 +165,10 @@ return [
         'asbuilt' => [
             'label' => 'As-built',
             'help' => 'As-builts par projet : créés au statut « Exécuté », fichiers par catégorie (fichiers standard par code COW et registre de documents techniques), contrôle Normec BTV et ZIP pour le client.',
+        ],
+        'board_deliveries' => [
+            'label' => 'Suivi des tableaux électriques',
+            'help' => 'Suivi des tableaux électriques par fournisseur (ELP, P&V panels, CE+T, Automation LP …) pour les projets 610–650 : numéro de PO, livraison et, pour CE+T et Automation LP, aussi configuration et finition.',
         ],
         'hr_calculations' => [
             'label' => 'Calculs RH',
@@ -452,6 +457,7 @@ return [
         'areas' => [
             'announcements' => 'Annonces',
             'asbuilt' => 'As-built',
+            'board_deliveries' => 'Suivi des tableaux électriques',
             'hr_calculations' => 'Calculs RH',
             'toolbox' => 'Toolbox meetings',
             'teams' => 'Équipes',
@@ -493,6 +499,7 @@ return [
         ],
         'abilities' => [
             'view_signatures' => 'Voir les signatures',
+            'manage_suppliers' => 'Gérer les fournisseurs',
             'view' => 'Consulter',
             'create' => 'Créer',
             'update' => 'Modifier',
@@ -2914,6 +2921,37 @@ return [
             'file_costs' => 'Frais de dossier',
             'total' => 'Total de l\'offre : :amount',
         ],
+    ],
+    'follow_ups' => [
+        'enersys_singular' => 'Livraison Enersys',
+        'enersys_plural' => 'Livraisons Enersys',
+        'board_singular' => 'tableau',
+        'board_plural' => 'Suivi des tableaux',
+        'supplier_singular' => 'fournisseur de tableaux',
+        'supplier_plural' => 'Fournisseurs de tableaux',
+        'tab' => 'Suivi des livraisons',
+        'project' => 'Projet',
+        'po_number' => 'Numéro de PO',
+        'delivery_date' => 'Date de livraison',
+        'expected_delivery' => 'Livraison prévue',
+        'actual_delivery' => 'Livraison effective',
+        'delivered' => 'Livré',
+        'configured_on' => 'Date de configuration',
+        'completed' => 'Installé & configuré',
+        'supplier' => 'Fournisseur',
+        'kind' => 'Type',
+        'notes' => 'Remarques',
+        'layout' => 'Liste',
+        'layouts' => [
+            'simple' => 'Simple : numéro de PO, date de livraison, livré',
+            'configured' => 'Avec configuration : livraison prévue et effective, date de configuration, terminé',
+        ],
+        'sort' => 'Ordre',
+        'tabs' => ['to_deliver' => 'À livrer', 'delivered' => 'Livré', 'open' => 'Ouvert', 'completed' => 'Terminé', 'all' => 'Tous'],
+        'enersys_help' => 'Le client commande lui-même les batteries Enersys. Cochez « livré » à l\'arrivée : le projet passe alors à « À planifier » (s\'il n\'est pas déjà plus loin).',
+        'one_per_project' => 'Ce projet figure déjà dans cette liste.',
+        'project_category' => 'Choisissez un projet de la bonne catégorie.',
+        'no_suppliers' => 'Ajoutez d\'abord un fournisseur de tableaux.',
     ],
     'batteries' => [
         'supplier' => [

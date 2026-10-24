@@ -24,6 +24,7 @@ return [
         'interventions' => 'Interventies',
         'batteries' => 'Batterijen',
         'charging' => 'Laadpalen',
+        'board_deliveries' => 'Borden',
     ],
     'resources' => [
         'user' => ['singular' => 'gebruiker', 'plural' => 'Gebruikers'],
@@ -164,6 +165,10 @@ return [
         'asbuilt' => [
             'label' => 'As-built',
             'help' => 'As-builts per project: aangemaakt bij "Uitgevoerd", bestanden per categorie (met standaardbestanden per COW-code en een register van technische documenten), keuring door Normec BTV en een ZIP voor de klant.',
+        ],
+        'board_deliveries' => [
+            'label' => 'Opvolging elektrische borden',
+            'help' => 'Opvolging van de elektrische borden per leverancier (ELP, P&V panels, CE+T, Automation LP …) voor de 610–650-projecten: PO-nummer, levering en voor CE+T en Automation LP ook configuratie en afwerking.',
         ],
         'hr_calculations' => [
             'label' => 'HR-berekeningen',
@@ -452,6 +457,7 @@ return [
         'areas' => [
             'announcements' => 'Mededelingen',
             'asbuilt' => 'As-built',
+            'board_deliveries' => 'Opvolging elektrische borden',
             'hr_calculations' => 'HR-berekeningen',
             'toolbox' => 'Toolboxmeetings',
             'teams' => 'Ploegen',
@@ -493,6 +499,7 @@ return [
         ],
         'abilities' => [
             'view_signatures' => 'Handtekeningen bekijken',
+            'manage_suppliers' => 'Leveranciers beheren',
             'view' => 'Bekijken',
             'create' => 'Aanmaken',
             'update' => 'Bewerken',
@@ -2915,6 +2922,37 @@ return [
             'file_costs' => 'Dossierkosten',
             'total' => 'Totaal offerte: :amount',
         ],
+    ],
+    'follow_ups' => [
+        'enersys_singular' => 'Enersys-levering',
+        'enersys_plural' => 'Enersys-leveringen',
+        'board_singular' => 'bord',
+        'board_plural' => 'Opvolging borden',
+        'supplier_singular' => 'bordleverancier',
+        'supplier_plural' => 'Bordleveranciers',
+        'tab' => 'Opvolging leveringen',
+        'project' => 'Project',
+        'po_number' => 'PO-nummer',
+        'delivery_date' => 'Leverdatum',
+        'expected_delivery' => 'Verwachte levering',
+        'actual_delivery' => 'Werkelijke levering',
+        'delivered' => 'Geleverd',
+        'configured_on' => 'Configuratiedatum',
+        'completed' => 'Geplaatst & geconfigureerd',
+        'supplier' => 'Leverancier',
+        'kind' => 'Soort',
+        'notes' => 'Opmerkingen',
+        'layout' => 'Lijst',
+        'layouts' => [
+            'simple' => 'Eenvoudig: PO-nummer, leverdatum, geleverd',
+            'configured' => 'Met configuratie: verwachte en werkelijke levering, configuratiedatum, afgewerkt',
+        ],
+        'sort' => 'Volgorde',
+        'tabs' => ['to_deliver' => 'Te leveren', 'delivered' => 'Geleverd', 'open' => 'Open', 'completed' => 'Afgewerkt', 'all' => 'Alle'],
+        'enersys_help' => 'De klant bestelt de Enersys-batterijen zelf. Vink "geleverd" aan bij aankomst: het project gaat dan naar "In te plannen" (als het nog niet verder staat).',
+        'one_per_project' => 'Dit project staat al in deze lijst.',
+        'project_category' => 'Kies een project van de juiste categorie.',
+        'no_suppliers' => 'Voeg eerst een bordleverancier toe.',
     ],
     'batteries' => [
         'supplier' => [

@@ -24,6 +24,7 @@ return [
         'interventions' => 'Interventions',
         'batteries' => 'Batteries',
         'charging' => 'Charging stations',
+        'board_deliveries' => 'Boards',
     ],
     'resources' => [
         'user' => ['singular' => 'user', 'plural' => 'Users'],
@@ -164,6 +165,10 @@ return [
         'asbuilt' => [
             'label' => 'As-built',
             'help' => 'As-builts per project: made at "Executed", files per category (standard files per COW code and a register of technical documents), Normec BTV inspection and a ZIP for the client.',
+        ],
+        'board_deliveries' => [
+            'label' => 'Electrical boards follow-up',
+            'help' => 'Follow-up of the electrical boards per supplier (ELP, P&V panels, CE+T, Automation LP …) for the 610–650 projects: PO number, delivery and for CE+T and Automation LP also configuration and completion.',
         ],
         'hr_calculations' => [
             'label' => 'HR calculations',
@@ -452,6 +457,7 @@ return [
         'areas' => [
             'announcements' => 'Announcements',
             'asbuilt' => 'As-built',
+            'board_deliveries' => 'Electrical boards follow-up',
             'hr_calculations' => 'HR calculations',
             'toolbox' => 'Toolbox meetings',
             'teams' => 'Teams',
@@ -493,6 +499,7 @@ return [
         ],
         'abilities' => [
             'view_signatures' => 'View signatures',
+            'manage_suppliers' => 'Manage suppliers',
             'view' => 'View',
             'create' => 'Create',
             'update' => 'Edit',
@@ -2914,6 +2921,37 @@ return [
             'file_costs' => 'File costs',
             'total' => 'Total quotation: :amount',
         ],
+    ],
+    'follow_ups' => [
+        'enersys_singular' => 'Enersys delivery',
+        'enersys_plural' => 'Enersys deliveries',
+        'board_singular' => 'board',
+        'board_plural' => 'Boards follow-up',
+        'supplier_singular' => 'board supplier',
+        'supplier_plural' => 'Board suppliers',
+        'tab' => 'Delivery follow-up',
+        'project' => 'Project',
+        'po_number' => 'PO number',
+        'delivery_date' => 'Delivery date',
+        'expected_delivery' => 'Expected delivery',
+        'actual_delivery' => 'Actual delivery',
+        'delivered' => 'Delivered',
+        'configured_on' => 'Configuration date',
+        'completed' => 'Installed & configured',
+        'supplier' => 'Supplier',
+        'kind' => 'Kind',
+        'notes' => 'Remarks',
+        'layout' => 'List',
+        'layouts' => [
+            'simple' => 'Simple: PO number, delivery date, delivered',
+            'configured' => 'With configuration: expected and actual delivery, configuration date, completed',
+        ],
+        'sort' => 'Order',
+        'tabs' => ['to_deliver' => 'To deliver', 'delivered' => 'Delivered', 'open' => 'Open', 'completed' => 'Completed', 'all' => 'All'],
+        'enersys_help' => 'The client orders the Enersys batteries itself. Tick "delivered" on arrival: the project then goes to "To be planned" (unless it is already further).',
+        'one_per_project' => 'This project is already in this list.',
+        'project_category' => 'Choose a project of the right category.',
+        'no_suppliers' => 'First add a board supplier.',
     ],
     'batteries' => [
         'supplier' => [

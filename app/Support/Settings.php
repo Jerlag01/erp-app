@@ -96,6 +96,7 @@ class Settings
                 Modules::ANNOUNCEMENTS => true,
                 Modules::ASBUILT => true,
                 Modules::HR_CALCULATIONS => true,
+                Modules::BOARD_DELIVERIES => true,
                 Modules::ENERSYS => true,
             ],
             'mail' => [

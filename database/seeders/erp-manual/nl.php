@@ -721,9 +721,40 @@ Dossiers voor **Enersys-batterijen** op **605-projecten**: input, leveringsnota,
 
 Het werkt zoals de batterijdossiers (604): open het dossier vanuit het project, vul de input, metingen en keuring in, laat het ondertekenen (ook in de mobiele app) en maak de PDF's.
 
+
+## Leveringen opvolgen
+
+De klant bestelt de Enersys-batterijen zelf. Bij **Batterijen → Enersys-leveringen** volg je per 605-project het **PO-nummer** en de **leverdatum** op en vink je **geleverd** aan bij aankomst. Het project gaat dan naar **In te plannen** (tenzij het al verder staat, bv. ingepland). Het PO-nummer wordt overgenomen van het project. De leveringen staan ook op het project (tabblad *Opvolging leveringen*).
+
 ## Rechten
 
 Dezelfde soort rechten als bij de batterijdossiers, apart in te stellen onder **Enersys-batterijen**.
+MD,
+        ],
+
+        'board_deliveries' => [
+            'title' => 'Opvolging elektrische borden (610–650)',
+            'body' => <<<'MD'
+## Waarvoor?
+
+De opvolging van de **elektrische borden** van de 610-, 620-, 630-, 640- en 650-projecten, met een eigen lijst per **leverancier**: ELP, P&V panels, CE+T en Automation LP (Halle). Het is een aparte module die je bij **Instellingen → Modules** aan- of uitzet.
+
+## Waar?
+
+- **Borden → Opvolging borden**: één tabblad per leverancier.
+- **Borden → Bordleveranciers**: leveranciers toevoegen, de volgorde en de soort lijst kiezen.
+- Op het project: tabblad *Opvolging leveringen*.
+
+## Zo werkt het
+
+- **ELP en P&V panels** (eenvoudige lijst): project, PO-nummer, leverdatum en een vinkje **geleverd** (de dag van het vinkje wordt de werkelijke leverdatum).
+- **CE+T en Automation LP** (lijst met configuratie): PO-nummer, project, **verwachte levering**, **werkelijke levering**, **configuratiedatum** en een vinkje **geplaatst & geconfigureerd**. De datums vul je rechtstreeks in de lijst in.
+
+Een nieuwe lijn maak je met **Nieuw**: kies de leverancier en een 610–650-project; het PO-nummer wordt van het project overgenomen. De projectstatus verandert hier nooit vanzelf.
+
+## Rechten
+
+**Opvolging elektrische borden**: bekijken, aanmaken, bewerken, verwijderen en **leveranciers beheren**.
 MD,
         ],
 

@@ -720,9 +720,40 @@ Dossiers for **Enersys batteries** on **605 projects**: input, delivery note, me
 
 Like the battery dossiers (604): open the dossier from the project, fill in the input, measurements and inspection, have it signed (also in the mobile app) and make the PDFs.
 
+
+## Delivery follow-up
+
+The client orders the Enersys batteries itself. Under **Batteries → Enersys deliveries** you follow up per 605 project the **PO number** and the **delivery date**, and tick **delivered** on arrival. The project then goes to **To be planned** (unless it is already further, e.g. planned). The PO number is taken from the project. The deliveries are also on the project (tab *Delivery follow-up*).
+
 ## Permissions
 
 The same kind of permissions as for battery dossiers, set separately under **Enersys batteries**.
+MD,
+        ],
+
+        'board_deliveries' => [
+            'title' => 'Electrical boards follow-up (610–650)',
+            'body' => <<<'MD'
+## What for?
+
+The follow-up of the **electrical boards** of the 610, 620, 630, 640 and 650 projects, with a list per **supplier**: ELP, P&V panels, CE+T and Automation LP (Halle). It is a separate module you switch on or off under **Settings → Modules**.
+
+## Where?
+
+- **Boards → Boards follow-up**: one tab per supplier.
+- **Boards → Board suppliers**: add suppliers, choose the order and the kind of list.
+- On the project: tab *Delivery follow-up*.
+
+## How it works
+
+- **ELP and P&V panels** (simple list): project, PO number, delivery date and a **delivered** check box (the day of the tick becomes the actual delivery date).
+- **CE+T and Automation LP** (list with configuration): PO number, project, **expected delivery**, **actual delivery**, **configuration date** and an **installed & configured** check box. The dates are filled in directly in the list.
+
+A new line is made with **New**: choose the supplier and a 610–650 project; the PO number is taken from the project. The project status never changes by itself here.
+
+## Permissions
+
+**Electrical boards follow-up**: view, create, edit, delete and **manage suppliers**.
 MD,
         ],
 

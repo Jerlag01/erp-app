@@ -24,7 +24,9 @@ namespace App\Support;
  * a short overview of the project instead); "batteries.edit_finished" changes (and reopens) dossiers the
  * technician finished, e.g. for the invoicing. "batteries.bae_orders" sees, fills in and exports the BAE orders
  * of the 604 projects (with purchase prices) and mails them to the supplier; "batteries.suppliers"
- * manages the battery suppliers.
+ * manages the battery suppliers. The Enersys delivery follow-up uses the "enersys" permissions.
+ * "board_deliveries" covers the follow-up of electrical boards per supplier (610–650 projects the user
+ * can see); "board_deliveries.manage_suppliers" manages those suppliers.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
  * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
@@ -88,6 +90,7 @@ class Permissions
         'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers']],
     ];
 
     /**

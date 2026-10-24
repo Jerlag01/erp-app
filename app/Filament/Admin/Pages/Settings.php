@@ -352,6 +352,7 @@ class Settings extends Page
             Modules::ANNOUNCEMENTS => Heroicon::OutlinedMegaphone,
             Modules::ASBUILT => Heroicon::OutlinedArchiveBox,
             Modules::HR_CALCULATIONS => Heroicon::OutlinedCalculator,
+            Modules::BOARD_DELIVERIES => Heroicon::OutlinedCpuChip,
         ];
 
         return [

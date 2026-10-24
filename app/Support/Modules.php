@@ -62,7 +62,9 @@ class Modules
 
     public const HR_CALCULATIONS = 'hr_calculations';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS];
+    public const BOARD_DELIVERIES = 'board_deliveries';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES];
 
     public function __construct(protected Settings $settings) {}
 
@@ -199,6 +201,14 @@ class Modules
     public function hrCalculations(): bool
     {
         return $this->enabled(self::HR_CALCULATIONS);
+    }
+
+    /**
+     * Follow-up of the electrical boards per supplier for the 610–650 projects.
+     */
+    public function boardDeliveries(): bool
+    {
+        return $this->enabled(self::BOARD_DELIVERIES) && $this->projects();
     }
 
     public function announcements(): bool
