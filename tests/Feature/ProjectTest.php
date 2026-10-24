@@ -20,6 +20,7 @@ use App\Models\ProjectFile;
 use App\Models\StockItem;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\WasteEntryLine;
 use App\Models\WorkSite;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Testing\TestAction;
@@ -27,6 +28,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -61,17 +63,17 @@ class ProjectTest extends TestCase
         $site = WorkSite::factory()->create(['cow_code' => '02GAM']);
         $yy = now()->format('y');
 
-        $this->assertSame('604-001-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
-        $this->assertSame('604-002-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
-        $this->assertSame("605-{$yy}001-02GAM", Project::factory()->inCategory('605')->for($site)->create()->reference);
-        $this->assertSame("605-{$yy}002-02GAM", Project::factory()->inCategory('605')->for($site)->create()->reference);
+        $this->assertSame('604-0001-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
+        $this->assertSame('604-0002-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
+        $this->assertSame("605-{$yy}0001-02GAM", Project::factory()->inCategory('605')->for($site)->create()->reference);
+        $this->assertSame("605-{$yy}0002-02GAM", Project::factory()->inCategory('605')->for($site)->create()->reference);
 
         $private = Project::factory()->inCategory('606')->create(['client_name' => 'Familie Peeters']);
-        $this->assertSame('606-001', $private->reference);
+        $this->assertSame('606-0001', $private->reference);
         $this->assertNull($private->work_site_id, 'Private projects have no work site.');
 
         $withDescription = Project::factory()->inCategory('607')->for($site)->create(['short_description' => 'Nieuwe verlichting']);
-        $this->assertSame('607-001-02GAM', $withDescription->reference);
+        $this->assertSame('607-0001-02GAM', $withDescription->reference);
         $this->assertSame('Nieuwe verlichting', $withDescription->short_description);
         $this->assertNull(Project::factory()->inCategory('604')->for($site)->create(['short_description' => 'x'])->short_description);
     }
@@ -97,7 +99,7 @@ class ProjectTest extends TestCase
             ->assertHasNoFormErrors();
 
         $project = Project::sole();
-        $this->assertSame('608-001-11ABC', $project->reference);
+        $this->assertSame('608-0001-11ABC', $project->reference);
         $this->assertSame(['4500123456', '4500123457'], $project->poNumbers->pluck('number')->all());
         $this->assertTrue($project->isLedBy($employee), 'The creator becomes project leader by default.');
         $this->assertTrue($project->creator->is($employee));
@@ -143,7 +145,7 @@ class ProjectTest extends TestCase
             ->assertHasNoFormErrors();
 
         $project = Project::sole();
-        $this->assertSame('606-001', $project->reference);
+        $this->assertSame('606-0001', $project->reference);
         $this->assertSame('Jan Peeters', $project->client_name);
         $this->assertSame('Antwerpen', $project->city);
     }
@@ -338,8 +340,8 @@ class ProjectTest extends TestCase
 
         // Set by hand: numbering continues from there.
         $category->update(['next_number' => 150]);
-        $this->assertSame('604-150-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
-        $this->assertSame('604-151-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
+        $this->assertSame('604-0150-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
+        $this->assertSame('604-0151-02GAM', Project::factory()->inCategory('604')->for($site)->create()->reference);
 
         // Numbers in use are skipped: from 2, the first free one is 4.
         $category->update(['next_number' => 2]);
@@ -352,10 +354,10 @@ class ProjectTest extends TestCase
         // Yearly numbering only takes a number of this year.
         $yearly = ProjectCategory::query()->where('code', '605')->sole();
         $yy = (int) now()->format('y');
-        $yearly->update(['next_number' => $yy * 1000 + 100]);
-        $this->assertSame($yy * 1000 + 100, $yearly->fresh()->nextNumber());
-        $yearly->update(['next_number' => ($yy - 1) * 1000 + 100]);
-        $this->assertSame($yy * 1000 + 1, $yearly->fresh()->nextNumber(), 'A number of another year is ignored.');
+        $yearly->update(['next_number' => $yy * 10000 + 100]);
+        $this->assertSame($yy * 10000 + 100, $yearly->fresh()->nextNumber());
+        $yearly->update(['next_number' => ($yy - 1) * 10000 + 100]);
+        $this->assertSame($yy * 10000 + 1, $yearly->fresh()->nextNumber(), 'A number of another year is ignored.');
     }
 
     #[Test]
@@ -371,21 +373,21 @@ class ProjectTest extends TestCase
             ->assertHasNoFormErrors();
 
         $project = Project::query()->sole();
-        $this->assertSame('604-042-02GAM', $project->reference);
+        $this->assertSame('604-0042-02GAM', $project->reference);
         $other = Project::factory()->inCategory('604')->for($site)->create();
-        $this->assertSame('604-043-02GAM', $other->reference, 'Without a number: the next in line.');
+        $this->assertSame('604-0043-02GAM', $other->reference, 'Without a number: the next in line.');
 
         Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
             ->fillForm(['number' => 7])
             ->call('save')
             ->assertHasNoFormErrors();
-        $this->assertSame('604-007-02GAM', $project->fresh()->reference);
+        $this->assertSame('604-0007-02GAM', $project->fresh()->reference);
 
         Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
             ->fillForm(['number' => 43])
             ->call('save')
             ->assertHasFormErrors(['number' => 'unique']);
-        $this->assertSame('604-007-02GAM', $project->fresh()->reference);
+        $this->assertSame('604-0007-02GAM', $project->fresh()->reference);
     }
 
     #[Test]
@@ -404,5 +406,32 @@ class ProjectTest extends TestCase
         Livewire::test(ManageProjectCategories::class)
             ->callTableAction('edit', $yearly, ['next_number' => 12345])
             ->assertHasTableActionErrors(['next_number']);
+    }
+
+    #[Test]
+    public function existing_projects_get_four_digit_numbers_and_new_references(): void
+    {
+        $site = WorkSite::factory()->create(['cow_code' => '02GAM']);
+        $sequence = Project::factory()->inCategory('604')->for($site)->create();
+        $yearly = Project::factory()->inCategory('605')->for($site)->create();
+        $later = Project::factory()->inCategory('605')->for($site)->create();
+        $private = Project::factory()->inCategory('606')->create();
+        // As they were stored before: 3 digits, and the year with 3 digits.
+        DB::table('projects')->where('id', $sequence->id)->update(['number' => 42, 'reference' => '604-042-02GAM']);
+        DB::table('projects')->where('id', $yearly->id)->update(['number' => 26012, 'reference' => '605-26012-02GAM']);
+        DB::table('projects')->where('id', $later->id)->update(['number' => 26013, 'reference' => '605-26013-02GAM']);
+        DB::table('projects')->where('id', $private->id)->update(['number' => 7, 'reference' => '606-007']);
+        ProjectCategory::query()->where('code', '605')->update(['next_number' => 26100]);
+        $line = WasteEntryLine::factory()->create()->id;
+        DB::table('waste_entry_lines')->where('id', $line)->update(['project_id' => $yearly->id, 'project_reference' => '605-26012-02GAM']);
+
+        (require database_path('migrations/2026_11_27_100000_four_digit_project_numbers.php'))->up();
+
+        $this->assertSame([42, '604-0042-02GAM'], [$sequence->fresh()->number, $sequence->fresh()->reference]);
+        $this->assertSame([260012, '605-260012-02GAM'], [$yearly->fresh()->number, $yearly->fresh()->reference]);
+        $this->assertSame([260013, '605-260013-02GAM'], [$later->fresh()->number, $later->fresh()->reference]);
+        $this->assertSame('606-0007', $private->fresh()->reference);
+        $this->assertSame(260100, ProjectCategory::query()->where('code', '605')->value('next_number'));
+        $this->assertSame('605-260012-02GAM', DB::table('waste_entry_lines')->where('id', $line)->value('project_reference'));
     }
 }

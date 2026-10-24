@@ -39,7 +39,7 @@ class ProjectCategory extends Model
     }
 
     /**
-     * The next free project number: 001, 002, … or, for yearly numbering, 26001, 26002, … in 2026. With a
+     * The next free project number: 0001, 0002, … or, for yearly numbering, 260001, 260002, … in 2026. With a
      * follow-up number set on the category, numbering continues from there instead.
      */
     public function nextNumber(): int
@@ -57,8 +57,8 @@ class ProjectCategory extends Model
         }
 
         if ($this->numbering === ProjectNumbering::Yearly) {
-            $start = (int) now()->format('y') * 1000;
-            $last = $this->projects()->whereBetween('number', [$start, $start + 999])->max('number');
+            $start = (int) now()->format('y') * ProjectNumbering::PER_YEAR;
+            $last = $this->projects()->whereBetween('number', [$start, $start + ProjectNumbering::PER_YEAR - 1])->max('number');
 
             return $last ? (int) $last + 1 : $start + 1;
         }
@@ -67,7 +67,7 @@ class ProjectCategory extends Model
     }
 
     /**
-     * Yearly numbers belong to this year (26001–26999 in 2026); a starting number of another year is ignored.
+     * Yearly numbers belong to this year (260001–269999 in 2026); a starting number of another year is ignored.
      */
     public function numberFitsNumbering(int $number): bool
     {
@@ -75,9 +75,9 @@ class ProjectCategory extends Model
             return $number >= 1;
         }
 
-        $start = (int) now()->format('y') * 1000;
+        $start = (int) now()->format('y') * ProjectNumbering::PER_YEAR;
 
-        return $number > $start && $number <= $start + 999;
+        return $number > $start && $number < $start + ProjectNumbering::PER_YEAR;
     }
 
     /**

@@ -69,7 +69,7 @@ class BatteryDeliveryTest extends TestCase
 
         $delivery = BatteryDelivery::sole();
         $this->assertSame('55MUN - Munkzwalm', $delivery->location());
-        $this->assertSame('764', $delivery->orderNumber());
+        $this->assertSame('0764', $delivery->orderNumber());
         $this->assertSame(48, $delivery->pieces);
 
         // One line per project.

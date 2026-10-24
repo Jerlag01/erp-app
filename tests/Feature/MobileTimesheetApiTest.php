@@ -77,8 +77,8 @@ class MobileTimesheetApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.saved', false)
             ->assertJsonPath('data.rows.1.project_id', $project->id)
-            ->assertJsonPath('data.rows.1.imputation', '600-914')
-            ->assertJsonPath('data.planned_projects.0.imputation', '600-914');
+            ->assertJsonPath('data.rows.1.imputation', '600-0914')
+            ->assertJsonPath('data.planned_projects.0.imputation', '600-0914');
 
         $this->putJson('/api/v1/timesheet/days/2026-10-13', ['rows' => $this->rows($project->id), 'lunch_break' => true, 'remarks' => 'Regen'], $this->auth)
             ->assertOk()
@@ -89,7 +89,7 @@ class MobileTimesheetApiTest extends TestCase
             ->assertJsonPath('data.rows.2.description', 'Extra werf');
 
         $day = TimesheetDay::query()->sole();
-        $this->assertSame(['600-914', $project->refresh()->cow_code], [$day->rows[1]['imputation'], $day->rows[1]['description']]);
+        $this->assertSame(['600-0914', $project->refresh()->cow_code], [$day->rows[1]['imputation'], $day->rows[1]['description']]);
         $this->assertSame(['start', 'site', 'extra', 'end'], array_column($day->rows, 'kind'));
         $this->assertTrue($day->lunch_break);
         $this->assertSame('Regen', $day->remarks);
@@ -144,7 +144,7 @@ class MobileTimesheetApiTest extends TestCase
         $this->getJson('/api/v1/timesheet/projects?search=Laadpaal', $this->auth)
             ->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.imputation', '600-915');
+            ->assertJsonPath('data.0.imputation', '600-0915');
     }
 
     #[Test]

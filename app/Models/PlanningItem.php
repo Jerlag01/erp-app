@@ -157,7 +157,7 @@ class PlanningItem extends Model
     }
 
     /**
-     * "Mon 12/10/2026 07:30–16:00 · 604-001-02GAM", in the given language.
+     * "Mon 12/10/2026 07:30–16:00 · 604-0001-02GAM", in the given language.
      */
     public function summary(?string $locale = null): string
     {

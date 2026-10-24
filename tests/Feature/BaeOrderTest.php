@@ -73,11 +73,11 @@ class BaeOrderTest extends TestCase
         $order = $project->baeOrder;
 
         $this->assertNotNull($order);
-        $this->assertSame('604/923/0726/JL', $order->order_number);
+        $this->assertSame('604/0923/0726/JL', $order->order_number);
         $this->assertSame('2026-07-14', $order->order_date->toDateString());
         $this->assertSame('Belgacom CSL/PUR/GAE/4600001931', $order->contract);
         $this->assertSame('PRIO ASAP', $order->delivery_date);
-        $this->assertSame('Prox Batt BAE 604/923 - 83HVR', $order->ourReference());
+        $this->assertSame('Prox Batt BAE 604/0923 - 83HVR', $order->ourReference());
         $this->assertSame('83HVR : Route de Barvaux, 180 - 5590 HAVERSIN', $order->cowLine());
 
         // Other categories get none.
@@ -175,7 +175,7 @@ class BaeOrderTest extends TestCase
 
         $html = app(BaeOrderDocument::class)->html($order->refresh());
 
-        $this->assertStringContainsString('Prox Batt BAE 604/923 - 83HVR', $html);
+        $this->assertStringContainsString('Prox Batt BAE 604/0923 - 83HVR', $html);
         $this->assertStringContainsString('Intercell connector', $html);
         $this->assertStringContainsString('4364117 (90x175)', $html);
         $this->assertStringContainsString('10.858,96', $html);
@@ -254,7 +254,7 @@ class BaeOrderTest extends TestCase
             && $mail->hasReplyTo($user->email)
             && str_contains($mail->rendered['html'], 'Herr Schmidt')
             && str_contains($mail->rendered['html'], 'Graag levering voor eind november.')
-            && str_contains($mail->rendered['subject'], 'Prox Batt BAE 604/923 - 83HVR')
+            && str_contains($mail->rendered['subject'], 'Prox Batt BAE 604/0923 - 83HVR')
             && $mail->files[0]['mime'] === 'application/pdf');
 
         $order->refresh();

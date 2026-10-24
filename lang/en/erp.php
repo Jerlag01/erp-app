@@ -908,12 +908,12 @@ return [
             'sequence' => 'Number + COW code',
             'yearly' => 'Year + number + COW code',
             'private' => 'Private client',
-            'intervention' => 'Intervention (as sequence, e.g. 600-001-02GAM)',
+            'intervention' => 'Intervention (as sequence, e.g. 600-0001-02GAM)',
         ],
         'project_numbering_help' => [
-            'sequence' => '3-digit number followed by the COW code of the work site, e.g. 604-001-02GAM.',
-            'yearly' => '5 digits: the last 2 digits of the year and a 3-digit number, followed by the COW code, e.g. 605-26001-02GAM.',
-            'private' => 'Private / residential clients: 3-digit number with the client\'s details, no work site and no PO numbers, e.g. 606-001.',
+            'sequence' => '4-digit number followed by the COW code of the work site, e.g. 604-0001-02GAM.',
+            'yearly' => '6 digits: the last 2 digits of the year and a 4-digit number, followed by the COW code, e.g. 605-260001-02GAM.',
+            'private' => 'Private / residential clients: 4-digit number with the client\'s details, no work site and no PO numbers, e.g. 606-0001.',
             'intervention' => 'Numbered like a sequence with the COW code. With the interventions module on, these projects get a WO number, intervention categories, closing and review.',
         ],
         'project_status' => [

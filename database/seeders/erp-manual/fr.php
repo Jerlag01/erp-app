@@ -554,7 +554,7 @@ Les sites du client, chacun avec un **code COW** (p. ex. `02GAM`), une adresse, 
 
 ## Où est-ce utilisé ?
 
-Les projets reçoivent leur code COW du site (p. ex. `604-001-02GAM`). Les bornes, routeurs, interventions et demandes de GPW utilisent les mêmes sites et personnes de contact.
+Les projets reçoivent leur code COW du site (p. ex. `604-0001-02GAM`). Les bornes, routeurs, interventions et demandes de GPW utilisent les mêmes sites et personnes de contact.
 MD,
         ],
 
@@ -571,7 +571,7 @@ Tous les projets par **catégorie** (600, 604, 605, 606, 608, 610, …) avec leu
 
 ## Numéro de projet
 
-- Le numéro suit la catégorie : catégorie, numéro d'ordre et code COW, p. ex. `604-001-02GAM` ; numéroté par an comme `605-26001-02GAM` ; particulier sans code COW, p. ex. `606-001`.
+- Le numéro suit la catégorie : catégorie, numéro d'ordre et code COW, p. ex. `604-0001-02GAM` ; numéroté par an comme `605-260001-02GAM` ; particulier sans code COW, p. ex. `606-0001`.
 - Laissez le numéro vide pour le **numéro libre suivant**. Sur une catégorie, l'administrateur peut fixer le **numéro suivant** ; sur un projet existant, le numéro peut être corrigé.
 
 ## Statut

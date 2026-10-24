@@ -160,9 +160,9 @@ class ProjectCategoryResource extends Resource
     public static function exampleReference(ProjectCategory $category): string
     {
         return match ($category->numbering) {
-            ProjectNumbering::Yearly => "{$category->code}-".now()->format('y').'001-02GAM',
-            ProjectNumbering::Private => "{$category->code}-001",
-            default => "{$category->code}-001-02GAM",
+            ProjectNumbering::Yearly => "{$category->code}-".now()->format('y').'0001-02GAM',
+            ProjectNumbering::Private => "{$category->code}-0001",
+            default => "{$category->code}-0001-02GAM",
         };
     }
 

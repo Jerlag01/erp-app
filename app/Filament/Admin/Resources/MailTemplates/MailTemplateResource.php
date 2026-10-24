@@ -128,7 +128,7 @@ class MailTemplateResource extends Resource
             'due_date' => today()->addDays(30)->format('d/m/Y'), 'days_overdue' => '14', 'structured_reference' => '+++126/0000/04277+++',
             'iban' => 'BE68 5390 0754 7034', 'subject' => 'Elektriciteitswerken',
             'changed_by' => 'Jan Janssens', 'planning_url' => url('/planning'),
-            'items' => new HtmlString('- **'.today()->addDay()->format('d/m/Y').' 07:30–16:00** · 604-001-02GAM'),
+            'items' => new HtmlString('- **'.today()->addDay()->format('d/m/Y').' 07:30–16:00** · 604-0001-02GAM'),
             'company' => 'Proximus', 'portal_name' => __('erp.client_portal.brand'), 'portal_url' => url('/client/login'),
             'reset_link' => url('/client/login'), 'minutes' => '60',
             'contact_name' => 'Marc Janssens', 'project' => '610-012-02GAM', 'cow_code' => '02GAM', 'address' => 'Stationsstraat 1, 9000 Gent',
@@ -139,7 +139,7 @@ class MailTemplateResource extends Resource
             'file_name' => '610-012-02GAM - ASBUILT.zip',
             'author' => 'Jan Janssens', 'type' => 'idee', 'submitted_on' => today()->format('d/m/Y'), 'message' => 'Goed idee, we nemen het mee in het volgende overleg.', 'url' => url('/'),
             'overviews' => new HtmlString("- Projecten (600, 604, 605)\n- Batterijleveringen"),
-            'previous' => new HtmlString('- **'.today()->format('d/m/Y').' 07:30–12:00** · 604-001-02GAM'),
+            'previous' => new HtmlString('- **'.today()->format('d/m/Y').' 07:30–12:00** · 604-0001-02GAM'),
         ];
     }
 

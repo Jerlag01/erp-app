@@ -277,7 +277,7 @@ class ChargingTest extends TestCase
         $this->assertTrue($project->isThirdParty());
         $this->assertSame('Fluvius', $project->client_company);
         $this->assertNull($project->work_site_id);
-        $this->assertMatchesRegularExpression('/^608-\d{3}$/', $project->reference);
+        $this->assertMatchesRegularExpression('/^608-\d{4}$/', $project->reference);
 
         // A station opened from that project takes over the client and its address.
         Livewire::test(CreateChargingStation::class)

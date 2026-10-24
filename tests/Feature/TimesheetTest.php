@@ -155,7 +155,7 @@ class TimesheetTest extends TestCase
             ->assertSee('12/10/26')
             ->assertSee('16/10/26');
 
-        $this->assertSame('604-764', $page->get('data.rows')[array_keys($page->get('data.rows'))[1]]['imputation']);
+        $this->assertSame('604-0764', $page->get('data.rows')[array_keys($page->get('data.rows'))[1]]['imputation']);
         $this->assertSame('55MUN', $page->get('data.rows')[array_keys($page->get('data.rows'))[1]]['description']);
 
         $rows = $this->exampleRows();
@@ -163,7 +163,7 @@ class TimesheetTest extends TestCase
         $page->set('data.rows', $rows)->set('data.remarks', 'Sleutel opgehaald')->call('save')->assertHasNoErrors();
 
         $day = TimesheetDay::sole();
-        $this->assertSame('604-764', $day->rows[1]['imputation']);
+        $this->assertSame('604-0764', $day->rows[1]['imputation']);
         $this->assertSame('55MUN', $day->rows[1]['description']);
         $this->assertSame('2-CUR-747', TimesheetWeek::sole()->plate_number);
         $this->assertSame(8.0, app(Timesheets::class)->week($user, self::MONDAY)['days'][0]['total']);

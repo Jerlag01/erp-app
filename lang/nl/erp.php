@@ -908,12 +908,12 @@ return [
             'sequence' => 'Nummer + COW-code',
             'yearly' => 'Jaar + nummer + COW-code',
             'private' => 'Particuliere klant',
-            'intervention' => 'Interventie (zoals volgnummer, bv. 600-001-02GAM)',
+            'intervention' => 'Interventie (zoals volgnummer, bv. 600-0001-02GAM)',
         ],
         'project_numbering_help' => [
-            'sequence' => 'Nummer van 3 cijfers gevolgd door de COW-code van de werflocatie, bv. 604-001-02GAM.',
-            'yearly' => '5 cijfers: de laatste 2 cijfers van het jaar en een volgnummer van 3 cijfers, gevolgd door de COW-code, bv. 605-26001-02GAM.',
-            'private' => 'Particuliere / residentiële klanten: nummer van 3 cijfers met de gegevens van de klant, zonder werflocatie en zonder PO-nummers, bv. 606-001.',
+            'sequence' => 'Nummer van 4 cijfers gevolgd door de COW-code van de werflocatie, bv. 604-0001-02GAM.',
+            'yearly' => '6 cijfers: de laatste 2 cijfers van het jaar en een volgnummer van 4 cijfers, gevolgd door de COW-code, bv. 605-260001-02GAM.',
+            'private' => 'Particuliere / residentiële klanten: nummer van 4 cijfers met de gegevens van de klant, zonder werflocatie en zonder PO-nummers, bv. 606-0001.',
             'intervention' => 'Genummerd zoals een volgnummer met de COW-code. Met de interventiemodule aan krijgen deze projecten een WO-nummer, interventiecategorieën, afsluiten en review.',
         ],
         'project_status' => [

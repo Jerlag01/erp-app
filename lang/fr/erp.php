@@ -908,12 +908,12 @@ return [
             'sequence' => 'Numéro + code COW',
             'yearly' => 'Année + numéro + code COW',
             'private' => 'Client particulier',
-            'intervention' => 'Intervention (comme séquence, p. ex. 600-001-02GAM)',
+            'intervention' => 'Intervention (comme séquence, p. ex. 600-0001-02GAM)',
         ],
         'project_numbering_help' => [
-            'sequence' => 'Numéro à 3 chiffres suivi du code COW du site, p. ex. 604-001-02GAM.',
-            'yearly' => '5 chiffres : les 2 derniers chiffres de l\'année et un numéro à 3 chiffres, suivis du code COW, p. ex. 605-26001-02GAM.',
-            'private' => 'Clients particuliers / résidentiels : numéro à 3 chiffres avec les coordonnées du client, sans site ni numéros PO, p. ex. 606-001.',
+            'sequence' => 'Numéro à 4 chiffres suivi du code COW du site, p. ex. 604-0001-02GAM.',
+            'yearly' => '6 chiffres : les 2 derniers chiffres de l\'année et un numéro à 4 chiffres, suivis du code COW, p. ex. 605-260001-02GAM.',
+            'private' => 'Clients particuliers / résidentiels : numéro à 4 chiffres avec les coordonnées du client, sans site ni numéros PO, p. ex. 606-0001.',
             'intervention' => 'Numéroté comme une séquence avec le code COW. Avec le module interventions activé, ces projets ont un numéro WO, des catégories d\'intervention, une clôture et une revue.',
         ],
         'project_status' => [

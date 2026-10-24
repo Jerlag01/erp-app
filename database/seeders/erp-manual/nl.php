@@ -555,7 +555,7 @@ De werflocaties van de klant, elk met een **COW-code** (bv. `02GAM`), adres, geb
 
 ## Waar wordt het gebruikt?
 
-Projecten krijgen hun COW-code van de werflocatie (bv. `604-001-02GAM`). Laadpalen, routers, interventies en GPW-aanvragen werken met dezelfde werflocaties en contactpersonen.
+Projecten krijgen hun COW-code van de werflocatie (bv. `604-0001-02GAM`). Laadpalen, routers, interventies en GPW-aanvragen werken met dezelfde werflocaties en contactpersonen.
 MD,
         ],
 
@@ -572,7 +572,7 @@ Alle projecten per **categorie** (600, 604, 605, 606, 608, 610, …) met hun PO-
 
 ## Projectnummer
 
-- Het nummer volgt de categorie: categorie, volgnummer en COW-code, bv. `604-001-02GAM`; jaarlijks genummerd zoals `605-26001-02GAM`; particulier zonder COW-code, bv. `606-001`.
+- Het nummer volgt de categorie: categorie, volgnummer en COW-code, bv. `604-0001-02GAM`; jaarlijks genummerd zoals `605-260001-02GAM`; particulier zonder COW-code, bv. `606-0001`.
 - Laat het nummer leeg voor het **volgende vrije nummer**. Bij een categorie kan de beheerder het **volgende nummer** instellen; op een bestaand project kan je het nummer corrigeren.
 
 ## Status

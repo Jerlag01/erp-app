@@ -91,7 +91,7 @@ class InterventionTest extends TestCase
         $this->assertSame(['PHASE 1', 'PHASE 2'], $colibri->phaseList());
         $this->assertSame(['FRM220UB', 'FRM220 FIRE'], $colibri->tagList());
 
-        $this->assertSame('600-001-02GAM', $this->intervention()->reference);
+        $this->assertSame('600-0001-02GAM', $this->intervention()->reference);
     }
 
     #[Test]

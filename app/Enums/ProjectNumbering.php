@@ -7,10 +7,10 @@ use Filament\Support\Contracts\HasLabel;
 
 /**
  * How the projects of a category are numbered:
- * - Sequence: category, 3-digit number and the COW code of the work site, e.g. 604-001-02GAM.
- * - Yearly: category, 2-digit year + 3-digit number and the COW code, e.g. 605-26001-02GAM.
- * - Private: category and 3-digit number for private / residential clients, e.g. 606-001.
- * - Intervention: numbered like Sequence (600-001-02GAM); while the interventions module is on these
+ * - Sequence: category, 4-digit number and the COW code of the work site, e.g. 604-0001-02GAM.
+ * - Yearly: category, 2-digit year + 4-digit number and the COW code, e.g. 605-260001-02GAM.
+ * - Private: category and 4-digit number for private / residential clients, e.g. 606-0001.
+ * - Intervention: numbered like Sequence (600-0001-02GAM); while the interventions module is on these
  *   projects also get intervention categories, a closing report and a review (see Interventions).
  */
 enum ProjectNumbering: string implements HasDescription, HasLabel
@@ -53,8 +53,16 @@ enum ProjectNumbering: string implements HasDescription, HasLabel
         return $this === self::Intervention;
     }
 
+    /**
+     * Numbers within a year for yearly numbering: 260001–269999 in 2026.
+     */
+    public const PER_YEAR = 10_000;
+
+    /**
+     * 4 digits ("0042"), or for yearly numbering the year and 4 digits ("260042").
+     */
     public function formatNumber(int $number): string
     {
-        return str_pad((string) $number, $this === self::Yearly ? 5 : 3, '0', STR_PAD_LEFT);
+        return str_pad((string) $number, $this === self::Yearly ? 6 : 4, '0', STR_PAD_LEFT);
     }
 }

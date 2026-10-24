@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * A project in a category, e.g. 604-001-02GAM. Only administrators, its project leaders and the
+ * A project in a category, e.g. 604-0001-02GAM. Only administrators, its project leaders and the
  * teams assigned to it can see it (while the teams module is on).
  */
 #[Fillable([
@@ -357,7 +357,7 @@ class Project extends Model
     }
 
     /**
-     * 604-001-02GAM, 605-26001-02GAM or 606-001.
+     * 604-0001-02GAM, 605-260001-02GAM or 606-0001.
      */
     public function buildReference(): string
     {

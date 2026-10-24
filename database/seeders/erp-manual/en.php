@@ -554,7 +554,7 @@ The client's work sites, each with a **COW code** (e.g. `02GAM`), address, build
 
 ## Where is it used?
 
-Projects get their COW code from the work site (e.g. `604-001-02GAM`). Charging stations, routers, interventions and GPW requests use the same work sites and contact persons.
+Projects get their COW code from the work site (e.g. `604-0001-02GAM`). Charging stations, routers, interventions and GPW requests use the same work sites and contact persons.
 MD,
         ],
 
@@ -571,7 +571,7 @@ All projects per **category** (600, 604, 605, 606, 608, 610, …) with their PO 
 
 ## Project number
 
-- The number follows the category: category, sequence number and COW code, e.g. `604-001-02GAM`; numbered per year like `605-26001-02GAM`; private without COW code, e.g. `606-001`.
+- The number follows the category: category, sequence number and COW code, e.g. `604-0001-02GAM`; numbered per year like `605-260001-02GAM`; private without COW code, e.g. `606-0001`.
 - Leave the number empty for the **next free number**. On a category the administrator can set the **next number**; on an existing project the number can be corrected.
 
 ## Status
