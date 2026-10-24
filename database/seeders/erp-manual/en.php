@@ -799,6 +799,7 @@ In the client portal (permission **As-builts**) the client follows the status, d
 - **As-built → View**: the overview of all as-builts.
 - **As-built → Manage**: add and remove files, plan the inspection, upload the BTV report.
 - **As-built → Manage standard files** and **Reopen**.
+- **As-built → Delete**: remove an as-built for good (with its own files and ZIP), only on the **admin side**. This is an *extra permission*: even administrators only have it when it is ticked.
 - Whoever is on the project (project leader or assigned team) can always open and download that project's as-built.
 MD,
         ],

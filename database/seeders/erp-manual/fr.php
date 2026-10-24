@@ -799,6 +799,7 @@ Dans le portail client (droit **As-builts**), le client suit le statut, téléch
 - **As-built → Voir** : l'aperçu de tous les as-builts.
 - **As-built → Gérer** : ajouter et supprimer des fichiers, planifier le contrôle, téléverser le rapport BTV.
 - **As-built → Gérer les fichiers standard** et **Rouvrir**.
+- **As-built → Supprimer** : supprimer définitivement un as-built (avec ses propres fichiers et le ZIP), uniquement du **côté administrateur**. C'est un *droit supplémentaire* : même les administrateurs ne l'ont que s'il est coché.
 - Qui est sur le projet (chef de projet ou équipe affectée) peut toujours ouvrir et télécharger l'as-built de ce projet.
 MD,
         ],

@@ -800,6 +800,7 @@ In het klantenportaal (recht **As-builts**) volgt de klant de status op, downloa
 - **As-built → Bekijken**: het overzicht van alle as-builts.
 - **As-built → Beheren**: bestanden toevoegen en verwijderen, keuring plannen, BTV-verslag uploaden.
 - **As-built → Standaardbestanden beheren** en **Heropenen**.
+- **As-built → Verwijderen**: een as-built (met zijn eigen bestanden en ZIP) definitief verwijderen, enkel aan de **beheerderskant**. Dit is een *extra recht*: ook beheerders hebben het pas als het aangevinkt is.
 - Wie op het project staat (projectleider of toegewezen ploeg), kan de as-built van dat project altijd openen en downloaden.
 MD,
         ],
