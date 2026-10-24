@@ -30,6 +30,19 @@ This file lists what still has to happen outside the application code:
 
           php-fpm8.4 -i | grep -E 'upload_max_filesize|post_max_size'
 
+[TODO]  qpdf - needed to join PDFs in the regional battery export (waste registry)
+        "Export per year" puts the battery list first and the PDF of each entry
+        behind it in one file. Joining PDFs is done by the qpdf program. Without
+        it the export is a ZIP with the list and the PDFs as separate files.
+
+        Run as root:
+
+          apt install qpdf
+
+        Check:
+
+          qpdf --version
+
 [TODO]  Scheduler (cron) - needed for the daily price update
         The app runs "stock:update-prices" every day at 05:30, but only if
         Laravel's scheduler is called every minute. There is no cron entry yet

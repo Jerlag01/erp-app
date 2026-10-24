@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Enums\WasteRegion;
 use App\Models\WasteEntry;
+use App\Models\WasteEntryLine;
 use App\Support\PdfAccess;
+use App\Support\PdfMerger;
 use App\Support\WasteTotals;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
+use ZipArchive;
 
 /**
  * PDFs of the waste registry: the full list or a regional battery list (exactly the rows shown
@@ -86,5 +91,93 @@ class WastePdfController
         ])
             ->setPaper('a4', 'landscape')
             ->download('waste-totals-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    /**
+     * The PDF attached to a battery entry.
+     */
+    public function entryPdf(Request $request, WasteEntry $entry): Response
+    {
+        abort_unless(Gate::allows('viewAny', WasteEntry::class), 403);
+        abort_unless($entry->hasPdf(), 404);
+
+        return Storage::disk(WasteEntry::DISK)->response($entry->pdf_path, $entry->pdf_name ?: basename($entry->pdf_path), [
+            'Content-Type' => 'application/pdf',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
+     * The battery list of a region for one year: a row per line with its own weight (landscape),
+     * followed by the PDF of each entry in it (as uploaded, portrait). Without the qpdf program to
+     * join PDFs, a ZIP with the list and the PDFs is downloaded instead.
+     */
+    public function regional(Request $request, PdfMerger $merger): Response
+    {
+        abort_unless(Gate::allows('viewAny', WasteEntry::class) && PdfAccess::canGenerate($request->user(), 'waste'), 403);
+
+        $data = $request->validate([
+            'region' => ['required', Rule::enum(WasteRegion::class)],
+            'year' => ['required', 'integer', 'between:2000,2100'],
+        ]);
+        $region = WasteRegion::from($data['region']);
+        $year = (int) $data['year'];
+
+        $lines = WasteEntryLine::query()
+            ->join('waste_entries', 'waste_entries.id', '=', 'waste_entry_lines.waste_entry_id')
+            ->select('waste_entry_lines.*')
+            ->where('waste_entry_lines.region', $region->value)
+            ->whereYear('waste_entries.date', $year)
+            ->orderBy('waste_entries.date')
+            ->orderBy('waste_entry_lines.waste_entry_id')
+            ->orderBy('waste_entry_lines.sort')
+            ->with(['entry.category', 'entry.processor'])
+            ->get();
+
+        $title = __('erp.waste.batteries_region', ['region' => $region->getLabel()]).' '.$year;
+        $overview = Pdf::loadView('waste.list-pdf', [
+            'entries' => $lines->pluck('entry')->unique('id')->values(),
+            'rows' => $lines->map(fn (WasteEntryLine $line): array => ['entry' => $line->entry, 'line' => $line])->values(),
+            'title' => $title,
+            'region' => $region,
+            'period' => WasteTotals::periodLabel("{$year}-01-01", "{$year}-12-31"),
+        ])->setPaper('a4', 'landscape')->setOption('isFontSubsettingEnabled', true)->output();
+
+        $attachments = $lines->pluck('entry')->unique('id')->filter(fn (WasteEntry $entry): bool => $entry->hasPdf())->values();
+        $name = Str::slug($title);
+
+        if ($attachments->isEmpty()) {
+            return response($overview, 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="'.$name.'.pdf"']);
+        }
+
+        $disk = Storage::disk(WasteEntry::DISK);
+        $directory = sys_get_temp_dir().'/waste-export-'.Str::random(12);
+        mkdir($directory, 0700, true);
+
+        try {
+            file_put_contents("{$directory}/0-overview.pdf", $overview);
+
+            if ($merger->available()) {
+                $merger->merge(["{$directory}/0-overview.pdf", ...$attachments->map(fn (WasteEntry $entry): string => $disk->path($entry->pdf_path))->all()], "{$directory}/export.pdf");
+
+                return response((string) file_get_contents("{$directory}/export.pdf"), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="'.$name.'.pdf"']);
+            }
+
+            // Without qpdf: the list and the PDFs side by side in a ZIP, in the same order.
+            $zip = new ZipArchive;
+            $zip->open("{$directory}/export.zip", ZipArchive::CREATE);
+            $zip->addFile("{$directory}/0-overview.pdf", '0 - '.$name.'.pdf');
+
+            foreach ($attachments->values() as $index => $entry) {
+                $zip->addFile($disk->path($entry->pdf_path), ($index + 1).' - '.$entry->date->format('Y-m-d').' - '.Str::slug(pathinfo($entry->pdf_name ?: 'document', PATHINFO_FILENAME)).'.pdf');
+            }
+
+            $zip->close();
+
+            return response((string) file_get_contents("{$directory}/export.zip"), 200, ['Content-Type' => 'application/zip', 'Content-Disposition' => 'attachment; filename="'.$name.'.zip"']);
+        } finally {
+            array_map('unlink', glob("{$directory}/*") ?: []);
+            @rmdir($directory);
+        }
     }
 }

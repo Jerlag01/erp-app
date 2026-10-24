@@ -4,9 +4,9 @@ namespace App\Filament\Resources\WasteEntries\Pages;
 
 use App\Enums\WasteRegion;
 use App\Filament\Resources\WasteEntries\WasteEntryResource;
+use App\Filament\Resources\WasteEntryLines\WasteEntryLineResource;
 use App\Http\Controllers\WastePdfController;
 use App\Models\WasteEntry;
-use App\Models\WasteEntryLine;
 use App\Support\PdfAccess;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -41,6 +41,11 @@ class ManageWasteEntries extends ManageRecords
                         ->options(fn (): array => WasteEntryResource::yearOptions()),
                 ])
                 ->action(fn (array $data) => $this->js('window.open('.json_encode($this->exportUrl(filled($data['year'] ?? null) ? (int) $data['year'] : null)).', "_blank")')),
+            Action::make('regionalLists')
+                ->label(__('erp.waste.regional_lists'))
+                ->icon(Heroicon::OutlinedBattery50)
+                ->color('gray')
+                ->url(WasteEntryLineResource::getUrl()),
             CreateAction::make()
                 ->mutateDataUsing(fn (array $data): array => [...$data, 'created_by' => auth()->id()]),
         ];
@@ -66,29 +71,6 @@ class ManageWasteEntries extends ManageRecords
         }
 
         return WastePdfController::urlFor((string) $this->activeTab, $ids, ['from' => "{$year}-01-01", 'until' => "{$year}-12-31"]);
-    }
-
-    /**
-     * The full registry and the battery list of each region.
-     *
-     * @return array<string, Tab>
-     */
-    public function getTabs(): array
-    {
-        $tabs = [
-            'all' => Tab::make(__('erp.waste.registry'))->icon(Heroicon::OutlinedListBullet),
-        ];
-
-        $counts = WasteEntryLine::query()->selectRaw('region, count(distinct waste_entry_id) as total')->groupBy('region')->pluck('total', 'region');
-
-        foreach (WasteRegion::cases() as $region) {
-            $tabs[$region->value] = Tab::make($region->getLabel())
-                ->icon(Heroicon::OutlinedBattery50)
-                ->badge((int) ($counts[$region->value] ?? 0) ?: null)
-                ->modifyQueryUsing(fn (Builder $query) => self::regionQuery($query, $region));
-        }
-
-        return $tabs;
     }
 
     /**

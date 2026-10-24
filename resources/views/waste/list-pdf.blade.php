@@ -1,6 +1,7 @@
 {{--
     The waste registry, or the battery list of one region, as PDF. Battery entries show their lines
-    (destruction certificate, COW code, PO number); a regional list has a row per line of that region.
+    (destruction certificate, COW code, PO number, project); a regional list has a row per line of that
+    region with its own weight, also when several lines share an entry and reference.
 --}}
 @php
     $kg = fn ($value) => \App\Models\WasteEntry::formatKg($value);
@@ -27,28 +28,31 @@
             <thead>
                 <tr>
                     <th>{{ __('erp.fields.date') }}</th>
-                    <th class="num">{{ __('erp.waste.weight') }}</th>
-                    <th>{{ __('erp.waste.destruction_certificate_short') }}</th>
+                    <th>{{ __('erp.waste.processor_reference') }}</th>
+                    <th>{{ __('erp.waste.project_reference') }}</th>
                     <th>{{ __('erp.fields.cow_code') }}</th>
+                    <th>{{ __('erp.waste.destruction_certificate_short') }}</th>
                     <th>{{ __('erp.waste.po_number') }}</th>
+                    <th class="num">{{ __('erp.waste.weight') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($rows as $row)
                     <tr>
                         <td>{{ $row['entry']->date->format('d/m/Y') }}</td>
-                        <td class="num mono">{{ $kg($row['line']->weight_kg) }}</td>
-                        <td class="mono">{{ $row['line']->destruction_certificate }}</td>
+                        <td class="mono">{{ $row['entry']->processor_reference }}</td>
+                        <td class="mono">{{ $row['line']->project_reference }}</td>
                         <td class="mono">{{ $row['line']->cow_code }}</td>
+                        <td class="mono">{{ $row['line']->destruction_certificate }}</td>
                         <td class="mono">{{ $row['line']->po_number }}</td>
+                        <td class="num mono">{{ $kg($row['line']->weight_kg) }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="muted">{{ __('erp.waste.no_entries') }}</td></tr>
+                    <tr><td colspan="7" class="muted">{{ __('erp.waste.no_entries') }}</td></tr>
                 @endforelse
                 <tr class="total">
-                    <td>{{ __('erp.waste.total') }}</td>
+                    <td colspan="6">{{ __('erp.waste.total') }}</td>
                     <td class="num mono">{{ $kg($rows->sum(fn ($row) => (float) $row['line']->weight_kg)) }}</td>
-                    <td colspan="3"></td>
                 </tr>
             </tbody>
         </table>
@@ -66,6 +70,7 @@
                     <th>{{ __('erp.waste.destruction_certificate_short') }}</th>
                     <th>{{ __('erp.fields.cow_code') }}</th>
                     <th>{{ __('erp.waste.po_number') }}</th>
+                    <th>{{ __('erp.waste.project_reference') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -82,14 +87,15 @@
                         <td class="mono">{!! $lines($entry->lines->pluck('destruction_certificate')->filter()->all()) !!}</td>
                         <td class="mono">{!! $lines($entry->lines->map(fn ($line) => $line->cow_code ?? '—')->all()) !!}</td>
                         <td class="mono">{!! $lines($entry->lines->map(fn ($line) => $line->po_number ?? '—')->all()) !!}</td>
+                        <td class="mono">{!! $lines($entry->lines->map(fn ($line) => $line->project_reference ?? '—')->all()) !!}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="10" class="muted">{{ __('erp.waste.no_entries') }}</td></tr>
+                    <tr><td colspan="11" class="muted">{{ __('erp.waste.no_entries') }}</td></tr>
                 @endforelse
                 <tr class="total">
                     <td colspan="3">{{ __('erp.waste.total') }}</td>
                     <td class="num mono">{{ $kg($entries->sum('weight_kg')) }}</td>
-                    <td colspan="6"></td>
+                    <td colspan="7"></td>
                 </tr>
             </tbody>
         </table>

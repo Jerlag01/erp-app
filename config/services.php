@@ -2,6 +2,11 @@
 
 return [
 
+    // Merging PDF files (waste registry exports); a server package: apt install qpdf.
+    'qpdf' => [
+        'binary' => env('QPDF_BINARY', '/usr/bin/qpdf'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

@@ -7,7 +7,9 @@ use App\Filament\Pages\WasteTotalsOverview;
 use App\Filament\Resources\WasteCategories\Pages\ManageWasteCategories;
 use App\Filament\Resources\WasteEntries\Pages\ManageWasteEntries;
 use App\Filament\Resources\WasteEntries\WasteEntryResource;
+use App\Filament\Resources\WasteEntryLines\Pages\ListWasteEntryLines;
 use App\Http\Controllers\WastePdfController;
+use App\Models\Project;
 use App\Models\User;
 use App\Models\WasteCategory;
 use App\Models\WasteEntry;
@@ -21,8 +23,10 @@ use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -157,19 +161,21 @@ class WasteTest extends TestCase
         $entry->lines()->where('destruction_certificate', '103')->first()->update(['weight_kg' => 20]);
         $this->assertSame('220.25', $entry->fresh()->weight_kg);
 
-        // Each regional list holds only its own lines and their weight.
+        // The full registry shows the entry with all its lines.
         Livewire::test(ManageWasteEntries::class)
-            ->set('activeTab', 'wallonia')
-            ->assertCanSeeTableRecords([$entry])
-            ->assertTableColumnStateSet('weight_kg', 80.0, $entry)
-            ->assertTableColumnStateSet('certificates', ['102'], $entry)
-            ->assertTableColumnStateSet('cow_codes', ['04LIE'], $entry)
-            ->set('activeTab', 'flanders')
-            ->assertTableColumnStateSet('weight_kg', 140.25, $entry)
-            ->assertTableColumnStateSet('certificates', ['101', '103'], $entry)
-            ->set('activeTab', 'all')
             ->assertTableColumnStateSet('weight_kg', 220.25, $entry)
             ->assertTableColumnStateSet('po_numbers', ['4500000001', '4500000002'], $entry);
+
+        // Each regional list has a row per line of that region, with its own weight.
+        $lines = $entry->lines()->get()->keyBy('destruction_certificate');
+        Livewire::test(ListWasteEntryLines::class)
+            ->assertCanSeeTableRecords([$lines['101'], $lines['103']])
+            ->assertCanNotSeeTableRecords([$lines['102']])
+            ->assertTableColumnStateSet('weight_kg', '120.25', $lines['101'])
+            ->assertTableColumnStateSet('weight_kg', '20.00', $lines['103'])
+            ->set('activeTab', 'wallonia')
+            ->assertCanSeeTableRecords([$lines['102']])
+            ->assertCanNotSeeTableRecords([$lines['101'], $lines['103']]);
 
         // The regional PDF lists the lines of that region.
         $locales = [];
@@ -181,23 +187,71 @@ class WasteTest extends TestCase
     }
 
     #[Test]
-    public function each_region_has_its_own_battery_list(): void
+    public function battery_lines_carry_a_project_reference_and_the_entry_a_pdf(): void
     {
-        $flanders = WasteEntry::factory()->batteries(WasteRegion::Flanders)->create();
-        $wallonia = WasteEntry::factory()->batteries(WasteRegion::Wallonia)->create();
-        $copper = WasteEntry::factory()->create();
+        Repeater::fake();
+        Storage::fake('local');
         $this->registrar();
+        $project = Project::factory()->inCategory('604')->create();
 
         Livewire::test(ManageWasteEntries::class)
-            ->assertCanSeeTableRecords([$flanders, $wallonia, $copper])
-            ->set('activeTab', 'flanders')
-            ->assertCanSeeTableRecords([$flanders])
-            ->assertCanNotSeeTableRecords([$wallonia, $copper])
-            ->assertTableColumnVisible('certificates')
-            ->assertTableColumnHidden('processor.name')
-            ->set('activeTab', 'wallonia')
-            ->assertCanSeeTableRecords([$wallonia])
-            ->assertCanNotSeeTableRecords([$flanders, $copper]);
+            ->callAction('create', [
+                'date' => '2026-03-02',
+                'waste_category_id' => $this->category('16 06 01*')->id,
+                'waste_processor_id' => WasteProcessor::factory()->create()->id,
+                'processor_reference' => 'VB-77',
+                'pdf_path' => UploadedFile::fake()->create('vrachtbrief.pdf', 40, 'application/pdf'),
+                'lines' => [
+                    ['region' => 'flanders', 'destruction_certificate' => '201', 'project_reference' => $project->reference, 'weight_kg' => 50],
+                    ['region' => 'flanders', 'destruction_certificate' => '202', 'project_reference' => 'EXTERN-2026-14', 'weight_kg' => 30],
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        $entry = WasteEntry::sole();
+        $lines = $entry->lines()->get();
+        $this->assertSame($project->id, $lines[0]->project_id, 'A reference of the platform is linked to its project.');
+        $this->assertNull($lines[1]->project_id);
+        $this->assertSame('EXTERN-2026-14', $lines[1]->project_reference);
+        $this->assertSame('vrachtbrief.pdf', $entry->pdf_name);
+        $this->get(route('waste.entry-pdf', $entry))->assertOk()->assertHeader('content-type', 'application/pdf');
+
+        // Two lines under the same reference: two rows in the regional list, each with its own weight.
+        Livewire::test(ListWasteEntryLines::class)
+            ->assertCanSeeTableRecords($lines)
+            ->assertSee('VB-77')
+            ->assertSee('EXTERN-2026-14')
+            ->assertTableColumnStateSet('weight_kg', '50.00', $lines[0])
+            ->assertTableColumnStateSet('weight_kg', '30.00', $lines[1]);
+    }
+
+    #[Test]
+    public function the_regional_list_is_exported_per_year_with_the_pdfs_behind_it(): void
+    {
+        Storage::fake('local');
+        $this->registrar();
+        $withPdf = WasteEntry::factory()->batteries(WasteRegion::Brussels)->create(['date' => '2026-02-01', 'weight_kg' => 10]);
+        Storage::disk('local')->put('waste/2026/a.pdf', '%PDF-1.4 test');
+        $withPdf->update(['pdf_path' => 'waste/2026/a.pdf', 'pdf_name' => 'a.pdf']);
+        $otherYear = WasteEntry::factory()->batteries(WasteRegion::Brussels)->create(['date' => '2025-06-01', 'weight_kg' => 5]);
+
+        $rows = [];
+        Event::listen('composing: waste.list-pdf', function ($view) use (&$rows): void {
+            $rows[] = $view->getData()['rows']->map(fn ($row) => $row['entry']->id)->all();
+        });
+
+        // Without qpdf on the server: the list and the PDFs in a ZIP.
+        config(['services.qpdf.binary' => '/nonexistent/qpdf']);
+        $response = $this->get(route('waste.regional-pdf', ['region' => 'brussels', 'year' => 2026]))->assertOk();
+        $this->assertSame('application/zip', $response->headers->get('Content-Type'));
+        $this->assertSame([[$withPdf->id]], $rows, 'Only the lines of 2026.');
+
+        // A year without PDFs: just the list.
+        $response = $this->get(route('waste.regional-pdf', ['region' => 'brussels', 'year' => 2025]))->assertOk();
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+        $this->assertSame([$otherYear->id], $rows[1]);
+
+        Livewire::test(ListWasteEntryLines::class)->set('activeTab', 'brussels')->callAction('export', ['year' => 2026])->assertHasNoActionErrors();
     }
 
     #[Test]
@@ -217,7 +271,7 @@ class WasteTest extends TestCase
         $this->actingAs(User::factory()->withPermissions(['waste' => ['view']])->inTeam()->create())->get($url)->assertForbidden();
         $this->actingAs($user);
 
-        Livewire::test(ManageWasteEntries::class)->set('activeTab', 'brussels')->callAction('exportPdf')->assertHasNoActionErrors();
+        Livewire::test(ManageWasteEntries::class)->callAction('exportPdf')->assertHasNoActionErrors();
 
         $totals = $this->get(route('waste.totals-pdf', ['from' => '2026-01-01', 'until' => '2026-12-31']))->assertOk();
         $this->assertStringStartsWith('%PDF', $totals->getContent());

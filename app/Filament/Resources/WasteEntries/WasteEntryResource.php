@@ -5,6 +5,7 @@ namespace App\Filament\Resources\WasteEntries;
 use App\Enums\NavigationGroup;
 use App\Enums\WasteRegion;
 use App\Filament\Resources\WasteEntries\Pages\ManageWasteEntries;
+use App\Models\Project;
 use App\Models\WasteCategory;
 use App\Models\WasteEntry;
 use App\Models\WasteEntryLine;
@@ -15,6 +16,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -27,6 +29,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\TextColumn;
@@ -168,6 +171,13 @@ class WasteEntryResource extends Resource
                                     ->label(__('erp.waste.po_number'))
                                     ->maxLength(30)
                                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+                                // A project of the platform (suggested while typing) or any other reference.
+                                TextInput::make('project_reference')
+                                    ->label(__('erp.waste.project_reference'))
+                                    ->helperText(__('erp.waste.project_reference_help'))
+                                    ->datalist(fn (): array => self::projectReferences())
+                                    ->maxLength(60)
+                                    ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
                             ])
                             ->columns(3)
                             ->defaultItems(1)
@@ -177,6 +187,17 @@ class WasteEntryResource extends Resource
                             ->itemLabel(fn (array $state): ?string => filled($state['destruction_certificate'] ?? null) ? __('erp.waste.certificate_label', ['number' => $state['destruction_certificate']]) : null)
                             ->addActionLabel(__('erp.waste.add_line'))
                             ->columnSpanFull(),
+                        FileUpload::make('pdf_path')
+                            ->label(__('erp.waste.pdf'))
+                            ->helperText(__('erp.waste.pdf_help'))
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk(WasteEntry::DISK)
+                            ->directory(fn (): string => 'waste/'.now()->format('Y'))
+                            ->visibility('private')
+                            ->storeFileNamesIn('pdf_name')
+                            ->maxSize(51200)
+                            ->downloadable()
+                            ->columnSpanFull(),
                     ]),
                 Textarea::make('notes')
                     ->label(__('erp.fields.notes'))
@@ -184,6 +205,16 @@ class WasteEntryResource extends Resource
                     ->maxLength(2000)
                     ->columnSpanFull(),
             ]);
+    }
+
+    /**
+     * Project references of the platform, newest first, suggested while typing.
+     *
+     * @return list<string>
+     */
+    public static function projectReferences(): array
+    {
+        return Project::query()->latest('id')->limit(1000)->pluck('reference')->filter()->values()->all();
     }
 
     /**
@@ -283,6 +314,21 @@ class WasteEntryResource extends Resource
                     ->fontFamily(FontFamily::Mono)
                     ->searchable(query: fn (Builder $query, string $search) => $query->orWhereHas('lines', fn (Builder $query) => $query->where('po_number', 'like', '%'.addcslashes($search, '%_\\').'%')))
                     ->placeholder('—'),
+                TextColumn::make('projects')
+                    ->label(__('erp.waste.project_reference'))
+                    ->state(fn (WasteEntry $record): array => $record->lineValues('project_reference'))
+                    ->listWithLineBreaks()
+                    ->fontFamily(FontFamily::Mono)
+                    ->searchable(query: fn (Builder $query, string $search) => $query->orWhereHas('lines', fn (Builder $query) => $query->where('project_reference', 'like', '%'.addcslashes($search, '%_\\').'%')))
+                    ->placeholder('—')
+                    ->toggleable(),
+                IconColumn::make('pdf_path')
+                    ->label(__('erp.waste.pdf_short'))
+                    ->state(fn (WasteEntry $record): bool => filled($record->pdf_path))
+                    ->boolean()
+                    ->trueIcon(Heroicon::OutlinedDocumentText)
+                    ->falseIcon(Heroicon::OutlinedMinus)
+                    ->url(fn (WasteEntry $record): ?string => filled($record->pdf_path) ? route('waste.entry-pdf', $record) : null, shouldOpenInNewTab: true),
             ])
             ->filters([
                 SelectFilter::make('year')
