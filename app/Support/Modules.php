@@ -64,7 +64,9 @@ class Modules
 
     public const BOARD_DELIVERIES = 'board_deliveries';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES];
+    public const BATTERY_ROOMS = 'battery_rooms';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES, self::BATTERY_ROOMS];
 
     public function __construct(protected Settings $settings) {}
 
@@ -209,6 +211,14 @@ class Modules
     public function boardDeliveries(): bool
     {
         return $this->enabled(self::BOARD_DELIVERIES) && $this->projects();
+    }
+
+    /**
+     * Battery rooms (609) brought up to standard after a battery replacement in Flanders or Brussels.
+     */
+    public function batteryRooms(): bool
+    {
+        return $this->enabled(self::BATTERY_ROOMS) && $this->projects();
     }
 
     public function announcements(): bool

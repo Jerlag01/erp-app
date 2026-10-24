@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Actions\Batteries\CreateBaeOrder;
+use App\Actions\Batteries\CreateBatteryRoomDossier;
 use App\Actions\Projects\CloseProject;
-use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Enums\SiteLocationType;
@@ -215,7 +215,7 @@ class Project extends Model
     }
 
     /**
-     * The project this one was copied from, or the 604 project a 605 follows up.
+     * The project this one was copied from, or the 604 project a 609 follows up.
      *
      * @return BelongsTo<Project, $this>
      */
@@ -268,6 +268,14 @@ class Project extends Model
     public function batteryDossier(): HasOne
     {
         return $this->hasOne(BatteryDossier::class)->latestOfMany();
+    }
+
+    /**
+     * @return HasOne<BatteryRoomDossier, $this>
+     */
+    public function batteryRoom(): HasOne
+    {
+        return $this->hasOne(BatteryRoomDossier::class);
     }
 
     /**
@@ -460,20 +468,20 @@ class Project extends Model
 
         static::created(function (self $project): void {
             ProjectProgress::sync($project);
-            app(CreateFollowUpProject::class)->handle($project);
 
             // Executed: the as-built of the project starts (not for the excluded categories).
             if ($project->status === ProjectStatus::Executed) {
                 app(Asbuilts::class)->createFor($project);
             }
 
-            // A 604 project starts with its BAE order (Excel calc.xlsx).
+            // A 604 project starts with its BAE order (Excel calc.xlsx), a 609 with its battery room.
             $by = Auth::guard('web')->user();
             app(CreateBaeOrder::class)->handle($project, $by instanceof User ? $by : null);
+            app(CreateBatteryRoomDossier::class)->handle($project, $by instanceof User ? $by : null);
         });
 
-        // Status changes: closing (and "invoiced" on 610–650 projects) archives the project; an executed
-        // 604 in Flanders or Brussels gets its 605.
+        // Status changes: closing (and "invoiced" on 610–650 projects) archives the project; a closed 604
+        // in Flanders or Brussels gets its 609 (see CloseProject).
         static::updated(function (self $project): void {
             if (! $project->wasChanged('status')) {
                 return;
@@ -486,7 +494,6 @@ class Project extends Model
             }
 
             ProjectProgress::sync($project);
-            app(CreateFollowUpProject::class)->handle($project);
 
             if ($project->status === ProjectStatus::Executed) {
                 app(Asbuilts::class)->createFor($project);

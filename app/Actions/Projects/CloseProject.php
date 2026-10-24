@@ -3,8 +3,10 @@
 namespace App\Actions\Projects;
 
 use App\Actions\Batteries\BatteryDocument;
+use App\Actions\Batteries\BatteryRoomDocument;
 use App\Enums\ProjectStatus;
 use App\Models\BatteryDossier;
+use App\Models\BatteryRoomDossier;
 use App\Models\EnersysDossier;
 use App\Models\InterventionReport;
 use App\Models\Project;
@@ -39,6 +41,9 @@ class CloseProject
             'archived_at' => now(),
             'archive_path' => $path,
         ])->saveQuietly();
+
+        // A closed 604 in Flanders or Brussels gets its 609 (battery room).
+        app(CreateFollowUpProject::class)->handle($project);
     }
 
     /**
@@ -75,6 +80,27 @@ class CloseProject
                 $add('batterijen/'.BatteryDocument::filename($dossier, $document), rescue(fn (): string => $this->batteryDocuments->render($dossier, $document), '', false));
             }
         });
+
+        // The battery room (609): its documents and uploads.
+        if ($room = BatteryRoomDossier::query()->where('project_id', $project->id)->first()) {
+            foreach (array_keys(BatteryRoomDocument::DOCUMENTS) as $document) {
+                $add('batterijlokaal/'.BatteryRoomDocument::filename($room, $document), rescue(fn (): string => app(BatteryRoomDocument::class)->render($room, $document), '', false));
+            }
+
+            $disk = Storage::disk(BatteryRoomDossier::DISK);
+
+            foreach (['ventilation', 'btv'] as $kind) {
+                if (filled($path = $room->filePath($kind)) && $disk->exists($path)) {
+                    $add('batterijlokaal/'.$room->fileName($kind), (string) $disk->get($path));
+                }
+            }
+
+            foreach ((array) $room->photos as $photo) {
+                if ($disk->exists($photo)) {
+                    $add('batterijlokaal/fotos/'.basename($photo), (string) $disk->get($photo));
+                }
+            }
+        }
 
         if ($zip->numFiles === 0) {
             $zip->addFromString('LEESMIJ.txt', __('erp.projects.archive.empty', ['reference' => $project->reference]));

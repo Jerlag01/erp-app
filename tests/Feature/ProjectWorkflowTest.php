@@ -165,25 +165,28 @@ class ProjectWorkflowTest extends TestCase
     }
 
     #[Test]
-    public function an_executed_604_in_flanders_gets_a_605(): void
+    public function a_closed_604_in_flanders_gets_a_609_battery_room(): void
     {
         $flanders = WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_area_id' => WorkSiteArea::query()->create(['name' => '1-VLA'])->id]);
         $wallonia = WorkSite::factory()->create(['cow_code' => '51NAM', 'work_site_area_id' => WorkSiteArea::query()->create(['name' => '4-WAL'])->id]);
 
         $project = $this->project('604', ['work_site_id' => $flanders->id]);
         $project->poNumbers()->create(['number' => '4500099999']);
+
+        // Executed is not enough any more: only closing makes the follow-up.
         $project->update(['status' => ProjectStatus::Executed]);
+        $this->assertSame(0, Project::query()->where('source_project_id', $project->id)->count());
+
+        $project->update(['status' => ProjectStatus::Closed]);
 
         $followUp = Project::query()->where('source_project_id', $project->id)->sole();
-        $this->assertSame(['605', '02GAM', 0], [$followUp->category->code, $followUp->cow_code, $followUp->poNumbers()->count()]);
+        $this->assertSame(['609', '02GAM', 0, ProjectStatus::WaitingForPo], [$followUp->category->code, $followUp->cow_code, $followUp->poNumbers()->count(), $followUp->status]);
+        $this->assertMatchesRegularExpression('/^609-\d{4}-02GAM$/', $followUp->reference);
         $this->assertTrue($followUp->teams()->whereKey($this->team->id)->exists());
-
-        // Only once, also when the status changes again.
-        $project->update(['status' => ProjectStatus::InvoicingToDo]);
-        $this->assertSame(1, Project::query()->where('source_project_id', $project->id)->count());
+        $this->assertNotNull($followUp->batteryRoom);
 
         $walloon = $this->project('604', ['work_site_id' => $wallonia->id]);
-        $walloon->update(['status' => ProjectStatus::Executed]);
+        $walloon->update(['status' => ProjectStatus::Closed]);
         $this->assertSame(0, Project::query()->where('source_project_id', $walloon->id)->count());
     }
 

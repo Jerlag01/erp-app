@@ -27,6 +27,7 @@ namespace App\Support;
  * manages the battery suppliers. The Enersys delivery follow-up uses the "enersys" permissions.
  * "board_deliveries" covers the follow-up of electrical boards per supplier (610–650 projects the user
  * can see); "board_deliveries.manage_suppliers" manages those suppliers.
+ * "battery_rooms" covers the battery room dossiers of the 609 projects the user can see.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
  * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
@@ -91,6 +92,7 @@ class Permissions
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers']],
+        'battery_rooms' => ['module' => Modules::BATTERY_ROOMS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'download_pdf']],
     ];
 
     /**

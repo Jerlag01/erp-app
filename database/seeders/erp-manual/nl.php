@@ -732,6 +732,38 @@ Dezelfde soort rechten als bij de batterijdossiers, apart in te stellen onder **
 MD,
         ],
 
+        'battery_rooms' => [
+            'title' => 'Batterijlokalen (609)',
+            'body' => <<<'MD'
+## Waarvoor?
+
+Na een batterijvervanging (604) in **Vlaanderen of Brussel** wordt het batterijlokaal in orde gebracht. Daarvoor dient categorie **609**, met per project een dossier zoals de Excel *Leveringsnota*: de leveringsnota, extra info van de klant, de checklist en foto's, de ventilatieberekening en het BTV-keuringsverslag.
+
+## Hoe ontstaat een 609?
+
+- Wordt een **604-project gesloten** op een COW-code in de area **1-VLA, 2-VLA of 3-BRU**, dan maakt het platform automatisch een 609-project op dezelfde COW-code, met dezelfde ploeg en projectleider. Het lokaalnummer komt uit het batterijdossier van de 604.
+- Het **PO-nummer** wordt niet overgenomen: het project staat op **Wacht op PO**. Zodra Proximus het PO geeft, voeg je het toe op het project met **PO-nummer toevoegen**; de leveringsnota toont het dan als *Ref. klant*.
+- Een 609 kan ook met de hand gemaakt worden; het dossier komt er dan meteen bij.
+
+## Waar?
+
+**Batterijlokalen → Batterijlokalen**, of de knop **Batterijlokaal** op het 609-project.
+
+## Zo werkt het
+
+- **Leveringsnota**: lokaalnummer, datum, de hoeveelheden per post (verlichting, verluchting, ESD-matten, pictogrammen, zekeringkoffer, kabelladder, noodlicht, epoxyvloer, temperatuurvoeler, luchtaanzuigrooster), opmerkingen en de naam bij de handtekening. De PDF staat in staand formaat op het briefpapier, zoals de leveringsnota van de 604.
+- **Extra info**: een vrij veld voor wat de klant extra meegeeft.
+- **Checklist**: overal dezelfde lijst; enkel de COW-code en het lokaalnummer verschillen. Per punt vink je **OK** aan (leeg = NOK) en vul je de **te nemen actie** in zoals de klant ze doorgeeft. De PDF staat liggend, zonder briefpapier.
+- **Foto's & documenten**: meerdere foto's, de ventilatieberekening en het BTV-keuringsverslag (PDF).
+
+De documenten worden afgedrukt in de taal van de regio (Vlaanderen Nederlands, Brussel volgens Instellingen → Batterijen), tenzij je een taal kiest. Bij het sluiten van het 609-project komen de documenten en bestanden mee in het archief.
+
+## Rechten
+
+**Batterijlokalen (609)**: bekijken, aanmaken, bewerken, verwijderen, PDF genereren en PDF downloaden (voor het BTV-verslag). De module zet je aan of uit bij **Instellingen → Modules**.
+MD,
+        ],
+
         'board_deliveries' => [
             'title' => 'Opvolging elektrische borden (610–650)',
             'body' => <<<'MD'

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\Pages;
 
 use App\Actions\Batteries\CreateBaeOrder;
+use App\Actions\Batteries\CreateBatteryRoomDossier;
 use App\Actions\Gpw\RequestGpw;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CopyProject;
@@ -10,12 +11,14 @@ use App\Enums\ProjectStatus;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Filament\Resources\BaeOrders\BaeOrderResource;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
+use App\Filament\Resources\BatteryRooms\BatteryRoomResource;
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\Projects\Schemas\ProjectForm;
 use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
+use App\Models\BatteryRoomDossier;
 use App\Models\EnersysDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
@@ -88,7 +91,8 @@ class ViewProject extends ViewRecord
      * Adding a PO number at any moment, from the project page:
      * - 600 projects: administrators and "projects.intervention_po";
      * - 610–650 projects once the step "PO received" is ticked: those who may edit the project, and
-     *   "projects.intervention_po".
+     *   "projects.intervention_po";
+     * - 609 projects (battery rooms) at any moment: those who may edit the project, and "projects.intervention_po".
      * Only on a project they see that is not archived (administrators also on archived ones).
      */
     protected function mayAddPoNumber(Project $project): bool
@@ -101,6 +105,11 @@ class ViewProject extends ViewRecord
 
         if ($project->category?->numbering->isIntervention()) {
             return ProjectForm::mayAddInterventionPo();
+        }
+
+        // Battery rooms: Proximus gives the PO after the project was made (see CreateFollowUpProject).
+        if ($project->category?->code === BatteryRoomDossier::CATEGORY) {
+            return Gate::allows('update', $project) || ProjectForm::mayAddInterventionPo();
         }
 
         return ProjectProgress::appliesTo($project)
@@ -196,6 +205,19 @@ class ViewProject extends ViewRecord
                 ->action(function (Project $record): void {
                     $order = $record->baeOrder ?? app(CreateBaeOrder::class)->handle($record, auth()->user());
                     $this->redirect(BaeOrderResource::getUrl('edit', ['record' => $order]));
+                }),
+            // Every 609 project has its battery room (made with the project; older projects get it here).
+            Action::make('batteryRoom')
+                ->label(__('battery_rooms.button'))
+                ->icon(Heroicon::OutlinedHomeModern)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => app(CreateBatteryRoomDossier::class)->appliesTo($record)
+                    && ($record->batteryRoom ? Gate::allows('view', $record->batteryRoom) : Gate::allows('create', BatteryRoomDossier::class)))
+                ->authorize(fn (Project $record): bool => app(CreateBatteryRoomDossier::class)->appliesTo($record) && Gate::allows('view', $record)
+                    && ($record->batteryRoom ? Gate::allows('view', $record->batteryRoom) : Gate::allows('create', BatteryRoomDossier::class)))
+                ->action(function (Project $record): void {
+                    $dossier = $record->batteryRoom ?? app(CreateBatteryRoomDossier::class)->handle($record, auth()->user());
+                    $this->redirect(BatteryRoomResource::getUrl('edit', ['record' => $dossier]));
                 }),
             Action::make('enersysDossier')
                 ->label(__('erp.enersys.dossier_button'))

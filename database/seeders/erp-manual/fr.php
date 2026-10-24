@@ -731,6 +731,38 @@ Le même type de droits que pour les dossiers batteries, à régler séparément
 MD,
         ],
 
+        'battery_rooms' => [
+            'title' => 'Locaux batteries (609)',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Après un remplacement de batteries (604) en **Flandre ou à Bruxelles**, le local batteries est mis en ordre. La catégorie **609** sert à cela, avec par projet un dossier comme l'Excel *Leveringsnota* : la note de livraison, les infos supplémentaires du client, la checklist et les photos, le calcul de ventilation et le rapport de contrôle BTV.
+
+## Comment naît un 609 ?
+
+- Quand un **projet 604 est clôturé** sur un code COW de l'area **1-VLA, 2-VLA ou 3-BRU**, la plateforme crée automatiquement un projet 609 sur le même code COW, avec la même équipe et le même chef de projet. Le numéro de local vient du dossier batteries du 604.
+- Le **numéro de PO** n'est pas repris : le projet est en **Attente du PO**. Dès que Proximus donne le PO, ajoutez-le sur le projet avec **Ajouter un numéro de PO** ; la note de livraison l'affiche alors comme *Réf. client*.
+- Un 609 peut aussi être créé à la main ; le dossier est ajouté immédiatement.
+
+## Où ?
+
+**Locaux batteries → Locaux batteries**, ou le bouton **Local batteries** sur le projet 609.
+
+## Fonctionnement
+
+- **Note de livraison** : numéro de local, date, les quantités par poste (éclairage, ventilation, tapis ESD, pictogrammes, coffret fusibles, échelle à câbles, éclairage de secours, sol époxy, sonde de température, grille d'aspiration), remarques et le nom à la signature. Le PDF est en portrait sur le papier à lettres, comme la note de livraison du 604.
+- **Infos supplémentaires** : un champ libre pour ce que le client communique en plus.
+- **Checklist** : partout la même liste ; seuls le code COW et le numéro de local changent. Par point, cochez **OK** (vide = NOK) et indiquez l'**action à entreprendre** comme le client la communique. Le PDF est en paysage, sans papier à lettres.
+- **Photos & documents** : plusieurs photos, le calcul de ventilation et le rapport de contrôle BTV (PDF).
+
+Les documents sont imprimés dans la langue de la région (Flandre en néerlandais, Bruxelles selon Paramètres → Batteries), sauf si vous choisissez une langue. À la clôture du projet 609, les documents et fichiers sont repris dans l'archive.
+
+## Droits
+
+**Locaux batteries (609)** : voir, créer, modifier, supprimer, générer des PDF et télécharger des PDF (pour le rapport BTV). Le module s'active ou se désactive dans **Paramètres → Modules**.
+MD,
+        ],
+
         'board_deliveries' => [
             'title' => 'Suivi des tableaux électriques (610–650)',
             'body' => <<<'MD'

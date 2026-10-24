@@ -731,6 +731,38 @@ The same kind of permissions as for battery dossiers, set separately under **Ene
 MD,
         ],
 
+        'battery_rooms' => [
+            'title' => 'Battery rooms (609)',
+            'body' => <<<'MD'
+## What for?
+
+After a battery replacement (604) in **Flanders or Brussels** the battery room is brought up to standard. Category **609** is for that, with per project a dossier like the Excel *Leveringsnota*: the delivery note, extra info from the client, the checklist and photos, the ventilation calculation and the BTV inspection report.
+
+## How does a 609 start?
+
+- When a **604 project is closed** on a COW code in the area **1-VLA, 2-VLA or 3-BRU**, the platform automatically makes a 609 project on the same COW code, with the same team and project leader. The room number comes from the 604's battery dossier.
+- The **PO number** is not taken over: the project is **Waiting for PO**. As soon as Proximus gives the PO, add it on the project with **Add PO number**; the delivery note then shows it as *Client ref.*
+- A 609 can also be made by hand; its dossier comes with it straight away.
+
+## Where?
+
+**Battery rooms → Battery rooms**, or the **Battery room** button on the 609 project.
+
+## How it works
+
+- **Delivery note**: room number, date, the quantities per item (lighting, ventilation, ESD mats, pictograms, fuse box, cable ladder, emergency light, epoxy floor, temperature sensor, air intake grille), remarks and the name at the signature. The PDF is portrait on the letterhead, like the 604 delivery note.
+- **Extra info**: a free field for what the client adds.
+- **Checklist**: the same list everywhere; only the COW code and room number differ. Per point you tick **OK** (empty = NOK) and fill in the **action to take** as the client supplies it. The PDF is landscape, without letterhead.
+- **Photos & documents**: several photos, the ventilation calculation and the BTV inspection report (PDF).
+
+The documents are printed in the language of the region (Flanders Dutch, Brussels as set under Settings → Batteries), unless you choose a language. When the 609 project is closed, the documents and files go into its archive.
+
+## Permissions
+
+**Battery rooms (609)**: view, create, edit, delete, generate PDF and download PDF (for the BTV report). The module is switched on or off under **Settings → Modules**.
+MD,
+        ],
+
         'board_deliveries' => [
             'title' => 'Electrical boards follow-up (610–650)',
             'body' => <<<'MD'

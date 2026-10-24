@@ -25,6 +25,7 @@ return [
         'batteries' => 'Batteries',
         'charging' => 'Bornes de recharge',
         'board_deliveries' => 'Tableaux',
+        'battery_rooms' => 'Locaux batteries',
     ],
     'resources' => [
         'user' => ['singular' => 'utilisateur', 'plural' => 'Utilisateurs'],
@@ -165,6 +166,10 @@ return [
         'asbuilt' => [
             'label' => 'As-built',
             'help' => 'As-builts par projet : créés au statut « Exécuté », fichiers par catégorie (fichiers standard par code COW et registre de documents techniques), contrôle Normec BTV et ZIP pour le client.',
+        ],
+        'battery_rooms' => [
+            'label' => 'Locaux batteries (609)',
+            'help' => 'Après un remplacement de batteries (604) en Flandre ou à Bruxelles, le local batteries est mis en ordre : note de livraison, checklist, infos supplémentaires et photos, calcul de ventilation et contrôle BTV. Un projet 604 clôturé en 1-VLA, 2-VLA ou 3-BRU reçoit automatiquement un projet 609.',
         ],
         'board_deliveries' => [
             'label' => 'Suivi des tableaux électriques',
@@ -457,6 +462,7 @@ return [
         'areas' => [
             'announcements' => 'Annonces',
             'asbuilt' => 'As-built',
+            'battery_rooms' => 'Locaux batteries (609)',
             'board_deliveries' => 'Suivi des tableaux électriques',
             'hr_calculations' => 'Calculs RH',
             'toolbox' => 'Toolbox meetings',

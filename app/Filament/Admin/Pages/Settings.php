@@ -353,6 +353,7 @@ class Settings extends Page
             Modules::ASBUILT => Heroicon::OutlinedArchiveBox,
             Modules::HR_CALCULATIONS => Heroicon::OutlinedCalculator,
             Modules::BOARD_DELIVERIES => Heroicon::OutlinedCpuChip,
+            Modules::BATTERY_ROOMS => Heroicon::OutlinedHomeModern,
         ];
 
         return [

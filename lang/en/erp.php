@@ -25,6 +25,7 @@ return [
         'batteries' => 'Batteries',
         'charging' => 'Charging stations',
         'board_deliveries' => 'Boards',
+        'battery_rooms' => 'Battery rooms',
     ],
     'resources' => [
         'user' => ['singular' => 'user', 'plural' => 'Users'],
@@ -165,6 +166,10 @@ return [
         'asbuilt' => [
             'label' => 'As-built',
             'help' => 'As-builts per project: made at "Executed", files per category (standard files per COW code and a register of technical documents), Normec BTV inspection and a ZIP for the client.',
+        ],
+        'battery_rooms' => [
+            'label' => 'Battery rooms (609)',
+            'help' => 'After a battery replacement (604) in Flanders or Brussels the battery room is brought up to standard: delivery note, checklist, extra info and photos, ventilation calculation and BTV inspection. A closed 604 project in 1-VLA, 2-VLA or 3-BRU automatically gets a 609 project.',
         ],
         'board_deliveries' => [
             'label' => 'Electrical boards follow-up',
@@ -457,6 +462,7 @@ return [
         'areas' => [
             'announcements' => 'Announcements',
             'asbuilt' => 'As-built',
+            'battery_rooms' => 'Battery rooms (609)',
             'board_deliveries' => 'Electrical boards follow-up',
             'hr_calculations' => 'HR calculations',
             'toolbox' => 'Toolbox meetings',

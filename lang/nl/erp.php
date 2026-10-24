@@ -25,6 +25,7 @@ return [
         'batteries' => 'Batterijen',
         'charging' => 'Laadpalen',
         'board_deliveries' => 'Borden',
+        'battery_rooms' => 'Batterijlokalen',
     ],
     'resources' => [
         'user' => ['singular' => 'gebruiker', 'plural' => 'Gebruikers'],
@@ -165,6 +166,10 @@ return [
         'asbuilt' => [
             'label' => 'As-built',
             'help' => 'As-builts per project: aangemaakt bij "Uitgevoerd", bestanden per categorie (met standaardbestanden per COW-code en een register van technische documenten), keuring door Normec BTV en een ZIP voor de klant.',
+        ],
+        'battery_rooms' => [
+            'label' => 'Batterijlokalen (609)',
+            'help' => 'Na een batterijvervanging (604) in Vlaanderen of Brussel wordt het batterijlokaal in orde gebracht: leveringsnota, checklist, extra info en foto\'s, ventilatieberekening en BTV-keuring. Een gesloten 604-project in 1-VLA, 2-VLA of 3-BRU krijgt automatisch een 609-project.',
         ],
         'board_deliveries' => [
             'label' => 'Opvolging elektrische borden',
@@ -457,6 +462,7 @@ return [
         'areas' => [
             'announcements' => 'Mededelingen',
             'asbuilt' => 'As-built',
+            'battery_rooms' => 'Batterijlokalen (609)',
             'board_deliveries' => 'Opvolging elektrische borden',
             'hr_calculations' => 'HR-berekeningen',
             'toolbox' => 'Toolboxmeetings',

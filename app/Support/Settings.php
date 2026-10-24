@@ -97,6 +97,7 @@ class Settings
                 Modules::ASBUILT => true,
                 Modules::HR_CALCULATIONS => true,
                 Modules::BOARD_DELIVERIES => true,
+                Modules::BATTERY_ROOMS => true,
                 Modules::ENERSYS => true,
             ],
             'mail' => [
