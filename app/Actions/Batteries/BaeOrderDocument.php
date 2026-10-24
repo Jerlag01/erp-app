@@ -3,13 +3,14 @@
 namespace App\Actions\Batteries;
 
 use App\Models\BaeOrder;
+use App\Support\BatteryTemplates;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * The BAE order as PDF, laid out like the Excel sheet "Order" (calc.xlsx). It goes to the supplier,
- * so it is always in English, as in the Excel.
+ * The BAE order as PDF, laid out like the Excel sheet "Order" (calc.xlsx), on the letterhead of the
+ * battery documents (Settings > Batteries) with the VCA seal top right. It goes to the supplier, so it
+ * is always in English, as in the Excel.
  */
 class BaeOrderDocument
 {
@@ -29,7 +30,7 @@ class BaeOrderDocument
 
         return view('batteries.pdf.bae-order', [
             'order' => $order,
-            'logo' => $this->logo(),
+            'background' => BatteryTemplates::backgroundDataUri(),
             'seal' => 'data:image/png;base64,'.base64_encode((string) file_get_contents(resource_path(self::VCA_SEAL))),
         ])->render();
     }
@@ -37,16 +38,5 @@ class BaeOrderDocument
     public static function filename(BaeOrder $order): string
     {
         return Str::slug('BAE order '.$order->ourReference()).'.pdf';
-    }
-
-    /**
-     * The company logo of Settings > Appearance as data URI, as on the invoices.
-     */
-    protected function logo(): ?string
-    {
-        $logo = settings()->get('appearance.logo');
-        $disk = Storage::disk('public');
-
-        return $logo && $disk->exists($logo) ? 'data:'.$disk->mimeType($logo).';base64,'.base64_encode((string) $disk->get($logo)) : null;
     }
 }

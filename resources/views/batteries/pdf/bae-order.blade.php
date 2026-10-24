@@ -1,4 +1,4 @@
-{{-- The BAE order, printed like the Excel "calc.xlsx", sheet "Order" (always in English). --}}
+{{-- The BAE order, printed like the Excel "calc.xlsx", sheet "Order" (always in English), on the letterhead of the battery documents with the VCA seal top right. --}}
 @php
     $money = fn (float $value): string => number_format($value, 2, ',', '.');
     $lines = \App\Models\BaeOrder::LINES;
@@ -9,14 +9,16 @@
     <meta charset="utf-8">
     <title>Order {{ $order->order_number }}</title>
     <style>
-        @page { margin: 14mm 14mm 14mm 16mm; }
+        @page { margin: 46mm 16mm 34mm 18mm; }
+        .background { position: fixed; top: -46mm; left: -18mm; width: 210mm; height: 297mm; z-index: -1000; }
+        .seal { position: fixed; top: -36mm; right: 0; height: 24mm; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 8.5pt; color: #111827; }
         table { border-collapse: collapse; }
         .w { width: 100%; }
-        h1 { font-size: 20pt; margin: 0; color: #0b4a9b; }
+        h1 { font-size: 18pt; margin: 0; color: #0b4a9b; }
         .head td { padding: 2px 4px; vertical-align: top; }
         .head .label { width: 28mm; font-weight: bold; }
-        .grid td, .grid th { border: 1px solid #94a3b8; padding: 3px 5px; vertical-align: top; }
+        .grid td, .grid th { border: 1px solid #94a3b8; padding: 2px 5px; vertical-align: top; }
         .grid th { background: #e2e8f0; text-align: left; font-size: 7.5pt; }
         .num { text-align: right; white-space: nowrap; }
         .center { text-align: center; }
@@ -28,20 +30,14 @@
     </style>
 </head>
 <body>
-    <table class="w">
-        <tr>
-            <td style="vertical-align: top;">
-                @if ($logo)
-                    <img src="{{ $logo }}" style="max-height: 48px; max-width: 220px;">
-                @endif
-            </td>
-            <td style="text-align: right; vertical-align: top;"><img src="{{ $seal }}" style="height: 70px;"></td>
-        </tr>
-    </table>
+    @if ($background)
+        <img class="background" src="{{ $background }}" alt="">
+    @endif
+    <img class="seal" src="{{ $seal }}" alt="VCA">
 
     <h1>Order</h1>
 
-    <table class="w head" style="margin-top: 8px;">
+    <table class="w head" style="margin-top: 4px;">
         <tr><td class="label">Order nr</td><td>{{ $order->order_number }}</td></tr>
         <tr><td class="label">Order date</td><td>{{ $order->order_date?->format('d/m/Y') }}</td></tr>
         <tr><td class="label">Contract</td><td>{{ $order->contract }}</td></tr>
@@ -51,7 +47,7 @@
         <tr><td class="label">Our reference:</td><td>{{ $order->ourReference() }}</td></tr>
     </table>
 
-    <table class="w grid" style="margin-top: 14px;">
+    <table class="w grid" style="margin-top: 10px;">
         <thead>
             <tr>
                 <th>Battery</th>
@@ -104,7 +100,7 @@
         </tbody>
     </table>
 
-    <table class="w block" style="margin-top: 16px;">
+    <table class="w block" style="margin-top: 10px;">
         <tr><td class="label">Delivery date:</td><td>{{ $order->delivery_date }}</td></tr>
         <tr><td class="label">Delivery adres :</td><td>{{ $order->delivery_address }}</td></tr>
     </table>
