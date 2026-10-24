@@ -10,6 +10,7 @@ use App\Enums\BatteryTechnology;
 use App\Enums\ProjectStatus;
 use App\Support\BatteryInspection;
 use App\Support\BatteryTemplates;
+use App\Support\OutlookCalendar;
 use Database\Factories\BatteryDossierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -576,6 +577,12 @@ class BatteryDossier extends Model
         static::creating(fn (self $dossier) => $dossier->kind = static::KIND);
 
         static::saved(fn (self $dossier) => $dossier->wasChanged(['new_count', 'first_id_number']) || $dossier->wasRecentlyCreated ? $dossier->syncBatteries() : null);
+        // The batteries out and in are in the title of the project's Outlook events.
+        static::saved(function (self $dossier): void {
+            if ($dossier->wasRecentlyCreated || $dossier->wasChanged(['old_count', 'old_capacity_ah', 'old_technology', 'new_count', 'new_capacity_ah', 'new_technology'])) {
+                app(OutlookCalendar::class)->syncProject($dossier->project_id);
+            }
+        });
 
         static::deleting(fn (self $dossier) => $dossier->signatures->each->delete());
 

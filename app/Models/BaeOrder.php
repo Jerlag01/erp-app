@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BatteryMounting;
+use App\Support\OutlookCalendar;
 use Database\Factories\BaeOrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -49,6 +50,16 @@ class BaeOrder extends Model
      * Most batteries (strings) on one order.
      */
     public const MAX_BATTERIES = 12;
+
+    protected static function booted(): void
+    {
+        // Without a battery dossier, the new batteries of the order are in the project's Outlook events.
+        static::saved(function (self $order): void {
+            if ($order->wasChanged(['battery_model_id', 'battery_count', 'capacity_ah', 'technology'])) {
+                app(OutlookCalendar::class)->syncProject($order->project_id);
+            }
+        });
+    }
 
     /**
      * @return BelongsTo<Project, $this>

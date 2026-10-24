@@ -386,7 +386,7 @@ Elke wijziging in je planning krijg je als melding in het platform en op je tele
 
 Staat de koppeling met Microsoft 365 aan (**Instellingen → Planning → Outlook-agenda**), dan komt elk planningsitem ook in de **Outlook-agenda** van de werknemer, als **volledige dag** (zonder uren), met het project, het adres en de opmerkingen. Wordt het item gewijzigd, verplaatst naar een collega of verwijderd, dan gebeurt dat ook in Outlook.
 
-Bij een **604-project** tonen de planning en Outlook ook de batterijen die weggaan en bijkomen, bv. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (uit het batterijdossier; zolang er geen dossier is, enkel de nieuwe batterijen uit de BAE-bestelling).
+Bij een **604-project** tonen de planning en Outlook de batterijen die weggaan en bijkomen in plaats van de projectomschrijving, bv. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (uit het batterijdossier; zolang er geen dossier is, enkel de nieuwe batterijen uit de BAE-bestelling). Wordt het dossier later ingevuld of gewijzigd, dan worden de geplande afspraken in Outlook bijgewerkt.
 
 ## Rechten
 

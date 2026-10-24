@@ -115,11 +115,23 @@ class PlanningItem extends Model
     }
 
     /**
-     * The project's description or client, under the topic.
+     * The project's description or client, under the topic. Not for 604 projects: they show their
+     * batteries instead (batteries()).
      */
     public function subtitle(): ?string
     {
-        return $this->kind === PlanningKind::Project ? $this->project?->subtitle() : null;
+        return $this->kind === PlanningKind::Project && ! $this->isBatteryProject() ? $this->project?->subtitle() : null;
+    }
+
+    /**
+     * A 604 project (battery replacement) while the battery module is on.
+     */
+    public function isBatteryProject(): bool
+    {
+        return $this->kind === PlanningKind::Project
+            && $this->project !== null
+            && modules()->batteries()
+            && $this->project->category?->code === settings()->get(BatteryDossier::CATEGORY_SETTING);
     }
 
     /**
@@ -128,11 +140,11 @@ class PlanningItem extends Model
      */
     public function batteries(): ?string
     {
-        $project = $this->kind === PlanningKind::Project ? $this->project : null;
-
-        if (! $project || ! modules()->batteries() || $project->category?->code !== settings()->get(BatteryDossier::CATEGORY_SETTING)) {
+        if (! $this->isBatteryProject()) {
             return null;
         }
+
+        $project = $this->project;
 
         if ($summary = $project->batteryDossier?->swapSummary()) {
             return $summary;

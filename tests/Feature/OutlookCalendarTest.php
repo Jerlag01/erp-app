@@ -54,7 +54,8 @@ class OutlookCalendarTest extends TestCase
             && str_ends_with($request->url(), '/users/jan%40power.example/events')
             && $request->hasHeader('Authorization', 'Bearer token-123')
             && str_starts_with($request['subject'], $project->reference)
-            && str_ends_with($request['subject'], ' · 2 x 500Ah OPzS -> 2 x 490Ah OPzV')
+            // 604: the batteries instead of the project description.
+            && $request['subject'] === $project->reference.' · 2 x 500Ah OPzS -> 2 x 490Ah OPzV'
             // Always a full day, without the hours of the planning.
             && $request['isAllDay'] === true
             && $request['start'] === ['dateTime' => '2026-11-05T00:00:00', 'timeZone' => 'Romance Standard Time']
@@ -111,5 +112,24 @@ class OutlookCalendarTest extends TestCase
 
         Livewire::test(Settings::class)->callAction(TestAction::make('testOutlook')->schemaComponent('outlookActions', schema: 'form'))->assertNotified(__('erp.planning.outlook.test_ok'));
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'login.microsoftonline.com/tenant/oauth2/v2.0/token') && $request['client_secret'] === 'geheim');
+    }
+
+    #[Test]
+    public function the_events_follow_the_batteries_filled_in_after_planning(): void
+    {
+        $this->enable();
+        $employee = User::factory()->create(['email' => 'jan@power.example']);
+        $project = Project::factory()->inCategory('604')->create(['short_description' => 'Vervanging batterijen']);
+        $item = PlanningItem::factory()->forProject($project)->create(['user_id' => $employee->id, 'date' => today()->addDays(3)->toDateString()]);
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && ($request['subject'] ?? null) === $project->reference);
+        $this->assertNotNull($item->fresh()->outlook_event_id);
+
+        // The dossier is filled in later: the planned event gets the batteries.
+        $dossier = BatteryDossier::factory()->create(['project_id' => $project->id, 'old_count' => 1, 'old_capacity_ah' => 300, 'old_technology' => 'OPzS', 'new_count' => 2, 'new_capacity_ah' => 490, 'new_technology' => 'OPzV']);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH' && ($request['subject'] ?? null) === $project->reference.' · 1 x 300Ah OPzS -> 2 x 490Ah OPzV');
+
+        $dossier->update(['new_count' => 3]);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH' && ($request['subject'] ?? null) === $project->reference.' · 1 x 300Ah OPzS -> 3 x 490Ah OPzV');
     }
 }

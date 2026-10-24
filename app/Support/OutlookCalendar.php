@@ -77,6 +77,26 @@ class OutlookCalendar
     }
 
     /**
+     * Updates the events of a project's planning from today on, e.g. when the batteries of its dossier
+     * or BAE order change (they are in the event title). After the response.
+     */
+    public function syncProject(?int $projectId): void
+    {
+        if (! $projectId || ! $this->enabled()) {
+            return;
+        }
+
+        defer(function () use ($projectId): void {
+            PlanningItem::query()
+                ->where('project_id', $projectId)
+                ->whereDate('date', '>=', today())
+                ->with(['user', 'project.workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder'])
+                ->get()
+                ->each(fn (PlanningItem $item) => $this->sync($item));
+        });
+    }
+
+    /**
      * Removes the event of a deleted item.
      */
     public function remove(?string $mailbox, ?string $eventId): void

@@ -385,7 +385,7 @@ Every change in your planning is notified in the platform and on your phone (mob
 
 When the Microsoft 365 link is on (**Settings → Planning → Outlook calendar**), every planning item is also put in the employee's **Outlook calendar**, as a **full day** (without hours), with the project, address and remarks. When the item is changed, moved to a colleague or removed, that happens in Outlook too.
 
-For a **604 project**, the planning and Outlook also show the batteries that go out and come in, e.g. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (from the battery dossier; while there is no dossier, only the new batteries of the BAE order).
+For a **604 project**, the planning and Outlook show the batteries that go out and come in instead of the project description, e.g. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (from the battery dossier; while there is no dossier, only the new batteries of the BAE order). When the dossier is filled in or changed later, the planned Outlook events are updated.
 
 ## Permissions
 
