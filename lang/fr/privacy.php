@@ -5,6 +5,7 @@
 return [
     'title' => 'Politique de confidentialité :app',
     'updated' => 'Dernière mise à jour le :date',
+    'platform' => 'La déclaration de confidentialité de toute la plateforme ERP :',
     'language' => 'Langue',
     'intro' => 'Cette politique de confidentialité explique quelles données personnelles l\'application mobile :app et la plateforme ERP de :company traitent, pourquoi, combien de temps et quels sont vos droits. L\'application est destinée exclusivement aux collaborateurs de :company ; un compte est créé par l\'employeur.',
     'sections' => [

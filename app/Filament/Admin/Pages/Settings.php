@@ -286,6 +286,11 @@ class Settings extends Page
                     TextInput::make('general.company_name')
                         ->label(__('erp.settings.fields.company_name'))
                         ->maxLength(150),
+                    TagsInput::make('general.gdpr_emails')
+                        ->label(__('erp.settings.fields.gdpr_emails'))
+                        ->helperText(fn (): HtmlString => new HtmlString(e(__('erp.settings.help.gdpr_emails')).' <a href="'.e(route('gdpr')).'" target="_blank" rel="noopener" style="text-decoration: underline;">'.e(route('gdpr')).'</a>'))
+                        ->nestedRecursiveRules(['email', 'max:150'])
+                        ->columnSpanFull(),
                 ]),
             Section::make(__('erp.asbuilt.settings.section'))
                 ->description(__('erp.asbuilt.settings.help'))

@@ -13,6 +13,7 @@ use App\Http\Controllers\ClientWelcomeLinkController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
+use App\Http\Controllers\GdprController;
 use App\Http\Controllers\GpwDecisionController;
 use App\Http\Controllers\IncidentPdfController;
 use App\Http\Controllers\IncidentPhotoController;
@@ -59,6 +60,8 @@ Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->
 
 // The privacy policy of the mobile app: public (Google Play and the app link to it).
 Route::get('/privacy', PrivacyPolicyController::class)->name('privacy');
+// The GDPR statement of the whole platform: public, linked from the user menu and the sign-in pages.
+Route::get('/gdpr', GdprController::class)->name('gdpr');
 
 // The floor plan editor of a battery dossier for the mobile app (signed link from the API).
 Route::get('/mobile/floor-plan/{dossier}', MobileFloorPlanController::class)->whereNumber('dossier')->middleware('signed')->name('mobile.floor-plan');

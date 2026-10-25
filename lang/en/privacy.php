@@ -5,6 +5,7 @@
 return [
     'title' => ':app privacy policy',
     'updated' => 'Last updated on :date',
+    'platform' => 'The privacy statement of the whole ERP platform:',
     'language' => 'Language',
     'intro' => 'This privacy policy explains which personal data the :app mobile app and the ERP platform of :company process, why, for how long and what your rights are. The app is intended only for employees of :company; accounts are created by the employer.',
     'sections' => [

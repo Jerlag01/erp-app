@@ -5,6 +5,7 @@
 return [
     'title' => 'Privacybeleid :app',
     'updated' => 'Laatst bijgewerkt op :date',
+    'platform' => 'De privacyverklaring van het volledige ERP-platform:',
     'language' => 'Taal',
     'intro' => 'Dit privacybeleid legt uit welke persoonsgegevens de mobiele app :app en het bijhorende ERP-platform van :company verwerken, waarom, hoe lang en welke rechten je hebt. De app is uitsluitend bedoeld voor medewerkers van :company; een account wordt aangemaakt door de werkgever.',
     'sections' => [

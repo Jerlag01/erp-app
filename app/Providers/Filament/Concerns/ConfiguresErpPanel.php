@@ -58,6 +58,8 @@ trait ConfiguresErpPanel
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.language-switch'))
             // Suggests the Android app to someone who signed in on an Android phone.
             ->renderHook(PanelsRenderHook::BODY_END, fn () => view('filament.mobile-app-prompt'))
+            // The public GDPR statement, under the sign-in form.
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.gdpr-link'))
             ->userMenuItems([
                 Action::make('employeePanel')
                     ->label(fn (): string => __('erp.panels.app'))
@@ -69,6 +71,10 @@ trait ConfiguresErpPanel
                     ->icon(Heroicon::OutlinedDevicePhoneMobile)
                     ->url(fn (): string => route('mobile-app.download'))
                     ->visible(fn (): bool => app(MobileApp::class)->available()),
+                Action::make('gdpr')
+                    ->label(fn (): string => __('gdpr.menu'))
+                    ->icon(Heroicon::OutlinedShieldCheck)
+                    ->url(fn (): string => route('gdpr', ['lang' => app()->getLocale()]), shouldOpenInNewTab: true),
                 Action::make('adminPanel')
                     ->label(fn (): string => __('erp.panels.admin'))
                     ->icon(Heroicon::OutlinedCog6Tooth)

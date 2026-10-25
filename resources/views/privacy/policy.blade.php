@@ -79,6 +79,11 @@
                 @endisset
             @endforeach
         @endforeach
+
+        <p class="muted" style="margin-top: 2rem;">
+            {{ __('privacy.platform') }}
+            <a href="{{ route('gdpr', ['lang' => $locale]) }}">{{ route('gdpr') }}</a>
+        </p>
     </article>
 </main>
 </body>

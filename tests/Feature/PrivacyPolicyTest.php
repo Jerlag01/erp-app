@@ -41,4 +41,27 @@ class PrivacyPolicyTest extends TestCase
             ->assertSee('mailto:privacy@power-installation.be', false)
             ->assertDontSee('Drukpersstraat 4');
     }
+
+    #[Test]
+    public function the_gdpr_statement_of_the_platform_is_public_with_its_contact_addresses(): void
+    {
+        $this->get('/gdpr?lang=nl')
+            ->assertOk()
+            ->assertSee('Privacyverklaring (GDPR)')
+            ->assertSee('mailto:j.lagaet@power-installation.be', false)
+            ->assertSee('mailto:info@power-installation.be', false)
+            ->assertSee('Gegevensbeschermingsautoriteit')
+            ->assertSee(route('privacy'));
+        $this->get('/gdpr?lang=fr')->assertOk()->assertSee('Déclaration de confidentialité (RGPD)');
+        $this->get('/gdpr?lang=en')->assertOk()->assertSee('Privacy statement (GDPR)');
+        $this->get('/privacy?lang=nl')->assertSee(route('gdpr'));
+
+        // The addresses come from Settings > General.
+        settings()->save('general', [...settings('general'), 'gdpr_emails' => ['privacy@example.com']]);
+        $this->get('/gdpr')->assertSee('privacy@example.com')->assertDontSee('info@power-installation.be');
+
+        // Linked under every sign-in form.
+        $this->get('/login')->assertSee('data-gdpr-link', false);
+        $this->get('/client/login')->assertSee('data-gdpr-link', false);
+    }
 }

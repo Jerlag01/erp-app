@@ -6,6 +6,7 @@ use App\Filament\Client\Pages\Dashboard;
 use App\Filament\Client\Pages\EditClientProfile;
 use App\Http\Middleware\SetClientLocale;
 use App\Support\ClientPortal;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -13,6 +14,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -53,6 +55,14 @@ class ClientPanelProvider extends PanelProvider
             ->topNavigation()
             ->maxContentWidth('full')
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
+            // The public GDPR statement: under the sign-in form and in the user menu.
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.gdpr-link'))
+            ->userMenuItems([
+                Action::make('gdpr')
+                    ->label(fn (): string => __('gdpr.menu'))
+                    ->icon(Heroicon::OutlinedShieldCheck)
+                    ->url(fn (): string => route('gdpr', ['lang' => app()->getLocale()]), shouldOpenInNewTab: true),
+            ])
             ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\Filament\Client\Resources')
             ->pages([Dashboard::class])
             ->middleware([

@@ -68,6 +68,8 @@ class Settings
                 'company_name' => null,
                 'warning_days' => 30,
                 'it_audit_months' => 12,
+                // Contact addresses on the public GDPR statement (/gdpr).
+                'gdpr_emails' => ['j.lagaet@power-installation.be', 'info@power-installation.be'],
             ],
             'modules' => [
                 Modules::FLEET => true,
