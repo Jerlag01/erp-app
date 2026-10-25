@@ -709,7 +709,7 @@ return [
             'mobile_app' => 'Upload the APK of the mobile app here. Signed-in employees download it from the platform (user menu) and are offered it when they open the platform on an Android phone.',
             'mobile_app_apk' => 'The .apk file of the Android app (from the EAS build), max. :size MB. A new upload replaces the previous one.',
             'mobile_app_uploaded' => 'Current version uploaded on :date.',
-            'mobile_app_version' => 'Shown when downloading; a new version shows the suggestion again.',
+            'mobile_app_version' => 'Shown when downloading; a new version shows the suggestion again. Enter the same version as "version" in the build\'s app.json (e.g. 1.1.0): phones with a lower version get an update message in the app.',
             'mobile_app_prompt' => 'After signing in on an Android phone, a message suggests downloading the app.',
             'battery_brussels_locale' => 'Language of the battery documents for COW sites in Brussels (Flanders: Dutch, Wallonia: French).',
             'enersys' => 'For the Enersys dossiers; client, documents and shipping note are the same as above.',

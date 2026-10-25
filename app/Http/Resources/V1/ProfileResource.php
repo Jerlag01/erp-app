@@ -14,6 +14,7 @@ use App\Models\MoveDossier;
 use App\Models\Suggestion;
 use App\Models\ToolboxMeeting;
 use App\Models\User;
+use App\Support\MobileApp;
 use App\Support\Planning;
 use App\Support\Timesheets;
 use BackedEnum;
@@ -48,6 +49,10 @@ class ProfileResource extends JsonResource
             'teams' => $this->teams()->orderBy('name')->pluck('name')->all(),
             'employee' => $employee ? $this->employeeDetails($employee) : null,
             'features' => $this->features(),
+            // The newest app on the platform (Settings > Mobile app): the phone compares it with its own version.
+            'app_update' => app(MobileApp::class)->available() && filled($version = app(MobileApp::class)->version())
+                ? ['version' => $version, 'url' => route('mobile-app.download')]
+                : null,
         ];
     }
 

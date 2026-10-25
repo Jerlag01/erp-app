@@ -63,6 +63,8 @@ Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->
 Route::get('/privacy', PrivacyPolicyController::class)->name('privacy');
 // The GDPR statement of the whole platform: public, linked from the user menu and the sign-in pages.
 Route::get('/gdpr', GdprController::class)->name('gdpr');
+// The Android app (APK): public, so the update message in the app opens it without signing in.
+Route::get('/mobile-app/download', MobileAppDownloadController::class)->middleware('throttle:30,1')->name('mobile-app.download');
 
 // The floor plan editor of a battery dossier for the mobile app (signed link from the API).
 Route::get('/mobile/floor-plan/{dossier}', MobileFloorPlanController::class)->whereNumber('dossier')->middleware('signed')->name('mobile.floor-plan');
@@ -100,7 +102,6 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
-    Route::get('/mobile-app/download', MobileAppDownloadController::class)->name('mobile-app.download');
     Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');
     Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');

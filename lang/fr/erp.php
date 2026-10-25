@@ -709,7 +709,7 @@ return [
             'mobile_app' => 'Téléversez ici l\'APK de l\'application mobile. Les employés connectés la téléchargent via la plateforme (menu utilisateur) et se la voient proposer lorsqu\'ils ouvrent la plateforme sur un téléphone Android.',
             'mobile_app_apk' => 'Le fichier .apk de l\'application Android (du build EAS), max. :size Mo. Un nouveau téléversement remplace le précédent.',
             'mobile_app_uploaded' => 'Version actuelle téléversée le :date.',
-            'mobile_app_version' => 'Affichée lors du téléchargement ; une nouvelle version affiche à nouveau le message.',
+            'mobile_app_version' => 'Affichée lors du téléchargement ; une nouvelle version affiche à nouveau le message. Indiquez la même version que « version » dans app.json du build (p. ex. 1.1.0) : les téléphones avec une version plus ancienne reçoivent dans l\'application un message de mise à jour.',
             'mobile_app_prompt' => 'Après la connexion sur un téléphone Android, un message propose de télécharger l\'application.',
             'battery_brussels_locale' => 'Langue des documents batteries pour les sites COW à Bruxelles (Flandre : néerlandais, Wallonie : français).',
             'enersys' => 'Pour les dossiers Enersys ; client, documents et note d\'envoi sont les mêmes que ci-dessus.',

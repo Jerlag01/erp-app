@@ -709,7 +709,7 @@ return [
             'mobile_app' => 'Laad hier de APK van de mobiele app op. Aangemelde werknemers downloaden ze via het platform (gebruikersmenu) en krijgen ze voorgesteld als ze het platform op een Android-telefoon openen.',
             'mobile_app_apk' => 'Het .apk-bestand van de Android-app (van de EAS-build), max. :size MB. Een nieuwe upload vervangt de vorige.',
             'mobile_app_uploaded' => 'Huidige versie opgeladen op :date.',
-            'mobile_app_version' => 'Getoond bij het downloaden; een nieuwe versie toont de melding opnieuw.',
+            'mobile_app_version' => 'Getoond bij het downloaden; een nieuwe versie toont de melding opnieuw. Vul dezelfde versie in als "version" in app.json van de build (bv. 1.1.0): telefoons met een lagere versie krijgen in de app een melding om bij te werken.',
             'mobile_app_prompt' => 'Na het aanmelden op een Android-telefoon verschijnt een melding om de app te downloaden.',
             'battery_brussels_locale' => 'Taal van de batterijdocumenten voor COW-sites in Brussel (Vlaanderen: Nederlands, Wallonië: Frans).',
             'enersys' => 'Voor de Enersys-dossiers; klant, documenten en verzendnota zijn dezelfde als hierboven.',

@@ -61,21 +61,18 @@ class MobileAppDownloadTest extends TestCase
     }
 
     #[Test]
-    public function only_signed_in_active_users_download_the_app(): void
+    public function the_app_is_downloaded_on_the_same_link_without_signing_in(): void
     {
         $this->upload('1.2.0');
         auth()->logout();
 
-        $this->get(route('mobile-app.download'))->assertRedirect();
-
-        $employee = User::factory()->withPermissions([])->inTeam()->create();
-        $this->actingAs($employee)->get(route('mobile-app.download'))
+        $this->get('/mobile-app/download')
             ->assertOk()
             ->assertDownload('erp-1.2.0.apk')
             ->assertHeader('content-type', 'application/vnd.android.package-archive');
 
-        $employee->update(['is_active' => false]);
-        $this->actingAs($employee->fresh())->get(route('mobile-app.download'))->assertForbidden();
+        $employee = User::factory()->withPermissions([])->inTeam()->create();
+        $this->actingAs($employee)->get(route('mobile-app.download'))->assertOk()->assertDownload('erp-1.2.0.apk');
     }
 
     #[Test]
