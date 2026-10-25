@@ -105,6 +105,11 @@ class MobilePlanningAndChecksApiTest extends TestCase
     #[Test]
     public function the_app_sends_itself_a_test_notification_and_hears_why_it_failed(): void
     {
+        // The app's other requests do not use up the test's limit.
+        foreach (range(1, 10) as $request) {
+            $this->getJson('/api/v1/me', $this->auth)->assertOk();
+        }
+
         $this->postJson('/api/v1/push-test', [], $this->auth)
             ->assertOk()
             ->assertJsonPath('data.registered', true)
