@@ -33,6 +33,8 @@ return [
         'ventilation' => 'Ventilation calculation',
         'btv' => 'BTV inspection report (PDF)',
         'cow_code' => 'COW code',
+        'source_project' => 'Follows 604 project (optional)',
+        'source_project_help' => 'The 604 project whose batteries were replaced: the COW code, team and project leader are taken over.',
         'checklist_done' => 'Checklist',
     ],
     'automatic' => 'Automatic (region)',

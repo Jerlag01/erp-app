@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Batteries\BatteryRoomDocument;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BatteryRooms\BatteryRoomResource;
+use App\Filament\Resources\BatteryRooms\Pages\CreateBatteryRoom;
 use App\Filament\Resources\BatteryRooms\Pages\EditBatteryRoom;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Models\BatteryDossier;
@@ -15,6 +16,7 @@ use App\Models\User;
 use App\Models\WorkSite;
 use App\Models\WorkSiteArea;
 use App\Support\Modules;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -191,5 +193,61 @@ class BatteryRoomTest extends TestCase
 
         settings()->save('modules', [...settings('modules'), Modules::BATTERY_ROOMS => false]);
         $this->get(BatteryRoomResource::getUrl('index'))->assertForbidden();
+    }
+
+    #[Test]
+    public function the_delivery_note_is_signed_and_then_locked_except_for_administrators(): void
+    {
+        $this->actingAs($this->user());
+        $room = $this->room();
+        $png = 'data:image/png;base64,'.base64_encode((string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='));
+
+        Livewire::test(EditBatteryRoom::class, ['record' => $room->getRouteKey()])
+            ->fillForm(['remarks' => 'Getekend door de klant.'])
+            ->callAction(TestAction::make('sign')->schemaComponent('signature_actions'), ['signer_name' => 'Piet Klant', 'signature' => $png])
+            ->assertHasNoActionErrors();
+
+        $room->refresh();
+        $this->assertTrue($room->isSigned());
+        $this->assertSame(['Piet Klant', 'Getekend door de klant.'], [$room->signer_name, $room->remarks]);
+        $this->assertStringContainsString('Piet Klant', app(BatteryRoomDocument::class)->html($room, 'delivery_note'));
+
+        // Locked: saving leaves the delivery note as it was signed.
+        Livewire::test(EditBatteryRoom::class, ['record' => $room->getRouteKey()])
+            ->assertFormFieldDisabled('remarks')
+            ->assertDontSee(__('erp.batteries.signature.remove'))
+            ->fillForm(['extra_info' => 'Na de handtekening.'])
+            ->call('save');
+        $this->assertSame(['Getekend door de klant.', 'Na de handtekening.'], [$room->refresh()->remarks, $room->extra_info]);
+
+        // Administrators can take the signature off again.
+        $this->actingAs(User::factory()->admin()->create());
+        Livewire::test(EditBatteryRoom::class, ['record' => $room->getRouteKey()])
+            ->assertFormFieldEnabled('remarks')
+            ->callAction(TestAction::make('unsign')->schemaComponent('signature_actions'));
+        $this->assertFalse($room->refresh()->isSigned());
+    }
+
+    #[Test]
+    public function a_battery_room_is_made_by_hand_with_its_609_project(): void
+    {
+        $user = $this->user(['view', 'create', 'update'], ['view', 'create']);
+        $this->actingAs($user);
+        $site = $this->site('1-VLA', '02GAM', '9000');
+
+        Livewire::test(CreateBatteryRoom::class)
+            ->fillForm(['work_site_id' => $site->id, 'room_number' => 'B-0.12'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $room = BatteryRoomDossier::query()->latest('id')->firstOrFail();
+        $project = $room->project;
+        $this->assertSame(['609', '02GAM', ProjectStatus::WaitingForPo, 'B-0.12'], [$project->category->code, $project->cow_code, $project->status, $room->room_number]);
+        $this->assertTrue($project->isLedBy($user));
+        $this->assertTrue($project->isVisibleTo($user));
+
+        // Without permission to make projects there is no "New".
+        $this->actingAs($this->user(['view', 'create', 'update'], ['view']));
+        $this->get(BatteryRoomResource::getUrl('create'))->assertForbidden();
     }
 }

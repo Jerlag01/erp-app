@@ -6,6 +6,7 @@ use App\Enums\DriverLicenseCategory;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Models\BatteryDossier;
+use App\Models\BatteryRoomDossier;
 use App\Models\Employee;
 use App\Models\EnersysDossier;
 use App\Models\Incident;
@@ -69,6 +70,7 @@ class ProfileResource extends JsonResource
             'open_asset_checks' => AssetCheckController::openChecks($user)->count(),
             'battery_dossiers' => $gate->allows('viewAny', BatteryDossier::class),
             'enersys_dossiers' => $gate->allows('viewAny', EnersysDossier::class),
+            'battery_rooms' => $gate->allows('viewAny', BatteryRoomDossier::class),
             'incidents' => $gate->allows('create', Incident::class),
             'suggestions' => $gate->allows('create', Suggestion::class),
             'toolbox' => $gate->allows('viewAny', ToolboxMeeting::class),

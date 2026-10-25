@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\BatteryDossierController;
+use App\Http\Controllers\Api\V1\BatteryRoomController;
 use App\Http\Controllers\Api\V1\IncidentController;
 use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\Api\V1\MobileAuthController;
@@ -75,6 +76,17 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::post('/{id}/finish', [BatteryDossierController::class, 'finish'])->whereNumber('id')->name('finish');
             Route::put('/{id}/floor-plan', [BatteryDossierController::class, 'saveFloorPlan'])->whereNumber('id')->name('floor-plan.save');
             Route::get('/{id}/floor-plan', [BatteryDossierController::class, 'floorPlanImage'])->whereNumber('id')->name('floor-plan.show');
+        });
+
+        // Battery rooms (609).
+        Route::prefix('/battery-rooms')->name('battery-rooms.')->group(function (): void {
+            Route::get('/', [BatteryRoomController::class, 'index'])->name('index');
+            Route::get('/{id}', [BatteryRoomController::class, 'show'])->whereNumber('id')->name('show');
+            Route::put('/{id}', [BatteryRoomController::class, 'update'])->whereNumber('id')->name('update');
+            Route::post('/{id}/photos', [BatteryRoomController::class, 'addPhoto'])->whereNumber('id')->name('photos.add');
+            Route::get('/{id}/photos/{index}', [BatteryRoomController::class, 'photo'])->whereNumber(['id', 'index'])->name('photos.show');
+            Route::delete('/{id}/photos/{index}', [BatteryRoomController::class, 'removePhoto'])->whereNumber(['id', 'index'])->name('photos.remove');
+            Route::post('/{id}/sign', [BatteryRoomController::class, 'sign'])->whereNumber('id')->name('sign');
         });
     });
 });

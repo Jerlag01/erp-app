@@ -742,7 +742,7 @@ After a battery replacement (604) in **Flanders or Brussels** the battery room i
 
 - When a **604 project is closed** on a COW code in the area **1-VLA, 2-VLA or 3-BRU**, the platform automatically makes a 609 project on the same COW code, with the same team and project leader. The room number comes from the 604's battery dossier.
 - The **PO number** is not taken over: the project is **Waiting for PO**. As soon as Proximus gives the PO, add it on the project with **Add PO number**; the delivery note then shows it as *Client ref.*
-- A 609 can also be made by hand; its dossier comes with it straight away.
+- With **New** under **Battery rooms** you make a battery room by hand: choose the COW code (or the 604 project it follows) and the room number. The 609 project is made at once (this also needs the permission to create projects).
 
 ## Where?
 
@@ -750,7 +750,7 @@ After a battery replacement (604) in **Flanders or Brussels** the battery room i
 
 ## How it works
 
-- **Delivery note**: room number, date, the quantities per item (lighting, ventilation, ESD mats, pictograms, fuse box, cable ladder, emergency light, epoxy floor, temperature sensor, air intake grille), remarks and the name at the signature. The PDF is portrait on the letterhead, like the 604 delivery note.
+- **Delivery note**: room number, date, the quantities per item (lighting, ventilation, ESD mats, pictograms, fuse box, cable ladder, emergency light, epoxy floor, temperature sensor, air intake grille), remarks and the **signature**: as with the 604 the dossier is saved first and the delivery note is then locked (only an administrator can remove the signature again). The PDF is portrait on the letterhead, like the 604 delivery note.
 - **Extra info**: a free field for what the client adds.
 - **Checklist**: the same list everywhere; only the COW code and room number differ. Per point you tick **OK** (empty = NOK) and fill in the **action to take** as the client supplies it. The PDF is landscape, without letterhead.
 - **Photos & documents**: several photos, the ventilation calculation and the BTV inspection report (PDF).
@@ -1103,7 +1103,7 @@ The **PI ERP** app brings the essentials of the platform to your phone, also on 
 - **Timesheet**: fill in your prestation sheet; it is saved straight away in the platform.
 - **Leave**: request leave or **overtime as leave**, **report sickness** and add a certificate (photo, file or a picture taken on the spot).
 - **Checks**: fill in the **yearly control** of your team's equipment (only while a list is open).
-- **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605), with the **floor plan** you draw as on the platform (604).
+- **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605), with the **floor plan** you draw as on the platform (604), and the **battery rooms** (609): delivery note with signature, extra info, checklist and photos (the ventilation calculation and BTV report are added on the platform).
 
 ## Notifications
 

@@ -4,10 +4,12 @@ namespace App\Filament\Resources\BatteryRooms;
 
 use App\Enums\NavigationGroup;
 use App\Filament\Concerns\ScopesToVisibleRecords;
+use App\Filament\Resources\BatteryRooms\Pages\CreateBatteryRoom;
 use App\Filament\Resources\BatteryRooms\Pages\EditBatteryRoom;
 use App\Filament\Resources\BatteryRooms\Pages\ListBatteryRooms;
 use App\Filament\Resources\BatteryRooms\Schemas\BatteryRoomForm;
 use App\Models\BatteryRoomDossier;
+use App\Models\Project;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
@@ -19,11 +21,12 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
 /**
  * Battery rooms (609): one per project, made with the project (automatically when a 604 in Flanders or
- * Brussels is closed). Filled in here and printed as delivery note and checklist.
+ * Brussels is closed, or by hand with "New"). Filled in here and printed as delivery note and checklist.
  */
 class BatteryRoomResource extends Resource
 {
@@ -49,6 +52,14 @@ class BatteryRoomResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return __('battery_rooms.plural');
+    }
+
+    /**
+     * Making a battery room by hand makes a 609 project too: both permissions are needed.
+     */
+    public static function canCreate(): bool
+    {
+        return Gate::allows('create', BatteryRoomDossier::class) && Gate::allows('create', Project::class);
     }
 
     public static function form(Schema $schema): Schema
@@ -92,6 +103,7 @@ class BatteryRoomResource extends Resource
     {
         return [
             'index' => ListBatteryRooms::route('/'),
+            'create' => CreateBatteryRoom::route('/create'),
             'edit' => EditBatteryRoom::route('/{record}/edit'),
         ];
     }

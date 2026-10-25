@@ -32,6 +32,8 @@ return [
         'ventilation' => 'Calcul de ventilation',
         'btv' => 'Rapport de contrôle BTV (PDF)',
         'cow_code' => 'Code COW',
+        'source_project' => 'Suite au projet 604 (facultatif)',
+        'source_project_help' => 'Le projet 604 dont les batteries ont été remplacées : le code COW, l\'équipe et le chef de projet sont repris.',
         'checklist_done' => 'Checklist',
     ],
     'automatic' => 'Automatique (région)',

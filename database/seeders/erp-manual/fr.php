@@ -742,7 +742,7 @@ Après un remplacement de batteries (604) en **Flandre ou à Bruxelles**, le loc
 
 - Quand un **projet 604 est clôturé** sur un code COW de l'area **1-VLA, 2-VLA ou 3-BRU**, la plateforme crée automatiquement un projet 609 sur le même code COW, avec la même équipe et le même chef de projet. Le numéro de local vient du dossier batteries du 604.
 - Le **numéro de PO** n'est pas repris : le projet est en **Attente du PO**. Dès que Proximus donne le PO, ajoutez-le sur le projet avec **Ajouter un numéro de PO** ; la note de livraison l'affiche alors comme *Réf. client*.
-- Un 609 peut aussi être créé à la main ; le dossier est ajouté immédiatement.
+- Avec **Nouveau** dans **Locaux batteries**, créez un local batteries à la main : choisissez le code COW (ou le projet 604 qu'il suit) et le numéro de local. Le projet 609 est créé immédiatement (le droit de créer des projets est aussi nécessaire).
 
 ## Où ?
 
@@ -750,7 +750,7 @@ Après un remplacement de batteries (604) en **Flandre ou à Bruxelles**, le loc
 
 ## Fonctionnement
 
-- **Note de livraison** : numéro de local, date, les quantités par poste (éclairage, ventilation, tapis ESD, pictogrammes, coffret fusibles, échelle à câbles, éclairage de secours, sol époxy, sonde de température, grille d'aspiration), remarques et le nom à la signature. Le PDF est en portrait sur le papier à lettres, comme la note de livraison du 604.
+- **Note de livraison** : numéro de local, date, les quantités par poste (éclairage, ventilation, tapis ESD, pictogrammes, coffret fusibles, échelle à câbles, éclairage de secours, sol époxy, sonde de température, grille d'aspiration), remarques et la **signature** : comme pour le 604, le dossier est d'abord enregistré, puis la note de livraison est verrouillée (seul un administrateur peut retirer la signature). Le PDF est en portrait sur le papier à lettres, comme la note de livraison du 604.
 - **Infos supplémentaires** : un champ libre pour ce que le client communique en plus.
 - **Checklist** : partout la même liste ; seuls le code COW et le numéro de local changent. Par point, cochez **OK** (vide = NOK) et indiquez l'**action à entreprendre** comme le client la communique. Le PDF est en paysage, sans papier à lettres.
 - **Photos & documents** : plusieurs photos, le calcul de ventilation et le rapport de contrôle BTV (PDF).
@@ -1103,7 +1103,7 @@ L'application **PI ERP** apporte l'essentiel de la plateforme sur votre téléph
 - **Prestations** : remplir votre fiche de prestations ; elle est enregistrée directement dans la plateforme.
 - **Congés** : demander un congé ou des **heures supplémentaires en congé**, **signaler une maladie** et ajouter un certificat (photo, fichier ou photo prise sur le moment).
 - **Contrôles** : compléter le **contrôle annuel** du matériel de votre équipe (seulement quand une liste est ouverte).
-- **Plus** : vos données, lire et signer les **toolbox meetings**, **signaler un incident**, la **boîte à idées** et compléter et signer les **dossiers batteries** (604/605), avec le **plan** que vous dessinez comme sur la plateforme (604).
+- **Plus** : vos données, lire et signer les **toolbox meetings**, **signaler un incident**, la **boîte à idées** et compléter et signer les **dossiers batteries** (604/605), avec le **plan** que vous dessinez comme sur la plateforme (604), et les **locaux batteries** (609) : note de livraison avec signature, infos supplémentaires, checklist et photos (le calcul de ventilation et le rapport BTV sont ajoutés sur la plateforme).
 
 ## Notifications
 

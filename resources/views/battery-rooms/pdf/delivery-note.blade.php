@@ -75,7 +75,19 @@
     <table class="w nobreak" style="margin-top: 12px;">
         <tr>
             <td style="width: 40%; padding-right: 10px;"><span class="label">{{ __('battery_rooms.doc.date_signature') }}</span><div class="box" style="height: 40px;">{{ $date }}</div></td>
-            <td style="width: 60%;"><span class="label">{{ __('battery_rooms.doc.signature') }}</span><div class="box" style="height: 40px;">{{ $dossier->signed_by }}</div></td>
+            <td style="width: 60%;">
+                <span class="label">{{ __('battery_rooms.doc.signature') }}</span>
+                <div class="box" style="height: auto; min-height: 40px;">
+                    @if ($dossier->isSigned())
+                        <div style="font-size: 7.5pt;">
+                            @if ($image = $dossier->signatureDataUri())<img src="{{ $image }}" alt="" style="height: 38px; max-width: 100%;"><br>@endif
+                            {{ $dossier->signer_name }} · {{ $dossier->signed_at->format('d/m/Y H:i') }}
+                        </div>
+                    @else
+                        {{ $dossier->signed_by }}
+                    @endif
+                </div>
+            </td>
         </tr>
     </table>
 @endsection

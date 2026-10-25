@@ -9,17 +9,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * The battery room of a 609 project, from the Excel "Leveringsnota 14EIN": the delivery note
  * (quantities per item), extra info from the client, the checklist (the same everywhere: OK/NOK and the
  * action to take per point) and the photos, ventilation calculation and BTV report. The texts are in
- * lang/{nl,fr}/battery_rooms.php; the documents are printed in the language of the region.
+ * lang/{nl,fr}/battery_rooms.php; the documents are printed in the language of the region. The delivery
+ * note gets a written signature (as on the 604 documents), after which it is locked.
  */
 #[Fillable([
     'project_id', 'document_locale', 'room_number', 'note_date', 'client_reference', 'quantities', 'remarks', 'signed_by',
     'extra_info', 'checklist_date', 'checklist', 'photos', 'ventilation_file', 'ventilation_file_name', 'btv_file', 'btv_file_name',
-    'created_by',
+    'signer_name', 'signature_path', 'signature_by', 'signed_at', 'created_by',
 ])]
 class BatteryRoomDossier extends Model
 {
@@ -73,6 +75,69 @@ class BatteryRoomDossier extends Model
     ];
 
     public const MAX_PHOTOS = 40;
+
+    /**
+     * The fields of the delivery note: locked once it is signed (except for administrators).
+     *
+     * @var list<string>
+     */
+    public const NOTE_FIELDS = ['room_number', 'note_date', 'client_reference', 'quantities', 'remarks'];
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function signer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'signature_by');
+    }
+
+    public function isSigned(): bool
+    {
+        return $this->signed_at !== null && filled($this->signature_path);
+    }
+
+    /**
+     * A signed delivery note can no longer be changed, except by administrators.
+     */
+    public function isLockedFor(?User $user): bool
+    {
+        return $this->isSigned() && ! $user?->isAdmin();
+    }
+
+    /**
+     * Puts the written signature on the delivery note (PNG data URL from the signature pad).
+     */
+    public function sign(string $name, string $dataUrl, User $by): void
+    {
+        $png = str_starts_with($dataUrl, 'data:image/png;base64,') ? base64_decode(substr($dataUrl, strlen('data:image/png;base64,')), true) : false;
+
+        if ($png === false || ! str_starts_with($png, "\x89PNG")) {
+            throw new \InvalidArgumentException('The signature is not a valid PNG image.');
+        }
+
+        $path = "battery-rooms/{$this->id}/signature-".Str::random(12).'.png';
+        Storage::disk(self::DISK)->put($path, $png);
+
+        $this->update(['signer_name' => mb_substr(trim($name), 0, 150), 'signature_path' => $path, 'signature_by' => $by->id, 'signed_at' => now()]);
+    }
+
+    /**
+     * Administrators take the signature off again; the delivery note can be changed.
+     */
+    public function unsign(): void
+    {
+        $this->update(['signer_name' => null, 'signature_path' => null, 'signature_by' => null, 'signed_at' => null]);
+    }
+
+    /**
+     * The signature as a data URI, for the form, the app and the PDF.
+     */
+    public function signatureDataUri(): ?string
+    {
+        $disk = Storage::disk(self::DISK);
+
+        return filled($this->signature_path) && $disk->exists($this->signature_path) ? 'data:image/png;base64,'.base64_encode((string) $disk->get($this->signature_path)) : null;
+    }
 
     /**
      * @return BelongsTo<Project, $this>
@@ -218,7 +283,7 @@ class BatteryRoomDossier extends Model
         static::updated(function (self $dossier): void {
             $disk = Storage::disk(self::DISK);
 
-            foreach (['ventilation_file', 'btv_file'] as $field) {
+            foreach (['ventilation_file', 'btv_file', 'signature_path'] as $field) {
                 if ($dossier->wasChanged($field) && filled($old = $dossier->getOriginal($field))) {
                     $disk->delete($old);
                 }
@@ -229,7 +294,7 @@ class BatteryRoomDossier extends Model
             }
         });
 
-        static::deleted(fn (self $dossier) => Storage::disk(self::DISK)->delete(array_values(array_filter([...(array) $dossier->photos, $dossier->ventilation_file, $dossier->btv_file]))));
+        static::deleted(fn (self $dossier) => Storage::disk(self::DISK)->delete(array_values(array_filter([...(array) $dossier->photos, $dossier->ventilation_file, $dossier->btv_file, $dossier->signature_path]))));
     }
 
     /**
@@ -243,6 +308,7 @@ class BatteryRoomDossier extends Model
             'quantities' => 'array',
             'checklist' => 'array',
             'photos' => 'array',
+            'signed_at' => 'datetime',
         ];
     }
 }

@@ -32,6 +32,8 @@ return [
         'ventilation' => 'Ventilatieberekening',
         'btv' => 'Keuringsverslag BTV (PDF)',
         'cow_code' => 'COW-code',
+        'source_project' => 'Volgt op 604-project (optioneel)',
+        'source_project_help' => 'Het 604-project waarvan de batterijen vervangen werden: de COW-code, de ploeg en de projectleider worden overgenomen.',
         'checklist_done' => 'Checklist',
     ],
     'automatic' => 'Automatisch (regio)',
