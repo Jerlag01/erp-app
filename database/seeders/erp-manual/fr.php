@@ -273,6 +273,7 @@ Dans **Demandes de congé**, vous approuvez ou refusez une demande (avec une rai
 - Via **Mes absences → Déclarer une maladie** (ou dans l'application mobile). L'administration est avertie immédiatement.
 - Ajoutez le **certificat** en photo ou PDF, tout de suite ou plus tard.
 - Dans **Absences**, l'administration voit les maladies encore **sans certificat**.
+- Seule la maladie demande un certificat : pour les **heures supplémentaires en congé**, le **congé familial** et le **congé sans solde**, il n'y a pas de téléversement (« Pas nécessaire »).
 
 ## Conseil
 

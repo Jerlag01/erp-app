@@ -60,9 +60,12 @@ class Absence extends Model
     /**
      * The employee may upload (or replace their own) certificate as long as the administrator has not.
      */
+    /**
+     * Only for absences that need a certificate (sickness), and not over one the administrator added.
+     */
     public function employeeMayUpload(): bool
     {
-        return $this->document_source !== self::SOURCE_ADMIN;
+        return $this->type->needsCertificate() && $this->document_source !== self::SOURCE_ADMIN;
     }
 
     public static function directoryFor(int $userId): string

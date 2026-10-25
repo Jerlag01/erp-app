@@ -47,6 +47,14 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
     }
 
     /**
+     * Only sickness needs a certificate; overtime taken as leave, family leave and unpaid leave do not.
+     */
+    public function needsCertificate(): bool
+    {
+        return $this === self::Medical;
+    }
+
+    /**
      * Medical and family reasons are private: colleagues only see that someone is absent.
      */
     public function isPrivate(): bool

@@ -1776,6 +1776,7 @@ return [
         'note_help' => 'Visible to the employee on "My absences".',
         'certificate' => 'Certificate',
         'certificate_admin_help' => 'Picture (any type) or PDF, max. 12 MB. Once you upload it here, the employee can only download it; without one, the employee can upload it themselves.',
+        'not_needed' => 'Not needed',
         'missing' => 'Missing',
         'present' => 'Present',
         'by_admin' => 'Uploaded by administration',

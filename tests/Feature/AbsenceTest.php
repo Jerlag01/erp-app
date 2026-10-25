@@ -179,4 +179,49 @@ class AbsenceTest extends TestCase
         Storage::disk('local')->assertExists($absence->document);
         $this->assertCount(1, $admin->notifications);
     }
+
+    #[Test]
+    public function overtime_family_and_unpaid_leave_need_no_certificate(): void
+    {
+        Storage::fake('local');
+        $employee = User::factory()->inTeam()->create();
+        $medical = Absence::factory()->for($employee)->create();
+        $others = collect([AbsenceType::Overtime, AbsenceType::Family, AbsenceType::Unpaid])
+            ->map(fn (AbsenceType $type, int $index) => Absence::factory()->for($employee)->ofType($type)->create(['start_date' => '2026-11-0'.($index + 2), 'end_date' => '2026-11-0'.($index + 2)]));
+
+        $this->actingAs($employee);
+        Filament::setCurrentPanel('app');
+        $page = Livewire::test(ListMyAbsences::class)->assertActionVisible(TestAction::make('upload')->table($medical));
+
+        foreach ($others as $absence) {
+            $this->assertFalse($employee->can('uploadDocument', $absence));
+            $page->set('activeTab', $absence->type->value)
+                ->assertActionHidden(TestAction::make('upload')->table($absence))
+                ->assertTableColumnStateSet('document_source', __('erp.absences.not_needed'), $absence);
+        }
+
+        // The phone gets no upload either.
+        $this->post("/api/v1/leave/absences/{$others[0]->id}/document", ['document' => UploadedFile::fake()->create('attest.pdf', 20, 'application/pdf')], [...$this->mobileAuth($employee), 'Accept' => 'application/json'])
+            ->assertForbidden();
+
+        // Administrators: no certificate field, and they are not counted as missing.
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+        Livewire::test(ManageAbsences::class)
+            ->set('activeTab', 'family')
+            ->callAction('create', [
+                'user_id' => $employee->id,
+                'type' => 'family',
+                'start_date' => '2026-11-16',
+                'end_date' => '2026-11-16',
+                'document' => UploadedFile::fake()->create('attest.pdf', 40, 'application/pdf'),
+            ])
+            ->assertHasNoActionErrors();
+        $this->assertNull(Absence::query()->latest('id')->first()->document);
+        Livewire::test(ManageAbsences::class)
+            ->set('activeTab', 'all')
+            ->filterTable('document', 'missing')
+            ->assertCanSeeTableRecords([$medical])
+            ->assertCanNotSeeTableRecords($others);
+    }
 }

@@ -115,12 +115,17 @@ class MyAbsenceResource extends Resource
                 TextColumn::make('document_source')
                     ->label(__('erp.absences.certificate'))
                     ->state(fn (Absence $record): string => match (true) {
+                        ! $record->hasDocument() && ! $record->type->needsCertificate() => __('erp.absences.not_needed'),
                         ! $record->hasDocument() => __('erp.absences.missing'),
                         $record->document_source === Absence::SOURCE_EMPLOYEE => __('erp.absences.uploaded_by_you'),
                         default => __('erp.absences.by_admin'),
                     })
                     ->badge()
-                    ->color(fn (Absence $record): string => $record->hasDocument() ? 'success' : 'warning'),
+                    ->color(fn (Absence $record): string => match (true) {
+                        $record->hasDocument() => 'success',
+                        $record->type->needsCertificate() => 'warning',
+                        default => 'gray',
+                    }),
                 TextColumn::make('note')
                     ->label(__('erp.fields.notes'))
                     ->wrap()

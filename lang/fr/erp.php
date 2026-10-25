@@ -1776,6 +1776,7 @@ return [
         'note_help' => 'Visible pour le collaborateur dans « Mes absences ».',
         'certificate' => 'Certificat',
         'certificate_admin_help' => 'Photo (tout type) ou PDF, max. 12 Mo. Si vous le téléversez ici, le collaborateur peut seulement le télécharger ; sans certificat, il peut le téléverser lui-même.',
+        'not_needed' => 'Pas nécessaire',
         'missing' => 'Manquant',
         'present' => 'Présent',
         'by_admin' => 'Téléversé par l\'administration',

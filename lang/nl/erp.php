@@ -1776,6 +1776,7 @@ return [
         'note_help' => 'Zichtbaar voor de medewerker bij "Mijn afwezigheden".',
         'certificate' => 'Attest',
         'certificate_admin_help' => 'Foto (elk type) of PDF, max. 12 MB. Upload je het hier, dan kan de medewerker het alleen downloaden; zonder attest kan de medewerker het zelf uploaden.',
+        'not_needed' => 'Niet nodig',
         'missing' => 'Ontbreekt',
         'present' => 'Aanwezig',
         'by_admin' => 'Geüpload door administratie',

@@ -96,6 +96,7 @@ class AbsenceResource extends Resource
                     ->options(AbsenceType::class)
                     ->inline()
                     ->required()
+                    ->live()
                     ->columnSpanFull(),
                 DatePicker::make('start_date')
                     ->label(__('erp.fields.start_date'))
@@ -133,6 +134,8 @@ class AbsenceResource extends Resource
                     ->acceptedFileTypes(Absence::DOCUMENT_TYPES)
                     ->maxSize(Absence::DOCUMENT_MAX_KILOBYTES)
                     ->storeFileNamesIn('document_name')
+                    // Only sickness needs a certificate.
+                    ->visible(fn (Get $get): bool => self::needsCertificate($get('type')))
                     ->columnSpanFull(),
             ]);
     }
@@ -154,6 +157,13 @@ class AbsenceResource extends Resource
         }
 
         return $data;
+    }
+
+    public static function needsCertificate(mixed $type): bool
+    {
+        $type = $type instanceof AbsenceType ? $type : AbsenceType::tryFrom((string) $type);
+
+        return (bool) $type?->needsCertificate();
     }
 
     public static function documentUrl(Absence $absence): string
@@ -186,13 +196,22 @@ class AbsenceResource extends Resource
                 TextColumn::make('document_source')
                     ->label(__('erp.absences.certificate'))
                     ->state(fn (Absence $record): string => match (true) {
+                        ! $record->hasDocument() && ! $record->type->needsCertificate() => __('erp.absences.not_needed'),
                         ! $record->hasDocument() => __('erp.absences.missing'),
                         $record->document_source === Absence::SOURCE_EMPLOYEE => __('erp.absences.by_employee'),
                         default => __('erp.absences.by_admin'),
                     })
                     ->badge()
-                    ->color(fn (Absence $record): string => $record->hasDocument() ? 'success' : 'warning')
-                    ->icon(fn (Absence $record): Heroicon => $record->hasDocument() ? Heroicon::OutlinedDocumentCheck : Heroicon::OutlinedExclamationCircle)
+                    ->color(fn (Absence $record): string => match (true) {
+                        $record->hasDocument() => 'success',
+                        $record->type->needsCertificate() => 'warning',
+                        default => 'gray',
+                    })
+                    ->icon(fn (Absence $record): ?Heroicon => match (true) {
+                        $record->hasDocument() => Heroicon::OutlinedDocumentCheck,
+                        $record->type->needsCertificate() => Heroicon::OutlinedExclamationCircle,
+                        default => null,
+                    })
                     ->url(fn (Absence $record): ?string => $record->hasDocument() ? self::documentUrl($record) : null, shouldOpenInNewTab: true),
                 TextColumn::make('note')
                     ->label(__('erp.fields.notes'))
@@ -214,7 +233,7 @@ class AbsenceResource extends Resource
                     ->label(__('erp.absences.certificate'))
                     ->options(['missing' => __('erp.absences.missing'), 'present' => __('erp.absences.present')])
                     ->query(fn (Builder $query, array $data) => match ($data['value'] ?? null) {
-                        'missing' => $query->whereNull('document'),
+                        'missing' => $query->whereNull('document')->where('type', AbsenceType::Medical),
                         'present' => $query->whereNotNull('document'),
                         default => $query,
                     }),

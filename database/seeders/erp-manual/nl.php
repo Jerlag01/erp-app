@@ -274,6 +274,7 @@ Bij **Verlofaanvragen** keur je een aanvraag goed of weiger je ze (met een reden
 - Via **Mijn afwezigheden → Ziekte melden** (of in de mobiele app). De administratie wordt meteen verwittigd.
 - Voeg het **attest** toe als foto of PDF, meteen of later.
 - Bij **Afwezigheden** ziet de administratie welke ziekteperiodes nog **zonder attest** zijn.
+- Enkel ziekte vraagt een attest: voor **overuren als verlof**, **familiaal verlof** en **onbetaald verlof** is er geen upload ("Niet nodig").
 
 ## Tips
 

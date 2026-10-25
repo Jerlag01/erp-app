@@ -273,6 +273,7 @@ Under **Vacation requests** you approve a request or refuse it (with a reason). 
 - Through **My absences → Report sickness** (or in the mobile app). The administration is warned straight away.
 - Add the **certificate** as a photo or PDF, now or later.
 - Under **Absences** the administration sees which sickness periods are still **without a certificate**.
+- Only sickness needs a certificate: **overtime as leave**, **family leave** and **unpaid leave** have no upload ("Not needed").
 
 ## Tip
 
