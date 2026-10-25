@@ -9,6 +9,7 @@ use App\Models\BatteryCable;
 use App\Models\BatteryDossier;
 use App\Models\BatteryDossierBattery;
 use App\Models\EnersysDossier;
+use App\Models\MoveDossier;
 use App\Models\User;
 use App\Support\PrivatePhotos;
 use App\Support\SignatureImage;
@@ -22,7 +23,7 @@ use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Battery (604, "bae") and Enersys (605, "enersys") dossiers in the mobile app: what the technician
+ * Battery (604, "bae"), Enersys (605, "enersys") and battery move (605, "move") dossiers in the mobile app: what the technician
  * fills in on site (delivery note, measurement report, visual inspection, single-line values, shipping
  * note), the written signatures, the photos, the floor plan (battery dossiers, drawn in the platform's
  * editor shown in the app) and finishing. The Input tab and prices stay on the platform. The form is described by the ERP (sections, fields, labels, locks), so the app
@@ -31,7 +32,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class BatteryDossierController extends Controller
 {
     /** @var array<string, class-string<BatteryDossier>> */
-    public const KINDS = ['bae' => BatteryDossier::class, 'enersys' => EnersysDossier::class];
+    public const KINDS = ['bae' => BatteryDossier::class, 'enersys' => EnersysDossier::class, 'move' => MoveDossier::class];
 
     /** Units of the number fields. */
     protected const SUFFIXES = [
@@ -256,6 +257,10 @@ class BatteryDossierController extends Controller
     {
         $class = $this->authorizeKind($user, $kind);
         $dossier = $class::query()->with(['project.workSite', 'signatures.signer', 'batteries', 'batteryModel.racks', 'finisher'])->findOrFail($id);
+
+        if ($dossier instanceof MoveDossier) {
+            $dossier->loadMissing(['fromSite', 'toSite']);
+        }
         abort_unless(Gate::forUser($user)->allows('view', $dossier), 403);
 
         return $dossier;
@@ -288,7 +293,7 @@ class BatteryDossierController extends Controller
     {
         $rules = [];
 
-        foreach ([...$this->deliveryFields($dossier), 'acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg'] as $field) {
+        foreach ([...$this->deliveryFields($dossier), ...$dossier::SHIPPING_FIELDS] as $field) {
             $rules["values.{$field}"] = match (true) {
                 in_array($field, self::TEXT_FIELDS, true) => ['nullable', 'string', 'max:50'],
                 $field === 'battery_cable_id' => ['nullable', 'integer', Rule::exists('battery_cables', 'id')],
@@ -329,6 +334,8 @@ class BatteryDossierController extends Controller
     protected function payload(BatteryDossier $dossier, User $user): array
     {
         $enersys = $this->isEnersys($dossier);
+        $move = $dossier instanceof MoveDossier;
+        $kind = (string) array_search($dossier::class, self::KINDS, true);
         $canEdit = Gate::forUser($user)->allows('update', $dossier) && $dossier->isEditableBy($user);
         $cells = max(1, min(60, (int) $dossier->cells_per_battery));
         $delivery = array_map(fn (string $key): array => match ($key) {
@@ -350,14 +357,18 @@ class BatteryDossierController extends Controller
                 'questions' => collect($questions)->map(fn (string $label, string $key): array => ['key' => $key, 'label' => $label])->values()->all(),
             ])->values()->all()],
             ...($enersys ? [] : [['key' => 'single_line', 'title' => __('erp.batteries.tabs.single_line'), 'document' => null, 'fields' => []]]),
-            ['key' => 'shipping', 'title' => __('erp.batteries.tabs.shipping'), 'document' => null, 'fields' => [
+            // A move has its own shipping note, and the one of the old batteries only when they are taken away.
+            ...($move ? [['key' => 'shipping_move', 'title' => __('erp.batteries.documents.shipping_move'), 'document' => null, 'fields' => [
+                $this->field('move_packages'), [...$this->field('move_weight_kg', 'decimal'), 'suffix' => 'kg'],
+            ]]] : []),
+            ...(! $move || $dossier->removal ? [['key' => 'shipping', 'title' => __('erp.batteries.tabs.shipping'), 'document' => null, 'fields' => [
                 $this->field('acid_boxes'), $this->field('empty_boxes_returned'), $this->field('packages'), [...$this->field('weight_kg', 'decimal'), 'suffix' => 'kg'],
-            ]],
+            ]]] : []),
         ];
 
         $values = [];
 
-        foreach ([...$this->deliveryFields($dossier), 'acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg', 'average_temperature', 'inspection_remarks', 'photos_remark'] as $key) {
+        foreach ([...$this->deliveryFields($dossier), ...$dossier::SHIPPING_FIELDS, 'average_temperature', 'inspection_remarks', 'photos_remark'] as $key) {
             $value = $dossier->getAttribute($key);
             $values[$key] = is_numeric($value) && ! in_array($key, self::TEXT_FIELDS, true) ? (float) $value : $value;
         }
@@ -370,14 +381,15 @@ class BatteryDossierController extends Controller
 
         return [
             'id' => $dossier->id,
-            'kind' => $enersys ? 'enersys' : 'bae',
+            'kind' => $kind,
             'reference' => $dossier->reference(),
             'description' => $dossier->description(),
             'finished' => $dossier->isFinished(),
             'finished_note' => $dossier->isFinished() ? __('erp.batteries.finish.finished_on', ['date' => $dossier->finished_at->format('d/m/Y H:i'), 'user' => $dossier->finisher?->name ?? '—']) : null,
             'can_edit' => $canEdit,
             'overview' => array_values(array_filter([
-                ['label' => __('erp.batteries.overview.cow_code'), 'value' => $dossier->cowCode()],
+                ['label' => __('erp.moves.from'), 'value' => $move ? trim($dossier->sourceCowCode().' '.implode(', ', MoveDossier::siteLines($dossier->fromSite))) : null],
+                ['label' => $move ? __('erp.moves.to') : __('erp.batteries.overview.cow_code'), 'value' => $dossier->cowCode()],
                 ['label' => __('erp.batteries.overview.address'), 'value' => implode(', ', $dossier->senderAddressLines()) ?: null],
                 ['label' => __('erp.batteries.contact_person'), 'value' => $dossier->contact_person],
                 ['label' => __('erp.batteries.execution_date'), 'value' => $dossier->execution_date?->format('d/m/Y')],
@@ -427,14 +439,14 @@ class BatteryDossierController extends Controller
             // The version in the path changes with the file, so the phone never shows a cached removed photo.
             'photos' => array_map(fn (int $index, string $path): array => [
                 'index' => $index,
-                'path' => '/dossiers/'.($enersys ? 'enersys' : 'bae')."/{$dossier->id}/photos/{$index}?v=".substr(md5($path), 0, 10),
+                'path' => "/dossiers/{$kind}/{$dossier->id}/photos/{$index}?v=".substr(md5($path), 0, 10),
             ], array_keys($photos = array_values((array) $dossier->photos)), $photos),
             'max_photos' => BatteryDossier::MAX_PHOTOS,
             // Battery dossiers only: the platform's editor, opened in the app through a short-lived signed link.
             'floor_plan' => $enersys ? null : [
                 'has_drawing' => filled($dossier->floor_plan),
-                'image_path' => filled($dossier->floor_plan_png) ? "/dossiers/bae/{$dossier->id}/floor-plan?v=".substr(md5((string) $dossier->updated_at?->timestamp), 0, 10) : null,
-                'editor_url' => URL::temporarySignedRoute('mobile.floor-plan', now()->addHours(2), ['dossier' => $dossier->id, 'user' => $user->id, 'lang' => app()->getLocale()]),
+                'image_path' => filled($dossier->floor_plan_png) ? "/dossiers/{$kind}/{$dossier->id}/floor-plan?v=".substr(md5((string) $dossier->updated_at?->timestamp), 0, 10) : null,
+                'editor_url' => URL::temporarySignedRoute('mobile.floor-plan', now()->addHours(2), ['dossier' => $dossier->id, 'kind' => $kind, 'user' => $user->id, 'lang' => app()->getLocale()]),
                 'title' => __('erp.batteries.tabs.floor_plan'),
             ],
         ];

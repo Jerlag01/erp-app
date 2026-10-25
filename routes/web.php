@@ -25,6 +25,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MobileAppDismissController;
 use App\Http\Controllers\MobileAppDownloadController;
 use App\Http\Controllers\MobileFloorPlanController;
+use App\Http\Controllers\MoveDocumentController;
 use App\Http\Controllers\PeppolInboundController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\ProjectArchiveController;
@@ -93,6 +94,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/battery-deliveries-pdf', BatteryDeliveriesPdfController::class)->name('batteries.deliveries-pdf');
     Route::get('/battery-deliveries/{delivery}/documents/{kind}', BatteryDeliveryDocumentController::class)->whereNumber('delivery')->whereIn('kind', BatteryDelivery::DOCUMENTS)->name('batteries.delivery-document');
     Route::get('/battery-dossiers/{dossier}/documents/{document}', BatteryDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('batteries.document');
+    Route::get('/move-dossiers/{dossier}/documents/{document}', MoveDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('moves.document');
     Route::get('/enersys-dossiers/{dossier}/documents/{document}', EnersysDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('enersys.document');
     Route::get('/interventions/{report}/pdf', InterventionPdfController::class)->whereNumber('report')->name('interventions.pdf');
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');

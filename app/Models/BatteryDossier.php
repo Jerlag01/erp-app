@@ -38,6 +38,7 @@ use Illuminate\Support\Str;
     'invoice_kind', 'invoice_percentage', 'measured_on', 'average_temperature', 'inspection', 'inspection_remarks',
     'floor_plan', 'floor_plan_png', 'photos', 'photos_remark', 'finished_at', 'finished_by', 'acid_boxes',
     'kind', 'document_locale', 'battery_type', 'new_capacity_label', 'leak_trays', 'order_amounts', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
+    'move_from_work_site_id', 'move_to_work_site_id', 'vertical_pickup_m', 'move_packages', 'move_weight_kg', 'decommission_source', 'decommissioned_at',
 ])]
 class BatteryDossier extends Model
 {
@@ -113,6 +114,13 @@ class BatteryDossier extends Model
         'measurement' => ['measured_on', 'average_temperature'],
         'inspection' => ['inspection', 'inspection_remarks'],
     ];
+
+    /**
+     * The fields of the shipping note(s) the technician fills in on site.
+     *
+     * @var list<string>
+     */
+    public const SHIPPING_FIELDS = ['acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg'];
 
     /**
      * Most batteries in one dossier (the Excel had room for 6).
@@ -304,6 +312,16 @@ class BatteryDossier extends Model
     public static function documentRoute(): string
     {
         return 'batteries.document';
+    }
+
+    /**
+     * The documents this dossier has (a move only has the second shipping note when old batteries go).
+     *
+     * @return list<string>
+     */
+    public function availableDocuments(): array
+    {
+        return array_keys(static::documents());
     }
 
     /**
@@ -618,6 +636,10 @@ class BatteryDossier extends Model
             'mounting' => BatteryMounting::class,
             'invoice_kind' => BatteryInvoiceKind::class,
             'removal' => 'boolean',
+            'vertical_pickup_m' => 'decimal:2',
+            'move_weight_kg' => 'decimal:2',
+            'decommission_source' => 'boolean',
+            'decommissioned_at' => 'datetime',
             'old_count' => 'integer',
             'new_count' => 'integer',
             'cells_per_battery' => 'integer',

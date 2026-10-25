@@ -29,7 +29,7 @@ class BatteryDocumentController extends Controller
     {
         abort_unless(Gate::allows('view', $dossier) && PdfAccess::canGenerate($request->user(), $dossier::AREA), 403);
 
-        $available = $dossier::documents();
+        $available = array_flip($dossier->availableDocuments());
 
         if ($document === 'all') {
             $list = array_values(array_filter(array_keys($available), fn (string $name): bool => $name !== $dossier::PRICE_DOCUMENT || Gate::allows('viewPrices', $dossier)));

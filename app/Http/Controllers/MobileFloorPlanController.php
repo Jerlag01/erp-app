@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BatteryDossier;
+use App\Http\Controllers\Api\V1\BatteryDossierController;
+use App\Models\EnersysDossier;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -16,8 +17,13 @@ use Illuminate\View\View;
  */
 class MobileFloorPlanController
 {
-    public function __invoke(Request $request, BatteryDossier $dossier): View
+    public function __invoke(Request $request, int $dossier): View
     {
+        // The kind of dossier (BAE or a battery move) comes with the signed link.
+        $class = BatteryDossierController::KINDS[(string) $request->query('kind', 'bae')] ?? abort(404);
+        abort_if($class === EnersysDossier::class, 404);
+        $dossier = $class::query()->findOrFail($dossier);
+
         $user = User::query()->find($request->integer('user'));
         abort_unless($user && $user->is_active && Gate::forUser($user)->allows('view', $dossier), 403);
 

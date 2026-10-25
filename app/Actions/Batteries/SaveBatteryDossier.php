@@ -24,7 +24,7 @@ class SaveBatteryDossier
     {
         $fields = array_filter(array_merge(...array_values($dossier::SIGNED_FIELDS)), fn (string $field): bool => ! str_ends_with($field, '_price'));
 
-        return array_values(array_unique([...$fields, 'acid_boxes', 'empty_boxes_returned', 'packages', 'weight_kg', 'photos_remark']));
+        return array_values(array_unique([...$fields, ...$dossier::SHIPPING_FIELDS, 'photos_remark']));
     }
 
     /**

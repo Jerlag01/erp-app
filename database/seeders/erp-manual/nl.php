@@ -723,6 +723,16 @@ Dossiers voor **Enersys-batterijen** op **605-projecten**: input, leveringsnota,
 Het werkt zoals de batterijdossiers (604): open het dossier vanuit het project, vul de input, metingen en keuring in, laat het ondertekenen (ook in de mobiele app) en maak de PDF's.
 
 
+## Batterijverplaatsing
+
+Een 605-project kan ook een **verplaatsing** zijn: batterijen die van de ene COW-code naar een andere gaan. Op het project kies je **Enersys-dossier** of **Batterijverplaatsing**; zodra één van beide bestaat, verdwijnt de andere knop. Je vindt ze ook bij **Batterijen → Batterijverplaatsingen**.
+
+- **Input**: de COW-code van de ophaling en die van de plaatsing (standaard die van het project), de lokalen, het type batterijen, het vermogen, het aantal en de elementen. Vink aan of de **oude batterijen op de nieuwe COW-code** weggenomen worden en of de **COW-code van de ophaling uit dienst** gaat.
+- Daarna werkt het zoals een 604-dossier: **leveringsnota** (met het verticaal transport bij de ophaling en de plaatsing), **meetrapport**, **visueel keuringsverslag**, **plattegrond**, **eendraadschema**, foto's, de **handtekeningen** en **afronden**.
+- Er zijn twee **verzendnota's**: die van de verplaatsing (van de eerste naar de tweede COW-code) en, enkel als er oude batterijen weggaan, die van het afval.
+- Is **uit dienst** aangevinkt, dan zet het systeem bij het afronden het type gebouw van de COW-code van de ophaling op **Uit dienst**, met een lijn in het logboek van de werflocatie.
+- In de mobiele app staan ze onder **Batterijverplaatsingen (605)**, met dezelfde onderdelen als op het platform. Een gesloten 605-project maakt nooit een 609-project.
+
 ## Leveringen opvolgen
 
 De klant bestelt de Enersys-batterijen zelf. Bij **Batterijen → Enersys-leveringen** volg je per 605-project het **PO-nummer** en de **leverdatum** op en vink je **geleverd** aan bij aankomst. Het project gaat dan naar **In te plannen** (tenzij het al verder staat, bv. ingepland). Het PO-nummer wordt overgenomen van het project. De leveringen staan ook op het project (tabblad *Opvolging leveringen*).

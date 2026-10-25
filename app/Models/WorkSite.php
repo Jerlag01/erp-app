@@ -134,11 +134,12 @@ class WorkSite extends Model
 
     /**
      * Changes the building type and logs it (with the details from the change form).
-     * The first type of a new site is logged the same way, without a previous type.
+     * The first type of a new site is logged the same way, without a previous type. Changes the system
+     * makes (e.g. a battery move that decommissions the site) name who finished the work.
      */
-    public function changeBuildingType(BuildingType $type, string $changedOn, ?string $reason = null, ?string $remarks = null): WorkSiteTypeChange
+    public function changeBuildingType(BuildingType $type, string $changedOn, ?string $reason = null, ?string $remarks = null, ?int $userId = null): WorkSiteTypeChange
     {
-        return DB::transaction(function () use ($type, $changedOn, $reason, $remarks): WorkSiteTypeChange {
+        return DB::transaction(function () use ($type, $changedOn, $reason, $remarks, $userId): WorkSiteTypeChange {
             $from = $this->exists ? $this->getOriginal('building_type') : null;
 
             $this->update(['building_type' => $type]);
@@ -149,7 +150,7 @@ class WorkSite extends Model
                 'changed_on' => $changedOn,
                 'reason' => $reason,
                 'remarks' => $remarks,
-                'user_id' => auth()->id(),
+                'user_id' => $userId ?? auth()->id(),
             ]);
         });
     }

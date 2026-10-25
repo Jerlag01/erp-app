@@ -722,6 +722,16 @@ Les dossiers des **batteries Enersys** sur les **projets 605** : input, bon de l
 Comme les dossiers batteries (604) : ouvrez le dossier depuis le projet, complétez l'input, les mesures et l'inspection, faites-le signer (aussi dans l'application mobile) et générez les PDF.
 
 
+## Déplacement de batteries
+
+Un projet 605 peut aussi être un **déplacement** : des batteries qui passent d'un code COW à un autre. Sur le projet, choisissez **Dossier Enersys** ou **Déplacement de batteries** ; dès que l'un existe, l'autre bouton disparaît. Vous les trouvez aussi dans **Batteries → Déplacements de batteries**.
+
+- **Input** : le code COW de l'enlèvement et celui du placement (par défaut celui du projet), les locaux, le type de batteries, la capacité, le nombre et les éléments. Indiquez si les **anciennes batteries sur le nouveau code COW** sont enlevées et si le **code COW de l'enlèvement est mis hors service**.
+- Ensuite, cela fonctionne comme un dossier 604 : **note de livraison** (avec le transport vertical à l'enlèvement et au placement), **rapport de mesure**, **rapport d'inspection visuelle**, **plan**, **schéma unifilaire**, photos, les **signatures** et la **clôture**.
+- Il y a deux **notes d'envoi** : celle du déplacement (du premier vers le second code COW) et, seulement si des anciennes batteries partent, celle des déchets.
+- Si **hors service** est coché, le système passe à la clôture le type de bâtiment du code COW de l'enlèvement à **Hors service**, avec une ligne dans le journal du site.
+- Dans l'application mobile, ils figurent sous **Déplacements de batteries (605)**, avec les mêmes parties que sur la plateforme. Un projet 605 clôturé ne crée jamais de projet 609.
+
 ## Suivi des livraisons
 
 Le client commande lui-même les batteries Enersys. Dans **Batteries → Livraisons Enersys**, suivez par projet 605 le **numéro de PO** et la **date de livraison**, et cochez **livré** à l'arrivée. Le projet passe alors à **À planifier** (sauf s'il est déjà plus loin, p. ex. planifié). Le numéro de PO est repris du projet. Les livraisons figurent aussi sur le projet (onglet *Suivi des livraisons*).

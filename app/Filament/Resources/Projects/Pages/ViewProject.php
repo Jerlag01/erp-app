@@ -13,6 +13,7 @@ use App\Filament\Resources\BaeOrders\BaeOrderResource;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\BatteryRooms\BatteryRoomResource;
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
+use App\Filament\Resources\MoveDossiers\MoveDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\Projects\Schemas\ProjectForm;
@@ -20,6 +21,7 @@ use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
 use App\Models\EnersysDossier;
+use App\Models\MoveDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectPoNumber;
@@ -223,12 +225,25 @@ class ViewProject extends ViewRecord
                 ->label(__('erp.enersys.dossier_button'))
                 ->icon(Heroicon::OutlinedBattery50)
                 ->color('gray')
+                // A 605 project is an Enersys replacement or a battery move: both are offered until one is made.
                 ->visible(fn (Project $record): bool => modules()->enersys()
                     && $record->category?->code === settings()->get(EnersysDossier::CATEGORY_SETTING)
+                    && ! MoveDossier::query()->where('project_id', $record->id)->exists()
                     && (($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first()) ? Gate::allows('view', $dossier) : Gate::allows('create', EnersysDossier::class)))
                 ->url(fn (Project $record): string => ($dossier = EnersysDossier::query()->where('project_id', $record->id)->latest('id')->first())
                     ? EnersysDossierResource::getUrl('edit', ['record' => $dossier])
                     : EnersysDossierResource::getUrl('create', ['project' => $record->id])),
+            Action::make('moveDossier')
+                ->label(__('erp.moves.dossier_button'))
+                ->icon(Heroicon::OutlinedArrowsRightLeft)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => modules()->enersys()
+                    && $record->category?->code === settings()->get(MoveDossier::CATEGORY_SETTING)
+                    && ! EnersysDossier::query()->where('project_id', $record->id)->exists()
+                    && (($dossier = MoveDossier::query()->where('project_id', $record->id)->latest('id')->first()) ? Gate::allows('view', $dossier) : Gate::allows('create', MoveDossier::class)))
+                ->url(fn (Project $record): string => ($dossier = MoveDossier::query()->where('project_id', $record->id)->latest('id')->first())
+                    ? MoveDossierResource::getUrl('edit', ['record' => $dossier])
+                    : MoveDossierResource::getUrl('create', ['project' => $record->id])),
             // 600 projects at any moment, 610–650 once "PO received" is ticked (see mayAddPoNumber()).
             Action::make('addPoNumber')
                 ->label(__('erp.projects.add_po_number'))

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\EnersysDossiers\Pages;
 
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
 use App\Filament\Resources\EnersysDossiers\Schemas\EnersysDossierForm;
+use App\Models\MoveDossier;
 use App\Models\Project;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Validation\ValidationException;
@@ -38,6 +39,11 @@ class CreateEnersysDossier extends CreateRecord
     {
         if (! array_key_exists((int) ($data['project_id'] ?? 0), EnersysDossierForm::projectOptions())) {
             throw ValidationException::withMessages(['data.project_id' => __('erp.batteries.errors.project')]);
+        }
+
+        // A 605 project is either an Enersys replacement or a move.
+        if (MoveDossier::query()->where('project_id', (int) $data['project_id'])->exists()) {
+            throw ValidationException::withMessages(['data.project_id' => __('erp.moves.errors.has_dossier')]);
         }
 
         unset($data['strings']);

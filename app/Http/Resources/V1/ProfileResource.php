@@ -10,6 +10,7 @@ use App\Models\BatteryRoomDossier;
 use App\Models\Employee;
 use App\Models\EnersysDossier;
 use App\Models\Incident;
+use App\Models\MoveDossier;
 use App\Models\Suggestion;
 use App\Models\ToolboxMeeting;
 use App\Models\User;
@@ -70,6 +71,7 @@ class ProfileResource extends JsonResource
             'open_asset_checks' => AssetCheckController::openChecks($user)->count(),
             'battery_dossiers' => $gate->allows('viewAny', BatteryDossier::class),
             'enersys_dossiers' => $gate->allows('viewAny', EnersysDossier::class),
+            'move_dossiers' => $gate->allows('viewAny', MoveDossier::class),
             'battery_rooms' => $gate->allows('viewAny', BatteryRoomDossier::class),
             'incidents' => $gate->allows('create', Incident::class),
             'suggestions' => $gate->allows('create', Suggestion::class),

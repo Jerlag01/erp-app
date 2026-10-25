@@ -68,13 +68,15 @@ class EditBatteryDossier extends EditRecord
     {
         $model = $this->record::class;
         $documents = array_keys($model::documents());
+        // A move only has the shipping note of the old batteries when they are taken away.
+        $available = fn (string $document): bool => in_array($document, $this->record->availableDocuments(), true);
 
         return [
             ActionGroup::make([
                 ...array_map(fn (string $document): Action => Action::make('pdf_'.$document)
                     ->label(__('erp.batteries.documents.'.$document))
                     ->icon(Heroicon::OutlinedDocumentText)
-                    ->visible(fn (): bool => $document !== $model::PRICE_DOCUMENT || Gate::allows('viewPrices', $this->record))
+                    ->visible(fn (): bool => $available($document) && ($document !== $model::PRICE_DOCUMENT || Gate::allows('viewPrices', $this->record)))
                     ->url(fn (): string => route($model::documentRoute(), [$this->record, $document]), shouldOpenInNewTab: true), $documents),
                 Action::make('pdf_all')
                     ->label(__('erp.batteries.documents.all'))

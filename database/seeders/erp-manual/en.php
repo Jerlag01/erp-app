@@ -722,6 +722,16 @@ Dossiers for **Enersys batteries** on **605 projects**: input, delivery note, me
 Like the battery dossiers (604): open the dossier from the project, fill in the input, measurements and inspection, have it signed (also in the mobile app) and make the PDFs.
 
 
+## Battery move
+
+A 605 project can also be a **move**: batteries that go from one COW code to another. On the project you choose **Enersys dossier** or **Battery move**; as soon as one exists, the other button disappears. They are also under **Batteries → Battery moves**.
+
+- **Input**: the COW code of the pickup and that of the placement (by default the project's), the rooms, the battery type, capacity, number and cells. Tick whether the **old batteries at the new COW code** are removed and whether the **pickup COW code is decommissioned**.
+- Then it works like a 604 dossier: **delivery note** (with the vertical transport at the pickup and the placement), **measurement report**, **visual inspection report**, **floor plan**, **single-line diagram**, photos, the **signatures** and **finishing**.
+- There are two **shipping notes**: the move (from the first to the second COW code) and, only when old batteries go, the waste.
+- When **decommissioned** is ticked, finishing sets the building type of the pickup COW code to **Decommissioned**, with a line in the site's log.
+- In the mobile app they are under **Battery moves (605)**, with the same parts as on the platform. A closed 605 project never makes a 609 project.
+
 ## Delivery follow-up
 
 The client orders the Enersys batteries itself. Under **Batteries → Enersys deliveries** you follow up per 605 project the **PO number** and the **delivery date**, and tick **delivered** on arrival. The project then goes to **To be planned** (unless it is already further, e.g. planned). The PO number is taken from the project. The deliveries are also on the project (tab *Delivery follow-up*).

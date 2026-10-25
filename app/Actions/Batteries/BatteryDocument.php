@@ -3,6 +3,7 @@
 namespace App\Actions\Batteries;
 
 use App\Models\BatteryDossier;
+use App\Models\MoveDossier;
 use App\Support\BatteryTemplates;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
@@ -12,7 +13,7 @@ use ZipArchive;
 /**
  * The documents of a battery dossier as PDF, laid out like the Excel sheets. The delivery note,
  * measurement report and shipping note are printed on the letterhead background. Which documents a
- * dossier has depends on its kind (BatteryDossier::documents(): BAE or Enersys).
+ * dossier has depends on its kind (BatteryDossier::documents(): BAE, Enersys or a move).
  */
 class BatteryDocument
 {
@@ -52,6 +53,10 @@ class BatteryDocument
         [$view, $background] = $dossier::documents()[$document];
 
         $dossier->loadMissing(['project.workSite.area', 'project.category', 'batteryModel.racks', 'cable', 'batteries', 'signatures']);
+
+        if ($dossier instanceof MoveDossier) {
+            $dossier->loadMissing(['fromSite', 'toSite.area']);
+        }
 
         return $this->inLocale($this->locale($dossier, $document), fn (): string => view($view, [
             'dossier' => $dossier,
