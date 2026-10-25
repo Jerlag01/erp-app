@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\ClientUser;
+use App\Models\ProjectCategory;
 use Filament\Facades\Filament;
 
 /**
@@ -17,8 +18,8 @@ class ClientPortal
 
     public const GUARD = 'client';
 
-    /** The project categories the portal can show. */
-    public const CATEGORIES = ['600', '604', '605', '608', '610', '620', '630', '640', '650'];
+    /** Project categories the portal never shows: private clients (606) and 607. */
+    public const EXCLUDED_CATEGORIES = ['606', '607'];
 
     public const PROJECTS = 'projects';
 
@@ -48,6 +49,38 @@ class ClientPortal
     /**
      * The signed-in client user, on the portal.
      */
+    /**
+     * The project categories the portal can show: every category except the excluded ones, so new
+     * categories (608.1, 609, …) can be given to client users too.
+     *
+     * @return list<string>
+     */
+    public static function categories(): array
+    {
+        return ProjectCategory::query()
+            ->whereNotIn('code', self::EXCLUDED_CATEGORIES)
+            ->orderBy('code')
+            ->pluck('code')
+            ->map(fn (mixed $code): string => (string) $code)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * "609 — Batterijlokalen" per category, for the client user form.
+     *
+     * @return array<string, string>
+     */
+    public static function categoryOptions(): array
+    {
+        return ProjectCategory::query()
+            ->whereIn('code', self::categories())
+            ->orderBy('code')
+            ->get()
+            ->mapWithKeys(fn (ProjectCategory $category): array => [(string) $category->code => $category->name && $category->name !== $category->code ? "{$category->code} — {$category->name}" : (string) $category->code])
+            ->all();
+    }
+
     public static function user(): ?ClientUser
     {
         $user = Filament::auth()->user();

@@ -151,7 +151,7 @@ class ClientUser extends Authenticatable implements FilamentUser, HasLocalePrefe
      */
     public function projectCategories(): array
     {
-        return array_values(array_intersect(ClientPortal::CATEGORIES, (array) $this->project_categories));
+        return array_values(array_intersect(ClientPortal::categories(), (array) $this->project_categories));
     }
 
     /**
@@ -173,7 +173,7 @@ class ClientUser extends Authenticatable implements FilamentUser, HasLocalePrefe
         // Only known permissions and categories are stored, whatever the form sends.
         static::saving(function (self $user): void {
             $user->permissions = array_values(array_intersect(ClientPortal::PERMISSIONS, (array) $user->permissions));
-            $user->project_categories = array_values(array_intersect(ClientPortal::CATEGORIES, (array) $user->project_categories));
+            $user->project_categories = array_values(array_intersect(ClientPortal::categories(), (array) $user->project_categories));
         });
     }
 

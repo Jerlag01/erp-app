@@ -24,7 +24,7 @@ class ClientUserFactory extends Factory
             'locale' => 'nl',
             'is_active' => true,
             'permissions' => [ClientPortal::PROJECTS],
-            'project_categories' => ClientPortal::CATEGORIES,
+            'project_categories' => fn (): array => ClientPortal::categories(),
         ];
     }
 

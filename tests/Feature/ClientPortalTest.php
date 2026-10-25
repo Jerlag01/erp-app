@@ -46,9 +46,9 @@ class ClientPortalTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function client(array $permissions, array $categories = ClientPortal::CATEGORIES): ClientUser
+    protected function client(array $permissions, ?array $categories = null): ClientUser
     {
-        $client = ClientUser::factory()->withPermissions($permissions)->create(['project_categories' => $categories]);
+        $client = ClientUser::factory()->withPermissions($permissions)->create(['project_categories' => $categories ?? ClientPortal::categories()]);
         $this->actingAs($client, ClientPortal::GUARD);
         Filament::setCurrentPanel(ClientPortal::PANEL);
 
@@ -230,9 +230,13 @@ class ClientPortalTest extends TestCase
         $this->assertSame(['604', '610'], $client->projectCategories());
 
         // Whatever is sent, only known permissions and the portal's categories are stored.
-        $client->update(['permissions' => [ClientPortal::PROJECTS, 'admin'], 'project_categories' => ['604', '606']]);
+        $client->update(['permissions' => [ClientPortal::PROJECTS, 'admin'], 'project_categories' => ['604', '606', '607', '608.1', '609']]);
         $this->assertSame([ClientPortal::PROJECTS], $client->fresh()->permissions);
-        $this->assertSame(['604'], $client->fresh()->project_categories);
+        $this->assertSame(['604', '608.1', '609'], $client->fresh()->project_categories);
+
+        // Every category can be given except 606 and 607, also new ones such as 608.1 and 609.
+        $this->assertSame(['600', '604', '605', '608', '608.1', '609', '610', '620', '630', '640', '650'], ClientPortal::categories());
+        $this->assertSame('609 — Batterijlokalen', ClientPortal::categoryOptions()['609']);
 
         // The password link leads to the portal's own reset page.
         Livewire::test(ManageClientUsers::class)->callTableAction('send_reset', $client);

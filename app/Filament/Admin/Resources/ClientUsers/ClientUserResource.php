@@ -141,7 +141,7 @@ class ClientUserResource extends Resource
                         Select::make('projects')
                             ->label(__('erp.client_portal.assigned_projects'))
                             ->helperText(__('erp.client_portal.assigned_projects_help'))
-                            ->relationship('projects', 'reference', fn (Builder $query) => $query->whereHas('category', fn (Builder $query) => $query->whereIn('code', ClientPortal::CATEGORIES)))
+                            ->relationship('projects', 'reference', fn (Builder $query) => $query->whereHas('category', fn (Builder $query) => $query->whereIn('code', ClientPortal::categories())))
                             ->getOptionLabelFromRecordUsing(fn (Project $record): string => trim($record->reference.' '.($record->subtitle() ? '· '.$record->subtitle() : '')))
                             ->multiple()
                             ->searchable(['reference', 'short_description', 'work_order_number']),
@@ -159,9 +159,9 @@ class ClientUserResource extends Resource
                         CheckboxList::make('project_categories')
                             ->label(__('erp.client_portal.categories'))
                             ->helperText(__('erp.client_portal.categories_help'))
-                            ->options(array_combine(ClientPortal::CATEGORIES, ClientPortal::CATEGORIES))
-                            ->default(ClientPortal::CATEGORIES)
-                            ->columns(['default' => 3, 'md' => 9])
+                            ->options(fn (): array => ClientPortal::categoryOptions())
+                            ->default(fn (): array => ClientPortal::categories())
+                            ->columns(['default' => 2, 'md' => 4])
                             ->bulkToggleable()
                             ->visible(fn (Get $get): bool => in_array(ClientPortal::PROJECTS, (array) $get('permissions'), true)),
                     ]),
