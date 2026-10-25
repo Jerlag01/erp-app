@@ -124,7 +124,8 @@ class MobilePlanningAndChecksApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.sent', false)
             ->assertJsonPath('data.error', 'InvalidCredentials')
-            ->assertJsonPath('data.message', __('erp.mobile.push_test.credentials', [], 'nl'));
+            ->assertJsonPath('data.detail', 'Unable to retrieve the FCM server key')
+            ->assertJsonPath('data.message', __('erp.mobile.push_test.credentials', [], 'nl')."\n\nExpo: Unable to retrieve the FCM server key");
         Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context): bool => $message === 'Push notification refused by Expo' && $context['error'] === 'InvalidCredentials');
 
         // A phone without a token is told to allow notifications.

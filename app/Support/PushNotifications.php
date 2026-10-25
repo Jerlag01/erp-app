@@ -16,6 +16,9 @@ use Throwable;
  */
 class PushNotifications
 {
+    /** Expo's explanation of the last refused message (e.g. which app it has no Firebase key for). */
+    public ?string $lastDetail = null;
+
     /**
      * @param  array<string, mixed>  $data  what the app needs to open the right screen ("screen", ids)
      */
@@ -47,9 +50,12 @@ class PushNotifications
     /**
      * Sends a test message to one phone at once (not after the response), so the app can show whether
      * push works: null when Expo accepted it, else its error ("InvalidCredentials", "DeviceNotRegistered", …).
+     * Expo's own explanation of the last refusal is kept in $lastDetail.
      */
     public function test(string $token, string $title, string $body): ?string
     {
+        $this->lastDetail = null;
+
         if (! config('services.expo_push.enabled')) {
             return 'disabled';
         }
@@ -82,6 +88,7 @@ class PushNotifications
                 }
 
                 $errors[$index] = $error = (string) ($ticket['details']['error'] ?? 'Unknown');
+                $this->lastDetail = mb_substr((string) ($ticket['message'] ?? ''), 0, 500) ?: null;
 
                 if ($error === 'DeviceNotRegistered') {
                     MobileKey::query()->where('push_token', $messages[$index]['to'] ?? '')->update(['push_token' => null, 'push_token_updated_at' => now()]);

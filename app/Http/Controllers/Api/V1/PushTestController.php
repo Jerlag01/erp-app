@@ -25,18 +25,21 @@ class PushTestController extends Controller
         }
 
         $error = $push->test($key->push_token, __('erp.mobile.push_test.title'), __('erp.mobile.push_test.body'));
+        $message = match (true) {
+            $error === null => __('erp.mobile.push_test.sent'),
+            $error === 'disabled' => __('erp.mobile.push_test.disabled'),
+            $error === 'InvalidCredentials' => __('erp.mobile.push_test.credentials'),
+            $error === 'DeviceNotRegistered' => __('erp.mobile.push_test.not_registered'),
+            default => __('erp.mobile.push_test.failed', ['error' => $error]),
+        };
 
         return response()->json(['data' => [
             'registered' => true,
             'sent' => $error === null,
             'error' => $error,
-            'message' => match (true) {
-                $error === null => __('erp.mobile.push_test.sent'),
-                $error === 'disabled' => __('erp.mobile.push_test.disabled'),
-                $error === 'InvalidCredentials' => __('erp.mobile.push_test.credentials'),
-                $error === 'DeviceNotRegistered' => __('erp.mobile.push_test.not_registered'),
-                default => __('erp.mobile.push_test.failed', ['error' => $error]),
-            },
+            // Expo's own explanation shows what is missing where (e.g. for which app or project).
+            'detail' => $push->lastDetail,
+            'message' => $error !== null && filled($push->lastDetail) ? $message."\n\nExpo: ".$push->lastDetail : $message,
         ]]);
     }
 }
