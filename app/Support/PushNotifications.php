@@ -45,10 +45,31 @@ class PushNotifications
     }
 
     /**
-     * @param  list<array<string, mixed>>  $messages
+     * Sends a test message to one phone at once (not after the response), so the app can show whether
+     * push works: null when Expo accepted it, else its error ("InvalidCredentials", "DeviceNotRegistered", …).
      */
-    public function send(array $messages): void
+    public function test(string $token, string $title, string $body): ?string
     {
+        if (! config('services.expo_push.enabled')) {
+            return 'disabled';
+        }
+
+        $errors = $this->send([[
+            'to' => $token, 'title' => $title, 'body' => $body, 'data' => (object) ['screen' => 'test'],
+            'sound' => 'default', 'channelId' => 'default', 'priority' => 'high',
+        ]]);
+
+        return $errors[0] ?? null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $messages
+     * @return array<int, string> the error per message that Expo refused, by its position
+     */
+    public function send(array $messages): array
+    {
+        $errors = [];
+
         try {
             $response = Http::acceptJson()
                 ->timeout(10)
@@ -56,16 +77,29 @@ class PushNotifications
                 ->post((string) config('services.expo_push.url'), $messages);
 
             foreach ((array) $response->json('data', []) as $index => $ticket) {
-                if (($ticket['status'] ?? null) === 'error' && (($ticket['details']['error'] ?? null) === 'DeviceNotRegistered')) {
+                if (($ticket['status'] ?? null) !== 'error') {
+                    continue;
+                }
+
+                $errors[$index] = $error = (string) ($ticket['details']['error'] ?? 'Unknown');
+
+                if ($error === 'DeviceNotRegistered') {
                     MobileKey::query()->where('push_token', $messages[$index]['to'] ?? '')->update(['push_token' => null, 'push_token_updated_at' => now()]);
+                } else {
+                    // E.g. InvalidCredentials: the FCM key of the Android app is missing in EAS.
+                    Log::warning('Push notification refused by Expo', ['error' => $error, 'message' => mb_substr((string) ($ticket['message'] ?? ''), 0, 300)]);
                 }
             }
 
             if ($response->failed()) {
                 Log::warning('Push notifications could not be sent', ['status' => $response->status(), 'body' => mb_substr($response->body(), 0, 500)]);
+                $errors = $errors ?: array_fill(0, count($messages), 'HTTP '.$response->status());
             }
         } catch (Throwable $exception) {
             Log::warning('Push notifications could not be sent', ['error' => $exception->getMessage()]);
+            $errors = array_fill(0, count($messages), 'Unreachable');
         }
+
+        return $errors;
     }
 }

@@ -3598,6 +3598,15 @@ return [
         'result' => ':created aangemaakt, :updated bijgewerkt, :unchanged ongewijzigd, :skipped overgeslagen.',
     ],
     'mobile' => [
+        'push_test' => [
+            'title' => 'Testmelding',
+            'body' => 'Meldingen werken op deze telefoon.',
+            'sent' => 'Testmelding verstuurd: ze verschijnt binnen enkele seconden.',
+            'not_registered' => 'Deze telefoon is niet geregistreerd voor meldingen. Sta meldingen toe voor de app in de instellingen van je telefoon en probeer opnieuw.',
+            'credentials' => 'De meldingsdienst weigert de melding: de Firebase-sleutel van de app ontbreekt nog. Verwittig de beheerder.',
+            'disabled' => 'Meldingen staan uit op de server.',
+            'failed' => 'De melding kon niet verstuurd worden (:error).',
+        ],
         'cancel' => 'Annuleren',
         'close' => 'Sluiten',
         'save' => 'Opslaan',

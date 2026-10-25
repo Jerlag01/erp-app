@@ -18,9 +18,10 @@ use Illuminate\Support\HtmlString;
 use Throwable;
 
 /**
- * Tells an employee that items were added to, changed in or removed from their planning: always in
- * the platform and on their phone (unless they made the change themselves) and, when asked, by e-mail to them with a
- * copy to the addresses from Settings > Planning.
+ * Tells an employee that items were added to, changed in or removed from their planning: in the
+ * platform (unless they made the change themselves), always on their phone (the planning is made on
+ * the platform, so also your own planning is pushed to your phone) and, when asked, by e-mail to them
+ * with a copy to the addresses from Settings > Planning.
  */
 class NotifyPlanningChange
 {
@@ -44,8 +45,12 @@ class NotifyPlanningChange
         $locale = $employee->preferredLocale() ?? config('app.locale');
         $date = $items[0]->date->toDateString();
 
-        if ($actor?->id !== $employee->id && $employee->is_active) {
-            $this->notifyInApp($employee, $event, $items, $previous, $locale, $date);
+        if ($employee->is_active) {
+            if ($actor?->id !== $employee->id) {
+                $this->notifyInApp($employee, $event, $items, $previous, $locale, $date);
+            }
+
+            $this->push($employee, $event, $items, $locale, $date);
         }
 
         return ! $mail || $this->mail($employee, $event, $items, $previous, $actor, $locale, $date);
@@ -84,7 +89,13 @@ class NotifyPlanningChange
         };
 
         $notification->sendToDatabase($employee);
+    }
 
+    /**
+     * @param  list<PlanningItem>  $items
+     */
+    protected function push(User $employee, string $event, array $items, string $locale, string $date): void
+    {
         app(PushNotifications::class)->toUser(
             $employee,
             __("erp.planning.notifications.{$event}_title", [], $locale),

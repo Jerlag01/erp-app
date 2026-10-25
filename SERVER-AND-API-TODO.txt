@@ -43,6 +43,23 @@ This file lists what still has to happen outside the application code:
 
           qpdf --version
 
+[TODO]  Push notifications of the mobile app (Android): Firebase key in EAS
+        The app registers with Expo, but Expo can only deliver to Android
+        phones with the Firebase (FCM V1) service account key of the project
+        "pi-erp-2a891". Without it Expo refuses every message
+        ("InvalidCredentials"); the server now logs that as
+        "Push notification refused by Expo", and the app shows it under
+        More > Profile > Notifications > "Send a test notification".
+
+        1. Firebase console > project pi-erp-2a891 > Project settings >
+           Service accounts > "Generate new private key" (a JSON file).
+        2. On your own computer, in devops/mobile:
+             eas credentials -p android
+           > production > Google Service Account >
+           "Manage your Google Service Account Key for Push Notifications
+           (FCM V1)" > upload the JSON file.
+        3. No new build is needed for the key itself; test with the button.
+
 [TODO]  Scheduler (cron) - needed for the daily price update
         The app runs "stock:update-prices" every day at 05:30, but only if
         Laravel's scheduler is called every minute. There is no cron entry yet

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\Api\V1\MobileAuthController;
 use App\Http\Controllers\Api\V1\PlanningController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\PushTestController;
 use App\Http\Controllers\Api\V1\PushTokenController;
 use App\Http\Controllers\Api\V1\SuggestionController;
 use App\Http\Controllers\Api\V1\TimesheetController;
@@ -25,6 +26,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('/auth/logout', [MobileAuthController::class, 'logout'])->name('auth.logout');
         Route::get('/me', ProfileController::class)->name('me');
         Route::put('/push-token', PushTokenController::class)->name('push-token');
+        Route::post('/push-test', PushTestController::class)->middleware('throttle:6,1')->name('push-test');
 
         // The employee's own prestation sheet.
         Route::get('/timesheet/week', [TimesheetController::class, 'week'])->name('timesheet.week');

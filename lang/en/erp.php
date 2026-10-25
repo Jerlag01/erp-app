@@ -3597,6 +3597,15 @@ return [
         'result' => ':created created, :updated updated, :unchanged unchanged, :skipped skipped.',
     ],
     'mobile' => [
+        'push_test' => [
+            'title' => 'Test notification',
+            'body' => 'Notifications work on this phone.',
+            'sent' => 'Test notification sent: it appears within a few seconds.',
+            'not_registered' => 'This phone is not registered for notifications. Allow notifications for the app in your phone\'s settings and try again.',
+            'credentials' => 'The notification service refuses the message: the app\'s Firebase key is still missing. Tell the administrator.',
+            'disabled' => 'Notifications are switched off on the server.',
+            'failed' => 'The notification could not be sent (:error).',
+        ],
         'cancel' => 'Cancel',
         'close' => 'Close',
         'save' => 'Save',

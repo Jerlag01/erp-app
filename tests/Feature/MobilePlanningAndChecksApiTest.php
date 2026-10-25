@@ -16,9 +16,11 @@ use App\Models\Team;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -93,10 +95,36 @@ class MobilePlanningAndChecksApiTest extends TestCase
             && json_decode($request->body(), true)[0]['to'] === 'ExponentPushToken[jan]'
             && json_decode($request->body(), true)[0]['data'] === ['screen' => 'planning', 'date' => '2026-10-08']);
 
-        // Your own changes are not pushed to you.
-        Http::fake(['exp.host/*' => Http::response(['data' => []])]);
+        // Planning yourself on the platform is pushed to your phone too (without a notification in the platform).
+        $before = $this->user->notifications()->count();
         app(NotifyPlanningChange::class)->handle($this->user, NotifyPlanningChange::UPDATED, [$item], $this->user, false);
-        Http::assertNothingSent();
+        Http::assertSentCount(2);
+        $this->assertSame($before, $this->user->notifications()->count());
+    }
+
+    #[Test]
+    public function the_app_sends_itself_a_test_notification_and_hears_why_it_failed(): void
+    {
+        $this->postJson('/api/v1/push-test', [], $this->auth)
+            ->assertOk()
+            ->assertJsonPath('data.registered', true)
+            ->assertJsonPath('data.sent', true);
+        Http::assertSent(fn (Request $request): bool => json_decode($request->body(), true)[0]['to'] === 'ExponentPushToken[jan]');
+
+        // Expo refuses (no Firebase key in EAS): the app is told, and the server logs it.
+        Log::spy();
+        Http::swap(new Factory);
+        Http::fake(['exp.host/*' => Http::response(['data' => [['status' => 'error', 'message' => 'Unable to retrieve the FCM server key', 'details' => ['error' => 'InvalidCredentials']]]])]);
+        $this->postJson('/api/v1/push-test', [], $this->auth)
+            ->assertOk()
+            ->assertJsonPath('data.sent', false)
+            ->assertJsonPath('data.error', 'InvalidCredentials')
+            ->assertJsonPath('data.message', __('erp.mobile.push_test.credentials', [], 'nl'));
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context): bool => $message === 'Push notification refused by Expo' && $context['error'] === 'InvalidCredentials');
+
+        // A phone without a token is told to allow notifications.
+        $this->putJson('/api/v1/push-token', ['token' => null], $this->auth)->assertOk();
+        $this->postJson('/api/v1/push-test', [], $this->auth)->assertOk()->assertJsonPath('data.registered', false);
     }
 
     #[Test]

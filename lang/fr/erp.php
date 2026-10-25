@@ -3597,6 +3597,15 @@ return [
         'result' => ':created créés, :updated mis à jour, :unchanged inchangés, :skipped ignorés.',
     ],
     'mobile' => [
+        'push_test' => [
+            'title' => 'Notification de test',
+            'body' => 'Les notifications fonctionnent sur ce téléphone.',
+            'sent' => 'Notification de test envoyée : elle apparaît dans quelques secondes.',
+            'not_registered' => 'Ce téléphone n\'est pas enregistré pour les notifications. Autorisez les notifications de l\'application dans les réglages du téléphone et réessayez.',
+            'credentials' => 'Le service de notifications refuse le message : la clé Firebase de l\'application manque encore. Prévenez l\'administrateur.',
+            'disabled' => 'Les notifications sont désactivées sur le serveur.',
+            'failed' => 'La notification n\'a pas pu être envoyée (:error).',
+        ],
         'cancel' => 'Annuler',
         'close' => 'Fermer',
         'save' => 'Enregistrer',
