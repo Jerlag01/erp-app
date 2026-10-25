@@ -66,7 +66,9 @@ class Modules
 
     public const BATTERY_ROOMS = 'battery_rooms';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES, self::BATTERY_ROOMS];
+    public const ONBOARDING = 'onboarding';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES, self::BATTERY_ROOMS, self::ONBOARDING];
 
     public function __construct(protected Settings $settings) {}
 
@@ -216,6 +218,14 @@ class Modules
     /**
      * Battery rooms (609) brought up to standard after a battery replacement in Flanders or Brussels.
      */
+    /**
+     * Onboarding documents that new users read and sign first.
+     */
+    public function onboarding(): bool
+    {
+        return $this->enabled(self::ONBOARDING);
+    }
+
     public function batteryRooms(): bool
     {
         return $this->enabled(self::BATTERY_ROOMS) && $this->projects();

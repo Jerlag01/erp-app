@@ -359,6 +359,7 @@ class Settings extends Page
             Modules::HR_CALCULATIONS => Heroicon::OutlinedCalculator,
             Modules::BOARD_DELIVERIES => Heroicon::OutlinedCpuChip,
             Modules::BATTERY_ROOMS => Heroicon::OutlinedHomeModern,
+            Modules::ONBOARDING => Heroicon::OutlinedAcademicCap,
         ];
 
         return [

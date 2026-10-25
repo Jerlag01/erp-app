@@ -2,6 +2,7 @@
 
 use App\Actions\Batteries\BatteryRoomDocument;
 use App\Http\Controllers\AbsenceDocumentController;
+use App\Http\Controllers\AccessExportController;
 use App\Http\Controllers\AsbuiltDownloadController;
 use App\Http\Controllers\BaeOrderPdfController;
 use App\Http\Controllers\BatteryDeliveriesPdfController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\MobileAppDismissController;
 use App\Http\Controllers\MobileAppDownloadController;
 use App\Http\Controllers\MobileFloorPlanController;
 use App\Http\Controllers\MoveDocumentController;
+use App\Http\Controllers\OnboardingDocumentController;
 use App\Http\Controllers\PeppolInboundController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\ProjectArchiveController;
@@ -104,6 +106,10 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
     Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');
     Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');
+    Route::get('/onboarding/documents/{document}', OnboardingDocumentController::class)->whereNumber('document')->name('onboarding.document');
+    Route::get('/onboarding-signatures-pdf', [AccessExportController::class, 'onboarding'])->name('onboarding.signatures-pdf');
+    Route::get('/access-badges-pdf', [AccessExportController::class, 'badges'])->name('access.badges-pdf');
+    Route::get('/security-tags-pdf', [AccessExportController::class, 'tags'])->name('access.tags-pdf');
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');
     Route::get('/waste-totals-pdf', [WastePdfController::class, 'totals'])->name('waste.totals-pdf');
     Route::get('/waste-regional-pdf', [WastePdfController::class, 'regional'])->name('waste.regional-pdf');

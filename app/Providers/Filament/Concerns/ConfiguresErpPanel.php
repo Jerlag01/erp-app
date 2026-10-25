@@ -4,6 +4,7 @@ namespace App\Providers\Filament\Concerns;
 
 use App\Enums\NavigationGroup;
 use App\Filament\Pages\Auth\EditProfile;
+use App\Http\Middleware\EnsureOnboarded;
 use App\Http\Middleware\SetUserLocale;
 use App\Support\MobileApp;
 use Filament\Actions\Action;
@@ -96,6 +97,7 @@ trait ConfiguresErpPanel
             ->authMiddleware([
                 Authenticate::class,
                 SetUserLocale::class,
+                EnsureOnboarded::class,
             ], isPersistent: true);
     }
 }

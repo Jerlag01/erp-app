@@ -351,9 +351,18 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     /**
      * @return array<string, string>
      */
+    /**
+     * @return HasMany<OnboardingSignature, $this>
+     */
+    public function onboardingSignatures(): HasMany
+    {
+        return $this->hasMany(OnboardingSignature::class);
+    }
+
     protected function casts(): array
     {
         return [
+            'onboarding_completed_at' => 'datetime',
             'email_verified_at' => 'datetime',
             'welcome_sent_at' => 'datetime',
             'password' => 'hashed',

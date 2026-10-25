@@ -230,9 +230,40 @@ Choisissez une ou plusieurs **catégories** (B, BE, C, …), le numéro et la da
 
 Un employé demande une modification (p. ex. nouvelle adresse) via **Mes données**. L'administration la confirme dans **Données modifiées**.
 
+## Badges, clés électroniques et tags de sécurité
+
+- **Badges & clés électroniques** : par collaborateur une ligne avec le **numéro de badge** (7 chiffres) et/ou la **clé électronique** (4 chiffres), si le collaborateur a l'**autorisation CLAD** et quelle **clearance**. Un numéro appartient à un seul collaborateur.
+- **Tags de sécurité** : par collaborateur le **tag** (2 chiffres), le **nom dans le système de sécurité**, l'accès au **dépôt** et au **bureau**, et si le collaborateur a reçu les **clés des portes**.
+- Les collaborateurs qui ne sont plus en service restent dans les deux listes comme **Désactivé** (onglet *Désactivé*).
+- Ajouter et modifier avec le droit **Badges, clés électroniques & tags de sécurité** ; supprimer uniquement avec le droit *Supprimer*. Les deux listes s'exportent en PDF (droit *Générer des PDF*).
+
 ## Confidentialité
 
 Les données sensibles comme le numéro de registre national sont conservées **chiffrées** et visibles uniquement avec les droits adéquats.
+MD,
+        ],
+
+        'onboarding' => [
+            'title' => 'Onboarding',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Les nouveaux utilisateurs lisent d'abord les **documents d'onboarding** (p. ex. règlement de travail, règles de sécurité) et signent qu'ils les ont lus, avant d'utiliser la plateforme.
+
+## Documents
+
+- Dans **Documents d'onboarding**, téléversez un ou plusieurs fichiers à la fois avec une **langue** (néerlandais, français ou anglais). Chaque fichier devient un document séparé ; titre, ordre et langue se modifient ensuite.
+- Un collaborateur ne voit que les documents dans **sa propre langue** (celle de son profil).
+
+## Pour le collaborateur
+
+- Un **nouvel utilisateur** arrive après la connexion d'abord sur la page **Onboarding** : toute autre page y mène tant que tout n'est pas signé.
+- Par document : **Ouvrir** puis **Signer** (nom et signature). La signature est conservée avec la date et l'heure.
+- Les utilisateurs déjà présents à l'arrivée du module sont considérés comme intégrés.
+
+## Suivi
+
+Dans **Onboarding : signatures**, vous voyez qui a ouvert et signé quel document, avec la signature ; la liste s'exporte en PDF. Les droits **Voir les signatures** et *Générer des PDF* de l'onboarding sont nécessaires ; gérer les documents demande **Gérer**.
 MD,
         ],
 

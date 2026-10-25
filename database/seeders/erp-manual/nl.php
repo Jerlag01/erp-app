@@ -231,9 +231,40 @@ Kies één of meer **categorieën** (B, BE, C, …), het nummer en de vervaldatu
 
 Een werknemer vraagt een wijziging (bv. nieuw adres) aan via **Mijn gegevens**. De administratie bevestigt ze bij **Gewijzigde gegevens**.
 
+## Badges, elektronische sleutels en beveiligingstags
+
+- **Badges & elektronische sleutels**: per werknemer één lijn met het **badgenummer** (7 cijfers) en/of de **elektronische sleutel** (4 cijfers), of de werknemer **CLAD-toelating** heeft en welke **clearance**. Een nummer hoort bij één werknemer.
+- **Beveiligingstags**: per werknemer de **tag** (2 cijfers), de **naam in het beveiligingssysteem**, toegang tot het **magazijn** en het **kantoor**, en of de werknemer **sleutels van de deuren** kreeg.
+- Werknemers die uit dienst zijn, blijven in beide lijsten staan als **Gedeactiveerd** (tabblad *Gedeactiveerd*).
+- Toevoegen en wijzigen met het recht **Badges, elektronische sleutels & beveiligingstags**; verwijderen kan enkel met het recht *Verwijderen*. Beide lijsten exporteer je als PDF (recht *PDF genereren*).
+
 ## Privacy
 
 Gevoelige gegevens zoals het rijksregisternummer worden **versleuteld** bewaard en zijn enkel zichtbaar met de juiste rechten.
+MD,
+        ],
+
+        'onboarding' => [
+            'title' => 'Onboarding',
+            'body' => <<<'MD'
+## Waarvoor?
+
+Nieuwe gebruikers lezen eerst de **onboardingdocumenten** (bv. arbeidsreglement, veiligheidsregels) en ondertekenen dat ze die gelezen hebben, voor ze het platform gebruiken.
+
+## Documenten
+
+- Bij **Onboardingdocumenten** laad je één of meer bestanden tegelijk op met een **taal** (Nederlands, Frans of Engels). Elk bestand wordt een apart document; titel, volgorde en taal pas je daarna aan.
+- Een werknemer ziet enkel de documenten in **zijn eigen taal** (de taal van zijn profiel).
+
+## Voor de werknemer
+
+- Een **nieuwe gebruiker** komt na het aanmelden eerst op de pagina **Onboarding**: elke andere pagina leidt daarheen tot alles ondertekend is.
+- Per document: **Openen** en daarna **Ondertekenen** (naam en handtekening). De handtekening wordt met datum en uur bewaard.
+- Gebruikers die er al waren toen de module kwam, gelden als ingewerkt.
+
+## Opvolging
+
+Bij **Onboarding: handtekeningen** zie je wie welk document opende en ondertekende, met de handtekening; je exporteert de lijst als PDF. Daarvoor zijn de rechten **Handtekeningen bekijken** en *PDF genereren* van Onboarding nodig; documenten beheren vraagt **Beheren**.
 MD,
         ],
 

@@ -230,9 +230,40 @@ Choose one or more **categories** (B, BE, C, …), the number and expiry date, a
 
 An employee requests a change (e.g. a new address) through **My details**. The administration confirms it under **Changed details**.
 
+## Badges, electronic keys and security tags
+
+- **Badges & electronic keys**: per employee one line with the **badge number** (7 digits) and/or the **electronic key** (4 digits), whether the employee has **CLAD permission** and which **clearance**. A number belongs to one employee.
+- **Security tags**: per employee the **tag** (2 digits), the **name in the security system**, access to the **warehouse** and the **office**, and whether the employee received **door keys**.
+- Employees who left stay in both lists as **Deactivated** (tab *Deactivated*).
+- Adding and changing with the permission **Badges, electronic keys & security tags**; deleting only with the permission *Delete*. Both lists are exported as PDF (permission *Generate PDF*).
+
 ## Privacy
 
 Sensitive data such as the national register number is stored **encrypted** and only visible with the right permissions.
+MD,
+        ],
+
+        'onboarding' => [
+            'title' => 'Onboarding',
+            'body' => <<<'MD'
+## What for?
+
+New users first read the **onboarding documents** (e.g. work rules, safety rules) and sign that they read them, before they use the platform.
+
+## Documents
+
+- Under **Onboarding documents** you upload one or more files at once with a **language** (Dutch, French or English). Each file becomes a separate document; title, order and language can be changed afterwards.
+- An employee only sees the documents in **their own language** (that of their profile).
+
+## For the employee
+
+- A **new user** first lands on the **Onboarding** page after signing in: every other page leads there until everything is signed.
+- Per document: **Open** and then **Sign** (name and signature). The signature is kept with the date and time.
+- Users who were there when the module came count as onboarded.
+
+## Follow-up
+
+Under **Onboarding: signatures** you see who opened and signed which document, with the signature; the list is exported as PDF. This needs the onboarding permissions **View signatures** and *Generate PDF*; managing documents needs **Manage**.
 MD,
         ],
 

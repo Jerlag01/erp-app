@@ -7,6 +7,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FinanceOverview;
 use App\Filament\Pages\FinanceStatistics;
 use App\Filament\Pages\HrAdvances;
+use App\Filament\Pages\Onboarding;
 use App\Filament\Pages\Planning;
 use App\Filament\Pages\Timesheet;
 use App\Filament\Pages\TimesheetOverview;
@@ -53,6 +54,7 @@ class AppPanelProvider extends PanelProvider
                 TimesheetOverview::class,
                 ToolboxOverview::class,
                 Announcement::class,
+                Onboarding::class,
                 HrAdvances::class,
             ])
             ->widgets([

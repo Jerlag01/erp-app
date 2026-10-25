@@ -36,6 +36,8 @@ class UserFactory extends Factory
             'job_title' => fake()->jobTitle(),
             'locale' => 'nl',
             'is_active' => true,
+            // Users in tests count as onboarded; see onboarding() for a new user who still has to.
+            'onboarding_completed_at' => now(),
         ];
     }
 
@@ -88,5 +90,13 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * A new user who still has to read and sign the onboarding documents.
+     */
+    public function onboarding(): static
+    {
+        return $this->state(fn (array $attributes) => ['onboarding_completed_at' => null]);
     }
 }

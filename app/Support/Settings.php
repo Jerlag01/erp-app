@@ -100,6 +100,7 @@ class Settings
                 Modules::HR_CALCULATIONS => true,
                 Modules::BOARD_DELIVERIES => true,
                 Modules::BATTERY_ROOMS => true,
+                Modules::ONBOARDING => true,
                 Modules::ENERSYS => true,
             ],
             'mail' => [
