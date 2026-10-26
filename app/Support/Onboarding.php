@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * The onboarding of a user: the active documents in their language, which they open and sign one by
+ * The onboarding of a user: the active documents in their language (mother tongue first), which they open and sign one by
  * one. When all are signed the onboarding is complete; until then a new user is sent to the onboarding
  * page first. Users that existed when the module came count as onboarded.
  */
@@ -22,11 +22,21 @@ class Onboarding
         return modules()->onboarding();
     }
 
+    /**
+     * The language of the user's documents: their mother tongue (employee register), else the language
+     * they use the platform in, else Dutch; the first of those that has documents.
+     */
     public function locale(User $user): string
     {
-        $locale = $user->preferredLocale();
+        $candidates = array_values(array_unique(array_filter([
+            $user->employee()->value('mother_tongue'),
+            $user->preferredLocale(),
+            'nl',
+        ], fn (?string $locale): bool => array_key_exists((string) $locale, OnboardingDocument::LOCALES))));
 
-        return array_key_exists((string) $locale, OnboardingDocument::LOCALES) ? (string) $locale : 'nl';
+        $available = OnboardingDocument::query()->where('is_active', true)->whereIn('locale', $candidates)->distinct()->pluck('locale')->all();
+
+        return collect($candidates)->first(fn (string $locale): bool => in_array($locale, $available, true)) ?? $candidates[0];
     }
 
     /**

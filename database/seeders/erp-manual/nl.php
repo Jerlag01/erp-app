@@ -262,12 +262,12 @@ Nieuwe gebruikers lezen eerst de **onboardingdocumenten** (bv. arbeidsreglement,
 ## Documenten
 
 - Bij **Onboardingdocumenten** laad je één of meer bestanden tegelijk op met een **taal** (Nederlands, Frans of Engels). Elk bestand wordt een apart document; titel, volgorde en taal pas je daarna aan.
-- Een werknemer ziet enkel de documenten in **zijn eigen taal** (de taal van zijn profiel).
+- Een werknemer ziet enkel de documenten in **zijn eigen taal**: zijn **moedertaal** uit het personeelsregister, anders de taal waarin hij het platform gebruikt. Zijn er (nog) geen documenten in die taal, dan krijgt hij die van de volgende taal, en anders de Nederlandse.
 
 ## Voor de werknemer
 
 - Een **nieuwe gebruiker** komt na het aanmelden eerst op de pagina **Onboarding**: elke andere pagina leidt daarheen tot alles ondertekend is.
-- Per document: **Openen** en daarna **Ondertekenen** (naam en handtekening). De handtekening wordt met datum en uur bewaard.
+- Per document: **Openen** (het document opent in een nieuw tabblad) en meteen daarna vraagt het platform om te **ondertekenen** (naam en handtekening). De handtekening wordt met datum en uur bewaard.
 - Gebruikers die er al waren toen de module kwam, gelden als ingewerkt.
 
 ## Opvolging

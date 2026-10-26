@@ -3042,7 +3042,7 @@ return [
         'files_help' => 'One or more files; each becomes a separate document in the chosen language.',
         'document_title' => 'Title',
         'language' => 'Language',
-        'language_help' => 'Employees only see the documents in their own language.',
+        'language_help' => 'Employees only see the documents in their own language: their mother tongue (employee register), else that of their profile.',
         'sort' => 'Order',
         'file' => 'File',
         'employee' => 'Employee',

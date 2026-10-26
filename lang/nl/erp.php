@@ -3043,7 +3043,7 @@ return [
         'files_help' => 'Eén of meer bestanden; elk wordt een apart document in de gekozen taal.',
         'document_title' => 'Titel',
         'language' => 'Taal',
-        'language_help' => 'Werknemers zien enkel de documenten in hun eigen taal.',
+        'language_help' => 'Werknemers zien enkel de documenten in hun eigen taal: hun moedertaal (personeelsregister), anders de taal van hun profiel.',
         'sort' => 'Volgorde',
         'file' => 'Bestand',
         'employee' => 'Werknemer',

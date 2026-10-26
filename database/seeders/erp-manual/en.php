@@ -261,12 +261,12 @@ New users first read the **onboarding documents** (e.g. work rules, safety rules
 ## Documents
 
 - Under **Onboarding documents** you upload one or more files at once with a **language** (Dutch, French or English). Each file becomes a separate document; title, order and language can be changed afterwards.
-- An employee only sees the documents in **their own language** (that of their profile).
+- An employee only sees the documents in **their own language**: their **mother tongue** from the employee register, else the language they use the platform in. When there are no documents in that language (yet), they get those of the next language, else the Dutch ones.
 
 ## For the employee
 
 - A **new user** first lands on the **Onboarding** page after signing in: every other page leads there until everything is signed.
-- Per document: **Open** and then **Sign** (name and signature). The signature is kept with the date and time.
+- Per document: **Open** (the document opens in a new tab), and right away the platform asks to **sign** (name and signature). The signature is kept with the date and time.
 - Users who were there when the module came count as onboarded.
 
 ## Follow-up

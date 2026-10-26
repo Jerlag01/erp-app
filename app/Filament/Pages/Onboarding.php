@@ -84,14 +84,17 @@ class Onboarding extends Page
     }
 
     /**
-     * Opening a document (the link opens it in a new tab) makes signing possible.
+     * Opening a document (the link opens it in a new tab) makes signing possible: the signing window
+     * is waiting when the user comes back to this tab.
      */
     public function opened(int $document): void
     {
         $found = $this->documents()->firstWhere('id', $document);
         abort_if($found === null, 404);
 
-        $this->service()->open($this->user(), $found);
+        if (! $this->service()->open($this->user(), $found)->isSigned()) {
+            $this->mountAction('sign', ['document' => $found->id]);
+        }
     }
 
     public function signAction(): Action

@@ -261,12 +261,12 @@ Les nouveaux utilisateurs lisent d'abord les **documents d'onboarding** (p. ex. 
 ## Documents
 
 - Dans **Documents d'onboarding**, téléversez un ou plusieurs fichiers à la fois avec une **langue** (néerlandais, français ou anglais). Chaque fichier devient un document séparé ; titre, ordre et langue se modifient ensuite.
-- Un collaborateur ne voit que les documents dans **sa propre langue** (celle de son profil).
+- Un collaborateur ne voit que les documents dans **sa propre langue** : sa **langue maternelle** du registre du personnel, sinon la langue dans laquelle il utilise la plateforme. S'il n'y a pas (encore) de documents dans cette langue, il reçoit ceux de la langue suivante, sinon les néerlandais.
 
 ## Pour le collaborateur
 
 - Un **nouvel utilisateur** arrive après la connexion d'abord sur la page **Onboarding** : toute autre page y mène tant que tout n'est pas signé.
-- Par document : **Ouvrir** puis **Signer** (nom et signature). La signature est conservée avec la date et l'heure.
+- Par document : **Ouvrir** (le document s'ouvre dans un nouvel onglet), et aussitôt la plateforme demande de **signer** (nom et signature). La signature est conservée avec la date et l'heure.
 - Les utilisateurs déjà présents à l'arrivée du module sont considérés comme intégrés.
 
 ## Suivi
