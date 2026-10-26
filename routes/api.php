@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\BatteryDossierController;
 use App\Http\Controllers\Api\V1\BatteryRoomController;
 use App\Http\Controllers\Api\V1\IncidentController;
+use App\Http\Controllers\Api\V1\InterventionController;
 use App\Http\Controllers\Api\V1\LeaveController;
+use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\MobileAuthController;
 use App\Http\Controllers\Api\V1\PlanningController;
 use App\Http\Controllers\Api\V1\ProfileController;
@@ -81,6 +83,19 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         });
 
         // Battery rooms (609).
+        // Messages from the platform.
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages');
+        Route::post('/messages/read', [MessageController::class, 'read'])->name('messages.read');
+
+        // Closing interventions (no signature).
+        Route::prefix('/interventions')->name('interventions.')->group(function (): void {
+            Route::get('/', [InterventionController::class, 'index'])->name('index');
+            Route::get('/stock-items', [InterventionController::class, 'stockItems'])->name('stock-items');
+            Route::get('/work-sites', [InterventionController::class, 'workSites'])->name('work-sites');
+            Route::get('/{id}', [InterventionController::class, 'show'])->whereNumber('id')->name('show');
+            Route::post('/{id}/close', [InterventionController::class, 'close'])->whereNumber('id')->name('close');
+        });
+
         Route::prefix('/battery-rooms')->name('battery-rooms.')->group(function (): void {
             Route::get('/', [BatteryRoomController::class, 'index'])->name('index');
             Route::get('/{id}', [BatteryRoomController::class, 'show'])->whereNumber('id')->name('show');

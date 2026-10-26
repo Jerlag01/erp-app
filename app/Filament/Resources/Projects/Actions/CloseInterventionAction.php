@@ -71,7 +71,7 @@ class CloseInterventionAction
      *
      * @return array<string, mixed>
      */
-    protected static function defaults(Project $project): array
+    public static function defaults(Project $project): array
     {
         $report = $project->interventionReport?->loadMissing(['materials', 'positions', 'coWorkers']);
 

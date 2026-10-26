@@ -97,6 +97,8 @@ class Permissions
         'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers']],
         // Resetting a user's two-step verification (explicit: also administrators need it ticked).
         'security' => ['module' => null, 'abilities' => ['reset_two_factor']],
+        // Messages from the platform to the mobile app (explicit: also administrators need it ticked).
+        'push_messages' => ['module' => null, 'abilities' => ['send']],
         'access_control' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'onboarding' => ['module' => Modules::ONBOARDING, 'abilities' => ['manage', 'view_signatures', 'generate_pdf']],
         'battery_rooms' => ['module' => Modules::BATTERY_ROOMS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'download_pdf']],
@@ -107,7 +109,7 @@ class Permissions
      *
      * @var list<string>
      */
-    public const EXPLICIT = ['routers.secrets', 'hr_calculations.view', 'hr_calculations.manage', 'asbuilt.delete', 'security.reset_two_factor'];
+    public const EXPLICIT = ['routers.secrets', 'hr_calculations.view', 'hr_calculations.manage', 'asbuilt.delete', 'security.reset_two_factor', 'push_messages.send'];
 
     public static function isExplicit(string $permission): bool
     {

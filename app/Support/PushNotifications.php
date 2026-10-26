@@ -48,6 +48,39 @@ class PushNotifications
     }
 
     /**
+     * The same message to many people at once (e.g. a message from the platform), in batches of
+     * 100 as Expo takes them, after the response.
+     *
+     * @param  iterable<User>  $users
+     * @param  array<string, mixed>  $data
+     */
+    public function toUsers(iterable $users, string $title, string $body, array $data = []): void
+    {
+        if (! config('services.expo_push.enabled')) {
+            return;
+        }
+
+        $ids = collect($users)->map(fn (User $user): int => $user->id)->all();
+        $tokens = MobileKey::query()->usable()->whereIn('user_id', $ids ?: [0])->whereNotNull('push_token')->pluck('push_token')->unique()->values();
+
+        if ($tokens->isEmpty()) {
+            return;
+        }
+
+        $messages = $tokens->map(fn (string $token): array => [
+            'to' => $token,
+            'title' => mb_substr($title, 0, 150),
+            'body' => mb_substr($body, 0, 1000),
+            'data' => (object) $data,
+            'sound' => 'default',
+            'channelId' => 'default',
+            'priority' => 'high',
+        ]);
+
+        defer(fn () => $messages->chunk(100)->each(fn ($chunk) => $this->send($chunk->values()->all())));
+    }
+
+    /**
      * Sends a test message to one phone at once (not after the response), so the app can show whether
      * push works: null when Expo accepted it, else its error ("InvalidCredentials", "DeviceNotRegistered", …).
      * Expo's own explanation of the last refusal is kept in $lastDetail.

@@ -4,9 +4,11 @@ namespace App\Support;
 
 use App\Enums\InterventionReportStatus;
 use App\Enums\MaterialDirection;
+use App\Enums\ProjectNumbering;
 use App\Models\InterventionCategory;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
@@ -29,6 +31,34 @@ class Interventions
     public function appliesTo(Project $project): bool
     {
         return $this->enabled() && $project->isIntervention();
+    }
+
+    /**
+     * The interventions a user sees: all for administrators and those who see every project; else
+     * the ones they lead, of their teams (with project rights) or that they are planned on.
+     *
+     * @return Builder<Project>
+     */
+    public function visibleTo(?User $user): Builder
+    {
+        $query = Project::query()->whereHas('category', fn (Builder $query) => $query->where('numbering', ProjectNumbering::Intervention->value));
+
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $canViewProjects = $user->hasPermission('projects.view');
+
+        if ($user->isAdmin() || ($canViewProjects && ! $user->seesOnlyOwnTeams())) {
+            return $query;
+        }
+
+        return $query->where(fn (Builder $query) => $query
+            ->whereRaw('1 = 0')
+            ->when($canViewProjects, fn (Builder $query) => $query
+                ->orWhereHas('leaders', fn (Builder $query) => $query->whereKey($user->id))
+                ->orWhereHas('teams', fn (Builder $query) => $query->whereKey($user->teamIds() ?: [0])))
+            ->when(modules()->planning(), fn (Builder $query) => $query->orWhereHas('planningItems', fn (Builder $query) => $query->where('user_id', $user->id))));
     }
 
     public function canClose(User $user, Project $project): bool

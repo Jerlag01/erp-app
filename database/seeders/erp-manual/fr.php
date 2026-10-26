@@ -1160,10 +1160,14 @@ L'application **PI ERP** apporte l'essentiel de la plateforme sur votre téléph
 - **Congés** : demander un congé ou des **heures supplémentaires en congé**, **signaler une maladie** et ajouter un certificat (photo, fichier ou photo prise sur le moment).
 - **Contrôles** : compléter le **contrôle annuel** du matériel de votre équipe (seulement quand une liste est ouverte).
 - **Plus** : vos données, lire et signer les **toolbox meetings**, **signaler un incident**, la **boîte à idées** et compléter et signer les **dossiers batteries** (604/605), avec le **plan** que vous dessinez comme sur la plateforme (604), et les **locaux batteries** (609) : note de livraison avec signature, infos supplémentaires, checklist et photos (le calcul de ventilation et le rapport BTV sont ajoutés sur la plateforme).
+- **Interventions** : **clôturer** une intervention comme sur la plateforme (catégories, code COW et local, temps presté, collègues, matériel, positions fusible/disjoncteur, tableaux modifiés et remarques), sans signature. Un administrateur la revoit ensuite ; une intervention renvoyée se clôture à nouveau.
+- **Messages** : les messages envoyés depuis la plateforme, dans votre langue.
 
 ## Notifications
 
 Autorisez les notifications : vous êtes averti d'un changement de planning, d'un nouveau toolbox meeting, d'un contrôle annuel ou d'un GPW approuvé.
+
+Les administrateurs avec le droit **Messages push de l'app → Envoyer** (à cocher séparément, même pour les administrateurs) envoient via **Administration → Messages push de l'app** un message à tout le monde, à des équipes ou à des personnes choisies. Le message est rédigé en néerlandais, français et anglais ; chaque collaborateur reçoit uniquement la version dans la langue de son profil, en notification et sous **Plus → Messages**. La liste indique combien de destinataires l'ont lu.
 
 ## Confidentialité
 

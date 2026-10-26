@@ -1161,10 +1161,14 @@ De app **PI ERP** brengt het belangrijkste van het platform naar je telefoon, oo
 - **Verlof**: verlof en **overuren als verlof** aanvragen, **ziekte melden** en een attest toevoegen (foto, bestand of meteen een foto nemen).
 - **Controles**: de **jaarlijkse controle** van het materieel van je ploeg invullen (enkel als er een lijst openstaat).
 - **Meer**: je gegevens, **toolboxmeetings** lezen en ondertekenen, **incident melden**, de **ideeënbus** en de **batterijdossiers** (604/605) invullen en ondertekenen, met de **plattegrond** die je tekent zoals op het platform (604), en de **batterijlokalen** (609): leveringsnota met handtekening, extra info, checklist en foto's (de ventilatieberekening en het BTV-verslag worden op het platform toegevoegd).
+- **Interventies**: een interventie **afsluiten** zoals op het platform (categorieën, COW-code en lokaal, gewerkte tijd, collega's, materiaal, posities zekering/automaat, gewijzigde borden en opmerkingen), zonder handtekening. Daarna reviewt een beheerder ze; een teruggestuurde interventie sluit je opnieuw af.
+- **Berichten**: de berichten die vanuit het platform verstuurd werden, in jouw taal.
 
 ## Meldingen
 
 Sta meldingen toe: je krijgt een melding bij een wijziging in je planning, een nieuwe toolboxmeeting, een jaarlijkse controle of een goedgekeurde GPW.
+
+Beheerders met het recht **Pushberichten app → Versturen** (apart aan te vinken, ook bij beheerders) sturen via **Beheer → Pushberichten app** een bericht naar iedereen, naar teams of naar gekozen personen. Het bericht wordt in het Nederlands, Frans en Engels ingevuld; elke medewerker krijgt enkel de versie in de taal van zijn profiel, als melding en onder **Meer → Berichten**. De lijst toont hoeveel ontvangers het gelezen hebben.
 
 ## Privacy
 

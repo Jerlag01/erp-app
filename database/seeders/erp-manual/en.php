@@ -1160,10 +1160,14 @@ The **PI ERP** app brings the essentials of the platform to your phone, also on 
 - **Leave**: request leave or **overtime as leave**, **report sickness** and add a certificate (photo, file or a picture taken on the spot).
 - **Checks**: fill in the **yearly control** of your team's equipment (only while a list is open).
 - **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605), with the **floor plan** you draw as on the platform (604), and the **battery rooms** (609): delivery note with signature, extra info, checklist and photos (the ventilation calculation and BTV report are added on the platform).
+- **Interventions**: **close** an intervention as on the platform (categories, COW code and room, time worked, colleagues, material, fuse/breaker positions, modified boards and remarks), without a signature. An administrator then reviews it; an intervention sent back is closed again.
+- **Messages**: the messages sent from the platform, in your language.
 
 ## Notifications
 
 Allow notifications: you are told about a change in your planning, a new toolbox meeting, a yearly control or an approved GPW.
+
+Administrators with the permission **App push messages → Send** (ticked separately, also for administrators) send a message to everyone, to teams or to chosen people through **Admin → App push messages**. The message is written in Dutch, French and English; every employee only gets the version in the language of their profile, as a notification and under **More → Messages**. The list shows how many recipients read it.
 
 ## Privacy
 

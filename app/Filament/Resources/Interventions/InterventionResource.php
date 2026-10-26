@@ -4,12 +4,12 @@ namespace App\Filament\Resources\Interventions;
 
 use App\Enums\InterventionReportStatus;
 use App\Enums\NavigationGroup;
-use App\Enums\ProjectNumbering;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\Interventions\Pages\ListInterventions;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\InterventionCategory;
 use App\Models\Project;
+use App\Support\Interventions;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontFamily;
@@ -94,25 +94,7 @@ class InterventionResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->whereHas('category', fn (Builder $query) => $query->where('numbering', ProjectNumbering::Intervention->value));
-        $user = auth()->user();
-
-        if (! $user) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        $canViewProjects = $user->hasPermission('projects.view');
-
-        if ($user->isAdmin() || ($canViewProjects && ! $user->seesOnlyOwnTeams())) {
-            return $query;
-        }
-
-        return $query->where(fn (Builder $query) => $query
-            ->whereRaw('1 = 0')
-            ->when($canViewProjects, fn (Builder $query) => $query
-                ->orWhereHas('leaders', fn (Builder $query) => $query->whereKey($user->id))
-                ->orWhereHas('teams', fn (Builder $query) => $query->whereKey($user->teamIds() ?: [0])))
-            ->when(modules()->planning(), fn (Builder $query) => $query->orWhereHas('planningItems', fn (Builder $query) => $query->where('user_id', $user->id))));
+        return app(Interventions::class)->visibleTo(auth()->user());
     }
 
     public static function table(Table $table): Table

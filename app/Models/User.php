@@ -66,6 +66,16 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * The messages sent to the user's mobile app from the platform.
+     *
+     * @return BelongsToMany<PushMessage, $this>
+     */
+    public function pushMessages(): BelongsToMany
+    {
+        return $this->belongsToMany(PushMessage::class)->withPivot(['locale', 'read_at'])->withTimestamps();
+    }
+
+    /**
      * @return BelongsToMany<Team, $this>
      */
     public function teams(): BelongsToMany
