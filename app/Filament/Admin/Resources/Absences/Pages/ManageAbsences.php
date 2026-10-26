@@ -20,7 +20,8 @@ class ManageAbsences extends ManageRecords
             CreateAction::make()
                 // A new absence starts with the type of the open tab.
                 ->fillForm(fn (): array => ['type' => AbsenceType::tryFrom((string) $this->activeTab)?->value ?? AbsenceType::Medical->value])
-                ->mutateDataUsing(fn (array $data): array => [...AbsenceResource::withDocumentSource($data), 'created_by' => auth()->id()]),
+                ->mutateDataUsing(fn (array $data): array => [...AbsenceResource::withDocumentSource($data), 'created_by' => auth()->id()])
+                ->using(fn (array $data): Absence => AbsenceResource::createAbsences($data)),
         ];
     }
 

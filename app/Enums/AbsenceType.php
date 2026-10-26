@@ -9,7 +9,8 @@ use Filament\Support\Icons\Heroicon;
 
 /**
  * Absences an administrator records: medical leave, overtime taken as paid leave, family leave
- * (unpaid leave for compelling family reasons, "dwingende redenen") and other unpaid leave.
+ * (unpaid leave for compelling family reasons, "dwingende redenen"), other unpaid leave and justified
+ * absence ("gewettigd afwezig", GA: with a supporting document, possibly on several loose periods).
  */
 enum AbsenceType: string implements HasColor, HasIcon, HasLabel
 {
@@ -20,6 +21,8 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
     case Family = 'family';
 
     case Unpaid = 'unpaid';
+
+    case Justified = 'justified';
 
     public function getLabel(): string
     {
@@ -33,6 +36,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Overtime => 'info',
             self::Family => 'warning',
             self::Unpaid => 'gray',
+            self::Justified => 'success',
         };
     }
 
@@ -43,6 +47,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Overtime => Heroicon::OutlinedClock,
             self::Family => Heroicon::OutlinedHome,
             self::Unpaid => Heroicon::OutlinedMinusCircle,
+            self::Justified => Heroicon::OutlinedDocumentCheck,
         };
     }
 
@@ -52,6 +57,22 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
     public function needsCertificate(): bool
     {
         return $this === self::Medical;
+    }
+
+    /**
+     * Where the administrator can add a document: the certificate of sickness, or the proof of a justified absence.
+     */
+    public function takesDocument(): bool
+    {
+        return $this === self::Medical || $this === self::Justified;
+    }
+
+    /**
+     * Justified absences can be entered for several loose periods at once.
+     */
+    public function allowsSeveralPeriods(): bool
+    {
+        return $this === self::Justified;
     }
 
     /**
@@ -72,6 +93,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Overtime => '#0284c7',
             self::Family => '#d97706',
             self::Unpaid => '#64748b',
+            self::Justified => '#059669',
         };
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\ClientUsers;
 
 use App\Actions\ClientPortal\SendClientWelcomeMail;
 use App\Enums\NavigationGroup;
+use App\Filament\Admin\Actions\ResetTwoFactorAction;
 use App\Models\ClientUser;
 use App\Models\Project;
 use App\Models\WorkSite;
@@ -213,6 +214,7 @@ class ClientUserResource extends Resource
                             ? Notification::make()->title(__('erp.client_portal.reset_sent'))->success()->send()
                             : Notification::make()->title(__($status))->danger()->send();
                     }),
+                ResetTwoFactorAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

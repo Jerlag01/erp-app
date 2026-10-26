@@ -466,6 +466,7 @@ return [
         'areas' => [
             'announcements' => 'Annonces',
             'asbuilt' => 'As-built',
+            'security' => 'Sécurité',
             'access_control' => 'Badges, clés électroniques & tags de sécurité',
             'onboarding' => 'Onboarding',
             'battery_rooms' => 'Locaux batteries (609)',
@@ -512,6 +513,7 @@ return [
         'abilities' => [
             'view_signatures' => 'Voir les signatures',
             'manage_suppliers' => 'Gérer les fournisseurs',
+            'reset_two_factor' => 'Réinitialiser la vérification en 2 étapes',
             'view' => 'Consulter',
             'create' => 'Créer',
             'update' => 'Modifier',
@@ -1021,6 +1023,7 @@ return [
             'overtime' => 'Heures sup. en congé',
             'family' => 'Congé familial',
             'unpaid' => 'Congé sans solde',
+            'justified' => 'Absence justifiée',
         ],
         'vat_rate' => ['reverse_charge' => 'Autoliquidation', 'percent' => ':rate%'],
         'invoice_type' => ['invoice' => 'Facture', 'credit_note' => 'Note de crédit'],
@@ -1784,6 +1787,11 @@ return [
         'note_help' => 'Visible pour le collaborateur dans « Mes absences ».',
         'certificate' => 'Certificat',
         'certificate_admin_help' => 'Photo (tout type) ou PDF, max. 12 Mo. Si vous le téléversez ici, le collaborateur peut seulement le télécharger ; sans certificat, il peut le téléverser lui-même.',
+        'periods' => 'Périodes',
+        'add_period' => 'Ajouter une période',
+        'periods_help' => 'Ajoutez une ou plusieurs périodes distinctes ; chaque période devient une absence séparée avec le même document.',
+        'document' => 'Document',
+        'justified_document_help' => 'Photo (tout type) ou PDF, max. 12 Mo : la preuve de l\'absence justifiée. Le collaborateur peut seulement la télécharger.',
         'not_needed' => 'Pas nécessaire',
         'missing' => 'Manquant',
         'present' => 'Présent',
@@ -2515,6 +2523,7 @@ return [
                 'R' => 'Récupération heures sup.',
                 'IR' => 'Repos compensatoire',
                 'FV' => 'Congé familial',
+                'GA' => 'Absence justifiée',
                 'OP' => 'Formation',
                 'F' => 'Jour férié',
             ],
@@ -2965,6 +2974,12 @@ return [
             'file_costs' => 'Frais de dossier',
             'total' => 'Total de l\'offre : :amount',
         ],
+    ],
+    'two_factor' => [
+        'reset' => 'Désactiver la vérification en 2 étapes',
+        'reset_heading' => 'Désactiver la vérification en 2 étapes de :name ?',
+        'reset_help' => 'Pour un utilisateur qui a perdu son application d\'authentification ou ses codes de récupération. Il se connecte ensuite avec son seul mot de passe et peut reconfigurer la vérification en 2 étapes dans son profil.',
+        'reset_done' => 'Vérification en 2 étapes désactivée.',
     ],
     'access' => [
         'badges' => 'Badges & clés électroniques',
@@ -3702,6 +3717,10 @@ return [
         'result' => ':created créés, :updated mis à jour, :unchanged inchangés, :skipped ignorés.',
     ],
     'mobile' => [
+        'two_factor' => [
+            'required' => 'Saisissez le code de votre application d\'authentification, ou le code que nous venons de vous envoyer par e-mail.',
+            'invalid' => 'Ce code est incorrect ou a expiré.',
+        ],
         'push_test' => [
             'title' => 'Notification de test',
             'body' => 'Les notifications fonctionnent sur ce téléphone.',

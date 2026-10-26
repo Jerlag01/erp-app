@@ -41,6 +41,13 @@ La plateforme ERP rassemble tout ce qui concerne l'entreprise : projets, plannin
 - Choisissez **néerlandais, français ou anglais** avec le choix de langue à côté du menu utilisateur. Ce choix vaut aussi pour les mails que vous recevez et pour l'application mobile.
 - Via le menu utilisateur → **Profil**, vous modifiez votre nom, votre adresse e-mail ou votre mot de passe.
 
+## Vérification en deux étapes
+
+- Via **Profil**, activez une deuxième étape à la connexion : une **application d'authentification** (Microsoft Authenticator, Google Authenticator, Authy, 1Password, …) avec laquelle vous scannez un code QR, et/ou un **code par e-mail**.
+- Conservez les **codes de récupération** en lieu sûr : chaque code fonctionne une fois si vous n'avez pas votre téléphone.
+- Ensuite, la plateforme demande le code après votre mot de passe, aussi dans l'application mobile et sur le portail client.
+- Plus d'accès à vos codes ? Un administrateur avec le droit **Sécurité → Réinitialiser la vérification en 2 étapes** la désactive (Administration → Utilisateurs ou Utilisateurs clients). Ce droit doit être coché séparément, même pour les administrateurs.
+
 ## Notifications
 
 La cloche en haut à droite affiche les notifications : un changement dans votre planning, une demande de congé approuvée, un nouveau toolbox meeting, … Cliquez sur une notification pour ouvrir directement la bonne page.
@@ -305,6 +312,7 @@ Dans **Demandes de congé**, vous approuvez ou refusez une demande (avec une rai
 - Ajoutez le **certificat** en photo ou PDF, tout de suite ou plus tard.
 - Dans **Absences**, l'administration voit les maladies encore **sans certificat**.
 - Seule la maladie demande un certificat : pour les **heures supplémentaires en congé**, le **congé familial** et le **congé sans solde**, il n'y a pas de téléversement (« Pas nécessaire »).
+- L'**absence justifiée (GA)** est ajoutée uniquement par un administrateur, avec un **document** (photo ou PDF) comme preuve. À la création, vous choisissez une ou plusieurs **périodes distinctes** : chaque période devient une absence séparée avec le même document. La feuille de prestations affiche le code **GA**, sans heures. Le collaborateur peut seulement télécharger le document.
 
 ## Conseil
 

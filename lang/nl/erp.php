@@ -466,6 +466,7 @@ return [
         'areas' => [
             'announcements' => 'Mededelingen',
             'asbuilt' => 'As-built',
+            'security' => 'Beveiliging',
             'access_control' => 'Badges, elektronische sleutels & beveiligingstags',
             'onboarding' => 'Onboarding',
             'battery_rooms' => 'Batterijlokalen (609)',
@@ -512,6 +513,7 @@ return [
         'abilities' => [
             'view_signatures' => 'Handtekeningen bekijken',
             'manage_suppliers' => 'Leveranciers beheren',
+            'reset_two_factor' => '2-stapsverificatie resetten',
             'view' => 'Bekijken',
             'create' => 'Aanmaken',
             'update' => 'Bewerken',
@@ -1021,6 +1023,7 @@ return [
             'overtime' => 'Overuren als verlof',
             'family' => 'Familiaal verlof',
             'unpaid' => 'Onbetaald verlof',
+            'justified' => 'Gewettigd afwezig',
         ],
         'vat_rate' => ['reverse_charge' => 'Btw verlegd', 'percent' => ':rate%'],
         'invoice_type' => ['invoice' => 'Factuur', 'credit_note' => 'Creditnota'],
@@ -1784,6 +1787,11 @@ return [
         'note_help' => 'Zichtbaar voor de medewerker bij "Mijn afwezigheden".',
         'certificate' => 'Attest',
         'certificate_admin_help' => 'Foto (elk type) of PDF, max. 12 MB. Upload je het hier, dan kan de medewerker het alleen downloaden; zonder attest kan de medewerker het zelf uploaden.',
+        'periods' => 'Periodes',
+        'add_period' => 'Periode toevoegen',
+        'periods_help' => 'Voeg één of meer losse periodes toe; elke periode wordt een aparte afwezigheid met hetzelfde document.',
+        'document' => 'Document',
+        'justified_document_help' => 'Foto (elk type) of PDF, max. 12 MB: het bewijs van de gewettigde afwezigheid. De medewerker kan het alleen downloaden.',
         'not_needed' => 'Niet nodig',
         'missing' => 'Ontbreekt',
         'present' => 'Aanwezig',
@@ -2515,6 +2523,7 @@ return [
                 'R' => 'Recuperatie overuren',
                 'IR' => 'Inhaalrust',
                 'FV' => 'Familiaal verlof',
+                'GA' => 'Gewettigd afwezig',
                 'OP' => 'Opleiding',
                 'F' => 'Feestdag',
             ],
@@ -2966,6 +2975,12 @@ return [
             'file_costs' => 'Dossierkosten',
             'total' => 'Totaal offerte: :amount',
         ],
+    ],
+    'two_factor' => [
+        'reset' => '2-stapsverificatie uitschakelen',
+        'reset_heading' => '2-stapsverificatie van :name uitschakelen?',
+        'reset_help' => 'Voor een gebruiker die zijn authenticator-app of herstelcodes kwijt is. Hij meldt zich daarna aan met enkel zijn wachtwoord en kan de 2-stapsverificatie opnieuw instellen in zijn profiel.',
+        'reset_done' => '2-stapsverificatie uitgeschakeld.',
     ],
     'access' => [
         'badges' => 'Badges & elektronische sleutels',
@@ -3703,6 +3718,10 @@ return [
         'result' => ':created aangemaakt, :updated bijgewerkt, :unchanged ongewijzigd, :skipped overgeslagen.',
     ],
     'mobile' => [
+        'two_factor' => [
+            'required' => 'Geef de code van je authenticator-app in, of de code die we je net mailden.',
+            'invalid' => 'Die code klopt niet of is verlopen.',
+        ],
         'push_test' => [
             'title' => 'Testmelding',
             'body' => 'Meldingen werken op deze telefoon.',

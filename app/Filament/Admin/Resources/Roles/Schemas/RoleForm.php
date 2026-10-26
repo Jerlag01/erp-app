@@ -48,7 +48,7 @@ class RoleForm
                             collect(Permissions::all())
                                 ->map(fn (array $abilities, string $area) => CheckboxList::make("permissions.{$area}")
                                     ->label(__("erp.permissions.areas.{$area}"))
-                                    ->helperText(fn (): ?string => modules()->disabled(Permissions::moduleOf($area)) ? __('erp.roles.module_off') : null)
+                                    ->helperText(fn (): ?string => ($module = Permissions::moduleOf($area)) !== null && modules()->disabled($module) ? __('erp.roles.module_off') : null)
                                     ->options(collect($abilities)->mapWithKeys(fn (string $ability): array => [
                                         $ability => __("erp.permissions.abilities.{$ability}"),
                                     ])->all())

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Users\Pages;
 
+use App\Filament\Admin\Actions\ResetTwoFactorAction;
 use App\Filament\Admin\Resources\Users\Schemas\UserPermissions;
 use App\Filament\Admin\Resources\Users\UserResource;
 use App\Models\Role;
@@ -38,6 +39,7 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            ResetTwoFactorAction::make(),
             DeleteAction::make(),
         ];
     }

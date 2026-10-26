@@ -42,6 +42,13 @@ Het ERP-platform bundelt alles van het bedrijf op één plaats: projecten, plann
 - Kies **Nederlands, Frans of Engels** met de taalkeuze naast je gebruikersmenu. Je keuze geldt ook voor de mails die je krijgt en voor de mobiele app.
 - Via het gebruikersmenu → **Profiel** wijzig je je naam, e-mailadres of wachtwoord.
 
+## Twee-stapsverificatie
+
+- Via **Profiel** zet je een tweede stap aan bij het aanmelden: een **authenticator-app** (Microsoft Authenticator, Google Authenticator, Authy, 1Password, …) waarmee je een QR-code scant, en/of een **code per e-mail**.
+- Bewaar de **herstelcodes** die je krijgt op een veilige plek: elke code werkt één keer als je je telefoon niet bij de hand hebt.
+- Daarna vraagt het platform na je wachtwoord om de code, ook in de mobiele app en op het klantenportaal.
+- Geen toegang meer tot je codes? Een beheerder met het recht **Beveiliging → 2-stapsverificatie resetten** zet ze uit (Beheer → Gebruikers of Klantgebruikers → **2-stapsverificatie resetten**). Dat recht moet apart aangevinkt worden, ook bij beheerders.
+
 ## Meldingen
 
 Het belletje rechtsboven toont meldingen van het platform: een wijziging in je planning, een goedgekeurde verlofaanvraag, een nieuwe toolboxmeeting, … Klik op een melding om meteen naar de juiste pagina te gaan.
@@ -306,6 +313,7 @@ Bij **Verlofaanvragen** keur je een aanvraag goed of weiger je ze (met een reden
 - Voeg het **attest** toe als foto of PDF, meteen of later.
 - Bij **Afwezigheden** ziet de administratie welke ziekteperiodes nog **zonder attest** zijn.
 - Enkel ziekte vraagt een attest: voor **overuren als verlof**, **familiaal verlof** en **onbetaald verlof** is er geen upload ("Niet nodig").
+- **Gewettigd afwezig (GA)** voeg je enkel als beheerder toe, met een **document** (foto of PDF) als bewijs. Bij het aanmaken kies je één of meer **losse periodes**: elke periode wordt een aparte afwezigheid met hetzelfde document. Op de prestatiestaat staat de code **GA**, zonder uren. De medewerker kan het document alleen downloaden.
 
 ## Tips
 

@@ -556,6 +556,8 @@ class Timesheets
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'family', 'Familiaal verlof', 0, false));
             $absences->where('type', AbsenceType::Unpaid)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'unpaid', __('erp.enums.absence_type.unpaid'), 0, false));
+            $absences->where('type', AbsenceType::Justified)
+                ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'justified', $absence->half_day ? 'Gewettigd afwezig (halve dag)' : 'Gewettigd afwezig', 0, false));
             $absences->where('type', AbsenceType::Overtime)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'overtime', 'Recuperatie overuren', 0, false));
         }

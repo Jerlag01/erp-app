@@ -4,8 +4,12 @@ namespace App\Models;
 
 use App\Enums\MobileKeyRevokeReason;
 use App\Enums\VacationStatus;
+use App\Models\Concerns\HasTwoFactorAuthentication;
 use App\Support\Permissions;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -24,10 +28,10 @@ use Illuminate\Support\Str;
 
 #[Fillable(['name', 'initials', 'email', 'password', 'role_id', 'permissions', 'job_title', 'phone', 'locale', 'is_active', 'vacation_days', 'mobile_app_dismissed_release'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, HasLocalePreference
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, HasLocalePreference
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasTwoFactorAuthentication, Notifiable;
 
     /** @var list<int>|null */
     protected ?array $teamIdsCache = null;

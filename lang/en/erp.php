@@ -466,6 +466,7 @@ return [
         'areas' => [
             'announcements' => 'Announcements',
             'asbuilt' => 'As-built',
+            'security' => 'Security',
             'access_control' => 'Badges, electronic keys & security tags',
             'onboarding' => 'Onboarding',
             'battery_rooms' => 'Battery rooms (609)',
@@ -512,6 +513,7 @@ return [
         'abilities' => [
             'view_signatures' => 'View signatures',
             'manage_suppliers' => 'Manage suppliers',
+            'reset_two_factor' => 'Reset two-step verification',
             'view' => 'View',
             'create' => 'Create',
             'update' => 'Edit',
@@ -1021,6 +1023,7 @@ return [
             'overtime' => 'Overtime as leave',
             'family' => 'Family leave',
             'unpaid' => 'Unpaid leave',
+            'justified' => 'Justified absence',
         ],
         'vat_rate' => ['reverse_charge' => 'Reverse charge', 'percent' => ':rate%'],
         'invoice_type' => ['invoice' => 'Invoice', 'credit_note' => 'Credit note'],
@@ -1784,6 +1787,11 @@ return [
         'note_help' => 'Visible to the employee on "My absences".',
         'certificate' => 'Certificate',
         'certificate_admin_help' => 'Picture (any type) or PDF, max. 12 MB. Once you upload it here, the employee can only download it; without one, the employee can upload it themselves.',
+        'periods' => 'Periods',
+        'add_period' => 'Add period',
+        'periods_help' => 'Add one or more separate periods; each period becomes its own absence with the same document.',
+        'document' => 'Document',
+        'justified_document_help' => 'Photo (any type) or PDF, max. 12 MB: the proof of the justified absence. The employee can only download it.',
         'not_needed' => 'Not needed',
         'missing' => 'Missing',
         'present' => 'Present',
@@ -2515,6 +2523,7 @@ return [
                 'R' => 'Overtime recuperation',
                 'IR' => 'IR day',
                 'FV' => 'Family leave',
+                'GA' => 'Justified absence',
                 'OP' => 'Training',
                 'F' => 'Public holiday',
             ],
@@ -2965,6 +2974,12 @@ return [
             'file_costs' => 'File costs',
             'total' => 'Total quotation: :amount',
         ],
+    ],
+    'two_factor' => [
+        'reset' => 'Switch off two-step verification',
+        'reset_heading' => 'Switch off two-step verification of :name?',
+        'reset_help' => 'For a user who lost their authenticator app or recovery codes. They then sign in with only their password and can set up two-step verification again in their profile.',
+        'reset_done' => 'Two-step verification switched off.',
     ],
     'access' => [
         'badges' => 'Badges & electronic keys',
@@ -3702,6 +3717,10 @@ return [
         'result' => ':created created, :updated updated, :unchanged unchanged, :skipped skipped.',
     ],
     'mobile' => [
+        'two_factor' => [
+            'required' => 'Enter the code of your authenticator app, or the code we just e-mailed you.',
+            'invalid' => 'That code is not correct or has expired.',
+        ],
         'push_test' => [
             'title' => 'Test notification',
             'body' => 'Notifications work on this phone.',

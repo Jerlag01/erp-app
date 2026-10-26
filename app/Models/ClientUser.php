@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTwoFactorAuthentication;
 use App\Notifications\Client\ClientResetPassword;
 use App\Support\ClientPortal;
 use Database\Factories\ClientUserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -25,10 +29,10 @@ use Illuminate\Support\Facades\DB;
  */
 #[Fillable(['name', 'email', 'company', 'work_site_contact_id', 'password', 'locale', 'is_active', 'permissions', 'project_categories', 'last_login_at', 'welcome_sent_at'])]
 #[Hidden(['password', 'remember_token'])]
-class ClientUser extends Authenticatable implements FilamentUser, HasLocalePreference
+class ClientUser extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, HasLocalePreference
 {
     /** @use HasFactory<ClientUserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasTwoFactorAuthentication, Notifiable;
 
     public function canAccessPanel(Panel $panel): bool
     {

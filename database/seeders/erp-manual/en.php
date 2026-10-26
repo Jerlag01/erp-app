@@ -41,6 +41,13 @@ The ERP platform brings everything of the company together: projects, planning, 
 - Choose **Dutch, French or English** with the language switch next to your user menu. Your choice also applies to the mails you receive and to the mobile app.
 - In the user menu → **Profile** you change your name, e-mail address or password.
 
+## Two-step verification
+
+- In **Profile** you turn on a second step when signing in: an **authenticator app** (Microsoft Authenticator, Google Authenticator, Authy, 1Password, …) with which you scan a QR code, and/or a **code by e-mail**.
+- Keep the **recovery codes** somewhere safe: each code works once when you do not have your phone at hand.
+- From then on the platform asks for the code after your password, also in the mobile app and on the client portal.
+- Lost access to your codes? An administrator with the permission **Security → Reset two-step verification** turns it off (Admin → Users or Client users). That permission must be ticked separately, also for administrators.
+
 ## Notifications
 
 The bell at the top right shows the platform's notifications: a change in your planning, an approved leave request, a new toolbox meeting, … Click a notification to go straight to the right page.
@@ -305,6 +312,7 @@ Under **Vacation requests** you approve a request or refuse it (with a reason). 
 - Add the **certificate** as a photo or PDF, now or later.
 - Under **Absences** the administration sees which sickness periods are still **without a certificate**.
 - Only sickness needs a certificate: **overtime as leave**, **family leave** and **unpaid leave** have no upload ("Not needed").
+- **Justified absence (GA)** is added by administrators only, with a **document** (photo or PDF) as proof. When creating it you pick one or more **separate periods**: each period becomes its own absence with the same document. The prestation sheet shows the code **GA**, without hours. The employee can only download the document.
 
 ## Tip
 

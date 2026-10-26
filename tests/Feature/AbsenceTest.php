@@ -8,7 +8,10 @@ use App\Filament\App\Resources\MyAbsences\Pages\ListMyAbsences;
 use App\Models\Absence;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TimesheetReport;
+use App\Support\Timesheets;
 use App\Support\VacationCalendar;
+use Carbon\CarbonImmutable;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -223,5 +226,46 @@ class AbsenceTest extends TestCase
             ->filterTable('document', 'missing')
             ->assertCanSeeTableRecords([$medical])
             ->assertCanNotSeeTableRecords($others);
+    }
+
+    #[Test]
+    public function a_justified_absence_takes_several_loose_periods_with_one_document(): void
+    {
+        Storage::fake('local');
+        $employee = User::factory()->inTeam()->create();
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+
+        Livewire::test(ManageAbsences::class)
+            ->set('activeTab', 'justified')
+            ->callAction('create', [
+                'user_id' => $employee->id,
+                'type' => 'justified',
+                'periods' => [
+                    ['start_date' => '2026-11-03', 'end_date' => '2026-11-03', 'half_day' => true],
+                    ['start_date' => '2026-11-16', 'end_date' => '2026-11-18', 'half_day' => false],
+                ],
+                'document' => UploadedFile::fake()->create('oproeping.pdf', 40, 'application/pdf'),
+            ])
+            ->assertHasNoActionErrors();
+
+        $absences = Absence::query()->orderBy('start_date')->get();
+        $this->assertCount(2, $absences);
+        $this->assertSame(['0.5', '3.0'], $absences->pluck('days')->all());
+        $this->assertTrue($absences->every(fn (Absence $absence): bool => $absence->type === AbsenceType::Justified && $absence->document_name === 'oproeping.pdf'));
+        // Each period has its own copy of the file.
+        $this->assertNotSame($absences[0]->document, $absences[1]->document);
+        $absences[0]->delete();
+        Storage::disk('local')->assertExists($absences[1]->document);
+
+        // The prestation sheet shows it as GA, without hours.
+        $status = app(Timesheets::class)->statuses($employee, CarbonImmutable::parse('2026-11-16'), CarbonImmutable::parse('2026-11-16'))['2026-11-16'];
+        $this->assertSame('justified', $status['type']);
+        $this->assertSame(0.0, (float) $status['credit']);
+        $this->assertSame('GA', TimesheetReport::CODES['justified']);
+
+        // The employee can download it but not upload one.
+        $this->assertFalse($employee->can('uploadDocument', $absences[1]));
+        $this->actingAs($employee)->get(route('absences.document', $absences[1]))->assertOk();
     }
 }

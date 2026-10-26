@@ -8,6 +8,8 @@ use App\Http\Middleware\EnsureOnboarded;
 use App\Http\Middleware\SetUserLocale;
 use App\Support\MobileApp;
 use Filament\Actions\Action;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,6 +41,11 @@ trait ConfiguresErpPanel
             ->login()
             ->passwordReset()
             ->profile(EditProfile::class, isSimple: false)
+            // Two-step verification, switched on per user in their profile: an authenticator app or a code by e-mail.
+            ->multiFactorAuthentication([
+                AppAuthentication::make()->recoverable(),
+                EmailAuthentication::make(),
+            ])
             ->brandName(fn (): string => settings()->siteName())
             ->brandLogo(fn () => view('filament.brand', ['label' => $label]))
             ->brandLogoHeight('2.5rem')

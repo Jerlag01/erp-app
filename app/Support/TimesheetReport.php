@@ -21,7 +21,7 @@ class TimesheetReport
      * Absence code per type of day, as in the Excel legend: R for overtime taken as time off (recuperatie
      * overuren), IR for the company inhaalrust days.
      */
-    public const CODES = ['vacation' => 'V', 'medical' => 'Z', 'overtime' => 'R', 'recuperation' => 'IR', 'family' => 'FV', 'training' => 'OP', 'holiday' => 'F'];
+    public const CODES = ['vacation' => 'V', 'medical' => 'Z', 'overtime' => 'R', 'recuperation' => 'IR', 'family' => 'FV', 'justified' => 'GA', 'training' => 'OP', 'holiday' => 'F'];
 
     /**
      * Codes counted in the left columns (year so far).

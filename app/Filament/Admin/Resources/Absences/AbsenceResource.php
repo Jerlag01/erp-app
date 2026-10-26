@@ -15,6 +15,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
@@ -28,10 +29,13 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use UnitEnum;
 
 /**
- * Medical leave, overtime taken as paid leave and family leave, entered by administrators only.
+ * Medical leave, overtime taken as paid leave, family leave, unpaid leave and justified absence
+ * ("gewettigd afwezig", several loose periods at once with one document), entered by administrators only.
  * They show in everyone's vacation calendar and on the employee's "My absences" page.
  */
 class AbsenceResource extends Resource
@@ -103,7 +107,8 @@ class AbsenceResource extends Resource
                     ->native(false)
                     ->displayFormat('d/m/Y')
                     ->required()
-                    ->live(),
+                    ->live()
+                    ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation)),
                 DatePicker::make('end_date')
                     ->label(__('erp.fields.end_date'))
                     ->native(false)
@@ -111,13 +116,48 @@ class AbsenceResource extends Resource
                     ->afterOrEqual('start_date')
                     ->default(fn (Get $get) => $get('start_date'))
                     ->required()
-                    ->live(),
+                    ->live()
+                    ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation)),
                 Toggle::make('half_day')
                     ->label(__('erp.fields.half_day'))
-                    ->visible(fn (Get $get): bool => filled($get('start_date')) && $get('start_date') === $get('end_date'))
+                    ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation) && filled($get('start_date')) && $get('start_date') === $get('end_date'))
                     ->live()
                     ->columnSpanFull(),
                 Text::make(fn (Get $get): string => __('erp.absences.days_preview', ['days' => WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'))]))
+                    ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation))
+                    ->columnSpanFull(),
+                // Justified absences: several loose periods at once, each its own absence.
+                Repeater::make('periods')
+                    ->label(__('erp.absences.periods'))
+                    ->helperText(__('erp.absences.periods_help'))
+                    ->schema([
+                        DatePicker::make('start_date')
+                            ->label(__('erp.fields.start_date'))
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->required()
+                            ->live(),
+                        DatePicker::make('end_date')
+                            ->label(__('erp.fields.end_date'))
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->afterOrEqual('start_date')
+                            ->required()
+                            ->live(),
+                        Toggle::make('half_day')
+                            ->label(__('erp.fields.half_day'))
+                            ->visible(fn (Get $get): bool => filled($get('start_date')) && $get('start_date') === $get('end_date'))
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2)
+                    ->defaultItems(1)
+                    ->minItems(1)
+                    ->maxItems(50)
+                    ->addActionLabel(__('erp.absences.add_period'))
+                    ->itemLabel(fn (array $state): ?string => filled($state['start_date'] ?? null)
+                        ? __('erp.absences.days_preview', ['days' => WorkingDays::count($state['start_date'], $state['end_date'] ?? $state['start_date'], (bool) ($state['half_day'] ?? false))])
+                        : null)
+                    ->visible(fn (Get $get, string $operation): bool => self::severalPeriods($get('type'), $operation))
                     ->columnSpanFull(),
                 Textarea::make('note')
                     ->label(__('erp.fields.notes'))
@@ -126,16 +166,16 @@ class AbsenceResource extends Resource
                     ->maxLength(2000)
                     ->columnSpanFull(),
                 FileUpload::make('document')
-                    ->label(__('erp.absences.certificate'))
-                    ->helperText(__('erp.absences.certificate_admin_help'))
+                    ->label(fn (Get $get): string => self::isJustified($get('type')) ? __('erp.absences.document') : __('erp.absences.certificate'))
+                    ->helperText(fn (Get $get): string => self::isJustified($get('type')) ? __('erp.absences.justified_document_help') : __('erp.absences.certificate_admin_help'))
                     ->disk(Absence::DISK)
                     ->directory(fn (Get $get): string => Absence::directoryFor((int) $get('user_id')))
                     ->visibility('private')
                     ->acceptedFileTypes(Absence::DOCUMENT_TYPES)
                     ->maxSize(Absence::DOCUMENT_MAX_KILOBYTES)
                     ->storeFileNamesIn('document_name')
-                    // Only sickness needs a certificate.
-                    ->visible(fn (Get $get): bool => self::needsCertificate($get('type')))
+                    // A certificate for sickness, the proof for a justified absence.
+                    ->visible(fn (Get $get): bool => self::takesDocument($get('type')))
                     ->columnSpanFull(),
             ]);
     }
@@ -161,9 +201,70 @@ class AbsenceResource extends Resource
 
     public static function needsCertificate(mixed $type): bool
     {
-        $type = $type instanceof AbsenceType ? $type : AbsenceType::tryFrom((string) $type);
+        return (bool) self::type($type)?->needsCertificate();
+    }
 
-        return (bool) $type?->needsCertificate();
+    public static function takesDocument(mixed $type): bool
+    {
+        return (bool) self::type($type)?->takesDocument();
+    }
+
+    public static function isJustified(mixed $type): bool
+    {
+        return self::type($type) === AbsenceType::Justified;
+    }
+
+    /**
+     * New justified absences take several periods; once saved, each is edited on its own.
+     */
+    public static function severalPeriods(mixed $type, string $operation): bool
+    {
+        return $operation === 'create' && (bool) self::type($type)?->allowsSeveralPeriods();
+    }
+
+    protected static function type(mixed $type): ?AbsenceType
+    {
+        return $type instanceof AbsenceType ? $type : AbsenceType::tryFrom((string) $type);
+    }
+
+    /**
+     * Creates the absence, or one per period for justified absences: each gets its own copy of the
+     * document, so removing one period never takes the file of another.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public static function createAbsences(array $data): Absence
+    {
+        $periods = self::severalPeriods($data['type'] ?? null, 'create') ? array_values((array) ($data['periods'] ?? [])) : [];
+        unset($data['periods']);
+
+        if ($periods === []) {
+            return Absence::query()->create($data);
+        }
+
+        return DB::transaction(function () use ($data, $periods): Absence {
+            $created = [];
+
+            foreach ($periods as $index => $period) {
+                $document = $data['document'] ?? null;
+
+                if ($index > 0 && filled($document)) {
+                    $copy = dirname($document).'/'.pathinfo($document, PATHINFO_FILENAME).'-'.($index + 1).'.'.pathinfo($document, PATHINFO_EXTENSION);
+                    Storage::disk(Absence::DISK)->copy($document, $copy);
+                    $document = $copy;
+                }
+
+                $created[] = Absence::query()->create([
+                    ...$data,
+                    'start_date' => $period['start_date'],
+                    'end_date' => $period['end_date'] ?? $period['start_date'],
+                    'half_day' => ($period['start_date'] === ($period['end_date'] ?? $period['start_date'])) && (bool) ($period['half_day'] ?? false),
+                    'document' => $document,
+                ]);
+            }
+
+            return $created[0];
+        });
     }
 
     public static function documentUrl(Absence $absence): string

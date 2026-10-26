@@ -7,6 +7,8 @@ use App\Filament\Client\Pages\EditClientProfile;
 use App\Http\Middleware\SetClientLocale;
 use App\Support\ClientPortal;
 use Filament\Actions\Action;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,6 +41,10 @@ class ClientPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->profile(EditClientProfile::class, isSimple: false)
+            ->multiFactorAuthentication([
+                AppAuthentication::make()->recoverable(),
+                EmailAuthentication::make(),
+            ])
             ->brandName(fn (): string => __('erp.client_portal.brand'))
             ->brandLogo(fn () => view('filament.brand', ['label' => __('erp.client_portal.brand')]))
             ->brandLogoHeight('2.5rem')
