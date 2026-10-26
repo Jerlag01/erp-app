@@ -2,14 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Absence;
+use App\Models\Holiday;
 use App\Models\PlanningItem;
+use App\Models\Training;
 use App\Support\OutlookCalendar;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('planning:sync-outlook {--from= : First day (Y-m-d), default today}')]
-#[Description('Put the planning items from today (or --from) in the employees\' Outlook calendars, e.g. right after switching on the Outlook link in Settings > Planning')]
+#[Description('Put the planning items, absences, holidays, IR days and trainings from today (or --from) in the employees\' Outlook calendars, e.g. right after switching on the Outlook link in Settings > Planning')]
 class SyncPlanningToOutlook extends Command
 {
     public function handle(OutlookCalendar $outlook): int
@@ -29,6 +32,22 @@ class SyncPlanningToOutlook extends Command
                 $outlook->sync($item);
             }
         });
+
+        // Absences and trainings still running on that day, holidays and IR days from then on.
+        $entries = [
+            'Absences' => Absence::query()->whereDate('end_date', '>=', $from),
+            'Trainings' => Training::query()->whereDate('end_date', '>=', $from),
+            'Holidays and IR days' => Holiday::query()->whereDate('date', '>=', $from),
+        ];
+
+        foreach ($entries as $label => $entryQuery) {
+            $this->components->info("{$label} from {$from}: {$entryQuery->count()}");
+            $entryQuery->chunkById(100, function ($entries) use ($outlook): void {
+                foreach ($entries as $entry) {
+                    $outlook->syncEntry($entry);
+                }
+            });
+        }
 
         $this->components->info('Done. Items that could not be sent are in the log.');
 

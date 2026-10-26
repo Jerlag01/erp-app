@@ -2011,7 +2011,7 @@ return [
     'planning' => [
         'outlook' => [
             'section' => 'Agenda Outlook (Microsoft 365)',
-            'help' => 'Chaque élément du planning est aussi ajouté à l\'agenda Outlook de l\'employé (la boîte mail de son adresse e-mail dans la plateforme), et y est modifié et supprimé en même temps. Requis : un enregistrement d\'application dans Microsoft Entra ID avec l\'autorisation d\'application « Calendars.ReadWrite » (avec consentement administrateur).',
+            'help' => 'Chaque élément du planning est aussi ajouté à l\'agenda Outlook de l\'employé (la boîte mail de son adresse e-mail dans la plateforme), et y est modifié et supprimé en même temps. Requis : un enregistrement d\'application dans Microsoft Entra ID avec l\'autorisation d\'application « Calendars.ReadWrite » (avec consentement administrateur). Les absences (maladie, heures supplémentaires en congé, congé familial et sans solde, absence justifiée), les jours fériés, les jours de repos compensatoire et les formations y sont aussi ajoutés.',
             'enabled' => 'Mettre le planning dans Outlook',
             'tenant_id' => 'ID de locataire (annuaire)',
             'client_id' => 'ID client (application)',
@@ -2023,6 +2023,8 @@ return [
             'test_ok' => 'La connexion avec Outlook fonctionne',
             'test_failed' => 'La connexion avec Outlook ne fonctionne pas',
             'open' => 'Ouvrir dans le planning',
+            'half_day' => 'demi-journée',
+            'training' => 'Formation : :name',
         ],
         'title' => 'Planning',
         'calendar' => 'Calendrier',

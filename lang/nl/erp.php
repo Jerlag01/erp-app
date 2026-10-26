@@ -2011,7 +2011,7 @@ return [
     'planning' => [
         'outlook' => [
             'section' => 'Outlook-agenda (Microsoft 365)',
-            'help' => 'Elk planningsitem komt ook in de Outlook-agenda van de werknemer (de mailbox van zijn e-mailadres in het platform), en wordt daar mee gewijzigd en verwijderd. Nodig: een app-registratie in Microsoft Entra ID met de toepassingsmachtiging "Calendars.ReadWrite" (met toestemming van de beheerder).',
+            'help' => 'Elk planningsitem komt ook in de Outlook-agenda van de werknemer (de mailbox van zijn e-mailadres in het platform), en wordt daar mee gewijzigd en verwijderd. Nodig: een app-registratie in Microsoft Entra ID met de toepassingsmachtiging "Calendars.ReadWrite" (met toestemming van de beheerder). Ook afwezigheden (ziekte, overuren als verlof, familiaal en onbetaald verlof, gewettigd afwezig), feestdagen, inhaalrustdagen en opleidingen komen erin.',
             'enabled' => 'Planning in Outlook zetten',
             'tenant_id' => 'Tenant-ID (directory)',
             'client_id' => 'Client-ID (toepassing)',
@@ -2023,6 +2023,8 @@ return [
             'test_ok' => 'De verbinding met Outlook werkt',
             'test_failed' => 'De verbinding met Outlook werkt niet',
             'open' => 'Openen in de planning',
+            'half_day' => 'halve dag',
+            'training' => 'Opleiding: :name',
         ],
         'title' => 'Planning',
         'calendar' => 'Kalender',

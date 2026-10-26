@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AbsenceType;
+use App\Models\Concerns\SyncsToOutlook;
 use App\Support\WorkingDays;
 use Database\Factories\AbsenceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -22,6 +23,8 @@ class Absence extends Model
 {
     /** @use HasFactory<AbsenceFactory> */
     use HasFactory;
+
+    use SyncsToOutlook;
 
     public const DISK = 'local';
 

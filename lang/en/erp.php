@@ -2011,7 +2011,7 @@ return [
     'planning' => [
         'outlook' => [
             'section' => 'Outlook calendar (Microsoft 365)',
-            'help' => 'Every planning item is also put in the employee\'s Outlook calendar (the mailbox of their e-mail address in the platform), and changed and removed there along with it. Needed: an app registration in Microsoft Entra ID with the application permission "Calendars.ReadWrite" (with admin consent).',
+            'help' => 'Every planning item is also put in the employee\'s Outlook calendar (the mailbox of their e-mail address in the platform), and changed and removed there along with it. Needed: an app registration in Microsoft Entra ID with the application permission "Calendars.ReadWrite" (with admin consent). Absences (sickness, overtime as leave, family and unpaid leave, justified absence), public holidays, IR days and trainings are added too.',
             'enabled' => 'Put the planning in Outlook',
             'tenant_id' => 'Tenant ID (directory)',
             'client_id' => 'Client ID (application)',
@@ -2023,6 +2023,8 @@ return [
             'test_ok' => 'The connection with Outlook works',
             'test_failed' => 'The connection with Outlook does not work',
             'open' => 'Open in the planning',
+            'half_day' => 'half day',
+            'training' => 'Training: :name',
         ],
         'title' => 'Planning',
         'calendar' => 'Calendar',

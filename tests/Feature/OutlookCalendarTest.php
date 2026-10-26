@@ -2,11 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AbsenceType;
 use App\Filament\Admin\Pages\Settings;
+use App\Models\Absence;
 use App\Models\BatteryDossier;
+use App\Models\Holiday;
+use App\Models\OutlookEvent;
 use App\Models\PlanningItem;
 use App\Models\Project;
+use App\Models\Training;
 use App\Models\User;
+use App\Support\OutlookCalendar;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -131,5 +137,68 @@ class OutlookCalendarTest extends TestCase
 
         $dossier->update(['new_count' => 3]);
         Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH' && ($request['subject'] ?? null) === $project->reference.' · 1 x 300Ah OPzS -> 3 x 490Ah OPzV');
+    }
+
+    #[Test]
+    public function absences_are_out_of_office_in_the_employees_calendar_with_private_reasons_marked_private(): void
+    {
+        $this->enable();
+        $employee = User::factory()->create(['email' => 'jan@power.example', 'locale' => 'nl']);
+
+        $sick = Absence::factory()->for($employee)->create(['start_date' => '2026-11-09', 'end_date' => '2026-11-11']);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events')
+            && str_ends_with($request->url(), '/users/jan%40power.example/events')
+            && $request['subject'] === 'Ziekte'
+            && $request['isAllDay'] === true
+            && $request['showAs'] === 'oof'
+            && $request['sensitivity'] === 'private'
+            && $request['start']['dateTime'] === '2026-11-09T00:00:00'
+            && $request['end']['dateTime'] === '2026-11-12T00:00:00');
+        $this->assertSame('event-1', OutlookEvent::query()->whereMorphedTo('source', $sick)->sole()->event_id);
+
+        $sick->refresh()->update(['end_date' => '2026-11-13']);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH' && str_ends_with($request->url(), '/events/event-1') && $request['end']['dateTime'] === '2026-11-14T00:00:00');
+
+        $sick->refresh()->delete();
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE' && str_contains($request->url(), '/users/jan%40power.example/events/event-1'));
+        $this->assertSame(0, OutlookEvent::query()->count());
+
+        // Overtime as leave is not private, half a day is in the title.
+        Absence::factory()->for($employee)->ofType(AbsenceType::Overtime)->create(['start_date' => '2026-11-20', 'end_date' => '2026-11-20', 'half_day' => true]);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && $request['subject'] === 'Overuren als verlof (halve dag)' && $request['sensitivity'] === 'normal');
+    }
+
+    #[Test]
+    public function holidays_go_to_every_active_employee_and_trainings_to_their_participants(): void
+    {
+        $this->enable();
+        $jan = User::factory()->create(['email' => 'jan@power.example']);
+        $piet = User::factory()->create(['email' => 'piet@power.example']);
+        User::factory()->create(['email' => 'oud@power.example', 'is_active' => false]);
+
+        $holiday = Holiday::factory()->create(['date' => '2026-12-25', 'name' => 'Kerstmis', 'type' => Holiday::HOLIDAY]);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && str_contains($request->url(), 'jan%40power.example') && $request['subject'] === 'Kerstmis');
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && str_contains($request->url(), 'piet%40power.example'));
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), 'oud%40power.example'));
+        $this->assertSame(2, OutlookEvent::query()->whereMorphedTo('source', $holiday)->count());
+
+        Holiday::factory()->create(['date' => '2026-12-28', 'name' => 'Brugdag', 'type' => Holiday::RECUPERATION]);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && $request['subject'] === 'IR · Brugdag');
+
+        $training = Training::factory()->create(['name' => 'VCA', 'start_date' => '2027-01-11', 'end_date' => '2027-01-12', 'city' => 'Gent']);
+        $training->participants()->sync([$jan->id, $piet->id]);
+        app(OutlookCalendar::class)->syncEntry($training);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events')
+            && str_contains($request->url(), 'jan%40power.example')
+            && $request['subject'] === 'Opleiding: VCA'
+            && $request['showAs'] === 'busy'
+            && str_contains($request['location']['displayName'], 'Gent')
+            && $request['end']['dateTime'] === '2027-01-13T00:00:00');
+
+        // Piet no longer takes part: out of his calendar only.
+        $training->participants()->sync([$jan->id]);
+        $training->refresh()->touch();
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE' && str_contains($request->url(), '/users/piet%40power.example/events/'));
+        $this->assertSame([$jan->id], OutlookEvent::query()->whereMorphedTo('source', $training)->pluck('user_id')->all());
     }
 }

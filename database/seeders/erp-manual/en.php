@@ -429,6 +429,8 @@ Every change in your planning is notified in the platform and on your phone (mob
 
 When the Microsoft 365 link is on (**Settings → Planning → Outlook calendar**), every planning item is also put in the employee's **Outlook calendar**, as a **full day** (without hours), with the project, address and remarks. When the item is changed, moved to a colleague or removed, that happens in Outlook too.
 
+**Absences** (sickness, overtime as leave, family leave, unpaid leave, justified absence), **public holidays**, **IR days** and **trainings** go to Outlook too, as whole days "out of office". An absence is in the employee's calendar (sickness, family and unpaid leave and justified absence as *private*), a holiday or IR day in every active employee's, a training in its participants' (with the place and a reminder the evening before). Changes and removals follow in Outlook. After switching the link on, `php artisan planning:sync-outlook` puts everything from today in the calendars.
+
 For a **604 project**, the planning and Outlook show the batteries that go out and come in instead of the project description, e.g. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (from the battery dossier; while there is no dossier, only the new batteries of the BAE order). When the dossier is filled in or changed later, the planned Outlook events are updated.
 
 ## Permissions

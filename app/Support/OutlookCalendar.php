@@ -4,7 +4,13 @@ namespace App\Support;
 
 use App\Enums\PlanningKind;
 use App\Filament\Pages\Planning as PlanningPage;
+use App\Models\Absence;
+use App\Models\Holiday;
+use App\Models\OutlookEvent;
 use App\Models\PlanningItem;
+use App\Models\Training;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
@@ -18,7 +24,9 @@ use Throwable;
  * Puts planning items in the employee's Outlook calendar through Microsoft Graph (Microsoft 365):
  * an event per item, changed and removed together with the item. Uses an app registration with the
  * application permission Calendars.ReadWrite (Settings > Planning). The employee's mailbox is their
- * e-mail address in the platform. Failures are logged and never stop the planning itself.
+ * e-mail address in the platform. Absences (sickness, overtime as leave, family, unpaid and justified
+ * leave), holidays and IR days, and trainings go along: one event per employee concerned, kept in
+ * outlook_events. Failures are logged and never stop the planning itself.
  */
 class OutlookCalendar
 {
@@ -109,6 +117,152 @@ class OutlookCalendar
             $this->deleteEvent($mailbox, $eventId);
         } catch (Throwable $exception) {
             Log::warning('Outlook event could not be removed', ['mailbox' => $mailbox, 'error' => $exception->getMessage()]);
+        }
+    }
+
+    /**
+     * Creates, changes or removes the events of an absence (its employee), a holiday or IR day
+     * (every active employee) or a training (its participants), so the calendars follow the platform.
+     */
+    public function syncEntry(Absence|Holiday|Training $source): void
+    {
+        if (! $this->enabled()) {
+            return;
+        }
+
+        $users = $this->recipients($source)->keyBy('id');
+        $events = OutlookEvent::query()->whereMorphedTo('source', $source)->get();
+
+        foreach ($events as $event) {
+            // No longer concerned, or another mailbox: out of that calendar.
+            if ($users->get($event->user_id)?->email !== $event->mailbox && $this->removeEvent($event)) {
+                $events = $events->except($event->getKey());
+            }
+        }
+
+        $events = $events->keyBy('user_id');
+
+        foreach ($users as $user) {
+            $payload = $this->entryPayload($source, $user);
+            $event = $events->get($user->id);
+
+            try {
+                if ($event) {
+                    $response = $this->graph()->patch($this->eventUrl($event->mailbox, $event->event_id), $payload);
+
+                    if ($response->status() !== 404) {
+                        $response->throw();
+
+                        continue;
+                    }
+                }
+
+                $created = $this->graph()->post(self::GRAPH.'/users/'.rawurlencode($user->email).'/events', $payload + [
+                    'transactionId' => 'erp-'.$source->getMorphClass().'-'.$source->getKey().'-'.$user->id.'-'.$source->updated_at?->timestamp,
+                ])->throw()->json();
+
+                OutlookEvent::query()->updateOrCreate(
+                    ['source_type' => $source->getMorphClass(), 'source_id' => $source->getKey(), 'user_id' => $user->id],
+                    ['mailbox' => $user->email, 'event_id' => (string) ($created['id'] ?? '')],
+                );
+            } catch (Throwable $exception) {
+                Log::warning('Calendar entry could not be put in Outlook', ['source' => $source->getMorphClass().'#'.$source->getKey(), 'mailbox' => $user->email, 'error' => $exception->getMessage()]);
+            }
+        }
+    }
+
+    /**
+     * The events of a removed absence, holiday or training (taken before it was deleted).
+     *
+     * @param  iterable<OutlookEvent>  $events
+     */
+    public function removeEntries(iterable $events): void
+    {
+        foreach ($events as $event) {
+            $this->enabled() ? $this->removeEvent($event) : $event->delete();
+        }
+    }
+
+    /**
+     * Who has the entry in their calendar: only employees with an e-mail address.
+     *
+     * @return Collection<int, User>
+     */
+    public function recipients(Absence|Holiday|Training $source): Collection
+    {
+        $users = match (true) {
+            $source instanceof Absence => new Collection(array_filter([$source->user()->first()])),
+            $source instanceof Training => $source->participants()->get(),
+            default => User::query()->active()->get(),
+        };
+
+        return $users->filter(fn (User $user): bool => filled($user->email))->values();
+    }
+
+    /**
+     * Absences, holidays and IR days show as "out of office" for whole days; private reasons are
+     * marked private. Trainings are busy with the place and the details, and a reminder the evening before.
+     *
+     * @return array<string, mixed>
+     */
+    public function entryPayload(Absence|Holiday|Training $source, User $user): array
+    {
+        $locale = $user->preferredLocale();
+        [$start, $end] = $source instanceof Holiday ? [$source->date, $source->date] : [$source->start_date, $source->end_date];
+
+        $payload = [
+            'isAllDay' => true,
+            'start' => ['dateTime' => $start->format('Y-m-d').'T00:00:00', 'timeZone' => self::TIME_ZONE],
+            'end' => ['dateTime' => $end->copy()->addDay()->format('Y-m-d').'T00:00:00', 'timeZone' => self::TIME_ZONE],
+            'showAs' => 'oof',
+            'isReminderOn' => false,
+            'body' => ['contentType' => 'HTML', 'content' => ''],
+            'location' => ['displayName' => ''],
+        ];
+
+        if ($source instanceof Absence) {
+            return [
+                ...$payload,
+                'subject' => __('erp.enums.absence_type.'.$source->type->value, [], $locale).($source->half_day ? ' ('.__('erp.planning.outlook.half_day', [], $locale).')' : ''),
+                'sensitivity' => $source->type->isPrivate() ? 'private' : 'normal',
+            ];
+        }
+
+        if ($source instanceof Holiday) {
+            return [...$payload, 'subject' => $source->label()];
+        }
+
+        $details = array_filter([
+            $source->company,
+            implode(' · ', array_filter([$source->contact_phone, $source->contact_email])),
+            $source->notes,
+        ], 'filled');
+
+        return [
+            ...$payload,
+            'subject' => __('erp.planning.outlook.training', ['name' => $source->name], $locale),
+            'body' => ['contentType' => 'HTML', 'content' => implode('', array_map(fn (string $line): string => '<p>'.nl2br(e($line)).'</p>', $details))],
+            'location' => ['displayName' => (string) $source->addressLine()],
+            'showAs' => 'busy',
+            'isReminderOn' => true,
+            'reminderMinutesBeforeStart' => 360,
+        ];
+    }
+
+    /**
+     * Removes one event from its calendar and forgets it; false when Outlook could not be reached.
+     */
+    protected function removeEvent(OutlookEvent $event): bool
+    {
+        try {
+            $this->deleteEvent($event->mailbox, $event->event_id);
+            $event->delete();
+
+            return true;
+        } catch (Throwable $exception) {
+            Log::warning('Outlook event could not be removed', ['mailbox' => $event->mailbox, 'error' => $exception->getMessage()]);
+
+            return false;
         }
     }
 

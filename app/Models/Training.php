@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SyncsToOutlook;
 use Carbon\CarbonInterface;
 use Database\Factories\TrainingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,6 +25,8 @@ class Training extends Model
 {
     /** @use HasFactory<TrainingFactory> */
     use HasFactory;
+
+    use SyncsToOutlook;
 
     /**
      * @return BelongsToMany<User, $this>

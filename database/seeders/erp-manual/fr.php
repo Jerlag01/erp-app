@@ -429,6 +429,8 @@ Chaque changement de votre planning vous est notifié dans la plateforme et sur 
 
 Si la liaison avec Microsoft 365 est activée (**Paramètres → Planning → Agenda Outlook**), chaque élément du planning est aussi ajouté à l'**agenda Outlook** de l'employé, en **journée entière** (sans heures), avec le projet, l'adresse et les remarques. Si l'élément est modifié, déplacé vers un collègue ou supprimé, c'est aussi le cas dans Outlook.
 
+Les **absences** (maladie, heures supplémentaires en congé, congé familial, congé sans solde, absence justifiée), les **jours fériés**, les **jours de repos compensatoire** et les **formations** vont aussi dans Outlook, en journées entières « absent ». Une absence figure dans l'agenda de l'employé (maladie, congé familial et sans solde et absence justifiée en *privé*), un jour férié ou de repos compensatoire chez chaque employé actif, une formation chez ses participants (avec le lieu et un rappel la veille). Les modifications et suppressions suivent dans Outlook. Après l'activation de la liaison, `php artisan planning:sync-outlook` ajoute tout à partir d'aujourd'hui dans les agendas.
+
 Pour un **projet 604**, le planning et Outlook indiquent les batteries retirées et placées au lieu de la description du projet, p. ex. *2 x 500Ah OPzS -> 2 x 490Ah OPzV* (du dossier batteries ; tant qu'il n'y a pas de dossier, uniquement les nouvelles batteries de la commande BAE). Si le dossier est rempli ou modifié plus tard, les rendez-vous planifiés dans Outlook sont mis à jour.
 
 ## Droits

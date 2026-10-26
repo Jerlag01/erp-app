@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SyncsToOutlook;
 use App\Support\WorkingDays;
 use Database\Factories\HolidayFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,6 +19,8 @@ class Holiday extends Model
 {
     /** @use HasFactory<HolidayFactory> */
     use HasFactory;
+
+    use SyncsToOutlook;
 
     public const HOLIDAY = 'holiday';
 
