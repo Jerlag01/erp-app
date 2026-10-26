@@ -993,6 +993,7 @@ return [
             'intern' => 'Intern',
             'temporary' => 'Temporary worker',
             'self_employed' => 'Self-employed',
+            'incapacitated' => 'Unfit for work',
         ],
         'contract_term' => [
             'indefinite' => 'Permanent (indefinite)',
@@ -1604,6 +1605,15 @@ return [
         'bank_account_invalid' => 'This is not a valid IBAN.',
         'employment_date' => 'Date of employment',
         'employment_category' => 'Employment category',
+        'incapacity' => [
+            'periods' => 'Incapacity for work',
+            'start_date' => 'Unfit for work since',
+            'start_help' => 'From this day every working day is sickness (Z) on the prestation sheet, until the statute changes back.',
+            'end_date' => 'Last day of sickness',
+            'end_help' => 'The incapacity ends after this day: prestations apply as usual again. Kept in the employee\'s overview.',
+            'open_period' => 'Since :start (ongoing)',
+            'closed_period' => ':start – :end',
+        ],
         'contract_term' => 'Contract',
         'emergency_contact_1' => 'Emergency contact 1',
         'emergency_contact_2' => 'Emergency contact 2',

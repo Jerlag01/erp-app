@@ -7,6 +7,7 @@ use App\Enums\EmploymentCategory;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
 use App\Models\Holiday;
+use App\Models\IncapacityPeriod;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\TimesheetDay;
@@ -540,7 +541,25 @@ class Timesheets
 
             $absences->where('type', AbsenceType::Medical)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'medical', $absence->half_day ? 'Ziekte (halve dag)' : 'Ziekte', $absence->half_day ? $day / 2 : $day, true));
+        }
 
+        // The statute "arbeidsongeschikt" (employee register): every working day of the period is sickness, also while it is open.
+        IncapacityPeriod::query()
+            ->whereHas('employee', fn ($query) => $query->where('user_id', $user->id))
+            ->overlapping($from->toDateString(), $until->toDateString())
+            ->get()
+            ->each(function (IncapacityPeriod $period) use ($set, $from, $until, $day): void {
+                $start = CarbonImmutable::instance($period->start_date)->max($from);
+                $end = $period->end_date ? CarbonImmutable::instance($period->end_date)->min($until) : $until;
+
+                foreach (CarbonPeriod::create($start, $end) as $date) {
+                    if (! $date->isWeekend()) {
+                        $set($date, $date, 'medical', 'Ziekte (arbeidsongeschikt)', $day, true);
+                    }
+                }
+            });
+
+        if (modules()->vacations()) {
             VacationRequest::query()->vacation()->where('user_id', $user->id)->where('status', VacationStatus::Approved)
                 ->whereDate('start_date', '<=', $until->toDateString())->whereDate('end_date', '>=', $from->toDateString())->get()
                 ->each(fn (VacationRequest $request) => $set($request->start_date, $request->end_date, 'vacation', $request->half_day ? 'Verlof (halve dag)' : 'Verlof', $request->half_day ? $day / 2 : $day, true));

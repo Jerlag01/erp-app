@@ -5,7 +5,8 @@ namespace App\Enums;
 use Filament\Support\Contracts\HasLabel;
 
 /**
- * Belgian employment status categories.
+ * Belgian employment status categories. "Arbeidsongeschikt" (unfit for work) is set for the time an
+ * employee is on long-term sick leave: every working day is then sickness (Z) on the prestation sheet.
  */
 enum EmploymentCategory: string implements HasLabel
 {
@@ -22,6 +23,8 @@ enum EmploymentCategory: string implements HasLabel
     case Temporary = 'temporary';
 
     case SelfEmployed = 'self_employed';
+
+    case Incapacitated = 'incapacitated';
 
     public function getLabel(): string
     {

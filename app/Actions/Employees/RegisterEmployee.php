@@ -27,8 +27,10 @@ class RegisterEmployee
     {
         $account = Arr::only($data, ['existing_user_id', 'login_email', 'role_id', 'teams', 'locale', 'job_title']);
         $fields = Arr::except($data, array_keys($account));
+        // Started as "arbeidsongeschikt": the date goes to the incapacity log, not to the employee.
+        $incapacityDate = Arr::pull($fields, 'incapacity_date');
 
-        [$employee, $isNewAccount] = DB::transaction(function () use ($account, $fields): array {
+        [$employee, $isNewAccount] = DB::transaction(function () use ($account, $fields, $incapacityDate): array {
             if (filled($account['existing_user_id'] ?? null)) {
                 $user = User::query()->findOrFail($account['existing_user_id']);
                 $isNew = false;
@@ -52,7 +54,11 @@ class RegisterEmployee
                 $user->flushTeamIds();
             }
 
-            return [Employee::create([...$fields, 'user_id' => $user->id]), $isNew];
+            $employee = new Employee([...$fields, 'user_id' => $user->id]);
+            $employee->incapacityDate = $incapacityDate;
+            $employee->save();
+
+            return [$employee, $isNew];
         });
 
         $mailed = $isNewAccount && $this->sendWelcomeMail->handle($employee);

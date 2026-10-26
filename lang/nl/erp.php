@@ -993,6 +993,7 @@ return [
             'intern' => 'Stagiair',
             'temporary' => 'Uitzendkracht',
             'self_employed' => 'Zelfstandige',
+            'incapacitated' => 'Arbeidsongeschikt',
         ],
         'contract_term' => [
             'indefinite' => 'Onbepaalde duur',
@@ -1604,6 +1605,15 @@ return [
         'bank_account_invalid' => 'Dit is geen geldig IBAN-nummer.',
         'employment_date' => 'Datum in dienst',
         'employment_category' => 'Statuut',
+        'incapacity' => [
+            'periods' => 'Arbeidsongeschiktheid',
+            'start_date' => 'Arbeidsongeschikt sinds',
+            'start_help' => 'Vanaf deze dag staat elke werkdag als ziekte (Z) op de prestatiestaat, tot het statuut terug verandert.',
+            'end_date' => 'Laatste dag ziekte',
+            'end_help' => 'De arbeidsongeschiktheid eindigt na deze dag: daarna gelden de prestaties weer gewoon. Wordt bewaard in het overzicht van de werknemer.',
+            'open_period' => 'Sinds :start (loopt)',
+            'closed_period' => ':start – :end',
+        ],
         'contract_term' => 'Contract',
         'emergency_contact_1' => 'Noodcontact 1',
         'emergency_contact_2' => 'Noodcontact 2',

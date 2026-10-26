@@ -228,6 +228,22 @@ class EmployeeForm
     }
 
     /**
+     * "start" when the statute is being set to "arbeidsongeschikt", "end" when it changes back from it,
+     * else null.
+     */
+    public static function incapacityChange(mixed $selected, ?Employee $record): ?string
+    {
+        $selected = $selected instanceof EmploymentCategory ? $selected : EmploymentCategory::tryFrom((string) $selected);
+        $current = $record?->employment_category;
+
+        return match (true) {
+            $selected === EmploymentCategory::Incapacitated && $current !== EmploymentCategory::Incapacitated => 'start',
+            $current === EmploymentCategory::Incapacitated && $selected !== null && $selected !== EmploymentCategory::Incapacitated => 'end',
+            default => null,
+        };
+    }
+
+    /**
      * @return list<mixed>
      */
     protected static function employment(): array
@@ -242,7 +258,22 @@ class EmployeeForm
             Select::make('employment_category')
                 ->label(__('erp.employees.employment_category'))
                 ->options(EmploymentCategory::class)
-                ->required(),
+                ->required()
+                ->live(),
+            // Set to or back from "arbeidsongeschikt": the date for the incapacity log (not stored on the employee).
+            DatePicker::make('incapacity_date')
+                ->label(fn (Get $get, ?Employee $record): string => self::incapacityChange($get('employment_category'), $record) === 'start'
+                    ? __('erp.employees.incapacity.start_date')
+                    : __('erp.employees.incapacity.end_date'))
+                ->helperText(fn (Get $get, ?Employee $record): string => self::incapacityChange($get('employment_category'), $record) === 'start'
+                    ? __('erp.employees.incapacity.start_help')
+                    : __('erp.employees.incapacity.end_help'))
+                ->native(false)
+                ->displayFormat('d/m/Y')
+                ->default(null)
+                ->afterOrEqual(fn (?Employee $record): ?string => $record?->incapacityPeriods()->whereNull('end_date')->value('start_date'))
+                ->required(fn (Get $get, ?Employee $record): bool => self::incapacityChange($get('employment_category'), $record) !== null)
+                ->visible(fn (Get $get, ?Employee $record): bool => self::incapacityChange($get('employment_category'), $record) !== null),
             Select::make('contract_term')
                 ->label(__('erp.employees.contract_term'))
                 ->options(ContractTerm::class)

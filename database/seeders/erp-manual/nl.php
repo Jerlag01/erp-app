@@ -359,6 +359,8 @@ Wat je meer werkt dan de te werken uren, komt bij je **meeruren-saldo**. Dat sal
 ## Bedienden
 
 Medewerkers met het statuut **bediende** (personeelsregister) vullen geen uren en kilometers in: elke werkdag telt **8 uur**. Een halve dag verlof laat 4 gewerkte uren over; verlof, ziekte, opleiding en feestdagen tellen zoals bij iedereen, familiaal en onbetaald verlof tellen 0. De imputatie, opmerkingen en het versturen blijven hetzelfde. In de mobiele app hebben ze geen tabblad Prestaties.
+
+Staat het statuut van een werknemer op **Arbeidsongeschikt** (personeelsregister), dan staat elke werkdag als **Z (ziekte)** op de prestatiestaat, ook in de weken die nog komen. Bij het instellen kies je de eerste dag (standaard vandaag); verander je het statuut terug (bv. naar arbeider), dan vul je de **laatste dag ziekte** in (standaard gisteren). Elke periode wordt bewaard en staat bij de werknemer onder *Arbeidsongeschiktheid*.
 MD,
         ],
 

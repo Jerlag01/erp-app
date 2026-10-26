@@ -993,6 +993,7 @@ return [
             'intern' => 'Stagiaire',
             'temporary' => 'Intérimaire',
             'self_employed' => 'Indépendant',
+            'incapacitated' => 'Incapacité de travail',
         ],
         'contract_term' => [
             'indefinite' => 'Durée indéterminée',
@@ -1604,6 +1605,15 @@ return [
         'bank_account_invalid' => 'Ce n\'est pas un IBAN valide.',
         'employment_date' => 'Date d\'entrée en service',
         'employment_category' => 'Statut',
+        'incapacity' => [
+            'periods' => 'Incapacité de travail',
+            'start_date' => 'En incapacité depuis',
+            'start_help' => 'À partir de ce jour, chaque jour ouvrable figure comme maladie (Z) sur la feuille de prestations, jusqu\'au changement de statut.',
+            'end_date' => 'Dernier jour de maladie',
+            'end_help' => 'L\'incapacité de travail se termine après ce jour : les prestations reprennent normalement ensuite. Conservé dans la fiche du collaborateur.',
+            'open_period' => 'Depuis le :start (en cours)',
+            'closed_period' => ':start – :end',
+        ],
         'contract_term' => 'Contrat',
         'emergency_contact_1' => 'Contact d\'urgence 1',
         'emergency_contact_2' => 'Contact d\'urgence 2',

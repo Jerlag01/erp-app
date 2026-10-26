@@ -358,6 +358,8 @@ What you work beyond the expected hours goes to your **overtime balance**, which
 ## Salaried employees (bediende)
 
 Employees with the statute **bediende** (employee register) fill in no hours and no kilometres: every working day counts **8 hours**. Half a day of leave leaves 4 worked hours; leave, sickness, training and holidays count as for everyone, family and unpaid leave count 0. The imputation, remarks and sending stay the same. In the mobile app they have no Prestations tab.
+
+When an employee's statute is **Unfit for work** (employee register), every working day is **Z (sickness)** on the prestation sheet, also in the weeks to come. When setting it you choose the first day (today by default); when you change the statute back (e.g. to worker), you fill in the **last day of sickness** (yesterday by default). Every period is kept and shown on the employee under *Incapacity for work*.
 MD,
         ],
 

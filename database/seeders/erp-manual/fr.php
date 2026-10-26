@@ -358,6 +358,8 @@ Ce que vous prestez au-delà des heures prévues s'ajoute à votre **solde d'heu
 ## Employés (statut bediende)
 
 Les collaborateurs avec le statut **employé** (registre du personnel) n'encodent ni heures ni kilomètres : chaque jour ouvrable compte **8 heures**. Une demi-journée de congé laisse 4 heures prestées ; congé, maladie, formation et jours fériés comptent comme pour tous, le congé familial et sans solde comptent 0. L'imputation, les remarques et l'envoi restent les mêmes. Dans l'application mobile, ils n'ont pas d'onglet Prestations.
+
+Lorsque le statut d'un collaborateur est **Incapacité de travail** (registre du personnel), chaque jour ouvrable figure comme **Z (maladie)** sur la feuille de prestations, y compris les semaines à venir. En le définissant, vous choisissez le premier jour (aujourd'hui par défaut) ; en remettant le statut (p. ex. ouvrier), vous indiquez le **dernier jour de maladie** (hier par défaut). Chaque période est conservée et affichée chez le collaborateur sous *Incapacité de travail*.
 MD,
         ],
 

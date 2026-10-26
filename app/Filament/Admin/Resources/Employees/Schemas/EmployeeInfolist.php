@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\Employees\Schemas;
 
 use App\Enums\DriverLicenseCategory;
 use App\Models\Employee;
+use App\Models\IncapacityPeriod;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
@@ -77,7 +78,17 @@ class EmployeeInfolist
                                     ->placeholder('—'),
                                 TextEntry::make('employment_category')
                                     ->label(__('erp.employees.employment_category'))
+                                    ->badge(fn (Employee $record): bool => $record->isIncapacitated())
+                                    ->color(fn (Employee $record): ?string => $record->isIncapacitated() ? 'danger' : null)
                                     ->placeholder('—'),
+                                // The log of the statute "arbeidsongeschikt": from when, and the last day of sickness.
+                                TextEntry::make('incapacity_periods')
+                                    ->label(__('erp.employees.incapacity.periods'))
+                                    ->state(fn (Employee $record): array => $record->incapacityPeriods()->get()->map(fn (IncapacityPeriod $period): string => $period->isOpen()
+                                        ? __('erp.employees.incapacity.open_period', ['start' => $period->start_date->format('d/m/Y')])
+                                        : __('erp.employees.incapacity.closed_period', ['start' => $period->start_date->format('d/m/Y'), 'end' => $period->end_date->format('d/m/Y')]))->all())
+                                    ->listWithLineBreaks()
+                                    ->visible(fn (Employee $record): bool => $record->incapacityPeriods()->exists()),
                                 TextEntry::make('contract_term')
                                     ->label(__('erp.employees.contract_term'))
                                     ->placeholder('—'),

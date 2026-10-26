@@ -40,6 +40,12 @@ class Employee extends Model
     use HasFactory;
 
     /**
+     * The date for the incapacity log when the statute changes (from the form): the first day unfit for
+     * work, or the last day of sickness when it changes back. Not stored on the employee itself.
+     */
+    public ?string $incapacityDate = null;
+
+    /**
      * Private disk for certificate and medical PDFs.
      */
     public const DISK = 'local';
@@ -60,6 +66,51 @@ class Employee extends Model
     public const DRIVER_LICENSE_FILE_TYPES = ['image/*', 'application/pdf'];
 
     public const MOTHER_TONGUES = ['nl', 'fr', 'de', 'en', 'other'];
+
+    /**
+     * @return HasMany<IncapacityPeriod, $this>
+     */
+    public function incapacityPeriods(): HasMany
+    {
+        return $this->hasMany(IncapacityPeriod::class)->orderByDesc('start_date');
+    }
+
+    public function isIncapacitated(): bool
+    {
+        return $this->employment_category === EmploymentCategory::Incapacitated;
+    }
+
+    /**
+     * Logs the statute "arbeidsongeschikt": a period opens when it is set (from today, or the date
+     * given) and closes with the last day of sickness when the statute changes back (yesterday, or the
+     * date given; never before the start).
+     */
+    public function logIncapacity(?EmploymentCategory $from, ?EmploymentCategory $to): void
+    {
+        if ($from === $to || ($from !== EmploymentCategory::Incapacitated && $to !== EmploymentCategory::Incapacitated)) {
+            return;
+        }
+
+        $date = filled($this->incapacityDate) ? Carbon::parse($this->incapacityDate)->startOfDay() : null;
+
+        if ($to === EmploymentCategory::Incapacitated) {
+            $this->incapacityPeriods()->create([
+                'start_date' => ($date ?? today())->toDateString(),
+                'previous_category' => $from,
+                'started_by' => auth()->id(),
+            ]);
+
+            return;
+        }
+
+        $open = $this->incapacityPeriods()->whereNull('end_date')->first();
+
+        $open?->update([
+            'end_date' => ($date ?? today()->subDay())->max($open->start_date)->toDateString(),
+            'next_category' => $to,
+            'ended_by' => auth()->id(),
+        ]);
+    }
 
     /**
      * @return BelongsTo<User, $this>
@@ -298,6 +349,15 @@ class Employee extends Model
             if ($employee->wasChanged('driver_license_files')) {
                 $old = (array) json_decode((string) $employee->getRawOriginal('driver_license_files'), true);
                 Storage::disk(self::DISK)->delete(array_values(array_diff($old, (array) $employee->driver_license_files)));
+            }
+        });
+
+        // The statute "arbeidsongeschikt" is logged per period (see logIncapacity).
+        static::created(fn (self $employee) => $employee->logIncapacity(null, $employee->employment_category));
+        static::updated(function (self $employee): void {
+            if ($employee->wasChanged('employment_category')) {
+                $from = $employee->getOriginal('employment_category');
+                $employee->logIncapacity($from instanceof EmploymentCategory ? $from : EmploymentCategory::tryFrom((string) $from), $employee->employment_category);
             }
         });
 
