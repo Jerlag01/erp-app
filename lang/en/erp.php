@@ -3461,6 +3461,7 @@ return [
         'day_hours' => 'Hours this day',
         'day_km' => 'Kilometres',
         'worked' => 'worked',
+        'fixed_day_help' => 'Bediende (salaried employee): no hours or kilometres to fill in; every working day counts :hours h (absences are taken off).',
         'counted_help' => 'Only the start, the site and the end of the day count; extra sites in between do not.',
         'saved' => 'Day saved',
         'prefill' => 'Fill in from planning',

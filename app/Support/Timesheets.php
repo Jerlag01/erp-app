@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\AbsenceType;
+use App\Enums\EmploymentCategory;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
 use App\Models\Holiday;
@@ -30,6 +31,8 @@ use Illuminate\Database\Eloquent\Collection;
  *   The lunch break is always on for vacation, medical leave, training and holidays.
  * - Per week: total versus the expected hours (40) gives the overtime of the week; the overtime and
  *   kilometres carry over from week to week ("Report" → "Nu" → "Nieuw").
+ * - Employees with the statute "bediende" register no times and no kilometres: every working day counts
+ *   the day hours (8), less the part of the day an absence takes (see fixedDay()). The rest is the same.
  */
 class Timesheets
 {
@@ -68,6 +71,34 @@ class Timesheets
     public function expectedHours(): float
     {
         return (float) settings()->get('timesheets.expected_hours', 40);
+    }
+
+    /** @var array<int, bool> per user, for one request */
+    protected array $fixed = [];
+
+    /**
+     * Employees with the statute "bediende" (employee register) have fixed days: no times or kilometres.
+     */
+    public function fixedDay(User $user): bool
+    {
+        return $this->fixed[$user->id] ??= $user->employee()->first()?->employment_category === EmploymentCategory::Employee;
+    }
+
+    /**
+     * The worked hours of a fixed day: the day hours, or what an absence leaves of them (a half day of
+     * leave 4 h, a full day of leave, family leave or a holiday nothing; the absence credits its own hours).
+     *
+     * @param  array{credit: float}|null  $status
+     */
+    public function fixedWorked(?array $status): float
+    {
+        if ($status === null) {
+            return $this->dayHours();
+        }
+
+        $credit = (float) $status['credit'];
+
+        return $credit > 0 ? max(0.0, round($this->dayHours() - $credit, 2)) : 0.0;
     }
 
     public function canView(User $viewer, User $employee): bool
@@ -345,7 +376,8 @@ class Timesheets
             $status = $statuses[$key] ?? null;
             $rows = $record ? self::normaliseRows((array) $record->rows) : self::emptyRows();
             $lunch = ($status['lunch_locked'] ?? false) || ($record?->lunch_break ?? true);
-            $worked = $this->workedHours($rows, $lunch);
+            $fixed = $this->fixedDay($user);
+            $worked = $fixed ? $this->fixedWorked($status) : $this->workedHours($rows, $lunch);
             $credit = (float) ($status['credit'] ?? 0);
 
             $days[$key] = [
@@ -357,7 +389,7 @@ class Timesheets
                 'worked' => round($worked, 2),
                 'credit' => $credit,
                 'total' => round($worked + $credit, 2),
-                'km' => self::km($rows),
+                'km' => $fixed ? 0 : self::km($rows),
                 'remarks' => $record?->remarks,
             ];
         }

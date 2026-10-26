@@ -347,6 +347,10 @@ Verlof, ziekte, opleidingen en feestdagen worden **automatisch** in de fiche gez
 ## Meeruren
 
 Wat je meer werkt dan de te werken uren, komt bij je **meeruren-saldo**. Dat saldo kan je als verlof opnemen (zie "Verlof, overuren en afwezigheden").
+
+## Bedienden
+
+Medewerkers met het statuut **bediende** (personeelsregister) vullen geen uren en kilometers in: elke werkdag telt **8 uur**. Een halve dag verlof laat 4 gewerkte uren over; verlof, ziekte, opleiding en feestdagen tellen zoals bij iedereen, familiaal en onbetaald verlof tellen 0. De imputatie, opmerkingen en het versturen blijven hetzelfde. In de mobiele app hebben ze geen tabblad Prestaties.
 MD,
         ],
 

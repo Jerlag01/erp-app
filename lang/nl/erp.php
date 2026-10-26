@@ -3462,6 +3462,7 @@ return [
         'day_hours' => 'Uren deze dag',
         'day_km' => 'Kilometers',
         'worked' => 'gewerkt',
+        'fixed_day_help' => 'Bediende: geen uren of kilometers in te vullen; elke werkdag telt :hours u (afwezigheden gaan ervan af).',
         'counted_help' => 'Enkel de start, de site en het einde van de dag tellen; extra sites tussendoor niet.',
         'saved' => 'Dag opgeslagen',
         'prefill' => 'Invullen vanuit planning',

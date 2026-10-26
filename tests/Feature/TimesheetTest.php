@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Timesheets\SendWeeklyTimesheets;
 use App\Actions\Timesheets\TimesheetPdf;
 use App\Enums\AbsenceType;
+use App\Enums\EmploymentCategory;
 use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
 use App\Enums\VacationStatus;
@@ -13,6 +14,7 @@ use App\Filament\Pages\Timesheet;
 use App\Filament\Resources\Trainings\Pages\ManageTrainings;
 use App\Mail\SystemMail;
 use App\Models\Absence;
+use App\Models\Employee;
 use App\Models\Holiday;
 use App\Models\PlanningItem;
 use App\Models\Project;
@@ -363,5 +365,45 @@ class TimesheetTest extends TestCase
         $this->actingAs(User::factory()->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertForbidden();
         $this->actingAs(User::factory()->withPermissions(['timesheets' => ['see_all']])->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertForbidden();
         $this->actingAs(User::factory()->withPermissions(['timesheets' => ['see_all', 'generate_pdf']])->inTeam()->create())->get(route('timesheets.report-pdf', ['month' => '2026-10']))->assertOk();
+    }
+
+    #[Test]
+    public function a_bediende_has_fixed_days_of_eight_hours_without_times_or_kilometres(): void
+    {
+        $bediende = User::factory()->inTeam()->create();
+        Employee::factory()->for($bediende)->create(['employment_category' => EmploymentCategory::Employee]);
+        $worker = User::factory()->inTeam()->create();
+        Employee::factory()->for($worker)->create(['employment_category' => EmploymentCategory::Worker]);
+        $timesheets = app(Timesheets::class);
+
+        $this->assertTrue($timesheets->fixedDay($bediende));
+        $this->assertFalse($timesheets->fixedDay($worker));
+
+        // Times and kilometres that might be in a day do not count; a half day of leave leaves 4 h worked.
+        $this->day($bediende, self::MONDAY);
+        VacationRequest::factory()->for($bediende)->create(['start_date' => '2026-10-13', 'end_date' => '2026-10-13', 'half_day' => true, 'status' => VacationStatus::Approved]);
+        Absence::factory()->for($bediende)->ofType(AbsenceType::Family)->create(['start_date' => '2026-10-14', 'end_date' => '2026-10-14']);
+
+        $days = $timesheets->days($bediende, CarbonImmutable::parse(self::MONDAY), CarbonImmutable::parse('2026-10-16'));
+        $this->assertSame([8.0, 0], [$days['2026-10-12']['total'], $days['2026-10-12']['km']]);
+        $this->assertSame([4.0, 4.0, 8.0], [$days['2026-10-13']['worked'], $days['2026-10-13']['credit'], $days['2026-10-13']['total']]);
+        $this->assertSame(0.0, $days['2026-10-14']['total']);
+        $this->assertSame(8.0, $days['2026-10-15']['total']);
+
+        // The worker's day still counts its times and kilometres.
+        $this->day($worker, self::MONDAY);
+        $this->assertSame(85, $timesheets->days($worker, CarbonImmutable::parse(self::MONDAY), CarbonImmutable::parse(self::MONDAY))[self::MONDAY]['km']);
+
+        // On the page: no kilometre or time columns and no lunch break; the imputation stays.
+        $this->actingAs($bediende);
+        Livewire::test(Timesheet::class, ['date' => '2026-10-15'])
+            ->assertSeeHtml('data-fixed-day')
+            ->assertFormFieldHidden('lunch_break')
+            ->assertDontSee(__('erp.timesheets.km_departure'))
+            ->assertSee(__('erp.timesheets.imputation'));
+
+        // The mobile app has no prestations tab for them.
+        $this->getJson('/api/v1/me', $this->mobileAuth($bediende))->assertJsonPath('data.features.timesheets', false);
+        $this->getJson('/api/v1/me', $this->mobileAuth($worker))->assertJsonPath('data.features.timesheets', true);
     }
 }

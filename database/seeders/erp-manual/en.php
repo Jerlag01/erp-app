@@ -346,6 +346,10 @@ Leave, sickness, trainings and public holidays are put in the sheet **automatica
 ## Overtime
 
 What you work beyond the expected hours goes to your **overtime balance**, which you can take as leave (see "Leave, overtime and absences").
+
+## Salaried employees (bediende)
+
+Employees with the statute **bediende** (employee register) fill in no hours and no kilometres: every working day counts **8 hours**. Half a day of leave leaves 4 worked hours; leave, sickness, training and holidays count as for everyone, family and unpaid leave count 0. The imputation, remarks and sending stay the same. In the mobile app they have no Prestations tab.
 MD,
         ],
 

@@ -3461,6 +3461,7 @@ return [
         'day_hours' => 'Heures ce jour',
         'day_km' => 'Kilomètres',
         'worked' => 'prestées',
+        'fixed_day_help' => 'Employé : pas d\'heures ni de kilomètres à encoder ; chaque jour ouvrable compte :hours h (les absences en sont déduites).',
         'counted_help' => 'Seuls le départ, le site et la fin de journée comptent ; les sites supplémentaires non.',
         'saved' => 'Journée enregistrée',
         'prefill' => 'Remplir depuis le planning',

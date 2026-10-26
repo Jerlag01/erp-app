@@ -69,7 +69,8 @@ class ProfileResource extends JsonResource
         $gate = Gate::forUser($user);
 
         return [
-            'timesheets' => app(Timesheets::class)->enabled(),
+            // A "bediende" has fixed days without times or kilometres: no prestations tab in the app.
+            'timesheets' => app(Timesheets::class)->enabled() && ! app(Timesheets::class)->fixedDay($user),
             'leave' => modules()->vacations(),
             'overtime_leave' => modules()->vacations() && app(Timesheets::class)->enabled(),
             'planning' => app(Planning::class)->enabled(),

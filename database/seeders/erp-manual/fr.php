@@ -346,6 +346,10 @@ Les congés, maladies, formations et jours fériés sont **automatiquement** rep
 ## Heures supplémentaires
 
 Ce que vous prestez au-delà des heures prévues s'ajoute à votre **solde d'heures supplémentaires**, que vous pouvez prendre en congé (voir « Congés, heures supplémentaires et absences »).
+
+## Employés (statut bediende)
+
+Les collaborateurs avec le statut **employé** (registre du personnel) n'encodent ni heures ni kilomètres : chaque jour ouvrable compte **8 heures**. Une demi-journée de congé laisse 4 heures prestées ; congé, maladie, formation et jours fériés comptent comme pour tous, le congé familial et sans solde comptent 0. L'imputation, les remarques et l'envoi restent les mêmes. Dans l'application mobile, ils n'ont pas d'onglet Prestations.
 MD,
         ],
 

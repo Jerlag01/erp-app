@@ -60,7 +60,7 @@
                 @foreach ($week['days'] as $index => $day)
                     <button type="button" role="tab" aria-selected="{{ $day['date']->toDateString() === $current ? 'true' : 'false' }}" wire:click="goTo('{{ $day['date']->toDateString() }}')" @class(['erp-ts-day', 'is-current' => $day['date']->toDateString() === $current])>
                         <strong>{{ \App\Support\Timesheets::DAYS[$index] }} {{ $day['date']->format('d/m') }}</strong>
-                        <span class="h">{{ $dec($day['total']) }} u</span> · {{ $day['km'] }} km
+                        <span class="h">{{ $dec($day['total']) }} u</span>@unless ($fixedDay) · {{ $day['km'] }} km @endunless
                         @if ($day['status'])<span class="note">{{ $day['status']['note'] }}</span>@endif
                     </button>
                 @endforeach
@@ -98,8 +98,12 @@
                     <span>{{ __('erp.timesheets.day_hours') }}: <b>{{ $dec($dayTotal) }}</b> u
                         @if ($status && $status['credit'] > 0)<span style="color: var(--ts-muted);">({{ $dec($dayWorked) }} {{ __('erp.timesheets.worked') }} + {{ $dec($status['credit']) }})</span>@endif
                     </span>
-                    <span>{{ __('erp.timesheets.day_km') }}: <b>{{ $dayKm }}</b> km</span>
-                    <span style="color: var(--ts-muted);">{{ __('erp.timesheets.counted_help') }}</span>
+                    @if ($fixedDay)
+                        <span style="color: var(--ts-muted);" data-fixed-day>{{ __('erp.timesheets.fixed_day_help', ['hours' => $dec(app(\App\Support\Timesheets::class)->dayHours())]) }}</span>
+                    @else
+                        <span>{{ __('erp.timesheets.day_km') }}: <b>{{ $dayKm }}</b> km</span>
+                        <span style="color: var(--ts-muted);">{{ __('erp.timesheets.counted_help') }}</span>
+                    @endif
                 </div>
 
                 @if ($canEdit)
@@ -116,8 +120,10 @@
                     <thead>
                         <tr>
                             <th>{{ __('erp.timesheets.date') }}</th>
-                            <th>{{ __('erp.timesheets.km') }}</th>
-                            <th>{{ __('erp.timesheets.lunch_break') }}</th>
+                            @unless ($fixedDay)
+                                <th>{{ __('erp.timesheets.km') }}</th>
+                                <th>{{ __('erp.timesheets.lunch_break') }}</th>
+                            @endunless
                             <th>{{ __('erp.timesheets.hours') }}</th>
                             <th class="l">{{ __('erp.timesheets.imputation') }} / {{ __('erp.timesheets.description') }}</th>
                         </tr>
@@ -126,8 +132,10 @@
                         @foreach ($week['days'] as $index => $day)
                             <tr>
                                 <td class="l" style="text-transform: capitalize;">{{ \App\Support\Timesheets::DAYS[$index] }} {{ $day['date']->format('d/m') }}</td>
-                                <td class="mono">{{ $day['km'] }}</td>
-                                <td>{{ $day['lunch'] ? 'Ja' : 'Neen' }}</td>
+                                @unless ($fixedDay)
+                                    <td class="mono">{{ $day['km'] }}</td>
+                                    <td>{{ $day['lunch'] ? 'Ja' : 'Neen' }}</td>
+                                @endunless
                                 <td class="mono"><strong>{{ $dec($day['total']) }}</strong></td>
                                 <td class="l">
                                     {{ collect($day['rows'])->filter(fn ($row) => filled($row['imputation']) || filled($row['description']))->map(fn ($row) => trim(($row['imputation'] ?? '').' '.($row['description'] ?? '')))->implode(' · ') ?: ($day['status']['note'] ?? '—') }}
@@ -139,12 +147,14 @@
             </div>
 
             <div class="erp-ts-sum">
+                @unless ($fixedDay)
                 <table>
                     <tr><td colspan="2"><strong>Kilometers</strong></td></tr>
                     <tr><td>Report</td><td class="n">{{ number_format($week['km_carried'], 0, ',', '.') }}</td></tr>
                     <tr><td>Nu</td><td class="n">{{ number_format($week['km'], 0, ',', '.') }}</td></tr>
                     <tr><td>Nieuw</td><td class="n">{{ number_format($week['km_new'], 0, ',', '.') }}</td></tr>
                 </table>
+                @endunless
                 <table>
                     <tr><td colspan="2"><strong>Meeruren</strong> <span style="color: var(--ts-muted);">({{ __('erp.timesheets.expected', ['hours' => $dec($week['expected'])]) }})</span></td></tr>
                     <tr><td>Report</td><td class="n">{{ $dec($week['overtime_carried']) }}</td></tr>

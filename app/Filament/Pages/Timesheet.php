@@ -175,6 +175,7 @@ class Timesheet extends Page implements HasSchemas
     public function form(Schema $schema): Schema
     {
         $locked = fn (): bool => (bool) ($this->status()['lunch_locked'] ?? false);
+        $fixed = app(Timesheets::class)->fixedDay($this->employeeUser());
 
         return $schema
             ->statePath('data')
@@ -202,23 +203,28 @@ class Timesheet extends Page implements HasSchemas
                         }))
                     // Only extra sites can be removed.
                     ->deleteAction(fn (Action $action): Action => $action->hidden(fn (array $arguments, Repeater $component): bool => ($component->getRawState()[$arguments['item'] ?? '']['kind'] ?? null) !== 'extra'))
+                    // A "bediende" registers no kilometres and no times (fixed days of 8 h).
                     ->table([
                         Repeater\TableColumn::make(''),
-                        Repeater\TableColumn::make(__('erp.timesheets.km_departure')),
-                        Repeater\TableColumn::make(__('erp.timesheets.km_arrival')),
-                        Repeater\TableColumn::make(__('erp.timesheets.arrival')),
-                        Repeater\TableColumn::make(__('erp.timesheets.departure')),
+                        ...($fixed ? [] : [
+                            Repeater\TableColumn::make(__('erp.timesheets.km_departure')),
+                            Repeater\TableColumn::make(__('erp.timesheets.km_arrival')),
+                            Repeater\TableColumn::make(__('erp.timesheets.arrival')),
+                            Repeater\TableColumn::make(__('erp.timesheets.departure')),
+                        ]),
                         Repeater\TableColumn::make(__('erp.timesheets.imputation')),
                         Repeater\TableColumn::make(__('erp.timesheets.description')),
                     ])
                     ->schema([
                         Text::make(fn (Get $get): string => __('erp.timesheets.kinds.'.$get('kind'))),
-                        TextInput::make('km_departure')->hiddenLabel()->integer()->minValue(0)->maxValue(9_999_999)->live(onBlur: true),
-                        TextInput::make('km_arrival')->hiddenLabel()->integer()->minValue(0)->maxValue(9_999_999)->live(onBlur: true)
-                            ->rule(fn (Get $get) => filled($get('km_departure')) ? 'gte:'.(int) $get('km_departure') : null),
-                        TextInput::make('arrival')->hiddenLabel()->type('time')->live(onBlur: true),
-                        TextInput::make('departure')->hiddenLabel()->type('time')->live(onBlur: true)
-                            ->rule(fn (Get $get) => filled($get('arrival')) ? 'after_or_equal:'.$get('arrival') : null),
+                        ...($fixed ? [] : [
+                            TextInput::make('km_departure')->hiddenLabel()->integer()->minValue(0)->maxValue(9_999_999)->live(onBlur: true),
+                            TextInput::make('km_arrival')->hiddenLabel()->integer()->minValue(0)->maxValue(9_999_999)->live(onBlur: true)
+                                ->rule(fn (Get $get) => filled($get('km_departure')) ? 'gte:'.(int) $get('km_departure') : null),
+                            TextInput::make('arrival')->hiddenLabel()->type('time')->live(onBlur: true),
+                            TextInput::make('departure')->hiddenLabel()->type('time')->live(onBlur: true)
+                                ->rule(fn (Get $get) => filled($get('arrival')) ? 'after_or_equal:'.$get('arrival') : null),
+                        ]),
                         Select::make('project_id')
                             ->hiddenLabel()
                             ->placeholder(__('erp.timesheets.imputation_placeholder'))
@@ -238,6 +244,7 @@ class Timesheet extends Page implements HasSchemas
                     ->label(__('erp.timesheets.lunch_break'))
                     ->helperText(fn (): ?string => $locked() ? __('erp.timesheets.lunch_locked') : __('erp.timesheets.lunch_help', ['hours' => str_replace('.', ',', (string) app(Timesheets::class)->lunchHours())]))
                     ->disabled($locked)
+                    ->hidden($fixed)
                     ->live(),
                 Textarea::make('remarks')->label(__('erp.timesheets.remarks'))->rows(2)->maxLength(1000),
             ]);
@@ -299,7 +306,8 @@ class Timesheet extends Page implements HasSchemas
         $rows = Timesheets::normaliseRows((array) ($this->data['rows'] ?? []));
         $lunch = (bool) ($this->data['lunch_break'] ?? true);
         $status = $this->status();
-        $worked = $timesheets->workedHours($rows, $lunch);
+        $fixed = $timesheets->fixedDay($this->employeeUser());
+        $worked = $fixed ? $timesheets->fixedWorked($status) : $timesheets->workedHours($rows, $lunch);
 
         return [
             'employeeName' => $this->employeeUser()->name,
@@ -309,7 +317,8 @@ class Timesheet extends Page implements HasSchemas
             'rowKm' => array_map(fn (array $row): ?int => Timesheets::rowKm($row), $rows),
             'dayWorked' => round($worked, 2),
             'dayTotal' => round($worked + (float) ($status['credit'] ?? 0), 2),
-            'dayKm' => Timesheets::km($rows),
+            'dayKm' => $fixed ? 0 : Timesheets::km($rows),
+            'fixedDay' => $fixed,
             'employees' => $this->employeeOptions(),
             'canEdit' => $this->canEdit(),
             'sent' => $week['record']?->isSent(),
