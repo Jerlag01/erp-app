@@ -111,4 +111,55 @@ class AccessControlTest extends TestCase
         $this->actingAs($this->manager(['view']));
         $this->get(route('access.badges-pdf'))->assertForbidden();
     }
+
+    #[Test]
+    public function tags_can_be_unassigned_belong_to_a_user_without_employee_record_or_be_lost(): void
+    {
+        $this->actingAs($this->manager());
+        $employee = Employee::factory()->create();
+        $cleaner = User::factory()->create(['name' => 'Poetsdienst Mia']);
+
+        // A user with a login who is not in the employee register.
+        Livewire::test(ManageSecurityTags::class)
+            ->mountAction('create')
+            ->fillForm(['holder' => 'user'])
+            ->assertFormFieldVisible('user_id')
+            ->assertFormFieldHidden('employee_id');
+        Livewire::test(ManageSecurityTags::class)
+            ->callAction('create', ['holder' => 'user', 'user_id' => $cleaner->id, 'tag_number' => '21'])
+            ->assertHasNoActionErrors();
+        $userTag = SecurityTag::query()->where('tag_number', '21')->sole();
+        $this->assertSame([null, $cleaner->id, 'Poetsdienst Mia'], [$userTag->employee_id, $userTag->user_id, $userTag->holderName()]);
+        $this->assertSame(SecurityTag::STATUS_ACTIVE, $userTag->status());
+
+        // One tag per user.
+        Livewire::test(ManageSecurityTags::class)
+            ->callAction('create', ['holder' => 'user', 'user_id' => $cleaner->id, 'tag_number' => '22'])
+            ->assertHasActionErrors(['user_id']);
+
+        // In stock: nobody.
+        Livewire::test(ManageSecurityTags::class)
+            ->callAction('create', ['holder' => 'none', 'tag_number' => '30'])
+            ->assertHasNoActionErrors();
+        $spare = SecurityTag::query()->where('tag_number', '30')->sole();
+        $this->assertSame(SecurityTag::STATUS_UNASSIGNED, $spare->status());
+
+        // Handing the user's tag to an employee clears the user.
+        Livewire::test(ManageSecurityTags::class)
+            ->callTableAction('edit', $userTag, ['holder' => 'employee', 'employee_id' => $employee->id])
+            ->assertHasNoTableActionErrors();
+        $this->assertSame([$employee->id, null], [$userTag->fresh()->employee_id, $userTag->fresh()->user_id]);
+
+        // Lost: from the list, with the date.
+        Livewire::test(ManageSecurityTags::class)->set('activeTab', 'unassigned')->call('updateTableColumnState', 'is_lost', (string) $spare->getKey(), true);
+        $this->assertTrue($spare->fresh()->is_lost);
+        $this->assertNotNull($spare->fresh()->lost_at);
+
+        Livewire::test(ManageSecurityTags::class)
+            ->set('activeTab', 'lost')->assertCanSeeTableRecords([$spare])->assertCanNotSeeTableRecords([$userTag])
+            ->set('activeTab', 'unassigned')->assertCanNotSeeTableRecords([$spare, $userTag])
+            ->set('activeTab', 'active')->assertCanSeeTableRecords([$userTag])->assertCanNotSeeTableRecords([$spare]);
+
+        $this->get(route('access.tags-pdf', ['tab' => 'lost']))->assertOk();
+    }
 }

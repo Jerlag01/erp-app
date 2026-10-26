@@ -241,6 +241,7 @@ An employee requests a change (e.g. a new address) through **My details**. The a
 
 - **Badges & electronic keys**: per employee one line with the **badge number** (7 digits) and/or the **electronic key** (4 digits), whether the employee has **CLAD permission** and which **clearance**. A number belongs to one employee.
 - **Security tags**: per employee the **tag** (2 digits), the **name in the security system**, access to the **warehouse** and the **office**, and whether the employee received **door keys**.
+- A tag can also be **unassigned** (in stock) or given to a **user with a login who is not in the employee list** (e.g. cleaners or externals). With the **Lost** switch (in the form or straight in the list) you report a tag lost; the date is kept. The *Unassigned* and *Lost* tabs show those tags, also in the PDF.
 - Employees who left stay in both lists as **Deactivated** (tab *Deactivated*).
 - Adding and changing with the permission **Badges, electronic keys & security tags**; deleting only with the permission *Delete*. Both lists are exported as PDF (permission *Generate PDF*).
 

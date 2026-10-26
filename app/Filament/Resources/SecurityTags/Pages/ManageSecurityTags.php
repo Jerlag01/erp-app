@@ -24,7 +24,7 @@ class ManageSecurityTags extends ManageRecords
                 ->color('gray')
                 ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), 'access_control'))
                 ->url(fn (): string => route('access.tags-pdf', ['tab' => $this->activeTab]), shouldOpenInNewTab: true),
-            CreateAction::make(),
+            CreateAction::make()->mutateDataUsing(fn (array $data): array => SecurityTagResource::holderData($data)),
         ];
     }
 
@@ -32,6 +32,8 @@ class ManageSecurityTags extends ManageRecords
     {
         return [
             'active' => Tab::make(__('erp.access.tabs.active'))->modifyQueryUsing(fn (Builder $query) => $query->active()),
+            'unassigned' => Tab::make(__('erp.access.tabs.unassigned'))->modifyQueryUsing(fn (Builder $query) => $query->unassigned()),
+            'lost' => Tab::make(__('erp.access.tabs.lost'))->modifyQueryUsing(fn (Builder $query) => $query->lost()),
             'deactivated' => Tab::make(__('erp.access.tabs.deactivated'))->modifyQueryUsing(fn (Builder $query) => $query->active(false)),
             'all' => Tab::make(__('erp.access.tabs.all')),
         ];

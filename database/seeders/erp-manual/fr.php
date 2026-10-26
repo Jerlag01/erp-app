@@ -241,6 +241,7 @@ Un employé demande une modification (p. ex. nouvelle adresse) via **Mes donnée
 
 - **Badges & clés électroniques** : par collaborateur une ligne avec le **numéro de badge** (7 chiffres) et/ou la **clé électronique** (4 chiffres), si le collaborateur a l'**autorisation CLAD** et quelle **clearance**. Un numéro appartient à un seul collaborateur.
 - **Tags de sécurité** : par collaborateur le **tag** (2 chiffres), le **nom dans le système de sécurité**, l'accès au **dépôt** et au **bureau**, et si le collaborateur a reçu les **clés des portes**.
+- Un tag peut aussi être **non attribué** (en stock) ou remis à un **utilisateur avec un login qui ne figure pas dans la liste du personnel** (p. ex. nettoyage ou externes). Avec l'interrupteur **Perdu** (dans le formulaire ou directement dans la liste), vous signalez un tag perdu ; la date est conservée. Les onglets *Non attribués* et *Perdus* montrent ces tags, aussi dans le PDF.
 - Les collaborateurs qui ne sont plus en service restent dans les deux listes comme **Désactivé** (onglet *Désactivé*).
 - Ajouter et modifier avec le droit **Badges, clés électroniques & tags de sécurité** ; supprimer uniquement avec le droit *Supprimer*. Les deux listes s'exportent en PDF (droit *Générer des PDF*).
 

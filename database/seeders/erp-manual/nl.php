@@ -242,6 +242,7 @@ Een werknemer vraagt een wijziging (bv. nieuw adres) aan via **Mijn gegevens**. 
 
 - **Badges & elektronische sleutels**: per werknemer één lijn met het **badgenummer** (7 cijfers) en/of de **elektronische sleutel** (4 cijfers), of de werknemer **CLAD-toelating** heeft en welke **clearance**. Een nummer hoort bij één werknemer.
 - **Beveiligingstags**: per werknemer de **tag** (2 cijfers), de **naam in het beveiligingssysteem**, toegang tot het **magazijn** en het **kantoor**, en of de werknemer **sleutels van de deuren** kreeg.
+- Een tag kan ook **niet toegewezen** zijn (in voorraad) of aan een **gebruiker met een login die niet in de personeelslijst staat** (bv. poetsdienst of externen) gegeven worden. Met de schakelaar **Verloren** (in het formulier of meteen in de lijst) meld je een tag verloren; de datum wordt bewaard. De tabbladen *Niet toegewezen* en *Verloren* tonen die tags, ook in de PDF.
 - Werknemers die uit dienst zijn, blijven in beide lijsten staan als **Gedeactiveerd** (tabblad *Gedeactiveerd*).
 - Toevoegen en wijzigen met het recht **Badges, elektronische sleutels & beveiligingstags**; verwijderen kan enkel met het recht *Verwijderen*. Beide lijsten exporteer je als PDF (recht *PDF genereren*).
 

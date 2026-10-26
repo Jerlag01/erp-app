@@ -33,7 +33,13 @@ class AccessExportController extends Controller
     {
         abort_unless(Gate::allows('viewAny', SecurityTag::class) && PdfAccess::canGenerate($request->user(), 'access_control'), 403);
 
-        $tags = $this->tab(SecurityTag::query()->with('employee'), (string) $request->query('tab', 'active'))->orderBy('tag_number')->get();
+        $tab = (string) $request->query('tab', 'active');
+        $query = SecurityTag::query()->with(['employee', 'user']);
+        $tags = (match ($tab) {
+            'unassigned' => $query->unassigned(),
+            'lost' => $query->lost(),
+            default => $this->tab($query, $tab),
+        })->orderBy('tag_number')->get();
 
         return $this->pdf('access.tags-pdf', ['tags' => $tags], 'beveiligingstags.pdf');
     }
