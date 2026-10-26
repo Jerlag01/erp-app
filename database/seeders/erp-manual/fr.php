@@ -930,6 +930,35 @@ Dans le portail client (droit **As-builts**), le client suit le statut, téléch
 MD,
         ],
 
+        'cable-calculator' => [
+            'title' => 'Calcul de câbles',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Calculer une **section de câble indicative**, comme le calculateur de câbles de Schneider : selon l'**IEC 60364-5-52**, la plateforme cherche la plus petite section qui respecte le courant admissible, la chute de tension et (en option) le courant de court-circuit.
+
+## Saisie
+
+- **Circuit** : AC triphasé, AC monophasé ou **DC** (p. ex. 48 V), la tension, la charge en **courant** ou en **puissance** (avec cos φ), la **longueur** et éventuellement la **protection** (vide : la valeur normalisée suivante au-dessus du courant d'emploi).
+- **Câble et pose** : cuivre ou aluminium (à partir de 16 mm²), PVC ou PR, le nombre de **câbles en parallèle**, le **mode de pose** (A1 à E), la température ambiante ou du sol et le nombre de **circuits groupés**.
+- **Limites** : la **chute de tension** admise (3 % par défaut) et en option le **courant de court-circuit** avec le temps de coupure.
+
+## Résultat
+
+À côté du formulaire, vous voyez directement le **câble proposé** (p. ex. *3 × 6 mm² Cu XLPE*), ce qui détermine la section (courant, chute de tension ou court-circuit), Ib, In, les facteurs k1 et k2, Iz et la chute de tension, et les sections autour du choix. Enregistrez le calcul avec un nom et éventuellement un **projet** ; **Copier** crée une variante.
+
+## PDF
+
+Avec **PDF** (droit *Générer des PDF*), vous imprimez le calcul sur le **papier à en-tête de la note de livraison 604**, avec toutes les données et le tableau des sections.
+
+## Droits
+
+Le droit **Calcul de câbles** : consulter, créer, modifier, supprimer et générer des PDF. Le module s'active ou se désactive dans Paramètres → Modules.
+
+Le calcul est une **indication** et ne remplace pas une étude complète (sélectivité, impédance de boucle, harmoniques …).
+MD,
+        ],
+
         'cable-stripping' => [
             'title' => 'Dénudage de câbles',
             'body' => <<<'MD'

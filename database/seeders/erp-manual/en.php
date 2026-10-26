@@ -930,6 +930,35 @@ In the client portal (permission **As-builts**) the client follows the status, d
 MD,
         ],
 
+        'cable-calculator' => [
+            'title' => 'Cable calculator',
+            'body' => <<<'MD'
+## What is it for?
+
+Calculating an **indicative cable section**, like Schneider's cable calculator: after **IEC 60364-5-52** the platform looks for the smallest section that meets the current-carrying capacity, the voltage drop and (optionally) the short-circuit current.
+
+## Filling in
+
+- **Circuit**: 3-phase AC, 1-phase AC or **DC** (e.g. 48 V), the voltage, the load as **current** or **power** (with cos φ), the **length** and optionally the **protective device** (empty: the next standard rating above the design current).
+- **Cable and installation**: copper or aluminium (from 16 mm²), PVC or XLPE, the number of **parallel cables**, the **installation method** (A1 to E), the ambient or ground temperature and the number of **grouped circuits**.
+- **Limits**: the allowed **voltage drop** (3 % by default) and optionally the **short-circuit current** with the disconnection time.
+
+## Result
+
+Next to the form you see straight away the **proposed cable** (e.g. *3 × 6 mm² Cu XLPE*), what sets the section (current, voltage drop or short circuit), Ib, In, the correction factors k1 and k2, Iz and the voltage drop, and the sections around the choice. Save the calculation with a name and optionally a **project**; **Copy** makes a variant.
+
+## PDF
+
+With **PDF** (permission *Generate PDF*) you print the calculation on the **letterhead of the 604 delivery note**, with all data and the table of sections.
+
+## Permissions
+
+The permission **Cable calculator**: view, create, change, delete and generate PDF. The module is switched on or off under Settings → Modules.
+
+The calculation is an **indication** and does not replace a full study (selectivity, loop impedance, harmonics …).
+MD,
+        ],
+
         'cable-stripping' => [
             'title' => 'Cable stripping',
             'body' => <<<'MD'

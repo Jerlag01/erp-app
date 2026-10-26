@@ -931,6 +931,35 @@ In het klantenportaal (recht **As-builts**) volgt de klant de status op, downloa
 MD,
         ],
 
+        'cable-calculator' => [
+            'title' => 'Kabelberekening',
+            'body' => <<<'MD'
+## Waarvoor?
+
+Een **indicatieve kabelsectie** berekenen, zoals de kabelcalculator van Schneider: volgens **IEC 60364-5-52** zoekt het platform de kleinste sectie die voldoet aan de toelaatbare stroom, de spanningsval en (optioneel) de kortsluitstroom.
+
+## Invullen
+
+- **Circuit**: 3-fasig AC, 1-fasig AC of **DC** (bv. 48 V), de spanning, de belasting als **stroom** of **vermogen** (met cos φ), de **lengte** en eventueel de **beveiliging** (leeg: de eerstvolgende standaardwaarde boven de bedrijfsstroom).
+- **Kabel en installatie**: koper of aluminium (vanaf 16 mm²), PVC of XLPE, het aantal **parallelle kabels**, de **plaatsingswijze** (A1 tot E), de omgevings- of grondtemperatuur en het aantal **gebundelde circuits**.
+- **Grenzen**: de toegelaten **spanningsval** (standaard 3 %) en optioneel de **kortsluitstroom** met de uitschakeltijd.
+
+## Resultaat
+
+Naast het formulier zie je meteen de **voorgestelde kabel** (bv. *3 × 6 mm² Cu XLPE*), wat de sectie bepaalt (stroom, spanningsval of kortsluiting), Ib, In, de correctiefactoren k1 en k2, Iz en de spanningsval, en de secties rond de keuze. Bewaar de berekening met een naam en eventueel een **project**; met **Kopiëren** maak je een variant.
+
+## PDF
+
+Met **PDF** (recht *PDF genereren*) druk je de berekening af op het **briefpapier van de 604-leveringsnota**, met alle gegevens en de tabel van de secties.
+
+## Rechten
+
+Het recht **Kabelberekening**: bekijken, aanmaken, wijzigen, verwijderen en PDF genereren. De module zet je aan of uit bij Instellingen → Modules.
+
+De berekening is een **indicatie** en vervangt geen volledige studie (selectiviteit, lusimpedantie, harmonischen …).
+MD,
+        ],
+
         'cable-stripping' => [
             'title' => 'Kabel ontmantelen',
             'body' => <<<'MD'

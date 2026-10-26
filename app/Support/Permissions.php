@@ -94,6 +94,7 @@ class Permissions
         'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'cable_calculations' => ['module' => Modules::CABLE_CALCULATOR, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers']],
         // Resetting a user's two-step verification (explicit: also administrators need it ticked).
         'security' => ['module' => null, 'abilities' => ['reset_two_factor']],

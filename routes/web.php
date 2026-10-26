@@ -9,6 +9,7 @@ use App\Http\Controllers\BatteryDeliveriesPdfController;
 use App\Http\Controllers\BatteryDeliveryDocumentController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\BatteryRoomController;
+use App\Http\Controllers\CableCalculationPdfController;
 use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\ClientWelcomeLinkController;
 use App\Http\Controllers\EmployeeDocumentController;
@@ -110,6 +111,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/onboarding-signatures-pdf', [AccessExportController::class, 'onboarding'])->name('onboarding.signatures-pdf');
     Route::get('/access-badges-pdf', [AccessExportController::class, 'badges'])->name('access.badges-pdf');
     Route::get('/security-tags-pdf', [AccessExportController::class, 'tags'])->name('access.tags-pdf');
+    Route::get('/cable-calculations/{calculation}/pdf', CableCalculationPdfController::class)->whereNumber('calculation')->name('cable-calculations.pdf');
     Route::get('/waste-pdf/{token}', [WastePdfController::class, 'list'])->name('waste.pdf');
     Route::get('/waste-totals-pdf', [WastePdfController::class, 'totals'])->name('waste.totals-pdf');
     Route::get('/waste-regional-pdf', [WastePdfController::class, 'regional'])->name('waste.regional-pdf');

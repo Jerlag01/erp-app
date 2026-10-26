@@ -99,6 +99,7 @@ class Settings
                 Modules::ASBUILT => true,
                 Modules::HR_CALCULATIONS => true,
                 Modules::BOARD_DELIVERIES => true,
+                Modules::CABLE_CALCULATOR => true,
                 Modules::BATTERY_ROOMS => true,
                 Modules::ONBOARDING => true,
                 Modules::ENERSYS => true,
