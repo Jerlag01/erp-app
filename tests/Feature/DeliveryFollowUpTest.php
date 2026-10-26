@@ -151,6 +151,12 @@ class DeliveryFollowUpTest extends TestCase
         $this->assertNotNull($configured->completed_at);
         $this->assertSame(ProjectStatus::Offer, $configured->project->refresh()->status);
 
+        // The date fields in the list show the saved dates (the browser's date field needs Y-m-d).
+        Livewire::test(ManageBoardDeliveries::class)
+            ->set('activeTab', 'supplier-'.$cet->id)
+            ->assertTableColumnStateSet('delivered_on', '2026-11-12', $configured)
+            ->assertTableColumnStateSet('configured_on', '2026-11-14', $configured);
+
         // New lines: 610–650 projects only.
         Livewire::test(ManageBoardDeliveries::class)
             ->set('activeTab', 'supplier-'.$cet->id)

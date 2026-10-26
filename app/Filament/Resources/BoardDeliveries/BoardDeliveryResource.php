@@ -149,6 +149,8 @@ class BoardDeliveryResource extends Resource
         $date = fn (string $name, string $label): TextInputColumn => TextInputColumn::make($name)
             ->label($label)
             ->type('date')
+            // The browser's date field only takes Y-m-d, not the full date of the cast.
+            ->getStateUsing(fn (DeliveryFollowUp $record): ?string => $record->{$name}?->format('Y-m-d'))
             ->rules(['nullable', 'date'])
             ->disabled(fn (DeliveryFollowUp $record): bool => ! Gate::allows('update', $record))
             ->visible($configured);
