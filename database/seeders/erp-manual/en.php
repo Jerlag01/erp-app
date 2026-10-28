@@ -892,6 +892,7 @@ Per project an **as-built** with all files per category, the inspection by **Nor
 - **Projects → As-builts**: the overview per status (in progress, planned for Normec BTV, finished).
 - **Projects → As-built standard files**: the register of standard files.
 - On a project: the **As-built** button.
+- The page of an as-built shows the **project details** at the top (category, site with address, description, PO numbers, project leaders, teams …) and the files per category below.
 
 ## How is an as-built made?
 

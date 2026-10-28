@@ -305,4 +305,21 @@ class AsbuiltTest extends TestCase
         $other = $this->executedProject('620')->asbuilt;
         Livewire::test(ViewAsbuilt::class, ['record' => $other->getRouteKey()])->assertActionHidden('delete');
     }
+
+    #[Test]
+    public function the_asbuilt_page_shows_the_project_details_also_without_files(): void
+    {
+        $project = $this->executedProject();
+        $project->update(['short_description' => 'Remplacement de TGBT']);
+        $project->poNumbers()->create(['number' => '4500012345']);
+
+        $this->actingAs($this->manager())
+            ->get(AsbuiltResource::getUrl('view', ['record' => $project->asbuilt]))
+            ->assertOk()
+            ->assertSee(__('erp.asbuilt.project_details'))
+            ->assertSee('02GAM')
+            ->assertSee('Remplacement de TGBT')
+            ->assertSee('4500012345')
+            ->assertSee('data-asbuilt-files', false);
+    }
 }

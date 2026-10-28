@@ -893,6 +893,7 @@ Per project een **as-built** met alle bestanden per categorie, de keuring door *
 - **Projecten → As-builts**: het overzicht per status (in uitvoering, gepland voor Normec BTV, afgerond).
 - **Projecten → As-built standaardbestanden**: het register van standaardbestanden.
 - Op een project: de knop **As-built**.
+- Op de pagina van een as-built staan bovenaan de **projectgegevens** (categorie, werflocatie met adres, omschrijving, PO-nummers, projectleiders, ploegen …) en daaronder de bestanden per categorie.
 
 ## Hoe ontstaat een as-built?
 

@@ -892,6 +892,7 @@ Par projet, un **as-built** avec tous les fichiers par catégorie, le contrôle 
 - **Projets → As-builts** : l'aperçu par statut (en cours, planifié pour Normec BTV, terminé).
 - **Projets → Fichiers standard as-built** : le registre des fichiers standard.
 - Sur un projet : le bouton **As-built**.
+- La page d'un as-built affiche en haut les **données du projet** (catégorie, site avec adresse, description, numéros PO, chefs de projet, équipes …) et en dessous les fichiers par catégorie.
 
 ## Comment naît un as-built ?
 

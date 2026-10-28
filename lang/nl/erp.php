@@ -2588,6 +2588,8 @@ return [
         ],
     ],
     'asbuilt' => [
+        'project_details' => 'Projectgegevens',
+        'project_status' => 'Status project',
         'create' => 'As-built aanmaken',
         'create_help' => 'De as-built wordt nu al aangemaakt, met de standaardbestanden van de COW-code. Wordt het project later "Uitgevoerd", dan wordt er geen tweede aangemaakt.',
         'created_done' => 'As-built aangemaakt',

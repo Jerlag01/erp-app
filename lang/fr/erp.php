@@ -2587,6 +2587,8 @@ return [
         ],
     ],
     'asbuilt' => [
+        'project_details' => 'Données du projet',
+        'project_status' => 'Statut du projet',
         'create' => 'Créer l\'as-built',
         'create_help' => 'L\'as-built est créé dès maintenant, avec les fichiers standard du code COW. Quand le projet passera à « Exécuté », aucun deuxième ne sera créé.',
         'created_done' => 'As-built créé',

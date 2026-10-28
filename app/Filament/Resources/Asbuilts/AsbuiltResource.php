@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Asbuilts;
 use App\Enums\AsbuiltStatus;
 use App\Enums\NavigationGroup;
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Asbuilt;
 use App\Models\ProjectCategory;
 use BackedEnum;
@@ -85,6 +86,63 @@ class AsbuiltResource extends Resource
                             : __('erp.asbuilt.origin_automatic')),
                     TextEntry::make('btv_date')->label(__('erp.asbuilt.btv_date'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('closed_at')->label(__('erp.asbuilt.closed'))->date('d/m/Y')->placeholder('—'),
+                ]),
+            // The project's own details, as on the project page.
+            Section::make(__('erp.asbuilt.project_details'))
+                ->columns(['default' => 1, 'md' => 2, 'lg' => 3])
+                ->columnSpanFull()
+                ->visible(fn (Asbuilt $record): bool => $record->project !== null)
+                ->schema([
+                    TextEntry::make('project.category')
+                        ->label(__('erp.resources.project_category.singular'))
+                        ->state(fn (Asbuilt $record): ?string => $record->project?->category?->label()),
+                    TextEntry::make('project.workSite.cow_code')
+                        ->label(__('erp.resources.work_site.singular'))
+                        ->state(fn (Asbuilt $record): ?string => ($site = $record->project?->workSite) ? trim($site->cow_code.' · '.$site->addressLine(), ' ·') : $record->project?->cow_code)
+                        ->url(fn (Asbuilt $record): ?string => ($site = $record->project?->workSite) && modules()->workSites() && Gate::allows('view', $site) ? WorkSiteResource::getUrl('view', ['record' => $site]) : null)
+                        ->placeholder('—'),
+                    TextEntry::make('project.status')
+                        ->label(__('erp.asbuilt.project_status'))
+                        ->badge(),
+                    TextEntry::make('project.short_description')
+                        ->label(__('erp.projects.short_description'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                    TextEntry::make('project.work_order_number')
+                        ->label(__('erp.interventions.wo_number'))
+                        ->prefix('WO ')
+                        ->fontFamily(FontFamily::Mono)
+                        ->visible(fn (Asbuilt $record): bool => (bool) $record->project?->isIntervention()),
+                    TextEntry::make('project.poNumbers.number')
+                        ->label(__('erp.projects.po_numbers'))
+                        ->badge()
+                        ->color('gray')
+                        ->fontFamily(FontFamily::Mono)
+                        ->copyable()
+                        ->placeholder('—'),
+                    TextEntry::make('project.client_name')
+                        ->label(__('erp.projects.client_name'))
+                        ->helperText(fn (Asbuilt $record): ?string => $record->project?->client_company)
+                        ->visible(fn (Asbuilt $record): bool => filled($record->project?->client_name) || filled($record->project?->client_company)),
+                    TextEntry::make('project.address')
+                        ->label(__('erp.fields.address'))
+                        ->state(fn (Asbuilt $record): ?string => $record->project?->addressLine())
+                        ->visible(fn (Asbuilt $record): bool => filled($record->project?->addressLine())),
+                    TextEntry::make('project.leaders.name')
+                        ->label(__('erp.projects.leaders'))
+                        ->badge()
+                        ->placeholder('—'),
+                    TextEntry::make('project.teams.name')
+                        ->label(__('erp.resources.team.plural'))
+                        ->badge()
+                        ->color('gray')
+                        ->placeholder('—')
+                        ->visible(fn (): bool => modules()->teams()),
+                    TextEntry::make('project.notes')
+                        ->label(__('erp.fields.notes'))
+                        ->placeholder('—')
+                        ->prose()
+                        ->columnSpanFull(),
                 ]),
             ViewEntry::make('files')
                 ->hiddenLabel()
