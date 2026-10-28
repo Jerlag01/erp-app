@@ -82,7 +82,7 @@ class OnboardingTest extends TestCase
 
         // Every page leads to the onboarding first.
         $this->get('/')->assertRedirect(Onboarding::getUrl(panel: 'app'));
-        $this->get(Onboarding::getUrl(panel: 'app'))->assertOk()->assertSee('Arbeidsreglement')->assertDontSee('Règlement de travail')->assertSee('data-onboarding-required', false);
+        $this->get(Onboarding::getUrl(panel: 'app'))->assertOk()->assertDontSee("mountAction('sign', {&quot;", false)->assertSee('Arbeidsreglement')->assertDontSee('Règlement de travail')->assertSee('data-onboarding-required', false);
 
         // Signing needs the document opened first.
         Livewire::test(Onboarding::class)

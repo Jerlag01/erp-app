@@ -512,6 +512,7 @@ return [
             'battery_master_data' => 'Modèles de batteries & câbles',
             'timesheets' => 'Prestations',
             'charging' => 'Bornes de recharge',
+            'project_workdays' => 'Jours de travail des projets (par utilisateur uniquement)',
             'cable_calculations' => 'Calcul de câbles',
             'cable_stripping' => 'Dénudage de câbles',
             'enersys' => 'Batteries Enersys',
@@ -1445,6 +1446,12 @@ return [
         'notification_title' => 'Nouvelle contribution dans la boîte à idées : :type',
     ],
     'projects' => [
+        'estimated_workdays' => 'Jours de travail estimés',
+        'estimated_workdays_help' => 'Combien de jours de travail le projet demande selon l\'estimation.',
+        'days_suffix' => 'jours',
+        'workdays' => 'Jours de travail',
+        'workdays_help' => 'Jours de travail estimés / jours dans le planning (jusqu\'à aujourd\'hui). En rouge quand l\'estimation est dépassée.',
+        'workdays_over' => 'Jours de travail dépassés',
         'status_closed_help' => '« Clôturé » archive le projet avec un ZIP de tous ses fichiers. Pour 610–650, « Facturé » clôture aussi le projet.',
         'follow_up_note' => 'Créé automatiquement après l\'exécution de :reference.',
         'archive' => [

@@ -6,6 +6,7 @@ use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Support\ProjectProgress;
+use App\Support\ProjectWorkdays;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -14,6 +15,7 @@ use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,7 +25,8 @@ class ProjectsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers'])->withCount('steps'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers'])->withCount('steps')
+                ->when(ProjectWorkdays::canView(auth()->user()), fn (Builder $query) => ProjectWorkdays::withWorkedDays($query)))
             ->defaultSort('created_at', 'desc')
             ->searchPlaceholder(__('erp.projects.search'))
             ->columns([
@@ -60,6 +63,15 @@ class ProjectsTable
                     ] : null)
                     ->visible(fn ($livewire): bool => ! property_exists($livewire, 'activeTab') || in_array($livewire->activeTab, [null, '', 'all', 'archived', ...ProjectProgress::CATEGORIES], true))
                     ->toggleable(),
+                // "Estimated/actual" workdays, red when over the estimate: only with "project_workdays.view".
+                TextColumn::make('workdays')
+                    ->label(__('erp.projects.workdays'))
+                    ->tooltip(__('erp.projects.workdays_help'))
+                    ->state(fn (Project $record): string => ProjectWorkdays::label($record))
+                    ->badge()
+                    ->color(fn (Project $record): string => ProjectWorkdays::color($record))
+                    ->fontFamily(FontFamily::Mono)
+                    ->visible(fn (): bool => ProjectWorkdays::canView(auth()->user())),
                 TextColumn::make('poNumbers.number')
                     ->label(__('erp.projects.po_numbers'))
                     ->fontFamily(FontFamily::Mono)
@@ -85,6 +97,11 @@ class ProjectsTable
                     ->label(__('erp.resources.project_category.singular'))
                     ->options(fn (): array => ProjectCategory::query()->orderBy('code')->get()->mapWithKeys(fn (ProjectCategory $category): array => [$category->id => $category->label()])->all())
                     ->multiple(),
+                Filter::make('workdays_over')
+                    ->label(__('erp.projects.workdays_over'))
+                    ->toggle()
+                    ->query(fn (Builder $query) => ProjectWorkdays::over($query))
+                    ->visible(fn (): bool => ProjectWorkdays::canView(auth()->user())),
                 SelectFilter::make('status')
                     ->label(__('erp.fields.status'))
                     ->options(ProjectStatus::class)

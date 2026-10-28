@@ -30,6 +30,10 @@ class Role extends Model
      */
     public function allows(string $permission): bool
     {
+        if (Permissions::isUserOnly($permission)) {
+            return false;
+        }
+
         if ($this->is_admin && ! Permissions::isExplicit($permission)) {
             return true;
         }
@@ -64,7 +68,7 @@ class Role extends Model
     public function permissionCount(): int
     {
         return $this->is_admin
-            ? collect(Permissions::all())->flatten()->count() - count(Permissions::EXPLICIT) + collect($this->permissions ?? [])->flatten()->count()
+            ? collect(Permissions::forRoles())->flatten()->count() - count(Permissions::EXPLICIT) + collect($this->permissions ?? [])->flatten()->count()
             : collect($this->permissions ?? [])->flatten()->count();
     }
 

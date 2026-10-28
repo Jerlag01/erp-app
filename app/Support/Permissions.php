@@ -103,7 +103,60 @@ class Permissions
         'access_control' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'onboarding' => ['module' => Modules::ONBOARDING, 'abilities' => ['manage', 'view_signatures', 'generate_pdf']],
         'battery_rooms' => ['module' => Modules::BATTERY_ROOMS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'download_pdf']],
+        // Estimated against planned workdays of projects: per user only (see USER_ONLY).
+        'project_workdays' => ['module' => Modules::PROJECTS, 'abilities' => ['view']],
     ];
+
+    /**
+     * Permissions that are never part of a role: they are given to a user alone (their own permissions),
+     * and administrators do not have them unless ticked for them.
+     *
+     * @var list<string>
+     */
+    public const USER_ONLY = ['project_workdays.view'];
+
+    public static function isUserOnly(string $permission): bool
+    {
+        return in_array($permission, self::USER_ONLY, true);
+    }
+
+    /**
+     * The user-only permissions per area, e.g. ['project_workdays' => ['view']].
+     *
+     * @return array<string, list<string>>
+     */
+    public static function userOnly(): array
+    {
+        $areas = [];
+
+        foreach (self::USER_ONLY as $permission) {
+            [$area, $ability] = explode('.', $permission, 2);
+            $areas[$area][] = $ability;
+        }
+
+        return $areas;
+    }
+
+    /**
+     * What a role can grant: every permission except the user-only ones.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function forRoles(): array
+    {
+        $userOnly = self::userOnly();
+        $areas = [];
+
+        foreach (self::all() as $area => $abilities) {
+            $abilities = array_values(array_diff($abilities, $userOnly[$area] ?? []));
+
+            if ($abilities !== []) {
+                $areas[$area] = $abilities;
+            }
+        }
+
+        return $areas;
+    }
 
     /**
      * Permissions an administrator role is not granted automatically: they must be ticked on the role.
@@ -180,7 +233,7 @@ class Permissions
     {
         $clean = [];
 
-        foreach ($explicitOnly ? self::explicit() : self::all() as $area => $abilities) {
+        foreach ($explicitOnly ? self::explicit() : self::forRoles() as $area => $abilities) {
             $granted = array_values(array_intersect($abilities, (array) ($permissions[$area] ?? [])));
 
             if ($granted !== []) {

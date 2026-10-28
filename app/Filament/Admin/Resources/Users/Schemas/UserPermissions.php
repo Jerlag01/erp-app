@@ -30,7 +30,7 @@ class UserPermissions
      */
     public static function areas(?Role $role): array
     {
-        return $role?->is_admin ? Permissions::explicit() : Permissions::all();
+        return $role?->is_admin ? array_merge_recursive(Permissions::explicit(), Permissions::userOnly()) : Permissions::all();
     }
 
     /**

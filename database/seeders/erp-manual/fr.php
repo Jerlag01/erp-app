@@ -637,6 +637,12 @@ Offre → En attente du PO → À planifier → Planifié → À exécuter → E
 - Pour 608, choisissez l'**emplacement** : un code COW ou un **client tiers** avec sa propre adresse d'installation.
 - Depuis un projet, demandez un **GPW** (voir « Demandes de GPW »).
 
+## Jours de travail estimés
+
+À la création (ou modification) d'un projet, vous indiquez les **jours de travail estimés**. Qui a le droit **Jours de travail des projets** voit dans la liste des projets et sur le projet **estimé/réel**, p. ex. *10/12* : le nombre réel correspond aux jours (jusqu'à aujourd'hui) où le projet figure dans le **planning**, quel que soit le nombre de personnes ce jour-là. **Vert** tant que le réel est égal ou inférieur à l'estimation, **rouge** dès que l'estimation est dépassée. Le filtre *Jours de travail dépassés* ne montre que ces projets.
+
+Ce droit ne fait partie d'**aucun rôle** : un administrateur le coche dans les **droits propres d'un utilisateur** (Administration → Utilisateurs). Les administrateurs aussi ne le voient que s'il est coché pour eux.
+
 ## Droits
 
 Droits distincts pour voir, créer, modifier, supprimer, fichiers, pièces, PDF, copier et demander un GPW. Les offres et factures ne sont visibles qu'avec les droits financiers du projet ou en tant que chef de projet.

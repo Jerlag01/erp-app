@@ -167,6 +167,13 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      */
     public function hasPermission(string $permission): bool
     {
+        // Given to this user alone: never through the role, not even for administrators.
+        if (Permissions::isUserOnly($permission)) {
+            [$area, $ability] = explode('.', $permission, 2);
+
+            return in_array($ability, (array) ($this->permissions[$area] ?? []), true);
+        }
+
         if ($this->isAdmin() && ! Permissions::isExplicit($permission)) {
             return true;
         }

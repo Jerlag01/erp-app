@@ -320,6 +320,9 @@ class AsbuiltTest extends TestCase
             ->assertSee('02GAM')
             ->assertSee('Remplacement de TGBT')
             ->assertSee('4500012345')
-            ->assertSee('data-asbuilt-files', false);
+            ->assertSee('data-asbuilt-files', false)
+            // Livewire cannot parse a click with raw quotes ("Missing closing parenthesis"): the upload per category uses Js::from.
+            ->assertSee("mountAction('upload', JSON.parse(", false)
+            ->assertDontSee('mountAction(\'upload\', {&quot;', false);
     }
 }

@@ -37,7 +37,7 @@
                                 {{ __('erp.onboarding.open') }}
                             </x-filament::button>
                             @unless ($row?->isSigned())
-                                <x-filament::button icon="heroicon-o-pencil-square" :disabled="! $row?->opened_at" wire:click="mountAction('sign', {{ json_encode(['document' => $document->id]) }})">
+                                <x-filament::button icon="heroicon-o-pencil-square" :disabled="! $row?->opened_at" wire:click="mountAction('sign', {{ \Illuminate\Support\Js::from(['document' => $document->id]) }})">
                                     {{ __('erp.onboarding.sign') }}
                                 </x-filament::button>
                             @endunless

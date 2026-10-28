@@ -6,6 +6,7 @@ use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Project;
 use App\Support\Interventions;
 use App\Support\ProjectProgress;
+use App\Support\ProjectWorkdays;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
@@ -94,6 +95,14 @@ class ProjectInfolist
                                     ->visible(fn (Project $record): bool => $record->category->has_short_description)
                                     ->placeholder('—')
                                     ->columnSpanFull(),
+                                TextEntry::make('workdays')
+                                    ->label(__('erp.projects.workdays'))
+                                    ->helperText(__('erp.projects.workdays_help'))
+                                    ->state(fn (Project $record): string => ProjectWorkdays::label($record))
+                                    ->badge()
+                                    ->color(fn (Project $record): string => ProjectWorkdays::color($record))
+                                    ->fontFamily(FontFamily::Mono)
+                                    ->visible(fn (): bool => ProjectWorkdays::canView(auth()->user())),
                                 TextEntry::make('poNumbers.number')
                                     ->label(__('erp.projects.po_numbers'))
                                     ->badge()

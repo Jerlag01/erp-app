@@ -30,7 +30,7 @@
                         <strong>{{ $label }}</strong>
                         @unless ($asbuilt->isClosed())
                             <x-filament::icon-button icon="heroicon-o-arrow-up-tray" size="sm" :label="__('erp.asbuilt.client_upload')" :tooltip="__('erp.asbuilt.client_upload')"
-                                wire:click="mountAction('upload', {{ json_encode(['category' => $key]) }})" />
+                                wire:click="mountAction('upload', {{ \Illuminate\Support\Js::from(['category' => $key]) }})" />
                         @endunless
                     </div>
                     @forelse ($files as $file)

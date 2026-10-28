@@ -18,7 +18,7 @@
                     <x-filament::badge color="gray">{{ count($files) }}</x-filament::badge>
                     @if ($canManage && $category && $category !== \App\Enums\AsbuiltCategory::BtvReports)
                         <x-filament::icon-button icon="heroicon-o-arrow-up-tray" size="sm" :label="__('erp.asbuilt.add_files')" :tooltip="__('erp.asbuilt.add_files')"
-                            wire:click="mountAction('{{ $category->isRegister() ? 'technical' : 'upload' }}', {{ json_encode(['category' => $category->value]) }})" />
+                            wire:click="mountAction('{{ $category->isRegister() ? 'technical' : 'upload' }}', {{ \Illuminate\Support\Js::from(['category' => $category->value]) }})" />
                     @endif
                 </span>
             </x-slot>

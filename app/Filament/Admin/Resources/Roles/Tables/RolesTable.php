@@ -15,7 +15,7 @@ class RolesTable
 {
     public static function configure(Table $table): Table
     {
-        $total = collect(Permissions::all())->flatten()->count();
+        $total = collect(Permissions::forRoles())->flatten()->count();
 
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount('users'))

@@ -637,6 +637,12 @@ Offer → Waiting for PO → To be planned → Planned → To be executed → In
 - For 608 you choose the **location**: a COW code or a **third-party client** with its own installation address.
 - From a project you request a **GPW** (see "GPW requests").
 
+## Estimated workdays
+
+When creating (or changing) a project you fill in the **estimated workdays**. Whoever has the permission **Project workdays** sees **estimated/actual** in the project list and on the project, e.g. *10/12*: the actual number is the days (up to today) on which the project is in the **planning**, however many people were on it that day. **Green** while the actual number is equal to or below the estimate, **red** once the estimate is exceeded. The filter *Workdays exceeded* shows only those projects.
+
+This permission belongs to **no role**: an administrator ticks it in a **user's own permissions** (Admin → Users). Administrators too only see it when it is ticked for them.
+
 ## Permissions
 
 Separate permissions for viewing, creating, editing, deleting, files, parts, PDFs, copying and requesting a GPW. Offers and invoices are only visible with the project finance permissions or as project leader.

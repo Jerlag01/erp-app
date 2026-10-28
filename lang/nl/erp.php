@@ -512,6 +512,7 @@ return [
             'battery_master_data' => 'Batterijmodellen & kabels',
             'timesheets' => 'Prestaties',
             'charging' => 'Laadpalen',
+            'project_workdays' => 'Werkdagen projecten (enkel per gebruiker)',
             'cable_calculations' => 'Kabelberekening',
             'cable_stripping' => 'Kabel ontmantelen',
             'enersys' => 'Enersys-batterijen',
@@ -1445,6 +1446,12 @@ return [
         'notification_title' => 'Nieuwe inzending in de ideeënbus: :type',
     ],
     'projects' => [
+        'estimated_workdays' => 'Geschatte werkdagen',
+        'estimated_workdays_help' => 'Hoeveel werkdagen het project naar schatting nodig heeft.',
+        'days_suffix' => 'dagen',
+        'workdays' => 'Werkdagen',
+        'workdays_help' => 'Geschatte werkdagen / dagen in de planning (tot vandaag). Rood wanneer de schatting overschreden is.',
+        'workdays_over' => 'Werkdagen overschreden',
         'status_closed_help' => '"Afgesloten" archiveert het project met een ZIP van alle bestanden. Bij 610–650 sluit "Gefactureerd" het project ook af.',
         'follow_up_note' => 'Automatisch aangemaakt na uitvoering van :reference.',
         'archive' => [

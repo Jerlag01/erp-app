@@ -512,6 +512,7 @@ return [
             'battery_master_data' => 'Battery models & cables',
             'timesheets' => 'Prestations',
             'charging' => 'Charging stations',
+            'project_workdays' => 'Project workdays (per user only)',
             'cable_calculations' => 'Cable calculator',
             'cable_stripping' => 'Cable stripping',
             'enersys' => 'Enersys batteries',
@@ -1445,6 +1446,12 @@ return [
         'notification_title' => 'New entry in the idea box: :type',
     ],
     'projects' => [
+        'estimated_workdays' => 'Estimated workdays',
+        'estimated_workdays_help' => 'How many workdays the project is estimated to need.',
+        'days_suffix' => 'days',
+        'workdays' => 'Workdays',
+        'workdays_help' => 'Estimated workdays / days in the planning (up to today). Red when the estimate is exceeded.',
+        'workdays_over' => 'Workdays exceeded',
         'status_closed_help' => '"Closed" archives the project with a ZIP of all its files. For 610–650, "Invoiced" closes the project as well.',
         'follow_up_note' => 'Created automatically after :reference was executed.',
         'archive' => [

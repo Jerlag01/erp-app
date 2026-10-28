@@ -129,6 +129,15 @@ class ProjectForm
                                     ->maxLength(255)
                                     ->visible(fn (Get $get): bool => (bool) $category($get)?->has_short_description)
                                     ->columnSpanFull(),
+                                // The estimate is filled in by whoever makes the project; comparing it with the planning is for "project_workdays.view".
+                                TextInput::make('estimated_workdays')
+                                    ->label(__('erp.projects.estimated_workdays'))
+                                    ->helperText(__('erp.projects.estimated_workdays_help'))
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(9999)
+                                    ->step(0.5)
+                                    ->suffix(__('erp.projects.days_suffix')),
                                 Select::make('status')
                                     ->label(__('erp.fields.status'))
                                     ->options(ProjectStatus::class)

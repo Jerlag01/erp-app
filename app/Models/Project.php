@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  * teams assigned to it can see it (while the teams module is on).
  */
 #[Fillable([
-    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'location_type', 'short_description', 'status',
+    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'location_type', 'short_description', 'estimated_workdays', 'status',
     'intervention_subcategory_id', 'intervention_phase', 'intervention_tags',
     'client_name', 'client_company', 'client_email', 'client_phone',
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by', 'source_project_id',

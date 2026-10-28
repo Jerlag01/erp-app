@@ -638,6 +638,12 @@ Offerte → Wacht op PO → Te plannen → Ingepland → Uit te voeren → In ui
 - Bij 608 kies je de **locatie**: een COW-code of een **derde klant** met een eigen installatieadres.
 - Vanuit een project vraag je een **GPW** aan (zie "GPW-aanvragen").
 
+## Geschatte werkdagen
+
+Bij het aanmaken (of wijzigen) van een project vul je de **geschatte werkdagen** in. Wie het recht **Werkdagen projecten** heeft, ziet in de projectenlijst en op het project **geschat/werkelijk**, bv. *10/12*: het werkelijke aantal zijn de dagen (tot vandaag) waarop het project in de **planning** staat, ongeacht hoeveel mensen er die dag op stonden. **Groen** zolang het werkelijke aantal gelijk aan of lager dan de schatting is, **rood** zodra de schatting overschreden is. De filter *Werkdagen overschreden* toont enkel die projecten.
+
+Dit recht hoort bij **geen enkele rol**: een beheerder vinkt het aan bij de **eigen rechten van een gebruiker** (Beheer → Gebruikers). Ook beheerders zien het enkel als het voor hen aangevinkt is.
+
 ## Rechten
 
 Aparte rechten voor bekijken, aanmaken, bewerken, verwijderen, bestanden, onderdelen, PDF's, kopiëren en GPW aanvragen. Offertes en facturen zie je enkel met de financiële projectrechten of als projectleider.
