@@ -267,7 +267,7 @@ New users first read the **onboarding documents** (e.g. work rules, safety rules
 
 - A **new user** first lands on the **Onboarding** page after signing in: every other page leads there until everything is signed.
 - Per document: **Open** (the document opens in a new tab), and right away the platform asks to **sign** (name and signature). The signature is kept with the date and time.
-- Users who were there when the module came count as onboarded.
+- Users who were there when the module came count as onboarded. **Administrators** and logins that are **not in the employee list** (e.g. cleaners, externals) get no onboarding either: it is completed at once. When such a person is added to the employee list later without having signed anything, the platform asks for the onboarding after all.
 
 ## Follow-up
 

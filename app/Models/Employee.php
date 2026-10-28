@@ -353,7 +353,16 @@ class Employee extends Model
         });
 
         // The statute "arbeidsongeschikt" is logged per period (see logIncapacity).
-        static::created(fn (self $employee) => $employee->logIncapacity(null, $employee->employment_category));
+        static::created(function (self $employee): void {
+            $employee->logIncapacity(null, $employee->employment_category);
+
+            // A login that was completed only for not being an employee (nothing signed) onboards once it is one.
+            $user = $employee->user;
+
+            if ($user && $user->onboarding_completed_at !== null && ! $user->isAdmin() && ! OnboardingSignature::query()->where('user_id', $user->id)->whereNotNull('signed_at')->exists()) {
+                $user->forceFill(['onboarding_completed_at' => null])->saveQuietly();
+            }
+        });
         static::updated(function (self $employee): void {
             if ($employee->wasChanged('employment_category')) {
                 $from = $employee->getOriginal('employment_category');

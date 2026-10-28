@@ -37,6 +37,19 @@ class OnboardingTest extends TestCase
         return OnboardingDocument::query()->create(['title' => $title, 'path' => "onboarding/documents/{$title}.pdf", 'original_name' => "{$title}.pdf", 'locale' => $locale]);
     }
 
+    /**
+     * A new user who is in the employee register (only they onboard).
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newEmployee(array $attributes = [], ?string $motherTongue = null): User
+    {
+        $user = User::factory()->onboarding()->inTeam()->create($attributes);
+        Employee::factory()->for($user)->create(['mother_tongue' => $motherTongue]);
+
+        return $user;
+    }
+
     protected function signature(): string
     {
         return 'data:image/png;base64,'.base64_encode((string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='));
@@ -64,7 +77,7 @@ class OnboardingTest extends TestCase
         $rules = $this->document('Arbeidsreglement');
         $safety = $this->document('Veiligheid');
         $this->document('Règlement de travail', 'fr');
-        $user = User::factory()->onboarding()->inTeam()->create(['locale' => 'nl']);
+        $user = $this->newEmployee(['locale' => 'nl']);
         $this->actingAs($user);
 
         // Every page leads to the onboarding first.
@@ -132,16 +145,14 @@ class OnboardingTest extends TestCase
     {
         $this->document('Arbeidsreglement');
         $this->document('Règlement de travail', 'fr');
-        $user = User::factory()->onboarding()->inTeam()->create(['locale' => 'nl']);
-        Employee::factory()->for($user)->create(['mother_tongue' => 'fr']);
+        $user = $this->newEmployee(['locale' => 'nl'], 'fr');
         $this->actingAs($user);
 
         // A French-speaking employee using the platform in Dutch gets the French documents.
         $this->get(Onboarding::getUrl(panel: 'app'))->assertSee('Règlement de travail')->assertDontSee('Arbeidsreglement');
 
         // No documents in their language (yet): those of the platform language, else Dutch.
-        $english = User::factory()->onboarding()->inTeam()->create(['locale' => 'en']);
-        Employee::factory()->for($english)->create(['mother_tongue' => 'de']);
+        $english = $this->newEmployee(['locale' => 'en'], 'de');
         $this->actingAs($english)->get(Onboarding::getUrl(panel: 'app'))->assertSee('Arbeidsreglement');
     }
 
@@ -149,7 +160,7 @@ class OnboardingTest extends TestCase
     public function opening_a_document_asks_to_sign_it_at_once(): void
     {
         $rules = $this->document('Arbeidsreglement');
-        $this->actingAs(User::factory()->onboarding()->inTeam()->create(['locale' => 'nl']));
+        $this->actingAs($this->newEmployee(['locale' => 'nl']));
 
         Livewire::test(Onboarding::class)
             ->call('opened', $rules->id)
@@ -160,5 +171,27 @@ class OnboardingTest extends TestCase
 
         // Signed: opening it again to read it back does not ask again.
         Livewire::test(Onboarding::class)->call('opened', $rules->id)->assertActionNotMounted('sign');
+    }
+
+    #[Test]
+    public function administrators_and_logins_outside_the_employee_register_are_completed_at_once(): void
+    {
+        $this->document('Arbeidsreglement');
+
+        // A login without an employee record (e.g. a cleaner): no onboarding, completed.
+        $external = User::factory()->onboarding()->inTeam()->create();
+        $this->actingAs($external)->get('/')->assertOk();
+        $this->assertNotNull($external->refresh()->onboarding_completed_at);
+
+        // An administrator ("Beheerder"), also when in the register.
+        $admin = User::factory()->admin()->onboarding()->create();
+        Employee::factory()->for($admin)->create();
+        $this->actingAs($admin)->get('/')->assertOk();
+        $this->assertNotNull($admin->refresh()->onboarding_completed_at);
+
+        // The external is hired: once in the register, they onboard after all.
+        Employee::factory()->for($external)->create();
+        $this->assertNull($external->refresh()->onboarding_completed_at);
+        $this->actingAs($external)->get('/')->assertRedirect(Onboarding::getUrl(panel: 'app'));
     }
 }

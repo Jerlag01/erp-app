@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 /**
  * The onboarding of a user: the active documents in their language (mother tongue first), which they open and sign one by
  * one. When all are signed the onboarding is complete; until then a new user is sent to the onboarding
- * page first. Users that existed when the module came count as onboarded.
+ * page first. Users that existed when the module came count as onboarded, and so do administrators and
+ * logins that are not in the employee register.
  */
 class Onboarding
 {
@@ -76,7 +77,20 @@ class Onboarding
             return false;
         }
 
+        // Only employees of the register onboard: administrators and logins without an employee record
+        // (externals, cleaners …) are completed at once.
+        if (! self::requiresOnboarding($user)) {
+            $user->forceFill(['onboarding_completed_at' => now()])->saveQuietly();
+
+            return false;
+        }
+
         return $this->needs[$user->id] ??= $this->pendingFor($user)->isNotEmpty();
+    }
+
+    public static function requiresOnboarding(User $user): bool
+    {
+        return ! $user->isAdmin() && $user->employee()->exists();
     }
 
     /**

@@ -268,7 +268,7 @@ Nieuwe gebruikers lezen eerst de **onboardingdocumenten** (bv. arbeidsreglement,
 
 - Een **nieuwe gebruiker** komt na het aanmelden eerst op de pagina **Onboarding**: elke andere pagina leidt daarheen tot alles ondertekend is.
 - Per document: **Openen** (het document opent in een nieuw tabblad) en meteen daarna vraagt het platform om te **ondertekenen** (naam en handtekening). De handtekening wordt met datum en uur bewaard.
-- Gebruikers die er al waren toen de module kwam, gelden als ingewerkt.
+- Gebruikers die er al waren toen de module kwam, gelden als ingewerkt. Ook **beheerders** en logins die **niet in de personeelslijst** staan (bv. poetsdienst, externen) krijgen geen onboarding: die wordt meteen afgerond. Komt zo iemand later in de personeelslijst en ondertekende hij nog niets, dan vraagt het platform de onboarding alsnog.
 
 ## Opvolging
 

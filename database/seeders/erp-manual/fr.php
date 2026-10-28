@@ -267,7 +267,7 @@ Les nouveaux utilisateurs lisent d'abord les **documents d'onboarding** (p. ex. 
 
 - Un **nouvel utilisateur** arrive après la connexion d'abord sur la page **Onboarding** : toute autre page y mène tant que tout n'est pas signé.
 - Par document : **Ouvrir** (le document s'ouvre dans un nouvel onglet), et aussitôt la plateforme demande de **signer** (nom et signature). La signature est conservée avec la date et l'heure.
-- Les utilisateurs déjà présents à l'arrivée du module sont considérés comme intégrés.
+- Les utilisateurs déjà présents à l'arrivée du module sont considérés comme intégrés. Les **administrateurs** et les logins qui **ne figurent pas dans la liste du personnel** (p. ex. nettoyage, externes) n'ont pas d'onboarding non plus : il est clôturé aussitôt. Si une telle personne est ajoutée plus tard à la liste du personnel sans avoir rien signé, la plateforme demande quand même l'onboarding.
 
 ## Suivi
 
