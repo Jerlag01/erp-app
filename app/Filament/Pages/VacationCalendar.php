@@ -95,7 +95,7 @@ class VacationCalendar extends Page
             return [];
         }
 
-        return Team::query()->visibleTo(auth()->user())->orderBy('name')->pluck('name', 'id')->all();
+        return Team::options(Team::query()->visibleTo(auth()->user()));
     }
 
     /**

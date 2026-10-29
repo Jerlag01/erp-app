@@ -39,6 +39,12 @@ class RoleForm
                             ->disabled(fn (?Role $record): bool => $isOwnRole($record) || (bool) $record?->is_guest)
                             ->dehydrated(fn (?Role $record): bool => ! $isOwnRole($record) && ! $record?->is_guest)
                             ->columnSpanFull(),
+                        // E.g. HR: no prestation sheet, so not in the planning, vacation or sickness either.
+                        Toggle::make('no_timesheet')
+                            ->label(__('erp.roles.no_timesheet'))
+                            ->helperText(__('erp.roles.no_timesheet_help'))
+                            ->visible(fn (?Role $record): bool => ! $record?->is_guest)
+                            ->columnSpanFull(),
                     ]),
                 Section::make(__('erp.roles.permissions'))
                     ->description(__('erp.roles.permissions_help'))

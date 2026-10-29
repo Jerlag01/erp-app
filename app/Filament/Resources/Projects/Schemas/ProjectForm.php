@@ -11,6 +11,7 @@ use App\Models\InterventionCategory;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectPoNumber;
+use App\Models\Team;
 use App\Models\WorkSite;
 use Closure;
 use Filament\Forms\Components\Repeater;
@@ -164,6 +165,7 @@ class ProjectForm
                                     ->label(__('erp.resources.team.plural'))
                                     ->helperText(__('erp.projects.teams_help'))
                                     ->relationship('teams', 'name', fn (Builder $query) => $query->orderBy('name'))
+                                    ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                                     ->multiple()
                                     ->searchable()
                                     ->preload()

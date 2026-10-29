@@ -63,6 +63,7 @@ class TimesheetReport
         $filled = TimesheetDay::query()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->distinct()->pluck('user_id');
 
         return User::query()
+            ->withTimesheet()
             ->where(fn (Builder $query) => $query
                 ->whereKey($filled)
                 ->orWhere(fn (Builder $query) => $query->active()->when(

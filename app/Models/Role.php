@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'description', 'is_admin', 'is_guest', 'permissions'])]
+#[Fillable(['name', 'description', 'is_admin', 'is_guest', 'no_timesheet', 'permissions'])]
 class Role extends Model
 {
     /** @use HasFactory<RoleFactory> */
@@ -80,6 +80,7 @@ class Role extends Model
         return [
             'is_admin' => 'boolean',
             'is_guest' => 'boolean',
+            'no_timesheet' => 'boolean',
             'permissions' => 'array',
         ];
     }

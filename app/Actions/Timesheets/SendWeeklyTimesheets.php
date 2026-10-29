@@ -156,6 +156,7 @@ class SendWeeklyTimesheets
 
         return User::query()
             ->active()
+            ->withTimesheet()
             ->where(fn (Builder $query) => $query
                 ->whereKey($filled)
                 ->orWhere(fn (Builder $query) => modules()->employees()

@@ -162,7 +162,7 @@
                                 @foreach ($byPersonDay[$person->id.'|'.$key] ?? [] as $entry)
                                     @include('filament.pages.planning-chip', ['entry' => $entry, 'showPerson' => false])
                                 @endforeach
-                                @if ($canPlan && ! $reason)
+                                @if ($canPlan && ! isset($closed[$person->id][$key]))
                                     <button type="button" class="erp-plan-add" wire:click="mountAction('createItem', @js(['user' => $person->id, 'date' => $key]))" aria-label="{{ __('erp.planning.add_for', ['name' => $person->name, 'date' => $day->format('d/m')]) }}">
                                         <x-filament::icon icon="heroicon-m-plus" /> {{ __('erp.planning.add_short') }}
                                     </button>

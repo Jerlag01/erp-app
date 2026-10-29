@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Users\Tables;
 
 use App\Actions\Employees\SendWelcomeMail;
+use App\Models\Team;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -63,6 +64,7 @@ class UsersTable
                     ->visible(fn (): bool => modules()->vacations())
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('teams.name')
+                    ->state(fn (User $record): array => $record->teams->map(fn (Team $team): string => $team->label())->all())
                     ->label(__('erp.resources.team.plural'))
                     ->badge()
                     ->color('gray')
@@ -85,6 +87,7 @@ class UsersTable
                 SelectFilter::make('teams')
                     ->label(__('erp.resources.team.singular'))
                     ->relationship('teams', 'name')
+                    ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                     ->preload()
                     ->visible(fn (): bool => modules()->teams()),
                 TernaryFilter::make('is_active')

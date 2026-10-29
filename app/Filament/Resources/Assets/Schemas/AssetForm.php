@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Assets\Schemas;
 use App\Enums\AssetStatus;
 use App\Models\Asset;
 use App\Models\AssetCategory;
+use App\Models\Team;
 use App\Models\Vehicle;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -109,6 +110,7 @@ class AssetForm
                                         Select::make('team_id')
                                             ->label(__('erp.resources.team.singular'))
                                             ->relationship('team', 'name', fn (Builder $query) => $query->where('is_active', true)->visibleTo(auth()->user()))
+                                            ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                                             ->searchable()
                                             ->preload()
                                             ->visible(fn (): bool => modules()->teams()),

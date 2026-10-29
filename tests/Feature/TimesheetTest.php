@@ -254,7 +254,7 @@ class TimesheetTest extends TestCase
     }
 
     #[Test]
-    public function only_the_right_people_plan_trainings_and_participants_cannot_be_planned(): void
+    public function only_the_right_people_plan_trainings_which_show_in_the_planning(): void
     {
         $participant = User::factory()->create();
         $this->actingAs(User::factory()->withPermissions(['planning' => ['plan']])->inTeam()->create());
@@ -272,7 +272,10 @@ class TimesheetTest extends TestCase
         $training = Training::sole();
         $this->assertSame('Kortrijksesteenweg 12 B, 9000 Gent', $training->addressLine());
         $this->assertSame(1, $participant->notifications()->count());
-        $this->assertSame('Opleiding: VCA VOL – Securex, Gent', app(Planning::class)->blockedReason($participant, CarbonImmutable::parse('2026-10-15'), $participant));
+        // The training shows in the planning, but (like vacation) does not stop projects being planned.
+        $day = CarbonImmutable::parse('2026-10-15');
+        $this->assertSame('Opleiding: VCA VOL – Securex, Gent', app(Planning::class)->blockedDays([$participant->id], $day, $day, $participant)[$participant->id]['2026-10-15']);
+        $this->assertNull(app(Planning::class)->blockedReason($participant, $day, $participant));
         $this->assertSame(8.0, app(Timesheets::class)->week($participant, self::MONDAY)['days'][2]['total']);
     }
 

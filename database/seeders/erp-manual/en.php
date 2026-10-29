@@ -94,6 +94,10 @@ What someone sees and may do depends on their **role** and their **team**.
 
 - Give permissions through roles rather than per person: that stays clear.
 - Someone left the company? Set their account to **inactive**; their data is kept.
+
+## HR role (no prestation sheet)
+
+The role **HR** by default only sees its own account, the **prestations per month** and the **HR calculations**. A role with **No prestation sheet** (like HR) has no prestation sheet of its own and is not in the **planning**, **leave** or **sickness**; even without a team they are not guests. All other modules are given through the role's permissions as usual.
 MD,
         ],
 
@@ -201,6 +205,10 @@ Dividing employees into **teams** with a **team leader**, linked to a location.
 ## Important
 
 An employee without a team is a **guest** and has no permissions. So always add new employees to a team.
+
+## How a team is shown
+
+Wherever you choose or see a team (users, projects, planning, vehicles …) it shows as **team name - first name member 1 / first name member 2 / …**, e.g. *Team Ghent - An / Jan*. The first name comes from the employee register, else the first word of the name; active members only.
 MD,
         ],
 
@@ -422,7 +430,7 @@ A planning calendar per employee: who works when on which project, in the wareho
 4. Choose the **kind**: a **project** (open projects only: to be planned, planned, to be executed or in progress), **warehouse work** (description and tasks) or **something else**.
 5. Optionally tick **"Also notify by e-mail"**.
 
-Days with **leave, an absence or a training** are blocked; overlapping time slots are skipped and reported.
+Days of **sickness or family leave** are skipped and reported; other absences show, but you can still plan projects on them (see below).
 
 ## Notifications
 
@@ -441,6 +449,10 @@ For a **604 project**, the planning and Outlook show the batteries that go out a
 - **Plan everyone** (projects and warehouse), **plan other items**, **see everyone's planning** and **plan trainings** are separate permissions.
 - Project leaders plan their own projects.
 - Whoever requested a **GPW** plans a team within the approved period once it is approved (see "GPW requests").
+
+## Leave and overlaps
+
+Projects can also be planned on a day of **vacation, IR, overtime as leave, training** or another absence: it simply shows next to it. Only **sickness** (also unfit for work) and **family leave** prevent planning. Projects of one person may **overlap**.
 MD,
         ],
 
@@ -464,6 +476,10 @@ An overview of all **vehicles** with their details and inspections.
 ## Permissions
 
 Viewing, creating, editing and deleting are separate permissions.
+
+## Fuel passes
+
+Under **Fleet → Fuel passes** you add the fuel passes: the **card number** (19 digits), the **PIN code** (4 digits), the **expiry date** (month and year, e.g. 08/2028; red once expired) and the **vehicle**. The PIN code is never in the list: with **Show PIN** only the **members of the vehicle's team** and those with the permission **Fuel passes → Show PIN code** (ticked separately, also for administrators) see the code; every time is logged. Team members see the fuel passes of their vehicles even without the permission *View*.
 MD,
         ],
 

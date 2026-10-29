@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Users\Schemas;
 
 use App\Models\Role;
+use App\Models\Team;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -102,6 +103,7 @@ class UserForm
                             ->label(__('erp.resources.team.plural'))
                             ->helperText(fn (): ?string => ($guest = Role::guest()) ? __('erp.help.no_team', ['role' => $guest->name]) : null)
                             ->relationship('teams', 'name')
+                            ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                             ->multiple()
                             ->preload()
                             ->visible(fn (): bool => modules()->teams())

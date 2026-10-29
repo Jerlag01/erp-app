@@ -199,6 +199,7 @@ class LeaveController extends Controller
 
     protected function blocked(): ?JsonResponse
     {
-        return modules()->vacations() ? null : response()->json(['message' => __('erp.mobile.errors.module_off'), 'code' => 'module_off'], 403);
+        // Users without a prestation sheet (e.g. HR) have no leave either.
+        return modules()->vacations() && request()->user()?->hasTimesheet() ? null : response()->json(['message' => __('erp.mobile.errors.module_off'), 'code' => 'module_off'], 403);
     }
 }

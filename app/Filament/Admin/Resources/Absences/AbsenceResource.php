@@ -90,7 +90,7 @@ class AbsenceResource extends Resource
                 Select::make('user_id')
                     ->label(__('erp.absences.employee'))
                     ->options(fn (?Absence $record): array => User::query()
-                        ->where(fn (Builder $query) => $query->where('is_active', true)->when($record, fn (Builder $query) => $query->orWhere('id', $record->user_id)))
+                        ->where(fn (Builder $query) => $query->where('is_active', true)->withTimesheet()->when($record, fn (Builder $query) => $query->orWhere('id', $record->user_id)))
                         ->orderBy('name')->pluck('name', 'id')->all())
                     ->searchable()
                     ->required()

@@ -31,7 +31,7 @@ class ManageAssetChecks extends ManageRecords
                 ->schema([
                     Select::make('teams')
                         ->label(__('erp.resources.team.plural'))
-                        ->options(fn (): array => Team::query()->orderBy('name')->pluck('name', 'id')->all())
+                        ->options(fn (): array => Team::options())
                         ->multiple()
                         ->required(),
                     TextInput::make('year')

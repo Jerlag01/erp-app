@@ -58,6 +58,36 @@ class Team extends Model
     }
 
     /**
+     * The name with the first names of its active members: "Ploeg Gent - Jan / Piet / An".
+     */
+    public function label(): string
+    {
+        $names = $this->loadMissing(['members' => fn ($query) => $query->where('is_active', true)->with('employee:id,user_id,first_name')->orderBy('name')])
+            ->members
+            ->map(fn (User $member): string => $member->firstName())
+            ->filter()
+            ->implode(' / ');
+
+        return $names === '' ? $this->name : $this->name.' - '.$names;
+    }
+
+    /**
+     * Teams as options for a choice, labelled with their members.
+     *
+     * @param  Builder<Team>|null  $query
+     * @return array<int, string>
+     */
+    public static function options(?Builder $query = null): array
+    {
+        return ($query ?? static::query())
+            ->with(['members' => fn ($query) => $query->where('is_active', true)->with('employee:id,user_id,first_name')->orderBy('name')])
+            ->orderBy('name')
+            ->get()
+            ->mapWithKeys(fn (Team $team): array => [$team->id => $team->label()])
+            ->all();
+    }
+
+    /**
      * Teams the user may see: their own, or all of them for administrators.
      *
      * @param  Builder<Team>  $query

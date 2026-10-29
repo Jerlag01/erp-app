@@ -2,11 +2,13 @@
 
 namespace App\Support;
 
+use App\Enums\AbsenceType;
 use App\Enums\PlanningKind;
 use App\Enums\ProjectStatus;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
 use App\Models\Holiday;
+use App\Models\IncapacityPeriod;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\Training;
@@ -176,6 +178,14 @@ class Planning
                 ->each(fn (Absence $absence) => $mark($absence->user_id, $absence->start_date, $absence->end_date, $absence->labelFor($viewer)));
         }
 
+        // The statute "arbeidsongeschikt": sickness for the whole period.
+        IncapacityPeriod::query()
+            ->with('employee:id,user_id')
+            ->whereHas('employee', fn (Builder $query) => $query->whereNotNull('user_id')->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds)))
+            ->overlapping($from->toDateString(), $until->toDateString())
+            ->get()
+            ->each(fn (IncapacityPeriod $period) => $mark($period->employee->user_id, $period->start_date, $period->end_date ?? $until, $viewer->id === $period->employee->user_id || $viewer->isAdmin() ? __('erp.enums.employment_category.incapacitated') : __('erp.absences.absent')));
+
         // Trainings block the day like vacation (they belong to the planning module itself).
         Training::query()
             ->overlapping($from, $until)
@@ -207,13 +217,49 @@ class Planning
     }
 
     /**
-     * Why a day is blocked for the employee, or null when it is free.
+     * The days on which nothing can be planned: sickness (also "arbeidsongeschikt") and family leave.
+     * Vacation, IR days, overtime as leave, trainings and other absences only show in the planning;
+     * projects can still be planned on them.
+     *
+     * @param  list<int>|null  $userIds  null for everybody
+     * @return array<int, array<string, string>>
+     */
+    public function closedDays(?array $userIds, CarbonInterface $from, CarbonInterface $until, User $viewer): array
+    {
+        $closed = [];
+        $mark = function (int $userId, CarbonInterface $start, CarbonInterface $end, string $label) use (&$closed, $from, $until): void {
+            foreach (CarbonPeriod::create(CarbonImmutable::instance($start)->max($from), CarbonImmutable::instance($end)->min($until)) as $day) {
+                $closed[$userId][$day->toDateString()] ??= $label;
+            }
+        };
+
+        if (modules()->vacations()) {
+            Absence::query()
+                ->whereIn('type', [AbsenceType::Medical, AbsenceType::Family])
+                ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
+                ->overlapping($from->toDateString(), $until->toDateString())
+                ->get()
+                ->each(fn (Absence $absence) => $mark($absence->user_id, $absence->start_date, $absence->end_date, $absence->labelFor($viewer)));
+        }
+
+        IncapacityPeriod::query()
+            ->with('employee:id,user_id')
+            ->whereHas('employee', fn (Builder $query) => $query->whereNotNull('user_id')->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds)))
+            ->overlapping($from->toDateString(), $until->toDateString())
+            ->get()
+            ->each(fn (IncapacityPeriod $period) => $mark($period->employee->user_id, $period->start_date, $period->end_date ?? $until, $viewer->id === $period->employee->user_id || $viewer->isAdmin() ? __('erp.enums.employment_category.incapacitated') : __('erp.absences.absent')));
+
+        return $closed;
+    }
+
+    /**
+     * Why nothing can be planned for the employee that day (sickness, family leave), or null.
      */
     public function blockedReason(User $employee, CarbonInterface $date, User $viewer): ?string
     {
         $day = CarbonImmutable::instance($date)->startOfDay();
 
-        return $this->blockedDays([$employee->id], $day, $day, $viewer)[$employee->id][$day->toDateString()] ?? null;
+        return $this->closedDays([$employee->id], $day, $day, $viewer)[$employee->id][$day->toDateString()] ?? null;
     }
 
     /**

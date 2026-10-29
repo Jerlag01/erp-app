@@ -30,8 +30,8 @@ class SavePlanningItems
     public function __construct(protected Planning $planning, protected NotifyPlanningChange $notifier) {}
 
     /**
-     * One item per employee per day from "date" to "until" (weekends only when asked). Days that are
-     * blocked or already taken in that timeslot are skipped and reported. With an approved GPW request
+     * One item per employee per day from "date" to "until" (weekends only when asked). Days closed by
+     * sickness or family leave are skipped and reported; items may overlap. With an approved GPW request
      * its requester may plan that project even without planning rights (see PlanGpw for the period).
      *
      * @param  array<string, mixed>  $data
@@ -40,7 +40,7 @@ class SavePlanningItems
     public function create(array $data, User $actor, ?GpwRequest $gpw = null): array
     {
         $attributes = $this->attributes($data, $actor, gpw: $gpw);
-        $employees = User::query()->active()->whereKey((array) ($data['user_ids'] ?? []))->orderBy('name')->get();
+        $employees = User::query()->active()->withTimesheet()->whereKey((array) ($data['user_ids'] ?? []))->orderBy('name')->get();
 
         if ($employees->isEmpty()) {
             throw ValidationException::withMessages(['user_ids' => __('erp.planning.errors.no_employee')]);
@@ -55,12 +55,6 @@ class SavePlanningItems
                 foreach ($days as $day) {
                     if ($reason = $this->planning->blockedReason($employee, $day, $actor)) {
                         $skipped[] = "{$employee->name} · {$day->format('d/m/Y')}: {$reason}";
-
-                        continue;
-                    }
-
-                    if ($this->planning->clashes($employee->id, $day->toDateString(), $attributes['start_time'], $attributes['end_time'])) {
-                        $skipped[] = "{$employee->name} · {$day->format('d/m/Y')}: ".__('erp.planning.errors.clash');
 
                         continue;
                     }
@@ -98,15 +92,11 @@ class SavePlanningItems
         $item->loadMissing('project', 'user');
         $before = clone $item;
         $attributes = $this->attributes($data, $actor, $item);
-        $employee = User::query()->active()->find($data['user_id'] ?? $item->user_id) ?? throw ValidationException::withMessages(['user_id' => __('erp.planning.errors.no_employee')]);
+        $employee = User::query()->active()->withTimesheet()->find($data['user_id'] ?? $item->user_id) ?? throw ValidationException::withMessages(['user_id' => __('erp.planning.errors.no_employee')]);
         $date = CarbonImmutable::parse($data['date'] ?? $item->date);
 
         if ($reason = $this->planning->blockedReason($employee, $date, $actor)) {
             throw ValidationException::withMessages(['date' => __('erp.planning.errors.blocked', ['reason' => $reason])]);
-        }
-
-        if ($this->planning->clashes($employee->id, $date->toDateString(), $attributes['start_time'], $attributes['end_time'], $item->id)) {
-            throw ValidationException::withMessages(['start_time' => __('erp.planning.errors.clash')]);
         }
 
         $attributes['tasks'] = $attributes['tasks'] === null ? null : PlanningItem::normaliseTasks($attributes['tasks'], $item->taskList());

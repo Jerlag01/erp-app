@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\Tables;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\Team;
 use App\Support\ProjectProgress;
 use App\Support\ProjectWorkdays;
 use Filament\Actions\BulkActionGroup;
@@ -114,6 +115,7 @@ class ProjectsTable
                 SelectFilter::make('team')
                     ->label(__('erp.resources.team.singular'))
                     ->relationship('teams', 'name', fn (Builder $query) => $query->visibleTo(auth()->user()))
+                    ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                     ->preload()
                     ->visible(fn (): bool => modules()->teams()),
             ])

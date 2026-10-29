@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Vehicles\Schemas;
 
 use App\Enums\FuelType;
 use App\Enums\VehicleStatus;
+use App\Models\Team;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -111,6 +112,7 @@ class VehicleForm
                                         Select::make('team_id')
                                             ->label(__('erp.resources.team.singular'))
                                             ->relationship('team', 'name', fn (Builder $query) => $query->where('is_active', true)->visibleTo(auth()->user()))
+                                            ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                                             ->searchable()
                                             ->preload()
                                             ->visible(fn (): bool => modules()->teams()),

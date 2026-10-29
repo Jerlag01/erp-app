@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Project;
+use App\Models\Team;
 use App\Support\Interventions;
 use App\Support\ProjectProgress;
 use App\Support\ProjectWorkdays;
@@ -126,6 +127,7 @@ class ProjectInfolist
                                     ->badge()
                                     ->placeholder('—'),
                                 TextEntry::make('teams.name')
+                                    ->state(fn (Project $record): array => $record->teams->map(fn (Team $team): string => $team->label())->all())
                                     ->label(__('erp.resources.team.plural'))
                                     ->badge()
                                     ->color('gray')

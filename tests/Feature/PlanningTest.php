@@ -12,11 +12,13 @@ use App\Mail\SystemMail;
 use App\Models\Absence;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\Holiday;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\VacationRequest;
+use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -125,43 +127,52 @@ class PlanningTest extends TestCase
     }
 
     #[Test]
-    public function vacation_and_absences_block_the_day(): void
+    public function only_sickness_and_family_leave_close_the_day(): void
     {
         $planner = User::factory()->admin()->create();
         $employee = User::factory()->create();
         $project = Project::factory()->create(['status' => ProjectStatus::ToBeExecuted]);
+        // Mon 12 vacation, Tue 13 an IR day, Wed 14 family leave, Thu 15 sick, Fri 16 overtime as leave.
         VacationRequest::factory()->for($employee)->create(['start_date' => '2026-10-12', 'end_date' => '2026-10-12', 'status' => VacationStatus::Approved]);
+        Holiday::factory()->create(['date' => '2026-10-13', 'name' => 'Brugdag', 'type' => Holiday::RECUPERATION]);
         Absence::factory()->for($employee)->ofType(AbsenceType::Family)->create(['start_date' => '2026-10-14', 'end_date' => '2026-10-14']);
-        // A pending request does not block yet.
-        VacationRequest::factory()->for($employee)->create(['start_date' => '2026-10-15', 'end_date' => '2026-10-15', 'status' => VacationStatus::Pending]);
+        Absence::factory()->for($employee)->create(['start_date' => '2026-10-15', 'end_date' => '2026-10-15']);
+        Absence::factory()->for($employee)->ofType(AbsenceType::Overtime)->create(['start_date' => '2026-10-16', 'end_date' => '2026-10-16']);
         $this->actingAs($planner);
 
+        // A project on a vacation day can still be planned.
         Livewire::test(Planning::class)
             ->callAction('createItem', $this->projectItem($employee, $project))
+            ->assertHasNoActionErrors();
+        // Not on a day of family leave.
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['date' => '2026-10-14']))
             ->assertHasActionErrors(['date']);
 
-        // Over a period the blocked days are skipped: Mon 12 (vacation) and Wed 14 (family leave).
+        // Over a period only sickness and family leave are skipped.
+        PlanningItem::query()->delete();
         Livewire::test(Planning::class)
             ->callAction('createItem', $this->projectItem($employee, $project, ['until' => '2026-10-16']))
             ->assertHasNoActionErrors();
 
-        $this->assertSame(['2026-10-13', '2026-10-15', '2026-10-16'], PlanningItem::query()->orderBy('date')->get()->map(fn (PlanningItem $item): string => $item->date->toDateString())->all());
+        $this->assertSame(['2026-10-12', '2026-10-13', '2026-10-16'], PlanningItem::query()->orderBy('date')->get()->map(fn (PlanningItem $item): string => $item->date->toDateString())->all());
+
+        // The vacation still shows in the planning.
+        $this->assertArrayHasKey('2026-10-12', app(\App\Support\Planning::class)->blockedDays([$employee->id], CarbonImmutable::parse('2026-10-12'), CarbonImmutable::parse('2026-10-16'), $planner)[$employee->id]);
     }
 
     #[Test]
-    public function timeslots_of_one_person_cannot_overlap(): void
+    public function projects_of_one_person_may_overlap(): void
     {
         $planner = User::factory()->admin()->create();
         $employee = User::factory()->create();
         $project = Project::factory()->create(['status' => ProjectStatus::InProgress]);
-        PlanningItem::factory()->for($employee)->create(['start_time' => '07:30', 'end_time' => '12:00']);
+        $other = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        PlanningItem::factory()->forProject($project)->for($employee)->create(['start_time' => '07:30', 'end_time' => '12:00']);
         $this->actingAs($planner);
 
         Livewire::test(Planning::class)
-            ->callAction('createItem', $this->projectItem($employee, $project, ['start_time' => '11:00', 'end_time' => '15:00']))
-            ->assertHasActionErrors(['date']);
-        Livewire::test(Planning::class)
-            ->callAction('createItem', $this->projectItem($employee, $project, ['start_time' => '12:00', 'end_time' => '16:00']))
+            ->callAction('createItem', $this->projectItem($employee, $other, ['start_time' => '07:30', 'end_time' => '16:00']))
             ->assertHasNoActionErrors();
 
         $this->assertSame(2, PlanningItem::count());

@@ -93,7 +93,7 @@ class GpwRequestsRelationManager extends RelationManager
                     ->schema(fn (GpwRequest $record): array => [
                         Select::make('team_id')
                             ->label(__('erp.gpw.team'))
-                            ->options(fn (): array => Team::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all())
+                            ->options(fn (): array => Team::options(Team::query()->where('is_active', true)))
                             ->searchable()
                             ->required(),
                         Grid::make(3)->schema([

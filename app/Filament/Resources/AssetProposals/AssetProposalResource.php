@@ -11,6 +11,7 @@ use App\Filament\Resources\Assets\Schemas\AssetForm;
 use App\Models\Asset;
 use App\Models\AssetCategory;
 use App\Models\AssetProposal;
+use App\Models\Team;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -104,7 +105,8 @@ class AssetProposalResource extends Resource
                     ->default(AssetProposalStatus::Pending->value),
                 SelectFilter::make('team_id')
                     ->label(ucfirst(__('erp.resources.team.singular')))
-                    ->relationship('team', 'name'),
+                    ->relationship('team', 'name')
+                    ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label()),
             ])
             ->recordActions([
                 self::approveAction(),

@@ -148,6 +148,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             return true;
         }
 
+        // Office roles without a prestation sheet (e.g. HR) work without a team.
+        if ($this->role?->no_timesheet) {
+            return false;
+        }
+
         return modules()->teams() && $this->teamIds() === [];
     }
 
@@ -340,6 +345,33 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function preferredLocale(): ?string
     {
         return array_key_exists((string) $this->locale, config('app.locales')) ? $this->locale : null;
+    }
+
+    /**
+     * The first name: from the employee register, else the first word of the account name.
+     */
+    public function firstName(): string
+    {
+        return (string) ($this->employee?->first_name ?: strtok((string) $this->name, ' '));
+    }
+
+    /**
+     * Whether the user has a prestation sheet: not with a role such as HR ("no timesheet"), which also
+     * keeps them out of the planning, vacation and sickness.
+     */
+    public function hasTimesheet(): bool
+    {
+        return ! $this->role?->no_timesheet;
+    }
+
+    /**
+     * Users with a prestation sheet (their role is not "no timesheet").
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeWithTimesheet(Builder $query): void
+    {
+        $query->whereDoesntHave('role', fn (Builder $query) => $query->where('no_timesheet', true));
     }
 
     /**

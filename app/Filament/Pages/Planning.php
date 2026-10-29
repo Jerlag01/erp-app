@@ -77,7 +77,11 @@ class Planning extends Page
 
     public static function canAccess(): bool
     {
-        return modules()->planning() && auth()->check();
+        $user = auth()->user();
+        $planning = app(PlanningRules::class);
+
+        // Without a prestation sheet (e.g. HR) nobody plans them: only for those who plan or see everyone.
+        return $planning->enabled() && $user !== null && ($user->hasTimesheet() || $planning->canPlan($user) || $planning->seesEveryone($user));
     }
 
     public static function getNavigationLabel(): string
@@ -168,7 +172,7 @@ class Planning extends Page
             return [];
         }
 
-        return Team::query()->visibleTo($this->user())->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all();
+        return Team::options(Team::query()->visibleTo($this->user())->where('is_active', true));
     }
 
     /**
@@ -180,7 +184,7 @@ class Planning extends Page
     {
         $ids = $this->rules()->visibleUserIds($this->user());
 
-        return User::query()->active()
+        return User::query()->active()->withTimesheet()
             ->when($ids !== null, fn (Builder $query) => $query->whereKey($ids))
             ->orderBy('name')
             ->pluck('name', 'id')
@@ -212,11 +216,13 @@ class Planning extends Page
         // Project leaders see items of people outside their view on their projects: show those people too.
         $people = $people->union($items->pluck('user')->keyBy('id'))->sortBy(fn (User $user): string => ($user->id === $viewer->id ? '0' : '1').mb_strtolower($user->name));
         $blocked = $this->rules()->blockedDays($people->keys()->all(), $gridFrom, $gridUntil, $viewer);
+        // Only sickness and family leave close a day; vacation, IR days … only show.
+        $closed = $this->rules()->closedDays($people->keys()->all(), $gridFrom, $gridUntil, $viewer);
         $holidays = Holiday::query()->whereBetween('date', [$gridFrom->toDateString(), $gridUntil->toDateString()])->get()
             ->mapWithKeys(fn (Holiday $holiday): array => [$holiday->date->toDateString() => $holiday->label()]);
 
         $days = collect(CarbonPeriod::create($gridFrom, $gridUntil))->map(fn ($day): CarbonImmutable => CarbonImmutable::instance($day))->values();
-        $entries = $items->map(fn (PlanningItem $item): array => $this->entry($item, $viewer, $blocked));
+        $entries = $items->map(fn (PlanningItem $item): array => $this->entry($item, $viewer, $closed));
 
         return [
             'from' => $from,
@@ -227,6 +233,7 @@ class Planning extends Page
             'byPersonDay' => $entries->groupBy(fn (array $entry): string => $entry['item']->user_id.'|'.$entry['item']->date->toDateString()),
             'byDay' => $entries->groupBy(fn (array $entry): string => $entry['item']->date->toDateString()),
             'blocked' => $blocked,
+            'closed' => $closed,
             'holidays' => $holidays,
             'canPlan' => $this->rules()->canPlan($viewer),
             'teams' => $this->teamOptions(),
@@ -266,7 +273,7 @@ class Planning extends Page
     {
         $ids = $this->rules()->visibleUserIds($this->user());
 
-        return User::query()->active()
+        return User::query()->active()->withTimesheet()
             ->when($ids !== null, fn (Builder $query) => $query->whereKey($ids))
             ->when($this->person, fn (Builder $query, int $person) => $query->whereKey($person))
             ->when($this->team, fn (Builder $query, int $team) => $query->whereHas('teams', fn (Builder $query) => $query->whereKey($team)))
@@ -460,12 +467,12 @@ class Planning extends Page
                     ->multiple()
                     ->required()
                     ->searchable()
-                    ->options(fn (): array => User::query()->active()->orderBy('name')->pluck('name', 'id')->all())
+                    ->options(fn (): array => User::query()->active()->withTimesheet()->orderBy('name')->pluck('name', 'id')->all())
                 : Select::make('user_id')
                     ->label(__('erp.planning.employee'))
                     ->required()
                     ->searchable()
-                    ->options(fn (): array => User::query()->active()->orderBy('name')->pluck('name', 'id')->all()),
+                    ->options(fn (): array => User::query()->active()->withTimesheet()->orderBy('name')->pluck('name', 'id')->all()),
             Grid::make(3)->schema(array_values(array_filter([
                 DatePicker::make('date')->label($item === null ? __('erp.planning.from') : __('erp.fields.date'))->required()->native(false)->displayFormat('d/m/Y')->live(),
                 $item === null

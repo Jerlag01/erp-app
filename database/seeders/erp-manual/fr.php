@@ -94,6 +94,10 @@ Ce que quelqu'un voit et peut faire dépend de son **rôle** et de son **équipe
 
 - Donnez les droits de préférence via les rôles, pas par personne : cela reste clair.
 - Quelqu'un quitte l'entreprise ? Mettez son compte sur **inactif** ; ses données sont conservées.
+
+## Rôle RH (pas de feuille de prestations)
+
+Le rôle **HR** ne voit par défaut que son propre compte, les **prestations par mois** et les **calculs RH**. Un rôle avec **Pas de feuille de prestations** (comme RH) n'a pas de feuille de prestations et ne figure pas dans le **planning**, les **congés** ou les **maladies** ; même sans équipe, ils ne sont pas invités. Tous les autres modules s'attribuent via les droits du rôle.
 MD,
         ],
 
@@ -201,6 +205,10 @@ Répartir les employés en **équipes** avec un **chef d'équipe**, liées à un
 ## Important
 
 Un employé sans équipe est un **invité** et n'a aucun droit. Ajoutez donc toujours les nouveaux employés à une équipe.
+
+## Affichage d'une équipe
+
+Partout où vous choisissez ou voyez une équipe (utilisateurs, projets, planning, véhicules …), l'équipe s'affiche comme **nom de l'équipe - prénom membre 1 / prénom membre 2 / …**, p. ex. *Équipe Gand - An / Jan*. Le prénom vient du registre du personnel, sinon du premier mot du nom ; uniquement les membres actifs.
 MD,
         ],
 
@@ -422,7 +430,7 @@ Un calendrier de planning par employé : qui travaille quand sur quel projet, au
 4. Choisissez le **type** : un **projet** (uniquement les projets ouverts : à planifier, planifié, à exécuter ou en cours), du **travail au magasin** (description et tâches) ou **autre chose**.
 5. Cochez éventuellement **« Notifier aussi par e-mail »**.
 
-Les jours de **congé, d'absence ou de formation** sont bloqués ; les créneaux qui se chevauchent sont ignorés et signalés.
+Les jours de **maladie ou de congé familial** sont ignorés et signalés ; les autres absences restent affichées, mais vous pouvez encore y planifier des projets (voir ci-dessous).
 
 ## Notifications
 
@@ -441,6 +449,10 @@ Pour un **projet 604**, le planning et Outlook indiquent les batteries retirées
 - **Planifier tout le monde** (projets et magasin), **planifier d'autres éléments**, **voir le planning de chacun** et **planifier des formations** sont des droits distincts.
 - Les chefs de projet planifient leurs propres projets.
 - Celui qui a demandé un **GPW** planifie, après approbation, une équipe dans la période approuvée (voir « Demandes de GPW »).
+
+## Congés et chevauchements
+
+Vous pouvez aussi planifier des projets un jour de **congé, repos compensatoire, heures supplémentaires en congé, formation** ou autre absence : elle reste affichée. Seuls la **maladie** (aussi l'incapacité de travail) et le **congé familial** empêchent de planifier. Les projets d'une même personne peuvent **se chevaucher**.
 MD,
         ],
 
@@ -464,6 +476,10 @@ Un aperçu de tous les **véhicules** avec leurs données et contrôles techniqu
 ## Droits
 
 Voir, créer, modifier et supprimer sont des droits distincts.
+
+## Cartes carburant
+
+Dans **Parc automobile → Cartes carburant**, vous ajoutez les cartes : le **numéro de carte** (19 chiffres), le **code PIN** (4 chiffres), la **date d'expiration** (mois et année, p. ex. 08/2028 ; en rouge une fois expirée) et le **véhicule**. Le code PIN n'est jamais dans la liste : avec **Afficher le PIN**, seuls les **membres de l'équipe du véhicule** et ceux qui ont le droit **Cartes carburant → Afficher le code PIN** (à cocher séparément, même pour les administrateurs) voient le code ; chaque affichage est consigné. Les membres de l'équipe voient les cartes de leurs véhicules même sans le droit *Consulter*.
 MD,
         ],
 

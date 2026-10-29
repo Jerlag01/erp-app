@@ -95,7 +95,7 @@ class PushMessageResource extends Resource
                     ->live(),
                 Select::make('team_ids')
                     ->label(__('erp.push_messages.teams'))
-                    ->options(fn (): array => Team::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->options(fn (): array => Team::options())
                     ->multiple()
                     ->required()
                     ->visible(fn (Get $get): bool => $get('audience') === PushMessage::AUDIENCE_TEAMS)

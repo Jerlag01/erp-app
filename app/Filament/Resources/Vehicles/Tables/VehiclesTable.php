@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Vehicles\Tables;
 
 use App\Enums\FuelType;
 use App\Enums\VehicleStatus;
+use App\Models\Team;
 use App\Models\Vehicle;
 use App\Support\DueDate;
 use Filament\Actions\BulkActionGroup;
@@ -99,6 +100,7 @@ class VehiclesTable
                 SelectFilter::make('team')
                     ->label(__('erp.resources.team.singular'))
                     ->relationship('team', 'name', fn (Builder $query) => $query->visibleTo(auth()->user()))
+                    ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                     ->preload()
                     ->visible(fn (): bool => modules()->teams()),
                 SelectFilter::make('fuel')

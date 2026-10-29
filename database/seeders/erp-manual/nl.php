@@ -95,6 +95,10 @@ Wat iemand ziet en mag doen, hangt af van zijn **rol** en zijn **ploeg**.
 
 - Geef rechten liefst via rollen, niet per persoon: dat blijft overzichtelijk.
 - Iemand uit dienst? Zet zijn account op **inactief**; zijn gegevens blijven bewaard.
+
+## Rol HR (geen prestatiefiche)
+
+De rol **HR** ziet standaard enkel het eigen account, de **prestaties per maand** en de **HR-berekeningen**. Een rol met **Geen prestatiefiche** (zoals HR) heeft geen eigen prestatiefiche en staat niet in de **planning**, het **verlof** of de **ziektemeldingen**; ook zonder ploeg zijn ze geen gast. Alle andere modules geef je gewoon via de rechten van de rol.
 MD,
         ],
 
@@ -202,6 +206,10 @@ Medewerkers indelen in **ploegen** met een **ploegleider**, gekoppeld aan een lo
 ## Belangrijk
 
 Een medewerker zonder ploeg is een **gast** en heeft geen rechten. Voeg nieuwe medewerkers dus altijd toe aan een ploeg.
+
+## Weergave van een ploeg
+
+Overal waar je een ploeg kiest of ziet (gebruikers, projecten, planning, voertuigen …) staat de ploeg als **ploegnaam - voornaam lid 1 / voornaam lid 2 / …**, bv. *Ploeg Gent - An / Jan*. De voornaam komt uit het personeelsregister, anders het eerste woord van de naam; enkel actieve leden.
 MD,
         ],
 
@@ -423,7 +431,7 @@ Een planningskalender per werknemer: wie werkt wanneer aan welk project, in het 
 4. Kies de **soort**: een **project** (enkel open projecten: te plannen, ingepland, uit te voeren of in uitvoering), **magazijnwerk** (omschrijving en taken) of **iets anders**.
 5. Vink eventueel **"Ook per e-mail melden"** aan.
 
-Dagen met **verlof, een afwezigheid of een opleiding** zijn geblokkeerd; overlappende tijdsloten worden overgeslagen en gemeld.
+Dagen met **ziekte of familiaal verlof** worden overgeslagen en gemeld; andere afwezigheden staan erbij, maar je kunt er nog projecten op inplannen (zie hieronder).
 
 ## Meldingen
 
@@ -442,6 +450,10 @@ Bij een **604-project** tonen de planning en Outlook de batterijen die weggaan e
 - **Iedereen inplannen** (projecten en magazijn), **andere items inplannen**, **ieders planning zien** en **opleidingen plannen** zijn aparte rechten.
 - Projectleiders plannen hun eigen projecten.
 - Wie een **GPW** aanvroeg, plant na goedkeuring een ploeg in binnen de goedgekeurde periode (zie "GPW-aanvragen").
+
+## Verlof en overlappen
+
+Projecten kun je ook inplannen op een dag met **verlof, inhaalrust, overuren als verlof, opleiding** of een andere afwezigheid: die staat er gewoon bij. Enkel bij **ziekte** (ook arbeidsongeschikt) en **familiaal verlof** kan er niets ingepland worden. Projecten van eenzelfde persoon mogen **overlappen**.
 MD,
         ],
 
@@ -465,6 +477,10 @@ Een overzicht van alle **voertuigen** met hun gegevens en keuringen.
 ## Rechten
 
 Bekijken, aanmaken, bewerken en verwijderen zijn aparte rechten.
+
+## Tankkaarten
+
+Bij **Wagenpark → Tankkaarten** voeg je de tankkaarten toe: het **kaartnummer** (19 cijfers), de **PIN-code** (4 cijfers), de **vervaldatum** (maand en jaar, bv. 08/2028; rood zodra vervallen) en het **voertuig**. De PIN-code staat nooit in de lijst: met **PIN tonen** zien enkel de **ploegleden van het voertuig** en wie het recht **Tankkaarten → PIN-code tonen** heeft (apart aan te vinken, ook bij beheerders) de code; elke keer wordt dat gelogd. Ploegleden zien de tankkaarten van hun voertuigen ook zonder het recht *Bekijken*.
 MD,
         ],
 

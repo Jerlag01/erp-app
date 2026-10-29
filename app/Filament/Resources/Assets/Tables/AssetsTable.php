@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Assets\Tables;
 
 use App\Enums\AssetStatus;
 use App\Models\Asset;
+use App\Models\Team;
 use App\Support\DueDate;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -106,6 +107,7 @@ class AssetsTable
                 SelectFilter::make('team')
                     ->label(__('erp.resources.team.singular'))
                     ->relationship('team', 'name', fn (Builder $query) => $query->visibleTo(auth()->user()))
+                    ->getOptionLabelFromRecordUsing(fn (Team $record): string => $record->label())
                     ->preload()
                     ->visible(fn (): bool => modules()->teams()),
                 SelectFilter::make('vehicle')

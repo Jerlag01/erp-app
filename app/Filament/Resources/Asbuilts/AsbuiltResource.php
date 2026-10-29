@@ -8,6 +8,7 @@ use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Asbuilt;
 use App\Models\ProjectCategory;
+use App\Models\Team;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -133,6 +134,7 @@ class AsbuiltResource extends Resource
                         ->badge()
                         ->placeholder('—'),
                     TextEntry::make('project.teams.name')
+                        ->state(fn (Asbuilt $record): array => $record->project?->teams->map(fn (Team $team): string => $team->label())->all() ?? [])
                         ->label(__('erp.resources.team.plural'))
                         ->badge()
                         ->color('gray')

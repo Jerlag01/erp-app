@@ -64,7 +64,10 @@ class Timesheet extends Page implements HasSchemas
 
     public static function canAccess(): bool
     {
-        return modules()->timesheets() && auth()->check();
+        $user = auth()->user();
+
+        // Without a sheet of their own (e.g. HR) only to look at others.
+        return modules()->timesheets() && $user !== null && ($user->hasTimesheet() || $user->isAdmin() || $user->hasPermission('timesheets.see_all'));
     }
 
     public static function getNavigationLabel(): string
@@ -90,6 +93,11 @@ class Timesheet extends Page implements HasSchemas
 
         if ($this->employee && ! app(Timesheets::class)->canView(auth()->user(), $this->employeeUser())) {
             $this->employee = null;
+        }
+
+        // No sheet of their own: open the first employee's.
+        if (! $this->employee && ! auth()->user()->hasTimesheet()) {
+            $this->employee = array_key_first($this->employeeOptions());
         }
 
         $this->fillForm();
@@ -144,7 +152,7 @@ class Timesheet extends Page implements HasSchemas
             return [];
         }
 
-        return User::query()->active()->orderBy('name')->pluck('name', 'id')->all();
+        return User::query()->active()->withTimesheet()->orderBy('name')->pluck('name', 'id')->all();
     }
 
     public function weekRecord(): ?TimesheetWeek

@@ -56,6 +56,8 @@ class Permissions
     public const AREAS = [
         'teams' => ['module' => Modules::TEAMS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'vehicles' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete']],
+        // Fuel passes of the vehicles; their PIN with "view_pin" (explicit) or as a member of the vehicle's team.
+        'fuel_passes' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete', 'view_pin']],
         'assets' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete', 'control']],
         'asset_logs' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve']],
@@ -163,7 +165,7 @@ class Permissions
      *
      * @var list<string>
      */
-    public const EXPLICIT = ['routers.secrets', 'hr_calculations.view', 'hr_calculations.manage', 'asbuilt.delete', 'security.reset_two_factor', 'push_messages.send'];
+    public const EXPLICIT = ['routers.secrets', 'hr_calculations.view', 'hr_calculations.manage', 'asbuilt.delete', 'security.reset_two_factor', 'push_messages.send', 'fuel_passes.view_pin'];
 
     public static function isExplicit(string $permission): bool
     {

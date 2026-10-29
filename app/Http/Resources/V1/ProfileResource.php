@@ -72,10 +72,11 @@ class ProfileResource extends JsonResource
 
         return [
             // A "bediende" has fixed days without times or kilometres: no prestations tab in the app.
-            'timesheets' => app(Timesheets::class)->enabled() && ! app(Timesheets::class)->fixedDay($user),
-            'leave' => modules()->vacations(),
-            'overtime_leave' => modules()->vacations() && app(Timesheets::class)->enabled(),
-            'planning' => app(Planning::class)->enabled(),
+            // Without a prestation sheet (e.g. HR): no timesheet, leave or planning.
+            'timesheets' => $user->hasTimesheet() && app(Timesheets::class)->enabled() && ! app(Timesheets::class)->fixedDay($user),
+            'leave' => $user->hasTimesheet() && modules()->vacations(),
+            'overtime_leave' => $user->hasTimesheet() && modules()->vacations() && app(Timesheets::class)->enabled(),
+            'planning' => $user->hasTimesheet() && app(Planning::class)->enabled(),
             'open_asset_checks' => AssetCheckController::openChecks($user)->count(),
             'battery_dossiers' => $gate->allows('viewAny', BatteryDossier::class),
             'enersys_dossiers' => $gate->allows('viewAny', EnersysDossier::class),

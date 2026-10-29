@@ -414,7 +414,7 @@ class EmployeeForm
                 ->hidden($linksExisting),
             Select::make('teams')
                 ->label(__('erp.resources.team.plural'))
-                ->options(fn (): array => Team::query()->orderBy('name')->pluck('name', 'id')->all())
+                ->options(fn (): array => Team::options())
                 ->multiple()
                 ->visible(fn (): bool => modules()->teams()),
         ];

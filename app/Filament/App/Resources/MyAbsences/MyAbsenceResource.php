@@ -60,7 +60,8 @@ class MyAbsenceResource extends Resource
      */
     public static function getViewAnyAuthorizationResponse(): Response
     {
-        return modules()->vacations() && auth()->check() ? Response::allow() : Response::deny();
+        // Not for users without a prestation sheet (e.g. HR).
+        return modules()->vacations() && auth()->user()?->hasTimesheet() ? Response::allow() : Response::deny();
     }
 
     public static function getCreateAuthorizationResponse(): Response

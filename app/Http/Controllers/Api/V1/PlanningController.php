@@ -36,7 +36,7 @@ class PlanningController extends Controller
         /** @var User $user */
         $user = $request->user();
         $ids = $this->planning->visibleUserIds($user);
-        $people = User::query()->active()
+        $people = User::query()->active()->withTimesheet()
             ->when($ids !== null, fn ($query) => $query->whereKey($ids))
             ->orderBy('name')
             ->get(['id', 'name'])
