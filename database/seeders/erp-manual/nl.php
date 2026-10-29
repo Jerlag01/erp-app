@@ -702,7 +702,7 @@ In het tabblad **GPW-aanvragen** van het project klik je bij de goedgekeurde aan
 
 Bij **Projecten → GPW-aanvragen** staan alle GPW-aanvragen van de projecten die je ziet, met de **startdatum**, **einddatum** en de status: *Wachten op GPW-goedkeuring*, *In te plannen - GPW goedgekeurd* of *On hold - GPW-aanvraag opnieuw versturen* (en *Ingepland*). Dezelfde status staat ook in de **projectenlijst** (kolom GPW-aanvragen, de nieuwste aanvraag) en in het tabblad GPW op het project.
 
-Werd een GPW via **persoonlijke mail** gevraagd? Gebruik **GPW manueel toevoegen**: kies het project, de periode, aan wie het gevraagd werd en de status (wachtend, goedgekeurd of geweigerd). Er wordt geen mail verstuurd; goedgekeurd zet het project op *In te plannen*, net als bij een goedkeuring door de klant. Komt het antwoord later binnen, dan registreer je het met **Beslissing registreren**. Daarvoor is het recht **GPW** van Projecten nodig.
+Werd een GPW via **persoonlijke mail** gevraagd? Gebruik **GPW manueel toevoegen**: kies het project, de periode, aan wie het gevraagd werd en de status (wachtend, goedgekeurd of geweigerd). Er wordt geen mail verstuurd; goedgekeurd zet het project op *In te plannen*, net als bij een goedkeuring door de klant. Komt het antwoord later binnen, dan registreer je het met **Beslissing registreren**. Daarvoor is het recht **GPW** van Projecten nodig. Dezelfde knop **GPW manueel toevoegen** staat ook op het **project** zelf (en in het tabblad GPW-aanvragen); bovenaan het project staat dan een klein overzicht van de GPW-aanvragen met start, einde en status.
 MD,
         ],
 

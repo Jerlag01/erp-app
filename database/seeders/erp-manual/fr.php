@@ -701,7 +701,7 @@ Dans l'onglet **Demandes de GPW** du projet, cliquez sur **Planifier** pour la d
 
 Dans **Projets → Demandes GPW** figurent toutes les demandes GPW des projets que vous voyez, avec la **date de début**, la **date de fin** et le statut : *En attente d'approbation GPW*, *À planifier - GPW approuvé* ou *En attente - renvoyer la demande GPW* (et *Planifié*). Le même statut apparaît aussi dans la **liste des projets** (colonne Demandes GPW, la demande la plus récente) et dans l'onglet GPW du projet.
 
-Un GPW a été demandé par **e-mail personnel** ? Utilisez **Ajouter un GPW manuellement** : choisissez le projet, la période, à qui il a été demandé et le statut (en attente, approuvé ou refusé). Aucun e-mail n'est envoyé ; approuvé met le projet sur *À planifier*, comme une approbation par le client. Si la réponse arrive plus tard, enregistrez-la avec **Enregistrer la décision**. Il faut le droit **GPW** des Projets.
+Un GPW a été demandé par **e-mail personnel** ? Utilisez **Ajouter un GPW manuellement** : choisissez le projet, la période, à qui il a été demandé et le statut (en attente, approuvé ou refusé). Aucun e-mail n'est envoyé ; approuvé met le projet sur *À planifier*, comme une approbation par le client. Si la réponse arrive plus tard, enregistrez-la avec **Enregistrer la décision**. Il faut le droit **GPW** des Projets. Le même bouton **Ajouter un GPW manuellement** se trouve aussi sur le **projet** lui-même (et dans l'onglet Demandes GPW) ; en haut du projet, un petit aperçu des demandes GPW indique le début, la fin et le statut.
 MD,
         ],
 

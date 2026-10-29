@@ -701,7 +701,7 @@ In the project's **GPW requests** tab, click **Plan** on the approved request: c
 
 Under **Projects → GPW requests** you find every GPW request of the projects you see, with the **start date**, **end date** and the status: *Waiting for GPW approval*, *To be planned - GPW approved* or *On hold - resend GPW request* (and *Planned*). The same status also shows in the **project list** (column GPW requests, the newest request) and in the GPW tab of the project.
 
-Was a GPW asked through a **personal mail**? Use **Add GPW manually**: choose the project, the period, who it was asked to and the status (waiting, approved or rejected). No mail is sent; approved sets the project to *To be planned*, as a client's approval does. When the answer comes in later, record it with **Record decision**. This needs the **GPW** permission of Projects.
+Was a GPW asked through a **personal mail**? Use **Add GPW manually**: choose the project, the period, who it was asked to and the status (waiting, approved or rejected). No mail is sent; approved sets the project to *To be planned*, as a client's approval does. When the answer comes in later, record it with **Record decision**. This needs the **GPW** permission of Projects. The same **Add GPW manually** button is on the **project** itself too (and in the GPW requests tab); at the top of the project a small overview of its GPW requests shows the start, end and status.
 MD,
         ],
 

@@ -57,6 +57,19 @@ class ProjectInfolist
                             ->color('gray')
                             ->formatStateUsing(fn (Project $record): string => __('erp.projects.archive.archived_on', ['date' => $record->archived_at->format('d/m/Y H:i')])),
                     ]),
+                // The GPW requests of this project at a glance (details in the GPW tab).
+                Section::make(__('erp.gpw.title'))
+                    ->icon(Heroicon::OutlinedCalendarDateRange)
+                    ->compact()
+                    ->collapsible()
+                    ->columnSpanFull()
+                    ->visible(fn (Project $record): bool => $record->gpwRequests()->exists())
+                    ->schema([
+                        ViewEntry::make('gpw_overview')
+                            ->hiddenLabel()
+                            ->state(fn (Project $record): array => $record->gpwRequests()->get()->all())
+                            ->view('filament.projects.gpw-overview'),
+                    ]),
                 Grid::make(['default' => 1, 'lg' => 3])
                     ->columnSpanFull()
                     ->schema([

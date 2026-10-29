@@ -52,13 +52,17 @@ class GpwRequestsRelationManager extends RelationManager
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
         /** @var Project $ownerRecord */
-        return Gate::allows('view', $ownerRecord) && (Gate::allows('requestGpw', $ownerRecord) || $ownerRecord->gpwRequests()->exists());
+        return Gate::allows('view', $ownerRecord) && (Gate::allows('requestGpw', $ownerRecord) || Gate::allows('manageGpw', $ownerRecord) || $ownerRecord->gpwRequests()->exists());
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->emptyStateHeading(__('erp.gpw.none'))
+            ->headerActions([
+                // Asked through a personal mail: added here by hand, with its status.
+                GpwRequestResource::manualAction(fn (): Project => $this->getOwnerRecord(), 'addManual'),
+            ])
             ->columns([
                 TextColumn::make('starts_on')->label(__('erp.gpw.period'))->state(fn (GpwRequest $record): string => $record->period())->sortable(),
                 GpwRequestResource::statusColumn(),

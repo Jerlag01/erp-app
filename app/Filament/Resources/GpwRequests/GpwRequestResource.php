@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\User;
 use BackedEnum;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -200,12 +201,12 @@ class GpwRequestResource extends Resource
      *
      * @return list<mixed>
      */
-    public static function manualSchema(): array
+    public static function manualSchema(bool $withProject = true): array
     {
         $decided = fn (Get $get): bool => in_array($get('status'), [GpwStatus::Approved->value, GpwStatus::Rejected->value], true);
 
-        return [
-            Select::make('project_id')
+        return array_values(array_filter([
+            ! $withProject ? null : Select::make('project_id')
                 ->label(__('erp.gpw.project'))
                 ->searchable()
                 ->getSearchResultsUsing(fn (string $search): array => Project::query()
@@ -243,7 +244,29 @@ class GpwRequestResource extends Resource
                 Textarea::make('decision_note')->label(__('erp.gpw.decision_note'))->rows(2)->maxLength(2000),
             ]),
             Textarea::make('remarks')->label(__('erp.gpw.remarks'))->rows(3)->maxLength(2000),
-        ];
+        ]));
+    }
+
+    /**
+     * "Add GPW manually" for one project (on the project page and in its GPW tab), given how to find it.
+     *
+     * @param  Closure(): Project  $project
+     */
+    public static function manualAction(Closure $project, string $name = 'addManualGpw'): Action
+    {
+        return Action::make($name)
+            ->label(__('erp.gpw.add_manual'))
+            ->icon(Heroicon::OutlinedEnvelope)
+            ->color('gray')
+            ->visible(fn (): bool => Gate::allows('manageGpw', $project()))
+            ->authorize(fn (): bool => Gate::allows('manageGpw', $project()))
+            ->modalHeading(__('erp.gpw.add_manual'))
+            ->modalDescription(__('erp.gpw.add_manual_help'))
+            ->schema(self::manualSchema(withProject: false))
+            ->action(function (array $data) use ($project): void {
+                self::addManual([...$data, 'project_id' => $project()->id]);
+                Notification::make()->title(__('erp.gpw.manual_added'))->success()->send();
+            });
     }
 
     public static function addManual(array $data): GpwRequest

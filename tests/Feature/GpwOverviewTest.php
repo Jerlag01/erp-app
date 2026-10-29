@@ -8,6 +8,8 @@ use App\Enums\ProjectStatus;
 use App\Filament\Resources\GpwRequests\GpwRequestResource;
 use App\Filament\Resources\GpwRequests\Pages\ListGpwRequests;
 use App\Filament\Resources\Projects\Pages\ListProjects;
+use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\RelationManagers\GpwRequestsRelationManager;
 use App\Models\GpwRequest;
 use App\Models\Project;
 use App\Models\Team;
@@ -127,5 +129,41 @@ class GpwOverviewTest extends TestCase
         Livewire::test(ListGpwRequests::class)
             ->callAction('create', ['project_id' => $project->id, 'starts_on' => '2026-11-09', 'ends_on' => '2026-11-02', 'status' => 'pending', 'contact_name' => 'X'])
             ->assertHasActionErrors(['ends_on']);
+    }
+
+    #[Test]
+    public function on_the_project_a_gpw_is_added_by_hand_and_its_requests_are_shown(): void
+    {
+        $this->actingAs($this->user());
+        $project = $this->project();
+
+        // No requests yet: no overview.
+        $this->get(route('filament.app.resources.projects.view', $project))->assertOk()->assertDontSee('data-project-gpw', false);
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->assertActionVisible('addManualGpw')
+            ->callAction('addManualGpw', ['starts_on' => '2026-11-16', 'ends_on' => '2026-11-18', 'status' => 'pending', 'contact_name' => 'Sophie Dubois'])
+            ->assertHasNoActionErrors();
+
+        $gpw = GpwRequest::query()->where('project_id', $project->id)->sole();
+        $this->assertSame(GpwRequest::SOURCE_MANUAL, $gpw->source);
+
+        // The small overview: start, end and status.
+        $this->get(route('filament.app.resources.projects.view', $project))
+            ->assertSee('data-project-gpw', false)
+            ->assertSee('16/11/2026')
+            ->assertSee('18/11/2026')
+            ->assertSee('Wachten op GPW-goedkeuring');
+
+        // Also from the GPW tab.
+        Livewire::test(GpwRequestsRelationManager::class, ['ownerRecord' => $project, 'pageClass' => ViewProject::class])
+            ->callTableAction('addManual', data: ['starts_on' => '2026-11-23', 'ends_on' => '2026-11-23', 'status' => 'approved', 'contact_name' => 'Marc'])
+            ->assertHasNoTableActionErrors();
+        $this->assertSame(2, $project->gpwRequests()->count());
+        $this->assertSame(ProjectStatus::ToBePlanned, $project->fresh()->status);
+
+        // Without the GPW permission no button.
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view']])->inTeam($this->team)->create());
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('addManualGpw');
     }
 }

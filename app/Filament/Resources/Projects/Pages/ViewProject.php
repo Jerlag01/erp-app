@@ -13,6 +13,7 @@ use App\Filament\Resources\BaeOrders\BaeOrderResource;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\BatteryRooms\BatteryRoomResource;
 use App\Filament\Resources\EnersysDossiers\EnersysDossierResource;
+use App\Filament\Resources\GpwRequests\GpwRequestResource;
 use App\Filament\Resources\MoveDossiers\MoveDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
@@ -315,6 +316,7 @@ class ViewProject extends ViewRecord
                         ? Notification::make()->title(__('erp.gpw.mail_failed'))->body(__('erp.gpw.mail_failed_body'))->warning()->persistent()->send()
                         : Notification::make()->title(__('erp.gpw.sent', ['email' => $gpw->contact_email]))->success()->send();
                 }),
+            GpwRequestResource::manualAction(fn (): Project => $this->getRecord()),
             Action::make('changeStatus')
                 ->label(__('erp.projects.change_status'))
                 ->icon(Heroicon::OutlinedArrowPath)
