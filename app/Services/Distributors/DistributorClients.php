@@ -10,7 +10,7 @@ use App\Models\Distributor;
 class DistributorClients
 {
     /**
-     * @var array<string, class-string<PendingApiClient>>
+     * @var array<string, class-string<DistributorClient>>
      */
     public const PROVIDERS = [
         'cebeo' => CebeoClient::class,

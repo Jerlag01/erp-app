@@ -562,6 +562,8 @@ Imprimez une **étiquette QR** par article ou plusieurs à la fois. En scannant 
 ## Prix et images
 
 - Chez un grossiste avec liaison de prix, **« Récupérer le prix chez le grossiste »** met à jour le prix (une référence du grossiste ou du fabricant est nécessaire).
+- **Rexel** est connecté : avec le numéro client, l'utilisateur et le mot de passe du grossiste Rexel, la plateforme récupère votre **prix net** (par unité, sans contributions comme Recupel) et, si l'article n'en a pas encore, la **photo**. Indiquez comme référence le **code article Rexel** ou le **numéro e** ; la liaison Rexel ne connaît pas les codes EAN. Les prix sont mis à jour chaque matin à 05:30.
+- **Cebeo** est aussi connecté (service web XML) : avec le numéro client, l'utilisateur et le mot de passe du grossiste Cebeo, la plateforme récupère votre **prix net** par unité. Indiquez comme référence le **numéro d'article Cebeo** ; sinon, la plateforme cherche sur la **référence fabricant**. Cebeo ne fournit pas de photos.
 - Ajoutez une photo du produit avec **« Image depuis une adresse web »**.
 - Les prix spéciaux des grossistes ne sont visibles qu'avec le droit **Prix (prix spéciaux des grossistes) → Voir**.
 MD,

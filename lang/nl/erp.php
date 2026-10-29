@@ -1233,6 +1233,9 @@ return [
         'price_refreshed' => 'Prijs bijgewerkt',
         'price_updated' => 'Bijgewerkt :date (:source)',
         'provider' => [
+            'service_unreachable' => ':name is niet bereikbaar. Probeer het later opnieuw.',
+            'call_failed' => 'De oproep naar :name is mislukt (:reason).',
+            'login_failed' => ':name weigert de aanmelding (:reason). Controleer het klantnummer, de gebruiker en het wachtwoord bij de groothandel.',
             'manual' => 'Manueel',
             'none' => 'Dit artikel heeft geen groothandel met een prijskoppeling.',
             'no_reference' => 'Vul eerst een referentie van de groothandel of fabrikant in.',

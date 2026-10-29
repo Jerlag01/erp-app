@@ -1233,6 +1233,9 @@ return [
         'price_refreshed' => 'Price updated',
         'price_updated' => 'Updated :date (:source)',
         'provider' => [
+            'service_unreachable' => ':name cannot be reached. Try again later.',
+            'call_failed' => 'The call to :name failed (:reason).',
+            'login_failed' => ':name refuses the sign-in (:reason). Check the customer number, user and password of the distributor.',
             'manual' => 'Manual',
             'none' => 'This item has no distributor with a price connection.',
             'no_reference' => 'Enter a distributor or manufacturer reference first.',

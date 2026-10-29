@@ -563,6 +563,8 @@ Druk een **QR-etiket** af per artikel of meerdere tegelijk. Wie het etiket scant
 ## Prijzen en afbeeldingen
 
 - Bij een groothandel met een prijskoppeling haal je met **"Prijs ophalen bij groothandel"** de actuele prijs op (een referentie van de groothandel of fabrikant is nodig).
+- **Rexel** is gekoppeld: met het klantnummer, de gebruiker en het wachtwoord bij de groothandel Rexel haalt het platform jullie **nettoprijs** (per eenheid, zonder bijdragen zoals Recupel) en, als het artikel er nog geen heeft, de **foto** op. Vul als referentie het **Rexel-artikelnummer** of het **e-nummer** in; EAN-codes kent de Rexel-koppeling niet. Elke ochtend om 05:30 worden de prijzen bijgewerkt.
+- **Cebeo** is ook gekoppeld (XML-webservice): met het klantnummer, de gebruiker en het wachtwoord bij de groothandel Cebeo haalt het platform jullie **nettoprijs** per eenheid op. Vul als referentie het **Cebeo-artikelnummer** in; zonder dat zoekt het platform op de **fabrikantreferentie**. Cebeo levert geen foto's.
 - Een productfoto voeg je toe met **"Afbeelding van webadres"**.
 - De speciale prijzen van de groothandels zijn enkel zichtbaar met het recht **Prijzen (speciale prijzen groothandels) → Bekijken**.
 MD,

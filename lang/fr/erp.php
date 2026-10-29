@@ -1233,6 +1233,9 @@ return [
         'price_refreshed' => 'Prix mis à jour',
         'price_updated' => 'Mis à jour le :date (:source)',
         'provider' => [
+            'service_unreachable' => ':name n\'est pas joignable. Réessayez plus tard.',
+            'call_failed' => 'L\'appel à :name a échoué (:reason).',
+            'login_failed' => ':name refuse la connexion (:reason). Vérifiez le numéro client, l\'utilisateur et le mot de passe du grossiste.',
             'manual' => 'Manuel',
             'none' => 'Cet article n\'a pas de grossiste avec une connexion des prix.',
             'no_reference' => 'Saisissez d\'abord une référence grossiste ou fabricant.',

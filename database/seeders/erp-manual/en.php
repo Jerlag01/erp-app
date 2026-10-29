@@ -562,6 +562,8 @@ Print a **QR label** per item or several at once. Scanning the label opens the i
 ## Prices and pictures
 
 - With a distributor that has a price link, **"Update price from distributor"** fetches the current price (a distributor or manufacturer reference is needed).
+- **Rexel** is connected: with the customer number, user and password on the distributor Rexel, the platform fetches your **net price** (per unit, without contributions such as Recupel) and, when the item has none yet, the **picture**. Use the **Rexel item code** or the **e-number** as reference; the Rexel link does not know EAN codes. Prices are updated every morning at 05:30.
+- **Cebeo** is connected too (XML web service): with the customer number, user and password on the distributor Cebeo, the platform fetches your **net price** per unit. Use the **Cebeo article number** as reference; without it the platform searches on the **manufacturer reference**. Cebeo provides no pictures.
 - Add a product photo with **"Image from web address"**.
 - The distributors' special prices are only visible with the permission **Prices (special distributor prices) → View**.
 MD,

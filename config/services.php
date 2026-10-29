@@ -41,10 +41,12 @@ return [
     */
 
     'cebeo' => [
+        // Empty: Cebeo's XML web service address (CebeoClient::ENDPOINT).
         'url' => env('CEBEO_API_URL'),
     ],
 
     'rexel' => [
+        // Empty: the production endpoint (RexelClient::ENDPOINT); the test one is .../exchange/ws/test/rexel.
         'url' => env('REXEL_API_URL'),
     ],
 
