@@ -696,6 +696,12 @@ In the project's **GPW requests** tab, click **Plan** on the approved request: c
 
 - Requesting: the permission **Projects → Request GPW**.
 - The mails (request, approved, refused) are edited under **E-mail templates**.
+
+## Overview and adding by hand
+
+Under **Projects → GPW requests** you find every GPW request of the projects you see, with the **start date**, **end date** and the status: *Waiting for GPW approval*, *To be planned - GPW approved* or *On hold - resend GPW request* (and *Planned*). The same status also shows in the **project list** (column GPW requests, the newest request) and in the GPW tab of the project.
+
+Was a GPW asked through a **personal mail**? Use **Add GPW manually**: choose the project, the period, who it was asked to and the status (waiting, approved or rejected). No mail is sent; approved sets the project to *To be planned*, as a client's approval does. When the answer comes in later, record it with **Record decision**. This needs the **GPW** permission of Projects.
 MD,
         ],
 
@@ -1159,6 +1165,10 @@ With the knowledge base permissions:
 - **Knowledge base → Categories**: categories with a name and description per language; hidden categories are only seen by writers.
 - **Knowledge base → Articles**: title and text **per language**, as formatted text (with pictures) or in Markdown, with downloadable files. An article can stay a draft until it is ready.
 - Downloading PDF attachments needs the permission **Knowledge base → Download PDF files**.
+
+## Subcategories
+
+A category can sit under a **main category** (one level deep): choose the *Main category* on the category. The overview shows the main categories with their subcategories; a hidden main category also hides its subcategories. The **ERP app manual** has a subcategory per module this way. A module's article is only shown when you have access to that module (e.g. *Fleet* only with the fleet permissions); administrators and those who manage the knowledge base see everything.
 MD,
         ],
 

@@ -9,6 +9,7 @@ use App\Models\KbCategory;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -52,6 +53,16 @@ class KbCategoryResource extends Resource
                 ->columns(2)
                 ->columnSpanFull()
                 ->schema([
+                    // One level deep: a main category, or a subcategory of one (not of itself, nor when it has subcategories).
+                    Select::make('parent_id')
+                        ->label(__('erp.kb.parent'))
+                        ->helperText(__('erp.kb.parent_help'))
+                        ->options(fn (?KbCategory $record): array => KbCategory::query()->ordered()->whereNull('parent_id')
+                            ->when($record, fn ($query) => $query->whereKeyNot($record->id))
+                            ->get()->mapWithKeys(fn (KbCategory $category): array => [$category->id => $category->translate('name')])->all())
+                        ->disabled(fn (?KbCategory $record): bool => (bool) $record?->children()->exists())
+                        ->placeholder(__('erp.kb.no_parent'))
+                        ->columnSpanFull(),
                     TranslatableField::make('name', __('erp.fields.name'), fn (string $path) => TextInput::make($path)->maxLength(150)),
                     TranslatableField::make('description', __('erp.fields.description'), fn (string $path) => Textarea::make($path)->rows(3)->maxLength(1000), required: false),
                     Toggle::make('is_visible')
@@ -72,11 +83,11 @@ class KbCategoryResource extends Resource
         return $table
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
-            ->modifyQueryUsing(fn ($query) => $query->withCount('articles'))
+            ->modifyQueryUsing(fn ($query) => $query->with('parent')->withCount('articles'))
             ->columns([
                 TextColumn::make('name')
                     ->label(__('erp.fields.name'))
-                    ->state(fn (KbCategory $record): string => $record->translate('name'))
+                    ->state(fn (KbCategory $record): string => $record->path())
                     ->description(fn (KbCategory $record): ?string => $record->translate('description') ?: null),
                 TextColumn::make('articles_count')
                     ->label(__('erp.resources.kb_article.plural'))

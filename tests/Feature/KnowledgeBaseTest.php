@@ -137,4 +137,24 @@ class KnowledgeBaseTest extends TestCase
         $this->actingAs($editor)->get('/knowledge-base-articles')->assertForbidden();
         $this->actingAs($editor)->get(route('kb.download', ['article' => KbArticle::sole(), 'index' => 0]))->assertNotFound();
     }
+
+    #[Test]
+    public function subcategories_sit_under_their_main_category_and_follow_its_visibility(): void
+    {
+        $main = KbCategory::factory()->create(['name' => ['nl' => 'Handleiding', 'fr' => 'Manuel', 'en' => 'Manual']]);
+        $sub = KbCategory::factory()->create(['parent_id' => $main->id, 'name' => ['nl' => 'Wagenpark', 'fr' => 'Parc', 'en' => 'Fleet']]);
+        $article = KbArticle::factory()->for($sub, 'category')->create(['title' => ['nl' => 'Tankkaart aanvragen', 'fr' => 'x', 'en' => 'x']]);
+        $employee = User::factory()->inTeam()->create(['locale' => 'nl']);
+        $this->actingAs($employee);
+
+        // The overview shows the main category with its subcategory; the subcategory lists the article.
+        $this->get('/knowledge-base')->assertOk()->assertSee('Handleiding')->assertSee('Wagenpark')->assertSee('data-kb-subcategories', false);
+        $this->get('/knowledge-base?category='.$sub->id)->assertOk()->assertSee('Tankkaart aanvragen');
+        $this->get('/knowledge-base?article='.$article->id)->assertOk()->assertSee('Handleiding › Wagenpark');
+
+        // A hidden main category hides its subcategories for employees.
+        $main->update(['is_visible' => false]);
+        $this->get('/knowledge-base?article='.$article->id)->assertNotFound();
+        $this->get('/knowledge-base')->assertDontSee('Wagenpark');
+    }
 }

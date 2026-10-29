@@ -26,7 +26,7 @@ class ProjectsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers'])->withCount('steps')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers', 'latestGpwRequest'])->withCount('steps')
                 ->when(ProjectWorkdays::canView(auth()->user()), fn (Builder $query) => ProjectWorkdays::withWorkedDays($query)))
             ->defaultSort('created_at', 'desc')
             ->searchPlaceholder(__('erp.projects.search'))
@@ -73,6 +73,15 @@ class ProjectsTable
                     ->color(fn (Project $record): string => ProjectWorkdays::color($record))
                     ->fontFamily(FontFamily::Mono)
                     ->visible(fn (): bool => ProjectWorkdays::canView(auth()->user())),
+                // Where the newest GPW request stands: waiting / to be planned / on hold.
+                TextColumn::make('latestGpwRequest.status')
+                    ->label(__('erp.gpw.title'))
+                    ->formatStateUsing(fn (Project $record): ?string => $record->latestGpwRequest?->overviewStatus())
+                    ->badge()
+                    ->color(fn (Project $record): string => $record->latestGpwRequest?->status->getColor() ?? 'gray')
+                    ->description(fn (Project $record): ?string => $record->latestGpwRequest?->period())
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('poNumbers.number')
                     ->label(__('erp.projects.po_numbers'))
                     ->fontFamily(FontFamily::Mono)

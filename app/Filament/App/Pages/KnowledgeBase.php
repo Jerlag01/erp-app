@@ -62,7 +62,7 @@ class KnowledgeBase extends Page
 
     public function getSubheading(): ?string
     {
-        return $this->currentArticle() ? $this->currentArticle()->category->translate('name') : __('erp.kb.intro');
+        return $this->currentArticle() ? $this->currentArticle()->category->path() : __('erp.kb.intro');
     }
 
     protected function user(): User
@@ -77,7 +77,7 @@ class KnowledgeBase extends Page
             return null;
         }
 
-        $article = KbArticle::query()->with('category')->find($this->article);
+        $article = KbArticle::query()->with('category.parent')->find($this->article);
 
         abort_if($article === null || ! $article->isReadableBy($this->user()), 404);
 
@@ -85,22 +85,41 @@ class KnowledgeBase extends Page
     }
 
     /**
-     * Categories with the articles the user may read; empty categories are left out.
+     * The cards of the overview: the main categories (with their subcategories), or — for a chosen
+     * category — its subcategories, or the category itself. Only with articles the user may read.
      *
      * @return Collection<int, KbCategory>
      */
     public function categories(): Collection
     {
         $user = $this->user();
+        $readable = fn ($query) => $query->readableBy($user);
+        $shown = fn ($query) => $query->unless($user->canEditKnowledgeBase(), fn ($query) => $query->shown());
 
-        return KbCategory::query()
-            ->ordered()
-            ->unless($user->canEditKnowledgeBase(), fn ($query) => $query->where('is_visible', true))
-            ->when($this->category, fn ($query, int $id) => $query->whereKey($id))
-            ->with(['articles' => fn ($query) => $query->readableBy($user)])
-            ->get()
-            ->filter(fn (KbCategory $category): bool => $category->articles->isNotEmpty())
+        $chosen = $this->category ? $shown(KbCategory::query())->with('children')->find($this->category) : null;
+        $query = $shown(KbCategory::query()->ordered())
+            ->with(['articles' => $readable, 'children' => fn ($query) => $shown($query)->with(['articles' => $readable])]);
+
+        $query = match (true) {
+            $chosen !== null && $chosen->children->isNotEmpty() => $query->where('parent_id', $chosen->id),
+            $chosen !== null => $query->whereKey($chosen->id),
+            default => $query->whereNull('parent_id'),
+        };
+
+        // Articles of a module only for those with access to it (see ManualAccess).
+        return $query->get()
+            ->filter(fn (KbCategory $category): bool => $category->isAccessibleBy($user))
+            ->each(fn (KbCategory $category) => $category->setRelation('children', $category->children->filter(fn (KbCategory $child): bool => $child->articles->isNotEmpty() && $child->setRelation('parent', $category)->isAccessibleBy($user))->values()))
+            ->filter(fn (KbCategory $category): bool => $category->articles->isNotEmpty() || $category->children->isNotEmpty())
             ->values();
+    }
+
+    /**
+     * The chosen category (for its name above the cards), or null on the overview.
+     */
+    public function chosenCategory(): ?KbCategory
+    {
+        return $this->category ? KbCategory::query()->with('parent')->find($this->category) : null;
     }
 
     /**
@@ -118,10 +137,10 @@ class KnowledgeBase extends Page
 
         return KbArticle::query()
             ->readableBy($this->user())
-            ->with('category')
+            ->with('category.parent')
             ->orderBy('sort_order')
             ->get()
-            ->filter(fn (KbArticle $article): bool => str($article->searchableText())->contains($search, ignoreCase: true))
+            ->filter(fn (KbArticle $article): bool => $article->category->isAccessibleBy($this->user()) && str($article->searchableText())->contains($search, ignoreCase: true))
             ->values();
     }
 

@@ -68,13 +68,13 @@ class KbArticle extends Model
     public function scopeReadableBy(Builder $query, User $user): void
     {
         if (! $user->canEditKnowledgeBase()) {
-            $query->where('is_published', true)->whereHas('category', fn (Builder $query) => $query->where('is_visible', true));
+            $query->where('is_published', true)->whereHas('category', fn (Builder $query) => $query->shown());
         }
     }
 
     public function isReadableBy(User $user): bool
     {
-        return $user->canEditKnowledgeBase() || ($this->is_published && $this->category->is_visible);
+        return $user->canEditKnowledgeBase() || ($this->is_published && $this->category->isShown() && $this->category->isAccessibleBy($user));
     }
 
     /**

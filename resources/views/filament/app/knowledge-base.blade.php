@@ -67,7 +67,10 @@
                     <x-filament::input type="search" wire:model.live.debounce.400ms="search" :placeholder="__('erp.kb.search')" data-kb-search />
                 </x-filament::input.wrapper>
             </div>
-            @if ($this->category)
+            @if ($chosen = $this->chosenCategory())
+                @if ($chosen->parent)
+                    <x-filament::link tag="button" wire:click="$set('category', {{ $chosen->parent->id }})" icon="heroicon-o-arrow-left">{{ $chosen->parent->translate('name') }}</x-filament::link>
+                @endif
                 <x-filament::link tag="button" wire:click="$set('category', null)" icon="heroicon-o-x-mark">{{ __('erp.kb.all_categories') }}</x-filament::link>
             @endif
         </div>
@@ -81,7 +84,7 @@
                         @foreach ($results as $result)
                             <li>
                                 <x-filament::link tag="button" wire:click="$set('article', {{ $result->id }})">{{ $result->translate('title') }}</x-filament::link>
-                                <span class="erp-kb-muted">· {{ $result->category->translate('name') }}</span>
+                                <span class="erp-kb-muted">· {{ $result->category->path() }}</span>
                             </li>
                         @endforeach
                     </ul>
@@ -101,6 +104,24 @@
                             @unless ($kbCategory->is_visible)
                                 <x-filament::badge color="warning" style="margin-bottom: .5rem;">{{ __('erp.kb.hidden_badge') }}</x-filament::badge>
                             @endunless
+                            {{-- Subcategories (e.g. one per module of the ERP manual), each with its number of articles. --}}
+                            @if ($kbCategory->children->isNotEmpty())
+                                <ul class="erp-kb-list" @style(['margin-bottom: .75rem' => $kbCategory->articles->isNotEmpty()]) data-kb-subcategories>
+                                    @foreach ($kbCategory->children->take($this->category ? 500 : 8) as $child)
+                                        <li>
+                                            <x-filament::link tag="button" wire:click="$set('category', {{ $child->id }})" icon="heroicon-o-folder">{{ $child->translate('name') }}</x-filament::link>
+                                            <span class="erp-kb-muted">· {{ $child->articles->count() }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                @if (! $this->category && $kbCategory->children->count() > 8)
+                                    <div style="margin-bottom: .75rem;">
+                                        <x-filament::link tag="button" wire:click="$set('category', {{ $kbCategory->id }})" icon="heroicon-o-arrow-right" icon-position="after">
+                                            {{ __('erp.kb.show_all_subcategories', ['count' => $kbCategory->children->count()]) }}
+                                        </x-filament::link>
+                                    </div>
+                                @endif
+                            @endif
                             <ul class="erp-kb-list">
                                 @foreach ($kbCategory->articles->take($this->category ? 500 : 6) as $item)
                                     <li>

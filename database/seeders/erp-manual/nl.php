@@ -697,6 +697,12 @@ In het tabblad **GPW-aanvragen** van het project klik je bij de goedgekeurde aan
 
 - Aanvragen: het recht **Projecten → GPW aanvragen**.
 - De mails (aanvraag, goedgekeurd, geweigerd) pas je aan bij **E-mailsjablonen**.
+
+## Overzicht en manueel toevoegen
+
+Bij **Projecten → GPW-aanvragen** staan alle GPW-aanvragen van de projecten die je ziet, met de **startdatum**, **einddatum** en de status: *Wachten op GPW-goedkeuring*, *In te plannen - GPW goedgekeurd* of *On hold - GPW-aanvraag opnieuw versturen* (en *Ingepland*). Dezelfde status staat ook in de **projectenlijst** (kolom GPW-aanvragen, de nieuwste aanvraag) en in het tabblad GPW op het project.
+
+Werd een GPW via **persoonlijke mail** gevraagd? Gebruik **GPW manueel toevoegen**: kies het project, de periode, aan wie het gevraagd werd en de status (wachtend, goedgekeurd of geweigerd). Er wordt geen mail verstuurd; goedgekeurd zet het project op *In te plannen*, net als bij een goedkeuring door de klant. Komt het antwoord later binnen, dan registreer je het met **Beslissing registreren**. Daarvoor is het recht **GPW** van Projecten nodig.
 MD,
         ],
 
@@ -1160,6 +1166,10 @@ Met de kennisbankrechten:
 - **Kennisbank → Categorieën**: categorieën met naam en beschrijving per taal; verborgen categorieën zien enkel de schrijvers.
 - **Kennisbank → Artikels**: titel en tekst **per taal**, als opgemaakte tekst (met afbeeldingen) of in Markdown, met downloadbare bestanden. Een artikel kan je als concept bewaren tot het klaar is.
 - Bijlagen in PDF downloaden vereist het recht **Kennisbank → PDF-bestanden downloaden**.
+
+## Subcategorieën
+
+Een categorie kan onder een **hoofdcategorie** staan (één niveau diep): kies bij de categorie de *Hoofdcategorie*. In het overzicht staan de hoofdcategorieën met hun subcategorieën; een verborgen hoofdcategorie verbergt ook haar subcategorieën. De **ERP-app handleiding** heeft zo een subcategorie per module. Het artikel van een module zie je enkel als je toegang hebt tot die module (bv. *Wagenpark* enkel met de rechten van het wagenpark); beheerders en wie de kennisbank beheert zien alles.
 MD,
         ],
 

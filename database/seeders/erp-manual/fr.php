@@ -696,6 +696,12 @@ Dans l'onglet **Demandes de GPW** du projet, cliquez sur **Planifier** pour la d
 
 - Demander : le droit **Projets → Demander des GPW**.
 - Les mails (demande, approuvé, refusé) se modifient dans **Modèles d'e-mail**.
+
+## Aperçu et ajout manuel
+
+Dans **Projets → Demandes GPW** figurent toutes les demandes GPW des projets que vous voyez, avec la **date de début**, la **date de fin** et le statut : *En attente d'approbation GPW*, *À planifier - GPW approuvé* ou *En attente - renvoyer la demande GPW* (et *Planifié*). Le même statut apparaît aussi dans la **liste des projets** (colonne Demandes GPW, la demande la plus récente) et dans l'onglet GPW du projet.
+
+Un GPW a été demandé par **e-mail personnel** ? Utilisez **Ajouter un GPW manuellement** : choisissez le projet, la période, à qui il a été demandé et le statut (en attente, approuvé ou refusé). Aucun e-mail n'est envoyé ; approuvé met le projet sur *À planifier*, comme une approbation par le client. Si la réponse arrive plus tard, enregistrez-la avec **Enregistrer la décision**. Il faut le droit **GPW** des Projets.
 MD,
         ],
 
@@ -1159,6 +1165,10 @@ Avec les droits de la base de connaissances :
 - **Base de connaissances → Catégories** : catégories avec nom et description par langue ; les catégories masquées ne sont visibles que par les rédacteurs.
 - **Base de connaissances → Articles** : titre et texte **par langue**, en texte mis en forme (avec images) ou en Markdown, avec des fichiers à télécharger. Un article peut rester en brouillon jusqu'à ce qu'il soit prêt.
 - Télécharger les pièces jointes PDF nécessite le droit **Base de connaissances → Télécharger les fichiers PDF**.
+
+## Sous-catégories
+
+Une catégorie peut figurer sous une **catégorie principale** (un seul niveau) : choisissez la *Catégorie principale* dans la catégorie. L'aperçu montre les catégories principales avec leurs sous-catégories ; une catégorie principale masquée masque aussi ses sous-catégories. Le **manuel de l'application ERP** a ainsi une sous-catégorie par module. L'article d'un module n'est visible que si vous avez accès à ce module (p. ex. *Parc automobile* uniquement avec les droits du parc) ; les administrateurs et ceux qui gèrent la base de connaissances voient tout.
 MD,
         ],
 

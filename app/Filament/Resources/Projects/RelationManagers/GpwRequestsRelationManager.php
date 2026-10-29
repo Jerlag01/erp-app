@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\RelationManagers;
 use App\Actions\Gpw\PlanGpw;
 use App\Actions\Gpw\RequestGpw;
 use App\Enums\GpwStatus;
+use App\Filament\Resources\GpwRequests\GpwRequestResource;
 use App\Models\GpwRequest;
 use App\Models\Project;
 use App\Models\Team;
@@ -60,7 +61,7 @@ class GpwRequestsRelationManager extends RelationManager
             ->emptyStateHeading(__('erp.gpw.none'))
             ->columns([
                 TextColumn::make('starts_on')->label(__('erp.gpw.period'))->state(fn (GpwRequest $record): string => $record->period())->sortable(),
-                TextColumn::make('status')->label(__('erp.fields.status'))->badge(),
+                GpwRequestResource::statusColumn(),
                 TextColumn::make('contact_name')->label(__('erp.gpw.sent_to'))->description(fn (GpwRequest $record): string => $record->contact_email.' · '.strtoupper($record->locale)),
                 TextColumn::make('requester.name')->label(__('erp.gpw.requested_by'))->description(fn (GpwRequest $record): string => $record->created_at->format('d/m/Y H:i')),
                 TextColumn::make('remarks')->label(__('erp.gpw.remarks'))->limit(60)->tooltip(fn (GpwRequest $record): ?string => $record->remarks)->placeholder('—')->toggleable(),
@@ -136,7 +137,7 @@ class GpwRequestsRelationManager extends RelationManager
                     ->label(__('erp.gpw.resend'))
                     ->icon(Heroicon::OutlinedEnvelope)
                     ->color('gray')
-                    ->visible(fn (GpwRequest $record): bool => $record->isPending() && Gate::allows('requestGpw', $this->getOwnerRecord()))
+                    ->visible(fn (GpwRequest $record): bool => $record->isPending() && ! $record->isManual() && Gate::allows('requestGpw', $this->getOwnerRecord()))
                     ->requiresConfirmation()
                     ->modalDescription(fn (GpwRequest $record): string => __('erp.gpw.resend_help', ['email' => $record->contact_email]))
                     ->action(function (GpwRequest $record, RequestGpw $requests): void {

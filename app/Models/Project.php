@@ -323,6 +323,16 @@ class Project extends Model
     }
 
     /**
+     * The newest GPW request, for its status in the project list (withdrawn ones left out).
+     *
+     * @return HasOne<GpwRequest, $this>
+     */
+    public function latestGpwRequest(): HasOne
+    {
+        return $this->hasOne(GpwRequest::class)->ofMany(['id' => 'max'], fn ($query) => $query->where('status', '!=', 'cancelled'));
+    }
+
+    /**
      * @return HasMany<PlanningItem, $this>
      */
     public function planningItems(): HasMany

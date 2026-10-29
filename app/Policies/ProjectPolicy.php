@@ -70,6 +70,15 @@ class ProjectPolicy extends AreaPolicy
     }
 
     /**
+     * Add a GPW request by hand (asked through a personal mail) or record the decision on one:
+     * "projects.gpw", on a project that is not closed.
+     */
+    public function manageGpw(User $user, Project $project): bool
+    {
+        return $this->view($user, $project) && ! $project->isArchived() && $this->allows($user, 'gpw');
+    }
+
+    /**
      * Ask the client for a GPW: "projects.gpw", only while the project is to be executed.
      */
     public function requestGpw(User $user, Project $project): bool

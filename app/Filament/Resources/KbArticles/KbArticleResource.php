@@ -69,8 +69,12 @@ class KbArticleResource extends Resource
      */
     public static function categoryOptions(): array
     {
-        return KbCategory::query()->ordered()->get()
-            ->mapWithKeys(fn (KbCategory $category): array => [$category->id => $category->translate('name')])
+        // Main categories with their subcategories right after them: "ERP-app handleiding › Planning".
+        $categories = KbCategory::query()->ordered()->with('parent')->get();
+
+        return $categories->whereNull('parent_id')
+            ->flatMap(fn (KbCategory $main): array => [$main, ...$categories->where('parent_id', $main->id)->all()])
+            ->mapWithKeys(fn (KbCategory $category): array => [$category->id => $category->path()])
             ->all();
     }
 
@@ -168,7 +172,7 @@ class KbArticleResource extends Resource
     {
         return $table
             ->defaultSort('sort_order')
-            ->modifyQueryUsing(fn ($query) => $query->with(['category', 'editor']))
+            ->modifyQueryUsing(fn ($query) => $query->with(['category.parent', 'editor']))
             ->columns([
                 TextColumn::make('title')
                     ->label(__('erp.kb.title_field'))
@@ -177,7 +181,7 @@ class KbArticleResource extends Resource
                     ->wrap(),
                 TextColumn::make('category.name')
                     ->label(__('erp.kb.category'))
-                    ->state(fn (KbArticle $record): string => $record->category->translate('name'))
+                    ->state(fn (KbArticle $record): string => $record->category->path())
                     ->badge()
                     ->color('gray'),
                 TextColumn::make('format')

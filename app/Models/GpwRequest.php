@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Fillable([
     'project_id', 'requested_by', 'work_site_contact_id', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
-    'status', 'mailed_at', 'decided_at', 'decided_by_client_user_id', 'decided_by_name', 'decision_note', 'team_id', 'planned_at', 'planned_by',
+    'status', 'source', 'mailed_at', 'decided_at', 'decided_by_client_user_id', 'decided_by_name', 'decision_note', 'team_id', 'planned_at', 'planned_by',
 ])]
 class GpwRequest extends Model
 {
@@ -61,6 +61,24 @@ class GpwRequest extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public const SOURCE_MAIL = 'mail';
+
+    public const SOURCE_MANUAL = 'manual';
+
+    public function isManual(): bool
+    {
+        return $this->source === self::SOURCE_MANUAL;
+    }
+
+    /**
+     * Where the request stands for the overview: "Waiting for GPW approval", "To be planned - GPW
+     * approved", "On hold - resend GPW request", or the status itself.
+     */
+    public function overviewStatus(): string
+    {
+        return __('erp.gpw.overview_status.'.$this->status->value);
     }
 
     public function isPending(): bool
