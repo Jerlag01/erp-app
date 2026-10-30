@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\BatteryDossierController;
 use App\Http\Controllers\Api\V1\BatteryRoomController;
+use App\Http\Controllers\Api\V1\CableStrippingController;
 use App\Http\Controllers\Api\V1\IncidentController;
 use App\Http\Controllers\Api\V1\InterventionController;
 use App\Http\Controllers\Api\V1\LeaveController;
@@ -96,6 +97,13 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('/work-sites', [InterventionController::class, 'workSites'])->name('work-sites');
             Route::get('/{id}', [InterventionController::class, 'show'])->whereNumber('id')->name('show');
             Route::post('/{id}/close', [InterventionController::class, 'close'])->whereNumber('id')->name('close');
+        });
+
+        // Cable stripping: for employees planned in the warehouse; add lines and see their own.
+        Route::prefix('/cable-stripping')->name('cable-stripping.')->group(function (): void {
+            Route::get('/', [CableStrippingController::class, 'index'])->name('index');
+            Route::get('/work-sites', [CableStrippingController::class, 'workSites'])->name('work-sites');
+            Route::post('/', [CableStrippingController::class, 'store'])->name('store');
         });
 
         // Stock: scan an item's label, see the stock everywhere, add, take or count.

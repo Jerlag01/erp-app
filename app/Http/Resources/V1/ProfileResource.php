@@ -5,6 +5,7 @@ namespace App\Http\Resources\V1;
 use App\Enums\DriverLicenseCategory;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Api\V1\AssetCheckController;
+use App\Http\Controllers\Api\V1\CableStrippingController;
 use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\StockController;
@@ -95,6 +96,8 @@ class ProfileResource extends JsonResource
             // Stock: scan items, see the stock everywhere; "stock_adjust" adds, takes and counts.
             'stock' => StockController::canView($user),
             'stock_adjust' => StockController::canView($user) && $user->hasPermission('stock.adjust'),
+            // Cable stripping: only while planned in the warehouse today.
+            'cable_stripping' => CableStrippingController::canUse($user),
             // 600 and 610–650 projects a team of the user executes.
             'projects' => ProjectController::teamProjects($user)->exists(),
             'open_toolbox' => $gate->allows('viewAny', ToolboxMeeting::class)

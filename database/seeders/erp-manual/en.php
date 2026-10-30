@@ -1042,6 +1042,7 @@ Following up **cable stripping**: per line the date, the project, who worked on 
 - Add a **line** per batch with the date, the **imputation** (project), the workers, the **start and end time**, the bin number and the **weighings**: before, the empty bin and after stripping.
 - The **hours**, the **stripped cable** and the **waste** are calculated automatically.
 - Make a **PDF overview** of a period.
+- **In the mobile app** (More → Cable stripping): employees **planned in the warehouse** that day add lines with the same fields and see their own lines. A line can only be added for a day they are planned in the warehouse (up to 14 days back).
 MD,
         ],
 
@@ -1265,6 +1266,7 @@ The **PI ERP** app brings the essentials of the platform to your phone, also on 
 - **Checks**: fill in the **yearly control** of your team's equipment (only while a list is open).
 - **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605), with the **floor plan** you draw as on the platform (604), and the **battery rooms** (609): delivery note with signature, extra info, checklist and photos (the ventilation calculation and BTV report are added on the platform).
 - **Stock**: **scan the QR label** of an item (or its barcode), or search it, to see its picture, names, references, suppliers, manufacturer, EAN, description and notes, and the **stock at every location**. With **Stock (own locations) → Raise / lower** you **add** or **take** an amount per location; during the yearly count you can only **count**.
+- **Cable stripping**: only on a day you are **planned in the warehouse**. Add a line with the same fields as on the platform (the totals are calculated while you type) and see your own lines.
 - **Projects**: the 600 and 610–650 projects your team executes: reference, description, address, COW code, contact person (call or mail) and project leaders, whether the **GPW** is approved and for which period (and the planned days), the documents, pictures, **electrical schematics** and extra files to open (no offers, invoices or plans), and the **part list**: add the items you used, from the stock list or described yourself. You can remove only the lines you added; on the platform the part list shows who added them.
 - **Interventions**: **close** an intervention as on the platform (categories, COW code and room, time worked, colleagues, material, fuse/breaker positions, modified boards and remarks), without a signature. An administrator then reviews it; an intervention sent back is closed again.
 - **Messages**: the messages sent from the platform, in your language.

@@ -4082,6 +4082,10 @@ return [
         'sent' => 'Bericht verstuurd naar :count medewerker(s)',
     ],
     'mobile' => [
+        'cable_stripping' => [
+            'not_planned' => 'Je kan alleen kabel ontmantelen invullen op een dag dat je in het magazijn ingepland bent.',
+            'saved' => 'Lijn opgeslagen.',
+        ],
         'stock' => [
             'not_found' => 'Geen artikel gevonden voor deze code.',
             'no_adjust' => 'Je mag de stock niet wijzigen.',

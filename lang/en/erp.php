@@ -4081,6 +4081,10 @@ return [
         'sent' => 'Message sent to :count employee(s)',
     ],
     'mobile' => [
+        'cable_stripping' => [
+            'not_planned' => 'You can only fill in cable stripping for a day you are planned in the warehouse.',
+            'saved' => 'Line saved.',
+        ],
         'stock' => [
             'not_found' => 'No item found for this code.',
             'no_adjust' => 'You may not change stock.',

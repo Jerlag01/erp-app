@@ -1043,6 +1043,7 @@ Opvolging van het **ontmantelen van kabel**: per lijn de datum, het project, wie
 - Voeg per partij een **lijn** toe met de datum, de **imputatie** (project), de medewerkers, het **begin- en einduur**, het **baknummer** en de **wegingen**: vóór, de lege bak en na het ontmantelen.
 - De **uren**, de **ontmantelde kabel** en het **afval** worden automatisch berekend.
 - Maak een **PDF-overzicht** van een periode.
+- **In de mobiele app** (Meer → Kabel ontmantelen): medewerkers die die dag **in het magazijn ingepland** zijn, voegen lijnen toe met dezelfde velden en zien hun eigen lijnen. Een lijn kan alleen voor een dag waarop ze in het magazijn ingepland zijn (tot 14 dagen terug).
 MD,
         ],
 
@@ -1266,6 +1267,7 @@ De app **PI ERP** brengt het belangrijkste van het platform naar je telefoon, oo
 - **Controles**: de **jaarlijkse controle** van het materieel van je ploeg invullen (enkel als er een lijst openstaat).
 - **Meer**: je gegevens, **toolboxmeetings** lezen en ondertekenen, **incident melden**, de **ideeënbus** en de **batterijdossiers** (604/605) invullen en ondertekenen, met de **plattegrond** die je tekent zoals op het platform (604), en de **batterijlokalen** (609): leveringsnota met handtekening, extra info, checklist en foto's (de ventilatieberekening en het BTV-verslag worden op het platform toegevoegd).
 - **Stock**: **scan het QR-label** van een artikel (of de barcode), of zoek het op, voor de foto, namen, referenties, leveranciers, fabrikant, EAN, omschrijving en opmerkingen, en de **stock op elke locatie**. Met **Voorraad (eigen locaties) → Verhogen / verlagen** kun je per locatie een aantal **toevoegen** of **nemen**; tijdens de jaarlijkse telling kun je enkel **tellen**.
+- **Kabel ontmantelen**: alleen op een dag dat je **in het magazijn ingepland** bent. Voeg een lijn toe met dezelfde velden als op het platform (de totalen worden berekend terwijl je typt) en bekijk je eigen lijnen.
 - **Projecten**: de 600- en 610–650-projecten die je ploeg uitvoert: referentie, omschrijving, adres, COW-code, contactpersoon (bellen of mailen) en projectleiders, of de **GPW** goedgekeurd is en voor welke periode (en de geplande dagen), de documenten, foto's, **elektrische schema's** en extra bestanden om te openen (geen offertes, facturen of plannen), en de **stuklijst**: voeg de artikels toe die je gebruikt hebt, uit de stocklijst of zelf omschreven. Je kunt alleen de lijnen verwijderen die je zelf toevoegde; op het platform toont de stuklijst wie ze toevoegde.
 - **Interventies**: een interventie **afsluiten** zoals op het platform (categorieën, COW-code en lokaal, gewerkte tijd, collega's, materiaal, posities zekering/automaat, gewijzigde borden en opmerkingen), zonder handtekening. Daarna reviewt een beheerder ze; een teruggestuurde interventie sluit je opnieuw af.
 - **Berichten**: de berichten die vanuit het platform verstuurd werden, in jouw taal.

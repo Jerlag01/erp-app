@@ -4081,6 +4081,10 @@ return [
         'sent' => 'Message envoyé à :count collaborateur(s)',
     ],
     'mobile' => [
+        'cable_stripping' => [
+            'not_planned' => 'Vous ne pouvez encoder le dénudage de câbles que pour un jour où vous êtes planifié à l\'entrepôt.',
+            'saved' => 'Ligne enregistrée.',
+        ],
         'stock' => [
             'not_found' => 'Aucun article trouvé pour ce code.',
             'no_adjust' => 'Vous n\'êtes pas autorisé à modifier le stock.',
