@@ -391,7 +391,7 @@ Staat het statuut van een werknemer op **Arbeidsongeschikt** (personeelsregister
 
 ## Nachtwerk en codes
 
-- **Nachtwerk (N)**: uren tussen **20:00 en 06:00**. In het maandoverzicht staan de gewerkte uren dan met een **N** erachter (bv. *7,5N*), en het totaal aan nachturen staat bij de codes. Wie om 05:00 begint en de dag doorwerkt, doet geen nachtwerk. Een nachtploeg mag over middernacht lopen (bv. 22:00 → 06:00: aankomst vanaf 18:00, vertrek tot 08:00).
+- **Nachtwerk (N)**: alleen voor een dag die **om 20:00 of later begint**; dan tellen de uren tussen 20:00 en 06:00. In het maandoverzicht staan de gewerkte uren dan met een **N** erachter (bv. *7,5N*), en het totaal aan nachturen staat bij de codes. Wie de dag 's morgens of 's middags begint, krijgt geen nachtwerk, ook niet bij doorwerken na 20:00. Een nachtploeg mag over middernacht lopen (bv. 22:00 → 06:00: aankomst vanaf 18:00, vertrek tot 08:00).
 - Nieuwe codes in het overzicht: **MV**, **AN**, **SV**, **KV** en betaald **WO** tellen als gewerkte dag; **EW** en **OV** tellen als niet gewerkt zonder overuren af te trekken; een **WO** zonder attest na 48 uur telt als onbetaald.
 MD,
         ],

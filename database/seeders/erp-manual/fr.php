@@ -390,7 +390,7 @@ Lorsque le statut d'un collaborateur est **Incapacité de travail** (registre du
 
 ## Travail de nuit et codes
 
-- **Travail de nuit (N)** : les heures entre **20:00 et 06:00**. Dans l'aperçu mensuel, les heures prestées sont alors suivies d'un **N** (p. ex. *7,5N*), et le total des heures de nuit figure dans les codes. Commencer à 05:00 et continuer la journée n'est pas du travail de nuit. Une équipe de nuit peut passer minuit (p. ex. 22:00 → 06:00 : arrivée à partir de 18:00, départ jusqu'à 08:00).
+- **Travail de nuit (N)** : uniquement pour une journée qui **commence à 20:00 ou plus tard** ; les heures entre 20:00 et 06:00 comptent alors. Dans l'aperçu mensuel, les heures prestées sont alors suivies d'un **N** (p. ex. *7,5N*), et le total des heures de nuit figure dans les codes. Une journée commencée le matin ou l'après-midi n'a pas de travail de nuit, même si elle continue après 20:00. Une équipe de nuit peut passer minuit (p. ex. 22:00 → 06:00 : arrivée à partir de 18:00, départ jusqu'à 08:00).
 - Nouveaux codes dans l'aperçu : **MV**, **AN**, **SV**, **KV** et **WO** payé comptent comme jour presté ; **EW** et **OV** comptent comme non presté sans déduire d'heures supplémentaires ; un **WO** sans certificat après 48 heures compte comme non payé.
 MD,
         ],

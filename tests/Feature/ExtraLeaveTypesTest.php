@@ -265,11 +265,17 @@ class ExtraLeaveTypesTest extends TestCase
         $this->day($user, '2026-11-09', '22:00', '06:00');
         // An early start that goes on into the day is not night work.
         $this->day($user, '2026-11-10', '05:00', '13:30');
+        // A day started in the afternoon that goes on after 20:00: no night work either.
+        $this->day($user, '2026-11-11', '14:00', '22:30');
+        // Starting at 20:00 or later: night work.
+        $this->day($user, '2026-11-12', '20:00', '23:00');
 
         $month = app(TimesheetReport::class)->month($user, CarbonImmutable::parse('2026-11-01'));
         $this->assertSame('7,5N', $month['days'][9]['value']);
         $this->assertSame('8', $month['days'][10]['value']);
-        $this->assertSame(8.0, $month['codes']['N']);
+        $this->assertSame('8', $month['days'][11]['value']);
+        $this->assertStringEndsWith('N', $month['days'][12]['value']);
+        $this->assertSame(11.0, $month['codes']['N']);
     }
 
     #[Test]

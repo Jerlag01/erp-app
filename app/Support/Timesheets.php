@@ -272,21 +272,30 @@ class Timesheets
     }
 
     /**
-     * Night hours (N) of the counted rows: work after 20:00, and work before 06:00 when it ends by then
-     * (an early start at 05:00 that goes on into the day is not night work).
+     * Night hours (N) of the counted rows: only for a day that starts at 20:00 or later. A day started in
+     * the morning or afternoon never gets night hours, even when it goes on after 20:00. On a night day
+     * the hours after 20:00 count, and those until 06:00 (after midnight).
      *
      * @param  list<array<string, mixed>>  $rows
      */
     public static function nightHours(array $rows): float
     {
-        $night = 0;
+        $spans = [];
 
         foreach ($rows as $row) {
-            if (! in_array($row['kind'] ?? null, self::COUNTED, true) || ($span = self::span($row['arrival'] ?? null, $row['departure'] ?? null)) === null) {
-                continue;
+            if (in_array($row['kind'] ?? null, self::COUNTED, true) && ($span = self::span($row['arrival'] ?? null, $row['departure'] ?? null)) !== null) {
+                $spans[] = $span;
             }
+        }
 
-            [$from, $until] = $span;
+        // The day starts with its first counted row (the start at the warehouse).
+        if ($spans === [] || $spans[0][0] < self::NIGHT_FROM) {
+            return 0.0;
+        }
+
+        $night = 0;
+
+        foreach ($spans as [$from, $until]) {
             // The evening: from 20:00 until midnight (and the next evening is never reached).
             $night += max(0, min($until, 1440) - max($from, self::NIGHT_FROM));
 

@@ -390,7 +390,7 @@ When an employee's statute is **Unfit for work** (employee register), every work
 
 ## Night work and codes
 
-- **Night work (N)**: hours between **20:00 and 06:00**. In the monthly overview the worked hours then show with an **N** behind them (e.g. *7,5N*), and the total night hours are with the codes. Starting at 05:00 and working on through the day is not night work. A night shift may run past midnight (e.g. 22:00 → 06:00: arrival from 18:00, departure until 08:00).
+- **Night work (N)**: only for a day that **starts at 20:00 or later**; the hours between 20:00 and 06:00 then count. In the monthly overview the worked hours then show with an **N** behind them (e.g. *7,5N*), and the total night hours are with the codes. A day started in the morning or afternoon has no night work, even when it goes on after 20:00. A night shift may run past midnight (e.g. 22:00 → 06:00: arrival from 18:00, departure until 08:00).
 - New codes in the overview: **MV**, **AN**, **SV**, **KV** and paid **WO** count as a worked day; **EW** and **OV** count as not worked without taking off overtime; a **WO** without certificate after 48 hours counts as unpaid.
 MD,
         ],
