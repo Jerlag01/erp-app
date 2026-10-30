@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Batteries\RegisterSentBaeOrder;
 use App\Enums\ProjectStatus;
 use Carbon\CarbonInterface;
 use Database\Factories\BatteryDeliveryFactory;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Storage;
  * "batteries.documents" (and "batteries.documents_upload" to change them).
  */
 #[Fillable([
-    'project_id', 'order_confirmation', 'battery_model_id', 'pieces', 'planned_delivery_date', 'executed', 'total_cost', 'notes',
+    'project_id', 'order_confirmation', 'battery_model_id', 'pieces', 'planned_delivery_date', 'delivery_date_confirmed', 'executed', 'total_cost', 'notes',
     'order_document', 'order_document_name', 'confirmation_document', 'confirmation_document_name', 'delivery_note_document', 'delivery_note_document_name',
 ])]
 class BatteryDelivery extends Model
@@ -143,6 +144,22 @@ class BatteryDelivery extends Model
         return $first ? Carbon::parse($first) : null;
     }
 
+    /**
+     * The order confirmation number is still the placeholder of a sent order ("0000000").
+     */
+    public function confirmationToBeConfirmed(): bool
+    {
+        return $this->order_confirmation === RegisterSentBaeOrder::UNCONFIRMED_NUMBER;
+    }
+
+    /**
+     * The delivery date is the requested one of the order, not yet confirmed by the supplier.
+     */
+    public function deliveryDateToBeConfirmed(): bool
+    {
+        return $this->planned_delivery_date !== null && ! $this->delivery_date_confirmed;
+    }
+
     public function markDelivered(User $user): void
     {
         DB::transaction(function () use ($user): void {
@@ -175,6 +192,7 @@ class BatteryDelivery extends Model
         return [
             'pieces' => 'integer',
             'planned_delivery_date' => 'date',
+            'delivery_date_confirmed' => 'boolean',
             'delivered' => 'boolean',
             'delivered_at' => 'datetime',
             'executed' => 'boolean',

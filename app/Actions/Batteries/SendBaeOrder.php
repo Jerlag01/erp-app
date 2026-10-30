@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\Mail;
 /**
  * Mails a complete BAE order as PDF to its supplier (in the supplier's language), with the supplier's
  * own cc addresses and the copy addresses of Settings > Batteries. Only done with the button on the
- * order, never automatically; replies go to the employee who sent it.
+ * order, never automatically; replies go to the employee who sent it. Then RegisterSentBaeOrder moves the
+ * project to "Ordered - to be delivered" and adds the order to its offers and the battery deliveries.
  */
 class SendBaeOrder
 {
-    public function __construct(protected BaeOrderDocument $document) {}
+    public function __construct(protected BaeOrderDocument $document, protected RegisterSentBaeOrder $register) {}
 
     /**
      * The copy addresses of Settings > Batteries.
@@ -90,5 +91,8 @@ class SendBaeOrder
             'sent_to' => self::recipientsText($supplier),
             'exported_at' => $order->exported_at ?? now(),
         ])->saveQuietly();
+
+        // The project: ordered, the PDF in its offers, and its line in the battery deliveries.
+        $this->register->handle($order, $by);
     }
 }

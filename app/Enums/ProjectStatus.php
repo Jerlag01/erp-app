@@ -20,6 +20,11 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     case WaitingForPo = 'waiting_for_po';
 
     /**
+     * 604: the battery order went to the supplier; the batteries are still to be delivered.
+     */
+    case Ordered = 'ordered';
+
+    /**
      * The client approved a GPW request: to be planned in the approved period.
      */
     case ToBePlanned = 'to_be_planned';
@@ -77,6 +82,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Offer => 'gray',
             self::WaitingForPo => 'warning',
+            self::Ordered => 'info',
             self::ToBePlanned => 'warning',
             self::Planned => 'info',
             self::ToBeExecuted => 'primary',
@@ -93,6 +99,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Offer => Heroicon::OutlinedDocumentText,
             self::WaitingForPo => Heroicon::OutlinedDocumentMagnifyingGlass,
+            self::Ordered => Heroicon::OutlinedTruck,
             self::ToBePlanned => Heroicon::OutlinedCalendar,
             self::Planned => Heroicon::OutlinedCalendarDays,
             self::ToBeExecuted => Heroicon::OutlinedClock,

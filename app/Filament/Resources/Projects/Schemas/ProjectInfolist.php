@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use App\Actions\Batteries\CreateBaeOrder;
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Project;
 use App\Models\Team;
@@ -86,6 +87,16 @@ class ProjectInfolist
                                 TextEntry::make('status')
                                     ->label(__('erp.fields.status'))
                                     ->badge(),
+                                // 604: when the battery order went to the supplier, by whom and to whom.
+                                TextEntry::make('bae_order_sent_at')
+                                    ->label(__('erp.batteries.bae_order.project_sent'))
+                                    ->state(fn (Project $record): ?string => $record->baeOrder?->sent_at?->format('d/m/Y H:i'))
+                                    ->helperText(fn (Project $record): ?string => $record->baeOrder?->isSent()
+                                        ? trim(implode(' · ', array_filter([$record->baeOrder->sender?->name, $record->baeOrder->sent_to])))
+                                        : null)
+                                    ->icon(Heroicon::OutlinedPaperAirplane)
+                                    ->placeholder(__('erp.batteries.bae_order.project_not_sent'))
+                                    ->visible(fn (Project $record): bool => app(CreateBaeOrder::class)->appliesTo($record) && $record->baeOrder !== null),
                                 TextEntry::make('category')
                                     ->label(__('erp.resources.project_category.singular'))
                                     ->state(fn (Project $record): string => $record->category->label())

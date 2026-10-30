@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BatteryDeliveries;
 
+use App\Actions\Batteries\RegisterSentBaeOrder;
 use App\Enums\NavigationGroup;
 use App\Filament\Concerns\ScopesToVisibleRecords;
 use App\Filament\Resources\BatteryDeliveries\Pages\ManageBatteryDeliveries;
@@ -86,13 +87,26 @@ class BatteryDeliveryResource extends Resource
                         }
                     })
                     ->columnSpan(2),
-                TextInput::make('order_confirmation')->label(__('erp.batteries.order_confirmation'))->maxLength(30),
+                TextInput::make('order_confirmation')
+                    ->label(__('erp.batteries.order_confirmation'))
+                    ->helperText(fn (?string $state): ?string => $state === RegisterSentBaeOrder::UNCONFIRMED_NUMBER ? __('erp.batteries.to_be_confirmed') : null)
+                    ->live(onBlur: true)
+                    ->maxLength(30),
                 Select::make('battery_model_id')
                     ->label(__('erp.batteries.model'))
                     ->options(fn (): array => BatteryModel::query()->orderBy('technology')->orderBy('name')->pluck('name', 'id')->all())
                     ->searchable(),
                 TextInput::make('pieces')->label(__('erp.batteries.pieces'))->integer()->minValue(0)->maxValue(9999),
-                DatePicker::make('planned_delivery_date')->label(__('erp.batteries.planned_delivery_date')),
+                DatePicker::make('planned_delivery_date')
+                    ->label(__('erp.batteries.planned_delivery_date'))
+                    ->live()
+                    // Another date than the requested one comes from the supplier: confirmed.
+                    ->afterStateUpdated(fn (Set $set) => $set('delivery_date_confirmed', true)),
+                Toggle::make('delivery_date_confirmed')
+                    ->label(__('erp.batteries.delivery_date_confirmed'))
+                    ->helperText(__('erp.batteries.delivery_date_confirmed_help'))
+                    ->default(true)
+                    ->inline(false),
                 TextInput::make('total_cost')
                     ->label(__('erp.batteries.total_cost'))
                     ->numeric()
@@ -130,10 +144,22 @@ class BatteryDeliveryResource extends Resource
                     ->fontFamily(FontFamily::Mono)
                     ->url(fn (BatteryDelivery $record): ?string => $record->project && Gate::allows('view', $record->project) ? ProjectResource::getUrl('view', ['record' => $record->project]) : null)
                     ->searchable(query: fn (Builder $query, string $search) => $query->whereHas('project', fn (Builder $query) => $query->where('reference', 'like', "%{$search}%"))),
-                TextColumn::make('order_confirmation')->label(__('erp.batteries.order_confirmation'))->fontFamily(FontFamily::Mono)->searchable()->placeholder('—'),
+                TextColumn::make('order_confirmation')
+                    ->label(__('erp.batteries.order_confirmation'))
+                    ->fontFamily(FontFamily::Mono)
+                    ->searchable()
+                    ->placeholder('—')
+                    ->description(fn (BatteryDelivery $record): ?string => $record->confirmationToBeConfirmed() ? __('erp.batteries.to_be_confirmed') : null)
+                    ->color(fn (BatteryDelivery $record): ?string => $record->confirmationToBeConfirmed() ? 'warning' : null),
                 TextColumn::make('batteryModel.name')->label(__('erp.batteries.model'))->placeholder('—'),
                 TextColumn::make('pieces')->label(__('erp.batteries.pieces'))->alignEnd()->placeholder('—'),
-                TextColumn::make('planned_delivery_date')->label(__('erp.batteries.planned_delivery_date'))->date('d/m/Y')->sortable()->placeholder('—'),
+                TextColumn::make('planned_delivery_date')
+                    ->label(__('erp.batteries.planned_delivery_date'))
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->placeholder('—')
+                    ->description(fn (BatteryDelivery $record): ?string => $record->deliveryDateToBeConfirmed() ? __('erp.batteries.to_be_confirmed') : null)
+                    ->color(fn (BatteryDelivery $record): ?string => $record->deliveryDateToBeConfirmed() ? 'warning' : null),
                 CheckboxColumn::make('delivered')
                     ->label(__('erp.batteries.delivered'))
                     ->tooltip(fn (BatteryDelivery $record): ?string => $record->delivered_at ? $record->delivered_at->format('d/m/Y H:i').($record->deliverer ? ' · '.$record->deliverer->name : '') : __('erp.batteries.tick_delivered'))

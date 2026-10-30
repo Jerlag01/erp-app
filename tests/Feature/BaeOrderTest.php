@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Actions\Batteries\BaeOrderDocument;
 use App\Actions\Batteries\CreateBaeOrder;
+use App\Actions\Batteries\RegisterSentBaeOrder;
 use App\Actions\Batteries\SendBaeOrder;
 use App\Enums\BatteryMounting;
 use App\Enums\MailTemplateKey;
+use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BaeOrders\BaeOrderResource;
 use App\Filament\Resources\BaeOrders\Pages\EditBaeOrder;
@@ -43,6 +45,8 @@ class BaeOrderTest extends TestCase
         parent::setUp();
 
         Filament::setCurrentPanel('app');
+        // Sending stores the order PDF in the project and the delivery line.
+        Storage::fake(BatteryDelivery::DISK);
         $this->team = Team::factory()->create();
     }
 
@@ -297,5 +301,79 @@ class BaeOrderTest extends TestCase
             ->callAction('create', ['name' => 'Hoppecke', 'email' => 'order@hoppecke.example', 'cc_emails' => ['sales@hoppecke.example'], 'locale' => 'fr'])
             ->assertHasNoActionErrors();
         $this->assertSame(['sales@hoppecke.example'], BatterySupplier::query()->where('name', 'Hoppecke')->sole()->ccEmails());
+    }
+
+    #[Test]
+    public function a_sent_order_moves_the_project_to_ordered_and_fills_its_offers_and_delivery_line(): void
+    {
+        Mail::fake();
+        Storage::fake(BatteryDelivery::DISK);
+        BatterySupplier::factory()->create(['email' => 'orders@bae.example', 'is_default' => true]);
+        $user = $this->user();
+        $this->actingAs($user);
+        $project = $this->project();
+        $model = BatteryModel::query()->where('name', '7 OPzV 490')->sole();
+
+        Livewire::test(EditBaeOrder::class, ['record' => $project->baeOrder->getRouteKey()])
+            ->fillForm(['battery_model_id' => $model->id, 'mounting' => 'u_vorm', 'battery_count' => 2, 'delivery_date' => '20/11/2026'])
+            ->callAction('send')
+            ->assertHasNoActionErrors();
+
+        $order = $project->baeOrder->refresh();
+        $project->refresh();
+        $this->assertSame(ProjectStatus::Ordered, $project->status);
+
+        // The project page shows when (and by whom) the order was sent.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->assertSee(__('erp.batteries.bae_order.project_sent'))
+            ->assertSee($order->sent_at->format('d/m/Y H:i'))
+            ->assertSee('Jeroen Lagaet');
+
+        // The order PDF in the Offers tab of the project.
+        $offer = $project->offers()->sole();
+        $this->assertSame(BaeOrderDocument::filename($order), $offer->name);
+        $this->assertSame(ProjectFileSection::Offers->value, $offer->section);
+
+        // Its line in the battery deliveries: the confirmation number and the date still to be confirmed.
+        $delivery = BatteryDelivery::query()->where('project_id', $project->id)->sole();
+        $this->assertSame(RegisterSentBaeOrder::UNCONFIRMED_NUMBER, $delivery->order_confirmation);
+        $this->assertTrue($delivery->confirmationToBeConfirmed());
+        $this->assertSame('2026-11-20', $delivery->planned_delivery_date->toDateString());
+        $this->assertTrue($delivery->deliveryDateToBeConfirmed());
+        $this->assertSame($model->id, $delivery->battery_model_id);
+        $this->assertSame($order->totalCells(), $delivery->pieces);
+        $this->assertSame(number_format($order->total(), 2, '.', ''), $delivery->total_cost);
+        $this->assertTrue($delivery->hasDocument('order'));
+        Storage::disk(BatteryDelivery::DISK)->assertExists($delivery->order_document);
+
+        // Sent again: a new version of the same offer file, still one delivery line; a confirmed line keeps its values.
+        $delivery->update(['order_confirmation' => '4500123', 'planned_delivery_date' => '2026-11-27', 'delivery_date_confirmed' => true]);
+        app(SendBaeOrder::class)->handle($order->refresh(), $user);
+        $this->assertSame(2, $project->offers()->sole()->versions()->count());
+        $delivery = BatteryDelivery::query()->where('project_id', $project->id)->sole();
+        $this->assertSame('4500123', $delivery->order_confirmation);
+        $this->assertSame('2026-11-27', $delivery->planned_delivery_date->toDateString());
+        $this->assertFalse($delivery->deliveryDateToBeConfirmed());
+    }
+
+    #[Test]
+    public function a_project_already_in_progress_keeps_its_status_and_free_text_dates_go_to_the_notes(): void
+    {
+        $user = $this->user();
+        $project = $this->project();
+        $project->update(['status' => ProjectStatus::InProgress]);
+        $order = $project->baeOrder;
+        $order->update(['battery_model_id' => BatteryModel::query()->where('name', '7 OPzV 490')->value('id'), 'battery_count' => 1, 'delivery_date' => 'week 47']);
+
+        $delivery = app(RegisterSentBaeOrder::class)->handle($order->refresh(), $user);
+
+        $this->assertSame(ProjectStatus::InProgress, $project->refresh()->status);
+        $this->assertNull($delivery->planned_delivery_date);
+        $this->assertStringContainsString('week 47', (string) $delivery->notes);
+
+        $this->assertSame('2026-11-01', RegisterSentBaeOrder::parseDate('1-11-2026')?->toDateString());
+        $this->assertSame('2026-11-20', RegisterSentBaeOrder::parseDate('2026-11-20')?->toDateString());
+        $this->assertSame('2026-11-20', RegisterSentBaeOrder::parseDate('20.11.26')?->toDateString());
+        $this->assertNull(RegisterSentBaeOrder::parseDate('31/02/2026'));
     }
 }

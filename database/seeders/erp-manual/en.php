@@ -809,6 +809,7 @@ Every new 604 project gets its **BAE order** straight away (the former *calc.xls
 4. **Export to PDF** saves and opens the order, ready to send to BAE. With **Save with delivery documents** the PDF is added to the delivery as *Order to the supplier*.
 
 5. **Send to supplier** mails the order as PDF to the chosen **supplier**, with an optional extra message. This only happens with this button, never automatically, and only once the order is complete. The list shows when and to whom it was sent.
+6. **After sending**, the 604 project moves to **Ordered - to be delivered** (unless it is already in progress or further), the PDF is added to the project's **Offers** and the project gets its line in the **battery deliveries overview**: battery type, number of cells, cost and the order as document. The **order confirmation number** is *0000000* and the **planned delivery date** is the requested delivery date of the order, both tagged **to be confirmed**. Fill in the real number and change the date (or tick **Delivery date confirmed**) once the supplier confirms. A requested date that is no date (e.g. *week 47*) goes into the notes.
 
 Suppliers are managed under **Batteries → Suppliers** (permission **Manage battery suppliers**): the e-mail address for orders, extra addresses in copy, the language of the mail and which supplier is the default. Every order also goes in copy to the addresses under **Settings → Batteries → BAE order → Orders in copy to**. The text of the mail is edited per language under **E-mail templates → BAE order (to supplier)**.
 
