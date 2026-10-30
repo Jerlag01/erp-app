@@ -77,8 +77,9 @@ trait ConfiguresErpPanel
                 Action::make('mobileApp')
                     ->label(fn (): string => __('erp.mobile_app.download_menu'))
                     ->icon(Heroicon::OutlinedDevicePhoneMobile)
-                    ->url(fn (): string => route('mobile-app.download'))
-                    ->visible(fn (): bool => app(MobileApp::class)->available()),
+                    // The APK, or the store when the download is off (the App Store on an iPhone).
+                    ->url(fn (): ?string => app(MobileApp::class)->linkFor(request()->userAgent()), shouldOpenInNewTab: fn (): bool => app(MobileApp::class)->isStoreLink(app(MobileApp::class)->linkFor(request()->userAgent())))
+                    ->visible(fn (): bool => app(MobileApp::class)->linkFor(request()->userAgent()) !== null),
                 Action::make('gdpr')
                     ->label(fn (): string => __('gdpr.menu'))
                     ->icon(Heroicon::OutlinedShieldCheck)

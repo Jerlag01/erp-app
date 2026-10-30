@@ -175,6 +175,7 @@ class Settings extends Page
             $previous = $settings->get('mobile_app.apk');
             $current = $data['mobile_app']['apk'] ?? null;
             $data['mobile_app']['prompt'] = (bool) ($data['mobile_app']['prompt'] ?? false);
+            $data['mobile_app']['download_disabled'] = (bool) ($data['mobile_app']['download_disabled'] ?? false);
             $data['mobile_app']['uploaded_at'] = $previous === $current ? $settings->get('mobile_app.uploaded_at') : ($current ? now()->toIso8601String() : null);
 
             if (filled($previous) && $previous !== $current) {
@@ -544,6 +545,22 @@ class Settings extends Page
                     Toggle::make('mobile_app.prompt')
                         ->label(__('erp.settings.fields.mobile_app_prompt'))
                         ->helperText(__('erp.settings.help.mobile_app_prompt')),
+                    Toggle::make('mobile_app.download_disabled')
+                        ->label(__('erp.settings.fields.mobile_app_download_disabled'))
+                        ->helperText(__('erp.settings.help.mobile_app_download_disabled'))
+                        ->columnSpanFull(),
+                    TextInput::make('mobile_app.play_store_url')
+                        ->label(__('erp.settings.fields.mobile_app_play_store_url'))
+                        ->helperText(__('erp.settings.help.mobile_app_store_url'))
+                        ->placeholder('https://play.google.com/store/apps/details?id=…')
+                        ->url()
+                        ->maxLength(500),
+                    TextInput::make('mobile_app.app_store_url')
+                        ->label(__('erp.settings.fields.mobile_app_app_store_url'))
+                        ->helperText(__('erp.settings.help.mobile_app_store_url'))
+                        ->placeholder('https://apps.apple.com/app/id…')
+                        ->url()
+                        ->maxLength(500),
                 ]),
             Section::make(__('erp.settings.sections.mobile_app_privacy'))
                 ->description(fn (): HtmlString => new HtmlString(e(__('erp.settings.help.mobile_app_privacy')).' <a href="'.e(route('privacy')).'" target="_blank" rel="noopener" style="text-decoration: underline;">'.e(route('privacy')).'</a>'))

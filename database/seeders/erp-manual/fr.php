@@ -1241,6 +1241,7 @@ L'application **PI ERP** apporte l'essentiel de la plateforme sur votre téléph
 ## Installer et se connecter
 
 - Sur un téléphone Android, la plateforme propose de télécharger l'application ; le téléchargement se trouve aussi dans votre **menu utilisateur**.
+- Si l'administrateur a désactivé le téléchargement (**Paramètres → Application mobile → Désactiver le téléchargement**), le menu et la proposition ouvrent **Google Play** ou, sur un iPhone, l'**App Store**, si ces liens sont remplis.
 - Connectez-vous avec votre **adresse e-mail et mot de passe** de la plateforme. L'application utilise la langue choisie dans la plateforme.
 
 ## Que pouvez-vous faire dans l'application ?

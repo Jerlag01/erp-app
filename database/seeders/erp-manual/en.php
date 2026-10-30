@@ -1241,6 +1241,7 @@ The **PI ERP** app brings the essentials of the platform to your phone, also on 
 ## Installing and signing in
 
 - On an Android phone the platform offers to download the app; the download is also in your **user menu**.
+- When the administrator has switched the download off (**Settings → Mobile app → Disable the download**), the menu and the suggestion open **Google Play** or, on an iPhone, the **App Store** instead, if those links are filled in.
 - Sign in with your platform **e-mail address and password**. The app uses the language you chose in the platform.
 
 ## What can you do in the app?

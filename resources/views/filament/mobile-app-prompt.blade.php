@@ -1,11 +1,13 @@
 {{--
-    Suggests the Android app to someone who signed in on an Android phone, with the message of
+    Suggests the app to someone who signed in on a phone (the APK, or Google Play / the App Store when the
+    download is off), with the message of
     Settings > Mobile app. ✕ and "Later" hide it on this phone for 14 days; "Don't show again" keeps it
     away for this user until a new version is uploaded. Colours are set for light and dark mode
     explicitly: Filament ships precompiled CSS, so utility classes like dark:bg-… do not exist.
 --}}
 @php($mobileApp = app(\App\Support\MobileApp::class))
 @if (auth()->check() && $mobileApp->shouldPrompt(request()->userAgent(), auth()->user()))
+    @php($appLink = $mobileApp->linkFor(request()->userAgent()))
     <style>
         .erp-app-prompt { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; background: rgb(15 23 42 / .6); padding: 1rem; }
         .erp-app-prompt__card { position: relative; width: 100%; max-width: 26rem; background: #ffffff; color: #0f172a; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 20px 40px rgb(0 0 0 / .3); }
@@ -22,7 +24,7 @@
             key: 'erp-mobile-app-prompt',
             release: @js($mobileApp->release()),
             init() {
-                const mobile = /Android/i.test(navigator.userAgent) && (navigator.userAgentData?.mobile ?? /Mobile/i.test(navigator.userAgent));
+                const mobile = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Android/i.test(navigator.userAgent) && (navigator.userAgentData?.mobile ?? /Mobile/i.test(navigator.userAgent)));
                 let dismissed = null;
                 try { dismissed = JSON.parse(localStorage.getItem(this.key) || 'null'); } catch (e) {}
                 const recent = dismissed && dismissed.release === this.release && Date.now() - dismissed.at < 14 * 24 * 3600 * 1000;
@@ -59,10 +61,12 @@
                 </div>
             </div>
             <p class="erp-app-prompt__text" data-mobile-app-message>{{ $mobileApp->message() }}</p>
-            <p class="erp-app-prompt__muted" style="margin-top: .5rem;">{{ __('erp.mobile_app.install_help') }}</p>
+            @unless ($mobileApp->isStoreLink($appLink))
+                <p class="erp-app-prompt__muted" style="margin-top: .5rem;">{{ __('erp.mobile_app.install_help') }}</p>
+            @endunless
             <div style="display: flex; gap: .5rem; margin-top: 1.125rem;">
-                <x-filament::button tag="a" :href="route('mobile-app.download')" icon="heroicon-o-arrow-down-tray" style="flex: 1;" x-on:click="later()">
-                    {{ __('erp.mobile_app.download') }}
+                <x-filament::button tag="a" :href="$appLink" :target="$mobileApp->isStoreLink($appLink) ? '_blank' : null" icon="heroicon-o-arrow-down-tray" style="flex: 1;" x-on:click="later()">
+                    {{ $mobileApp->linkLabel($appLink) }}
                 </x-filament::button>
                 <x-filament::button color="gray" x-on:click="later()">
                     {{ __('erp.mobile_app.later') }}

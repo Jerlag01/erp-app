@@ -53,8 +53,9 @@ class ProfileResource extends JsonResource
             'employee' => $employee ? $this->employeeDetails($employee) : null,
             'features' => $this->features(),
             // The newest app on the platform (Settings > Mobile app): the phone compares it with its own version.
-            'app_update' => app(MobileApp::class)->available() && filled($version = app(MobileApp::class)->version())
-                ? ['version' => $version, 'url' => route('mobile-app.download')]
+            // "url": the APK, or else a store; the app prefers its own store from "store_urls".
+            'app_update' => filled($version = app(MobileApp::class)->version()) && filled($url = app(MobileApp::class)->linkFor(null))
+                ? ['version' => $version, 'url' => $url, 'store_urls' => ['android' => app(MobileApp::class)->playStoreUrl(), 'ios' => app(MobileApp::class)->appStoreUrl()]]
                 : null,
         ];
     }

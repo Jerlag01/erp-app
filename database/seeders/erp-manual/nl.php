@@ -1242,6 +1242,7 @@ De app **PI ERP** brengt het belangrijkste van het platform naar je telefoon, oo
 ## Installeren en aanmelden
 
 - Op een Android-telefoon stelt het platform voor om de app te downloaden; je vindt de download ook in je **gebruikersmenu**.
+- Heeft de beheerder de download uitgeschakeld (**Instellingen → Mobiele app → Download uitschakelen**), dan openen het menu en het voorstel **Google Play** of, op een iPhone, de **App Store**, als die links ingevuld zijn.
 - Meld je aan met je **e-mailadres en wachtwoord** van het platform. De app gebruikt de taal die je in het platform koos.
 
 ## Wat kan je in de app?

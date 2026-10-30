@@ -19,6 +19,8 @@ class MobileAppDownloadTest extends TestCase
 
     protected const ANDROID = 'Mozilla/5.0 (Linux; Android 16; CPH2581) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36';
 
+    protected const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1';
+
     protected const DESKTOP = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36';
 
     protected function setUp(): void
@@ -96,6 +98,52 @@ class MobileAppDownloadTest extends TestCase
 
         settings()->save('mobile_app', [...settings('mobile_app'), 'prompt' => false]);
         $this->actingAs($employee)->withHeader('User-Agent', self::ANDROID)->get('/')->assertOk()->assertDontSee('data-mobile-app-prompt', false);
+    }
+
+    #[Test]
+    public function the_download_can_be_disabled_and_replaced_by_the_store_links(): void
+    {
+        $this->upload('1.2.0');
+        $employee = User::factory()->withPermissions([])->inTeam()->create();
+        $play = 'https://play.google.com/store/apps/details?id=be.example.erp';
+        $apple = 'https://apps.apple.com/app/id1234567890';
+
+        // Switched off without store links: no download, no suggestion, no update link in the app.
+        Livewire::test(Settings::class)->fillForm(['mobile_app.download_disabled' => true])->call('save')->assertHasNoFormErrors();
+        $this->assertTrue(app(MobileApp::class)->downloadDisabled());
+        $this->get('/mobile-app/download')->assertNotFound();
+        $this->actingAs($employee)->withHeader('User-Agent', self::ANDROID)->get('/')->assertOk()->assertDontSee('data-mobile-app-prompt', false);
+        $this->getJson('/api/v1/me', $this->mobileAuth($employee))->assertOk()->assertJsonPath('data.app_update', null);
+
+        // The store links are optional, but must be links.
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+        Livewire::test(Settings::class)->fillForm(['mobile_app.play_store_url' => 'not a link'])->call('save')->assertHasFormErrors(['mobile_app.play_store_url']);
+        Livewire::test(Settings::class)->fillForm(['mobile_app.play_store_url' => $play, 'mobile_app.app_store_url' => $apple])->call('save')->assertHasNoFormErrors();
+
+        // Each phone gets its own store.
+        $this->actingAs($employee)->withHeader('User-Agent', self::ANDROID)->get('/')
+            ->assertOk()
+            ->assertSee('data-mobile-app-prompt', false)
+            ->assertSee($play, false)
+            ->assertSee('Openen in Google Play')
+            ->assertDontSee(route('mobile-app.download'), false);
+        $this->actingAs($employee)->withHeader('User-Agent', self::IPHONE)->get('/')
+            ->assertOk()
+            ->assertSee($apple, false)
+            ->assertSee('Openen in de App Store');
+        $this->getJson('/api/v1/me', $this->mobileAuth($employee))->assertOk()
+            ->assertJsonPath('data.app_update.version', '1.2.0')
+            ->assertJsonPath('data.app_update.url', $play)
+            ->assertJsonPath('data.app_update.store_urls.ios', $apple);
+
+        // Switched on again: the APK is back.
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+        Livewire::test(Settings::class)->fillForm(['mobile_app.download_disabled' => false])->call('save')->assertHasNoFormErrors();
+        $this->get('/mobile-app/download')->assertOk();
+        $this->assertSame(route('mobile-app.download'), app(MobileApp::class)->linkFor(self::ANDROID));
+        $this->assertSame($apple, app(MobileApp::class)->linkFor(self::IPHONE));
     }
 
     #[Test]
