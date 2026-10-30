@@ -986,6 +986,8 @@ return [
             'driving_licence' => 'Driving licence',
             'forklift' => 'Forklift',
             'work_at_height' => 'Working at height',
+            'work_at_height_module_1' => 'Working at height module 1',
+            'work_at_height_module_2' => 'Working at height module 2',
             'safety_harness' => 'Working with safety harness',
             'aerial_work_platform' => 'Aerial work platform / cherry picker',
             'first_aid' => 'First aid (EHBO)',

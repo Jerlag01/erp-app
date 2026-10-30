@@ -986,6 +986,8 @@ return [
             'driving_licence' => 'Rijbewijs',
             'forklift' => 'Heftruck',
             'work_at_height' => 'Werken op hoogte',
+            'work_at_height_module_1' => 'Werken op hoogte module 1',
+            'work_at_height_module_2' => 'Werken op hoogte module 2',
             'safety_harness' => 'Werken met veiligheidsharnas',
             'aerial_work_platform' => 'Hoogwerker',
             'first_aid' => 'EHBO',

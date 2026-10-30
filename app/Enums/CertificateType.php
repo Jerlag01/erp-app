@@ -29,6 +29,10 @@ enum CertificateType: string implements HasLabel
 
     case WorkAtHeight = 'work_at_height';
 
+    case WorkAtHeightModule1 = 'work_at_height_module_1';
+
+    case WorkAtHeightModule2 = 'work_at_height_module_2';
+
     case SafetyHarness = 'safety_harness';
 
     case AerialWorkPlatform = 'aerial_work_platform';

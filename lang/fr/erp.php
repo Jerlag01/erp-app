@@ -986,6 +986,8 @@ return [
             'driving_licence' => 'Permis de conduire',
             'forklift' => 'Chariot élévateur',
             'work_at_height' => 'Travail en hauteur',
+            'work_at_height_module_1' => 'Travail en hauteur module 1',
+            'work_at_height_module_2' => 'Travail en hauteur module 2',
             'safety_harness' => 'Travail avec harnais de sécurité',
             'aerial_work_platform' => 'Nacelle élévatrice',
             'first_aid' => 'Premiers secours (EHBO)',
