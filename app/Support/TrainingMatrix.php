@@ -24,7 +24,7 @@ class TrainingMatrix
         CertificateType::VcaVol, CertificateType::Vca, CertificateType::PreventionAdvisor3, CertificateType::Nuclear,
         CertificateType::Proximus, CertificateType::ChargingStations, CertificateType::Ba4, CertificateType::Ba5,
         CertificateType::FirstAidFire, CertificateType::FirstAid, CertificateType::ScissorLift, CertificateType::AerialWorkPlatform,
-        CertificateType::Forklift, CertificateType::Ladders, CertificateType::LoaderCrane, CertificateType::DriverCode95,
+        CertificateType::Forklift, CertificateType::Ladders, CertificateType::WorkAtHeightModule1, CertificateType::WorkAtHeightModule2, CertificateType::LoaderCrane, CertificateType::DriverCode95,
     ];
 
     /**
