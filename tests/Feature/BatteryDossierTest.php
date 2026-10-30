@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Actions\Batteries\BatteryDocument;
 use App\Enums\BatteryDeliveryMode;
+use App\Enums\BatteryMounting;
 use App\Enums\BatteryTechnology;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
 use App\Filament\Resources\BatteryDossiers\Pages\CreateBatteryDossier;
 use App\Filament\Resources\BatteryDossiers\Pages\EditBatteryDossier;
+use App\Filament\Resources\BatteryModels\Pages\ManageBatteryModels;
 use App\Models\BatteryCable;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
@@ -478,5 +480,23 @@ class BatteryDossierTest extends TestCase
         Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
             ->assertSee(__('erp.batteries.tabs.input'))
             ->assertDontSee(__('erp.batteries.overview.title'));
+    }
+
+    #[Test]
+    public function a_battery_type_with_racks_opens_for_editing(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+        $model = BatteryModel::factory()->create();
+        $model->racks()->create(['mounting' => BatteryMounting::Line, 'code' => 'PGL1-44H', 'price' => 16.7]);
+
+        Livewire::test(ManageBatteryModels::class)
+            ->mountTableAction('edit', $model)
+            // The rack's heading is its mounting (an enum once loaded from the database).
+            ->assertSee(BatteryMounting::Line->getLabel())
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertSame('PGL1-44H', $model->racks()->sole()->code);
     }
 }

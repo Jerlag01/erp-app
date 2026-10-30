@@ -78,7 +78,7 @@ class BatteryModelResource extends Resource
                     ->label(__('erp.batteries.racks'))
                     ->relationship()
                     ->columns(4)
-                    ->itemLabel(fn (array $state): ?string => BatteryMounting::tryFrom((string) ($state['mounting'] ?? ''))?->getLabel())
+                    ->itemLabel(fn (array $state): ?string => (($state['mounting'] ?? null) instanceof BatteryMounting ? $state['mounting'] : BatteryMounting::tryFrom((string) ($state['mounting'] ?? '')))?->getLabel())
                     ->collapsible()
                     ->schema([
                         Select::make('mounting')->label(__('erp.batteries.mounting'))->options(BatteryMounting::class)->required()->distinct(),
