@@ -6,6 +6,7 @@ use App\Filament\Resources\StockItems\Pages\EditStockItem;
 use App\Filament\Resources\StockItems\Pages\ListStockItems;
 use App\Filament\Resources\StockItems\Pages\ViewStockItem;
 use App\Filament\Resources\StockItems\RelationManagers\LevelsRelationManager;
+use App\Models\Distributor;
 use App\Models\Location;
 use App\Models\StockItem;
 use App\Models\Team;
@@ -74,18 +75,22 @@ class StockPricePermissionTest extends TestCase
     #[Test]
     public function editing_without_the_price_permission_keeps_the_price(): void
     {
-        $item = StockItem::factory()->create(['market_price' => 13.37]);
+        $item = StockItem::factory()->create();
+        $supplier = $item->suppliers()->create(['distributor_id' => Distributor::factory()->create()->id, 'reference' => 'A-1', 'price' => 13.37, 'is_preferred' => true]);
         Filament::setCurrentPanel('app');
 
-        Livewire::actingAs($this->employee(['stock_items' => ['view', 'update']]))
-            ->test(EditStockItem::class, ['record' => $item->getRouteKey()])
-            ->assertFormFieldHidden('market_price')
-            ->fillForm(['name' => 'Renamed', 'market_price' => 0])
+        // The supplier's price is hidden: even when sent along, saving keeps it.
+        $component = Livewire::actingAs($this->employee(['stock_items' => ['view', 'update']]))
+            ->test(EditStockItem::class, ['record' => $item->getRouteKey()]);
+        $key = array_key_first($component->get('data.suppliers'));
+        $component->set("data.suppliers.{$key}.price", 0)
+            ->fillForm(['name' => 'Renamed'])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $item->refresh();
         $this->assertSame('Renamed', $item->name);
+        $this->assertSame('13.3700', $supplier->fresh()->price);
         $this->assertSame('13.3700', $item->market_price);
     }
 

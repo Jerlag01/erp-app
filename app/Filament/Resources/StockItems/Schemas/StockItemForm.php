@@ -4,8 +4,10 @@ namespace App\Filament\Resources\StockItems\Schemas;
 
 use App\Models\Distributor;
 use App\Models\StockCategory;
+use App\Models\StockItemSupplier;
 use App\Models\Unit;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -56,19 +58,6 @@ class StockItemForm
                                     ->label(__('erp.fields.manufacturer_reference'))
                                     ->maxLength(100)
                                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
-                                Select::make('distributor_id')
-                                    ->label(__('erp.resources.distributor.singular'))
-                                    ->helperText(fn (Get $get): ?string => $get('manufacturer_id') ? __('erp.help.distributor_filtered') : null)
-                                    ->relationship('distributor', 'name', fn (Builder $query, Get $get) => $query->when(
-                                        $get('manufacturer_id') && Distributor::whereHas('manufacturers', fn (Builder $query) => $query->whereKey($get('manufacturer_id')))->exists(),
-                                        fn (Builder $query) => $query->whereHas('manufacturers', fn (Builder $query) => $query->whereKey($get('manufacturer_id'))),
-                                    ))
-                                    ->searchable()
-                                    ->preload(),
-                                TextInput::make('distributor_reference')
-                                    ->label(__('erp.fields.distributor_reference'))
-                                    ->maxLength(100)
-                                    ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
                                 TextInput::make('ean')
                                     ->label(__('erp.fields.ean'))
                                     ->maxLength(20)
@@ -80,14 +69,6 @@ class StockItemForm
                                     ->numeric()
                                     ->minValue(0)
                                     ->suffix(fn (Get $get): ?string => Unit::find($get('unit_id'))?->abbreviation),
-                                TextInput::make('market_price')
-                                    ->label(__('erp.fields.market_price'))
-                                    ->helperText(__('erp.help.market_price'))
-                                    ->numeric()
-                                    ->minValue(0)
-                                    ->prefix('€')
-                                    // Hidden fields are not saved, so the stored price stays as it is.
-                                    ->visible(fn (): bool => (bool) auth()->user()?->canSeePrices()),
                                 Textarea::make('description')
                                     ->label(__('erp.fields.description'))
                                     ->rows(3)
@@ -113,6 +94,60 @@ class StockItemForm
                                 Textarea::make('notes')
                                     ->label(__('erp.fields.notes'))
                                     ->rows(4),
+                            ]),
+                        // Several suppliers, each with its own article number and price.
+                        Section::make(__('erp.stock.suppliers.title'))
+                            ->description(__('erp.stock.suppliers.help'))
+                            ->columnSpan(['lg' => 2])
+                            ->schema([
+                                Repeater::make('suppliers')
+                                    ->hiddenLabel()
+                                    ->relationship('suppliers')
+                                    ->reorderable(false)
+                                    ->columns(['default' => 1, 'md' => 4])
+                                    ->addActionLabel(__('erp.stock.suppliers.add'))
+                                    ->defaultItems(0)
+                                    ->itemLabel(fn (array $state): ?string => Distributor::query()->find($state['distributor_id'] ?? null)?->name)
+                                    ->schema([
+                                        Select::make('distributor_id')
+                                            ->label(__('erp.resources.distributor.singular'))
+                                            ->helperText(fn (Get $get): ?string => $get('../../manufacturer_id') ? __('erp.help.distributor_filtered') : null)
+                                            ->options(fn (Get $get): array => Distributor::query()
+                                                ->when(
+                                                    $get('../../manufacturer_id') && Distributor::whereHas('manufacturers', fn (Builder $query) => $query->whereKey($get('../../manufacturer_id')))->exists(),
+                                                    fn (Builder $query) => $query->whereHas('manufacturers', fn (Builder $query) => $query->whereKey($get('../../manufacturer_id'))),
+                                                )
+                                                ->orderBy('name')
+                                                ->pluck('name', 'id')
+                                                ->all())
+                                            ->searchable()
+                                            ->required()
+                                            ->distinct()
+                                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                            ->live(),
+                                        TextInput::make('reference')
+                                            ->label(__('erp.fields.distributor_reference'))
+                                            ->maxLength(100)
+                                            ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+                                        TextInput::make('price')
+                                            ->label(__('erp.fields.market_price'))
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->prefix('€')
+                                            // With a connection the price is fetched; disabled fields are not saved, so it stays.
+                                            ->disabled(fn (Get $get): bool => (bool) Distributor::query()->find($get('distributor_id'))?->hasPriceConnection())
+                                            ->helperText(fn (Get $get, ?StockItemSupplier $record): ?string => match (true) {
+                                                (bool) Distributor::query()->find($get('distributor_id'))?->hasPriceConnection() => __('erp.stock.suppliers.price_fetched'),
+                                                $record?->price_updated_at !== null => __('erp.stock.suppliers.price_manual', ['date' => $record->price_updated_at->format('d/m/Y')]),
+                                                default => __('erp.stock.suppliers.price_manual_help'),
+                                            })
+                                            // Hidden fields are not saved, so the stored price stays as it is.
+                                            ->visible(fn (): bool => (bool) auth()->user()?->canSeePrices()),
+                                        Toggle::make('is_preferred')
+                                            ->label(__('erp.stock.suppliers.preferred'))
+                                            ->helperText(__('erp.stock.suppliers.preferred_help'))
+                                            ->inline(false),
+                                    ]),
                             ]),
                     ]),
             ]);

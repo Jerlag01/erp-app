@@ -578,13 +578,20 @@ On an item, choose the location and then:
 
 Every change is in the **history**. Items below the minimum stock appear under **Low stock** on the dashboard.
 
+## Suppliers and stock per location
+
+- An item can have **several suppliers**, each with its own **article number** and **price**. Mark one as **preferred**: its price is the item's market price.
+- For a supplier **with a connection** (Rexel, Cebeo) the price is fetched; for any other supplier you **enter the price yourself**.
+- The stock list shows a column with the quantity **per location** (the locations of your teams, or all for administrators), next to the total. Searching also finds the suppliers' article numbers.
+- With the permission **Prices (special distributor prices) → Export the list with prices (Excel)**, **Export with prices** downloads the list shown (with your search and filters): the stock per location and in total, the market price and per supplier the article number, price and price date.
+
 ## QR labels
 
 Print a **QR label** per item or several at once. Scanning the label opens the item.
 
 ## Prices and pictures
 
-- With a distributor that has a price link, **"Update price from distributor"** fetches the current price (a distributor or manufacturer reference is needed).
+- **"Update price from distributor"** fetches the current price from **each supplier with a connection**, with that supplier's article number (or else the manufacturer reference).
 - **Rexel** is connected: with the customer number, user and password on the distributor Rexel, the platform fetches your **net price** (per unit, without contributions such as Recupel) and, when the item has none yet, the **picture**. Use the **Rexel item code** or the **e-number** as reference; the Rexel link does not know EAN codes. Prices are updated every morning at 05:30.
 - **Cebeo** is connected too (XML web service): with the customer number, user and password on the distributor Cebeo, the platform fetches your **net price** per unit. Use the **Cebeo article number** as reference; without it the platform searches on the **manufacturer reference**. Cebeo provides no pictures.
 - Add a product photo with **"Image from web address"**.

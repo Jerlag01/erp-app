@@ -36,13 +36,13 @@ class RexelClient implements DistributorClient
             && filled($this->distributor->api_customer_number);
     }
 
-    public function lookup(StockItem $item): ?ProductInfo
+    public function lookup(StockItem $item, ?string $reference = null): ?ProductInfo
     {
         if (! $this->isConfigured()) {
             throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Rexel']));
         }
 
-        foreach (array_values(array_unique(array_filter([$item->distributor_reference, $item->manufacturer_reference], 'filled'))) as $code) {
+        foreach (array_values(array_unique(array_filter([$reference ?? $item->distributor_reference, $item->manufacturer_reference], 'filled'))) as $code) {
             $price = $this->prices([$code])[0] ?? null;
 
             if ($price === null) {

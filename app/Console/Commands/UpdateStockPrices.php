@@ -38,13 +38,13 @@ class UpdateStockPrices extends Command
 
         StockItem::query()
             ->where('is_active', true)
-            ->whereIn('distributor_id', $distributorIds)
-            ->where(fn (Builder $query) => $query->whereNotNull('distributor_reference')->orWhereNotNull('manufacturer_reference'))
-            ->with('distributor')
+            ->whereHas('suppliers', fn (Builder $query) => $query->whereIn('distributor_id', $distributorIds))
             ->chunkById(100, function ($items) use ($refresh, &$updated, &$failed): void {
                 foreach ($items as $item) {
                     try {
-                        $refresh->handle($item);
+                        foreach ($refresh->handle($item) as $name => $message) {
+                            $this->components->warn("{$item->name} ({$name}): {$message}");
+                        }
                         $updated++;
                     } catch (DistributorException $exception) {
                         $failed++;

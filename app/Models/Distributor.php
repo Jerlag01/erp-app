@@ -60,6 +60,14 @@ class Distributor extends Model
     }
 
     /**
+     * Its prices are fetched through a working connection, so they are not entered by hand.
+     */
+    public function hasPriceConnection(): bool
+    {
+        return (bool) $this->client()?->isConfigured();
+    }
+
+    /**
      * The connection to this distributor's catalogue, if one is chosen.
      */
     public function client(): ?DistributorClient

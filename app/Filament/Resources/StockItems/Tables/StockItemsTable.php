@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\StockItems\Tables;
 
+use App\Models\Distributor;
+use App\Models\Location;
 use App\Models\StockCategory;
 use App\Models\StockItem;
+use App\Models\StockItemSupplier;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -27,7 +30,7 @@ class StockItemsTable
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->with(['unit', 'category.parent', 'manufacturer', 'distributor'])
+                ->with(['unit', 'category.parent', 'manufacturer', 'suppliers.distributor', 'levels' => fn ($query) => $query->visibleTo(auth()->user())])
                 ->withSum(['levels as quantity_total' => fn (Builder $query) => $query->visibleTo(auth()->user())], 'quantity')
                 ->withExists(['levels as is_low' => fn (Builder $query) => $query->visibleTo(auth()->user())->low()]))
             ->defaultSort('name')
@@ -50,7 +53,12 @@ class StockItemsTable
                     ->description(fn (StockItem $record): ?string => $record->manufacturer?->name)
                     ->weight('bold')
                     ->wrap()
-                    ->searchable(['name', 'manufacturer_reference', 'distributor_reference', 'ean'])
+                    // Also the article numbers of every supplier.
+                    ->searchable(query: fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('manufacturer_reference', 'like', "%{$search}%")
+                        ->orWhere('ean', 'like', "%{$search}%")
+                        ->orWhereHas('suppliers', fn (Builder $query) => $query->where('reference', 'like', "%{$search}%"))))
                     ->sortable(),
                 TextColumn::make('category.name')
                     ->label(__('erp.fields.category'))
@@ -65,11 +73,13 @@ class StockItemsTable
                     ->copyable()
                     ->placeholder('—')
                     ->toggleable(),
-                TextColumn::make('distributor_reference')
-                    ->label(__('erp.fields.distributor_reference'))
+                // Every supplier with its article number, the preferred one first.
+                TextColumn::make('suppliers')
+                    ->label(__('erp.stock.suppliers.title'))
+                    ->state(fn (StockItem $record): array => $record->suppliers->map(fn (StockItemSupplier $supplier): string => trim($supplier->distributor?->name.' · '.$supplier->reference, ' ·'))->all())
+                    ->listWithLineBreaks()
+                    ->limitList(3)
                     ->fontFamily(FontFamily::Mono)
-                    ->description(fn (StockItem $record): ?string => $record->distributor?->name)
-                    ->copyable()
                     ->placeholder('—')
                     ->toggleable(),
                 TextColumn::make('quantity_total')
@@ -79,6 +89,8 @@ class StockItemsTable
                     ->color(fn (StockItem $record): string => $record->is_low ? 'danger' : ((float) $record->quantity_total > 0 ? 'success' : 'gray'))
                     ->tooltip(fn (StockItem $record): ?string => $record->is_low ? __('erp.stock.low') : null)
                     ->sortable(),
+                // What is in stock at each location.
+                ...self::locationColumns(),
                 TextColumn::make('market_price')
                     ->label(__('erp.fields.market_price'))
                     ->money('EUR', locale: 'nl_BE')
@@ -104,8 +116,8 @@ class StockItemsTable
                     ->preload(),
                 SelectFilter::make('distributor')
                     ->label(__('erp.resources.distributor.singular'))
-                    ->relationship('distributor', 'name')
-                    ->preload(),
+                    ->options(fn (): array => Distributor::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->query(fn (Builder $query, array $data) => $query->when($data['value'], fn (Builder $query, $id) => $query->whereHas('suppliers', fn (Builder $query) => $query->where('distributor_id', $id)))),
                 Filter::make('low')
                     ->label(__('erp.stock.low'))
                     ->toggle()
@@ -128,5 +140,41 @@ class StockItemsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * The locations whose stock the user sees (their teams' locations, or all for administrators).
+     *
+     * @return Collection<int, Location>
+     */
+    public static function visibleLocations(): Collection
+    {
+        $user = auth()->user();
+
+        return Location::query()
+            ->where('is_active', true)
+            ->when($user?->seesOnlyOwnTeams() && modules()->locations(), fn (Builder $query) => $query->whereKey($user->locationIds()))
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * @return list<TextColumn>
+     */
+    protected static function locationColumns(): array
+    {
+        return self::visibleLocations()->map(fn (Location $location): TextColumn => TextColumn::make("location_{$location->id}")
+            ->label($location->code ?: $location->name)
+            ->tooltip($location->name)
+            ->state(fn (StockItem $record): ?string => $record->levels->firstWhere('location_id', $location->id)?->quantity)
+            ->formatStateUsing(fn (StockItem $record, ?string $state): string => $record->unit->format($state ?? 0))
+            ->color(fn (StockItem $record): string => match (true) {
+                (bool) $record->levels->firstWhere('location_id', $location->id)?->isLow() => 'danger',
+                (float) $record->levels->firstWhere('location_id', $location->id)?->quantity > 0 => 'success',
+                default => 'gray',
+            })
+            ->badge()
+            ->alignCenter()
+            ->toggleable())->values()->all();
     }
 }

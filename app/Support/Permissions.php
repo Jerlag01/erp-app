@@ -7,7 +7,8 @@ namespace App\Support;
  * For "vacations", view and approve cover the requests of the user's team members;
  * requesting your own vacation needs no permission. "stock.adjust" lets employees raise or lower
  * quantities (e.g. after scanning a QR code) at the locations of their teams. "stock_prices.view"
- * shows market prices and stock values, which hold the special prices agreed with distributors.
+ * shows market prices and stock values, which hold the special prices agreed with distributors;
+ * "stock_prices.export" exports the stock list with the prices per supplier (Excel).
  * The finance areas are not granted to any role by default: employees only see finance once
  * given these rights. "credit_notes.override" allows changing what a credit note copied from
  * its invoice (after switching that on per credit note); "expenses.validate" accepts or rejects
@@ -66,7 +67,7 @@ class Permissions
         'locations' => ['module' => Modules::LOCATIONS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'stock_items' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete']],
         'stock' => ['module' => Modules::STOCK, 'abilities' => ['adjust']],
-        'stock_prices' => ['module' => Modules::STOCK, 'abilities' => ['view']],
+        'stock_prices' => ['module' => Modules::STOCK, 'abilities' => ['view', 'export']],
         'stock_master_data' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete']],
         'it_assets' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'audit']],
         'it_licenses' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'view_keys']],

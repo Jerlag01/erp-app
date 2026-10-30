@@ -20,5 +20,5 @@ interface DistributorClient
      *
      * @throws DistributorException when the call fails or the connection is not set up
      */
-    public function lookup(StockItem $item): ?ProductInfo;
+    public function lookup(StockItem $item, ?string $reference = null): ?ProductInfo;
 }

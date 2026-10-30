@@ -228,12 +228,14 @@ class StockTest extends TestCase
     public function prices_keep_a_history(): void
     {
         $item = StockItem::factory()->create();
+        $supplier = $item->suppliers()->create(['distributor_id' => Distributor::factory()->create()->id]);
 
-        $item->recordPrice(12.40, 'cebeo');
-        $item->recordPrice(12.95, 'cebeo');
+        $supplier->update(['price' => 12.40]);
+        $supplier->update(['price' => 12.95]);
 
         $this->assertSame('12.9500', $item->fresh()->market_price);
         $this->assertCount(2, $item->prices);
+        $this->assertSame($supplier->distributor_id, $item->prices->first()->distributor_id);
     }
 
     #[Test]

@@ -34,13 +34,14 @@ class CebeoClient implements DistributorClient
             && filled($this->distributor->api_customer_number);
     }
 
-    public function lookup(StockItem $item): ?ProductInfo
+    public function lookup(StockItem $item, ?string $reference = null): ?ProductInfo
     {
         if (! $this->isConfigured()) {
             throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Cebeo']));
         }
 
-        $article = filled($item->distributor_reference) ? ($this->articles([(string) $item->distributor_reference])[0] ?? null) : null;
+        $reference ??= $item->distributor_reference;
+        $article = filled($reference) ? ($this->articles([(string) $reference])[0] ?? null) : null;
 
         if ($article === null && filled($item->manufacturer_reference)) {
             $article = $this->search((string) $item->manufacturer_reference);

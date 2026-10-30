@@ -95,7 +95,7 @@ class CebeoClientTest extends TestCase
         // Price 0 (no longer sold): no price, so the item keeps the one it has.
         Http::fake(['b2b.cebeo.be/*' => Http::response(self::answer(0, 'ok', self::item('171418', '23-366', '0,0000', 0)))]);
         $item = StockItem::factory()->for($cebeo)->create(['distributor_reference' => '171418']);
-        $item->recordPrice(6.5, 'cebeo');
+        $item->suppliers()->sole()->update(['price' => 6.5]);
         app(RefreshStockItemFromDistributor::class)->handle($item);
         $this->assertSame('6.5000', $item->fresh()->market_price);
 

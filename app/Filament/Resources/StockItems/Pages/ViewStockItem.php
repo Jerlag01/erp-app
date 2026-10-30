@@ -33,15 +33,21 @@ class ViewStockItem extends ViewRecord
                     ->label(__('erp.stock.refresh_price'))
                     ->icon(Heroicon::OutlinedArrowPath)
                     ->visible(fn (): bool => $canUpdate() && (bool) auth()->user()?->canSeePrices())
-                    ->disabled(fn (StockItem $record): bool => $record->distributor?->client() === null)
-                    ->tooltip(fn (StockItem $record): ?string => $record->distributor?->client() === null ? __('erp.stock.provider.none') : null)
+                    ->disabled(fn (StockItem $record): bool => ! $record->suppliers->contains(fn ($supplier): bool => $supplier->distributor?->client() !== null))
+                    ->tooltip(fn (StockItem $record): ?string => ! $record->suppliers->contains(fn ($supplier): bool => $supplier->distributor?->client() !== null) ? __('erp.stock.provider.none') : null)
                     ->action(function (StockItem $record): void {
                         try {
-                            app(RefreshStockItemFromDistributor::class)->handle($record);
-                            Notification::make()->title(__('erp.stock.price_refreshed'))->success()->send();
+                            $failed = app(RefreshStockItemFromDistributor::class)->handle($record);
+                            Notification::make()
+                                ->title(__('erp.stock.price_refreshed'))
+                                ->body($failed === [] ? null : implode("\n", array_map(fn (string $name, string $message): string => "{$name}: {$message}", array_keys($failed), $failed)))
+                                ->{$failed === [] ? 'success' : 'warning'}()
+                                ->send();
                         } catch (DistributorException $exception) {
                             Notification::make()->title(__('erp.stock.provider.failed'))->body($exception->getMessage())->warning()->persistent()->send();
                         }
+
+                        $record->unsetRelation('suppliers');
 
                         $this->refreshFormData(['market_price', 'image']);
                     }),

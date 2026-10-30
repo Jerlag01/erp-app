@@ -578,13 +578,20 @@ Sur un article, choisissez le site, puis :
 
 Chaque modification figure dans l'**historique**. Les articles sous le stock minimum apparaissent dans **Stock bas** sur le tableau de bord.
 
+## Fournisseurs et stock par site
+
+- Un article peut avoir **plusieurs fournisseurs**, chacun avec son propre **numéro d'article** et son **prix**. Marquez-en un comme **préféré** : son prix est le prix du marché de l'article.
+- Pour un fournisseur **avec une connexion** (Rexel, Cebeo), le prix est récupéré ; pour tout autre fournisseur, **saisissez le prix vous-même**.
+- La liste de stock affiche une colonne avec la quantité **par site** (les sites de vos équipes, ou tous pour les administrateurs), à côté du total. La recherche trouve aussi les numéros d'article des fournisseurs.
+- Avec le droit **Prix (prix spéciaux des grossistes) → Exporter la liste avec les prix (Excel)**, **Exporter avec les prix** télécharge la liste affichée (avec votre recherche et vos filtres) : le stock par site et au total, le prix du marché et par fournisseur le numéro d'article, le prix et la date du prix.
+
 ## Étiquettes QR
 
 Imprimez une **étiquette QR** par article ou plusieurs à la fois. En scannant l'étiquette, on arrive directement sur l'article.
 
 ## Prix et images
 
-- Chez un grossiste avec liaison de prix, **« Récupérer le prix chez le grossiste »** met à jour le prix (une référence du grossiste ou du fabricant est nécessaire).
+- **« Récupérer le prix chez le grossiste »** met à jour le prix chez **chaque fournisseur avec une connexion**, avec le numéro d'article de ce fournisseur (ou sinon la référence du fabricant).
 - **Rexel** est connecté : avec le numéro client, l'utilisateur et le mot de passe du grossiste Rexel, la plateforme récupère votre **prix net** (par unité, sans contributions comme Recupel) et, si l'article n'en a pas encore, la **photo**. Indiquez comme référence le **code article Rexel** ou le **numéro e** ; la liaison Rexel ne connaît pas les codes EAN. Les prix sont mis à jour chaque matin à 05:30.
 - **Cebeo** est aussi connecté (service web XML) : avec le numéro client, l'utilisateur et le mot de passe du grossiste Cebeo, la plateforme récupère votre **prix net** par unité. Indiquez comme référence le **numéro d'article Cebeo** ; sinon, la plateforme cherche sur la **référence fabricant**. Cebeo ne fournit pas de photos.
 - Ajoutez une photo du produit avec **« Image depuis une adresse web »**.

@@ -97,12 +97,39 @@ class StockItem extends Model
     }
 
     /**
-     * Records a new market price and keeps the previous ones as history.
+     * The suppliers it can be bought from, each with its own article number and price; the preferred one first.
+     *
+     * @return HasMany<StockItemSupplier, $this>
      */
-    public function recordPrice(float $price, string $source): void
+    public function suppliers(): HasMany
     {
-        $this->prices()->create(['price' => $price, 'source' => $source, 'fetched_at' => now()]);
-        $this->update(['market_price' => $price, 'price_updated_at' => now(), 'price_source' => $source]);
+        return $this->hasMany(StockItemSupplier::class)->orderByDesc('is_preferred')->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * The item's distributor, reference and market price follow its preferred supplier (the first one when
+     * none is marked; its price, or else the lowest price of the others).
+     */
+    public function syncFromSuppliers(): void
+    {
+        $suppliers = $this->suppliers()->get();
+        $preferred = $suppliers->firstWhere('is_preferred', true) ?? $suppliers->first();
+
+        if ($preferred !== null && ! $preferred->is_preferred) {
+            $preferred->updateQuietly(['is_preferred' => true]);
+        }
+
+        $priced = $preferred?->price !== null ? $preferred : $suppliers->whereNotNull('price')->sortBy(fn (StockItemSupplier $supplier): float => (float) $supplier->price)->first();
+
+        $this->forceFill([
+            'distributor_id' => $preferred?->distributor_id,
+            'distributor_reference' => $preferred?->reference,
+            ...($priced !== null ? [
+                'market_price' => $priced->price,
+                'price_updated_at' => $priced->price_updated_at,
+                'price_source' => $priced->price_source,
+            ] : []),
+        ])->saveQuietly();
     }
 
     /**
@@ -122,6 +149,23 @@ class StockItem extends Model
      */
     protected static function booted(): void
     {
+        // A distributor set on the item itself (an import, older code) becomes its preferred supplier.
+        static::saved(function (self $item): void {
+            if ($item->distributor_id !== null && ($item->wasRecentlyCreated || $item->wasChanged('distributor_id'))) {
+                if (! StockItemSupplier::query()->where('stock_item_id', $item->id)->where('distributor_id', $item->distributor_id)->exists()) {
+                    StockItemSupplier::query()->create([
+                        'stock_item_id' => $item->id,
+                        'distributor_id' => $item->distributor_id,
+                        'reference' => $item->distributor_reference,
+                        'price' => $item->market_price,
+                        'price_source' => $item->price_source,
+                        'price_updated_at' => $item->price_updated_at,
+                        'is_preferred' => true,
+                    ]);
+                }
+            }
+        });
+
         static::created(function (self $item): void {
             StockLevel::insertOrIgnore(Location::query()->pluck('id')->map(fn (int $locationId): array => [
                 'stock_item_id' => $item->id,
