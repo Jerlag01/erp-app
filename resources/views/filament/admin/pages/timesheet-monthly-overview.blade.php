@@ -25,7 +25,7 @@
     @endforeach
 
     <p style="font-size: .75rem; opacity: .75;">
-        <strong>V</strong> Verlof · <strong>Z</strong> Ziekte · <strong>R</strong> Recuperatie overuren · <strong>IR</strong> Inhaalrust · <strong>FV</strong> Familiaal verlof · <strong>OP</strong> Opleiding · <strong>F</strong> Feestdag —
+        @foreach (__('erp.pdf.report.legend') as $code => $label)<strong>{{ $code }}</strong> {{ $label }}@if (! $loop->last) · @endif @endforeach —
         {{ __('erp.timesheets.report_mobility', ['rate' => number_format($rate, 4, ',', '')]) }}
     </p>
 </x-filament-panels::page>

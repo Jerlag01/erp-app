@@ -359,7 +359,12 @@ class TimesheetTest extends TestCase
         $this->assertSame('2026-01', TimesheetReport::months(CarbonImmutable::parse('2026-10-01'), 'year')[0]->format('Y-m'));
 
         $admin = User::factory()->admin()->create();
-        $this->actingAs($admin)->get('/admin/timesheet-report?month=2026-10')->assertOk()->assertSee('APRIL Joran')->assertSee('OKTOBER 2026');
+        $page = $this->actingAs($admin)->get('/admin/timesheet-report?month=2026-10')->assertOk()->assertSee('APRIL Joran')->assertSee('OKTOBER 2026');
+
+        // The legend under the overview lists every short name, in the user's language.
+        foreach (__('erp.pdf.report.legend') as $code => $label) {
+            $page->assertSee("<strong>{$code}</strong> {$label}", false);
+        }
 
         foreach (['1', '2', 'year'] as $span) {
             $this->get(route('timesheets.report-pdf', ['month' => '2026-10', 'span' => $span]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
