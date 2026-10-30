@@ -19,6 +19,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
@@ -41,7 +42,20 @@ class StockItemResource extends Resource
     /**
      * @var list<string>
      */
-    protected static array $globallySearchableAttributes = ['name', 'manufacturer_reference', 'distributor_reference', 'ean'];
+    protected static array $globallySearchableAttributes = ['name', 'name_nl', 'name_fr', 'name_en', 'manufacturer_reference', 'distributor_reference', 'ean'];
+
+    /**
+     * The name in the user's language.
+     */
+    public static function getRecordTitle(?Model $record): string|Htmlable|null
+    {
+        return $record instanceof StockItem ? $record->localizedName() : parent::getRecordTitle($record);
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string|Htmlable
+    {
+        return $record instanceof StockItem ? $record->localizedName() : parent::getGlobalSearchResultTitle($record);
+    }
 
     public static function getModelLabel(): string
     {

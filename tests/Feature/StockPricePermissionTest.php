@@ -84,7 +84,7 @@ class StockPricePermissionTest extends TestCase
             ->test(EditStockItem::class, ['record' => $item->getRouteKey()]);
         $key = array_key_first($component->get('data.suppliers'));
         $component->set("data.suppliers.{$key}.price", 0)
-            ->fillForm(['name' => 'Renamed'])
+            ->fillForm(['name_nl' => 'Renamed'])
             ->call('save')
             ->assertHasNoFormErrors();
 

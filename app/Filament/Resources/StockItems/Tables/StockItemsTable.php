@@ -50,12 +50,16 @@ class StockItemsTable
                     ->toggleable(),
                 TextColumn::make('name')
                     ->label(__('erp.fields.name'))
+                    ->state(fn (StockItem $record): string => $record->localizedName())
                     ->description(fn (StockItem $record): ?string => $record->manufacturer?->name)
                     ->weight('bold')
                     ->wrap()
                     // Also the article numbers of every supplier.
                     ->searchable(query: fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query
                         ->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_nl', 'like', "%{$search}%")
+                        ->orWhere('name_fr', 'like', "%{$search}%")
+                        ->orWhere('name_en', 'like', "%{$search}%")
                         ->orWhere('manufacturer_reference', 'like', "%{$search}%")
                         ->orWhere('ean', 'like', "%{$search}%")
                         ->orWhereHas('suppliers', fn (Builder $query) => $query->where('reference', 'like', "%{$search}%"))))

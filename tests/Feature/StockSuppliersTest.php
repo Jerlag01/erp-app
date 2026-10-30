@@ -66,7 +66,7 @@ class StockSuppliersTest extends TestCase
 
         Livewire::test(CreateStockItem::class)
             ->fillForm([
-                'name' => 'Automaat 16A',
+                'name_nl' => 'Automaat 16A',
                 'unit_id' => $unit->id,
                 'suppliers' => [
                     ['distributor_id' => $rexel->id, 'reference' => 'RX-16', 'is_preferred' => false],
@@ -95,7 +95,7 @@ class StockSuppliersTest extends TestCase
 
         // One supplier per distributor.
         Livewire::test(CreateStockItem::class)
-            ->fillForm(['name' => 'Dubbel', 'unit_id' => $unit->id, 'suppliers' => [['distributor_id' => $local->id], ['distributor_id' => $local->id]]])
+            ->fillForm(['name_nl' => 'Dubbel', 'unit_id' => $unit->id, 'suppliers' => [['distributor_id' => $local->id], ['distributor_id' => $local->id]]])
             ->call('create')
             ->assertHasFormErrors();
 

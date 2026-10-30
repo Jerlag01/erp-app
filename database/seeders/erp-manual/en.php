@@ -578,6 +578,12 @@ On an item, choose the location and then:
 
 Every change is in the **history**. Items below the minimum stock appear under **Low stock** on the dashboard.
 
+## Names, low stock and the yearly count
+
+- Give the item's **name in Dutch, French and/or English**: one language is enough. Everyone sees the name in their own language, or else the one filled in.
+- When an add, take or count brings a location **to or below its minimum stock**, administrators and those with **Stock items → Edit** get a **notification in the platform** (the bell; no e-mail).
+- **Yearly count**: an administrator clicks **Start yearly count** on the stock list. While it runs, stock can only be **counted** (enter what is really there), on the platform and in the app: adding and taking are blocked. Counted rows are marked and the list shows how many are done. **End yearly count** makes adding and taking possible again.
+
 ## Suppliers and stock per location
 
 - An item can have **several suppliers**, each with its own **article number** and **price**. Mark one as **preferred**: its price is the item's market price.
@@ -1258,6 +1264,7 @@ The **PI ERP** app brings the essentials of the platform to your phone, also on 
 - **Leave**: request leave or **overtime as leave**, **report sickness** and add a certificate (photo, file or a picture taken on the spot).
 - **Checks**: fill in the **yearly control** of your team's equipment (only while a list is open).
 - **More**: your details, read and sign **toolbox meetings**, **report an incident**, the **idea box** and fill in and sign the **battery dossiers** (604/605), with the **floor plan** you draw as on the platform (604), and the **battery rooms** (609): delivery note with signature, extra info, checklist and photos (the ventilation calculation and BTV report are added on the platform).
+- **Stock**: **scan the QR label** of an item (or its barcode), or search it, to see its picture, names, references, suppliers, manufacturer, EAN, description and notes, and the **stock at every location**. With **Stock (own locations) → Raise / lower** you **add** or **take** an amount per location; during the yearly count you can only **count**.
 - **Projects**: the 600 and 610–650 projects your team executes: reference, description, address, COW code, contact person (call or mail) and project leaders, whether the **GPW** is approved and for which period (and the planned days), the documents, pictures, **electrical schematics** and extra files to open (no offers, invoices or plans), and the **part list**: add the items you used, from the stock list or described yourself. You can remove only the lines you added; on the platform the part list shows who added them.
 - **Interventions**: **close** an intervention as on the platform (categories, COW code and room, time worked, colleagues, material, fuse/breaker positions, modified boards and remarks), without a signature. An administrator then reviews it; an intervention sent back is closed again.
 - **Messages**: the messages sent from the platform, in your language.

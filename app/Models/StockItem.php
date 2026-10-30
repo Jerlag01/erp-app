@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
- * An article in the catalogue. Every location has its own stock level for it.
+ * An article in the catalogue. Every location has its own stock level for it. The name can be given in
+ * Dutch, French and English (one is enough); "name" holds the first one filled in.
  */
 #[Fillable([
-    'name', 'description', 'stock_category_id', 'manufacturer_id', 'distributor_id', 'unit_id', 'low_stock_threshold',
+    'name', 'name_nl', 'name_fr', 'name_en', 'description', 'stock_category_id', 'manufacturer_id', 'distributor_id', 'unit_id', 'low_stock_threshold',
     'manufacturer_reference', 'distributor_reference', 'ean', 'market_price', 'price_updated_at', 'price_source',
     'image', 'is_active', 'notes',
 ])]
@@ -88,6 +89,18 @@ class StockItem extends Model
         return $this->hasMany(StockItemPrice::class)->latest('fetched_at');
     }
 
+    public const LOCALES = ['nl', 'fr', 'en'];
+
+    /**
+     * The name in the language (the user's by default), or else the one filled in.
+     */
+    public function localizedName(?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+
+        return (string) ($this->{'name_'.$locale} ?: $this->name);
+    }
+
     /**
      * The short link printed in the QR code; it opens the item for stock changes.
      */
@@ -149,6 +162,17 @@ class StockItem extends Model
      */
     protected static function booted(): void
     {
+        // "name" is the first name filled in (Dutch, French, English); an item made with only "name" gets it as Dutch name.
+        static::saving(function (self $item): void {
+            $names = array_filter(array_map(fn (string $locale): ?string => filled($item->{'name_'.$locale}) ? trim((string) $item->{'name_'.$locale}) : null, self::LOCALES));
+
+            if ($names === [] && filled($item->name)) {
+                $item->name_nl = $item->name;
+            } elseif ($names !== []) {
+                $item->name = reset($names);
+            }
+        });
+
         // A distributor set on the item itself (an import, older code) becomes its preferred supplier.
         static::saved(function (self $item): void {
             if ($item->distributor_id !== null && ($item->wasRecentlyCreated || $item->wasChanged('distributor_id'))) {

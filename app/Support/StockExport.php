@@ -35,7 +35,9 @@ class StockExport
         $supplier = fn (StockItem $item, Distributor $distributor): ?StockItemSupplier => $item->suppliers->firstWhere('distributor_id', $distributor->id);
 
         $columns = [
-            __('erp.fields.name') => fn (StockItem $item): string => $item->name,
+            __('erp.stock.names.nl') => fn (StockItem $item): ?string => $item->name_nl,
+            __('erp.stock.names.fr') => fn (StockItem $item): ?string => $item->name_fr,
+            __('erp.stock.names.en') => fn (StockItem $item): ?string => $item->name_en,
             __('erp.fields.category') => fn (StockItem $item): ?string => $item->category?->fullName(),
             __('erp.resources.manufacturer.singular') => fn (StockItem $item): ?string => $item->manufacturer?->name,
             __('erp.fields.manufacturer_reference') => fn (StockItem $item): ?string => $item->manufacturer_reference,

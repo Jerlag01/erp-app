@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StockItems\Schemas;
 
 use App\Models\Distributor;
 use App\Models\StockCategory;
+use App\Models\StockItem;
 use App\Models\StockItemSupplier;
 use App\Models\Unit;
 use Filament\Forms\Components\FileUpload;
@@ -31,12 +32,15 @@ class StockItemForm
                             ->columnSpan(['lg' => 2])
                             ->columns(2)
                             ->schema([
-                                TextInput::make('name')
-                                    ->label(__('erp.fields.name'))
-                                    ->placeholder(__('erp.help.stock_item_name'))
-                                    ->required()
-                                    ->maxLength(200)
-                                    ->columnSpanFull(),
+                                // The name in three languages: one is enough.
+                                Grid::make(['default' => 1, 'md' => 3])
+                                    ->columnSpanFull()
+                                    ->schema(array_map(fn (string $locale): TextInput => TextInput::make("name_{$locale}")
+                                        ->label(__("erp.stock.names.{$locale}"))
+                                        ->placeholder(__('erp.help.stock_item_name'))
+                                        ->requiredWithoutAll(implode(',', array_map(fn (string $other): string => "name_{$other}", array_values(array_diff(StockItem::LOCALES, [$locale])))))
+                                        ->validationMessages(['required_without_all' => __('erp.stock.names.one_required')])
+                                        ->maxLength(200), StockItem::LOCALES)),
                                 Select::make('stock_category_id')
                                     ->label(__('erp.fields.category'))
                                     ->options(fn (): array => StockCategory::groupedOptions())

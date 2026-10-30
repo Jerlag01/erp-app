@@ -27,6 +27,10 @@ class StockItemInfolist
                             ->columnSpan(['lg' => 3])
                             ->columns(['default' => 1, 'sm' => 2])
                             ->schema([
+                                // The name in the three languages.
+                                ...array_map(fn (string $locale): TextEntry => TextEntry::make("name_{$locale}")
+                                    ->label(__("erp.stock.names.{$locale}"))
+                                    ->placeholder('—'), StockItem::LOCALES),
                                 TextEntry::make('category')
                                     ->label(__('erp.fields.category'))
                                     ->state(fn (StockItem $record): ?string => $record->category?->fullName())

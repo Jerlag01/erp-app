@@ -52,6 +52,7 @@ class StockLevelsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('item.name')
                     ->label(__('erp.resources.stock_item.singular'))
+                    ->state(fn (StockLevel $record): string => $record->item->localizedName())
                     ->description(fn (StockLevel $record): ?string => $record->item->category?->fullName())
                     ->searchable(),
                 TextColumn::make('item.manufacturer_reference')

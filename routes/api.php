@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\PushTestController;
 use App\Http\Controllers\Api\V1\PushTokenController;
+use App\Http\Controllers\Api\V1\StockController;
 use App\Http\Controllers\Api\V1\SuggestionController;
 use App\Http\Controllers\Api\V1\TimesheetController;
 use App\Http\Controllers\Api\V1\ToolboxController;
@@ -95,6 +96,15 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('/work-sites', [InterventionController::class, 'workSites'])->name('work-sites');
             Route::get('/{id}', [InterventionController::class, 'show'])->whereNumber('id')->name('show');
             Route::post('/{id}/close', [InterventionController::class, 'close'])->whereNumber('id')->name('close');
+        });
+
+        // Stock: scan an item's label, see the stock everywhere, add, take or count.
+        Route::prefix('/stock')->name('stock.')->group(function (): void {
+            Route::get('/lookup', [StockController::class, 'lookup'])->name('lookup');
+            Route::get('/search', [StockController::class, 'search'])->name('search');
+            Route::get('/items/{item}', [StockController::class, 'show'])->whereNumber('item')->name('show');
+            Route::post('/levels/{level}/adjust', [StockController::class, 'adjust'])->whereNumber('level')->name('adjust');
+            Route::post('/levels/{level}/count', [StockController::class, 'count'])->whereNumber('level')->name('count');
         });
 
         // The 600 and 610–650 projects a team of the employee executes.

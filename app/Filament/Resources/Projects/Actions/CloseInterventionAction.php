@@ -154,7 +154,7 @@ class CloseInterventionAction
                                 ->live()
                                 ->afterStateUpdated(function (mixed $state, Set $set): void {
                                     if ($item = StockItem::find($state)) {
-                                        $set('description', $item->name);
+                                        $set('description', $item->localizedName());
                                         $set('unit_id', $item->unit_id);
                                     }
                                 })

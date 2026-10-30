@@ -37,7 +37,7 @@
             <div class="label">
                 {!! \App\Support\StockQr::svg($item) !!}
                 <div class="text">
-                    <div class="name">{{ $item->name }}</div>
+                    <div class="name">{{ $item->localizedName() }}</div>
                     @if ($item->manufacturer_reference)
                         <div class="ref">{{ $item->manufacturer_reference }}</div>
                     @endif

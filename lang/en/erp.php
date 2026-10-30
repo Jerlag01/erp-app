@@ -1278,6 +1278,30 @@ return [
             'price' => ':name – price',
             'price_date' => ':name – price date',
         ],
+        'names' => [
+            'nl' => 'Name (Dutch)',
+            'fr' => 'Name (French)',
+            'en' => 'Name (English)',
+            'one_required' => 'Fill in the name in at least one language.',
+        ],
+        'yearly_count' => [
+            'start' => 'Start yearly count',
+            'start_help' => 'While the yearly count runs, stock can only be counted, on the platform and in the app: adding and taking are blocked. Rows already counted are marked.',
+            'started' => 'Yearly count started',
+            'stop' => 'End yearly count',
+            'stop_help' => ':counted of :total stock rows counted. After ending, adding and taking are possible again.',
+            'stopped' => 'Yearly count ended',
+            'running' => 'Yearly count running since :date: :counted of :total stock rows counted. Only counting is possible.',
+            'blocked' => 'The yearly count is running: only counting is possible.',
+            'counted_column' => 'Counted',
+            'not_counted' => 'Not yet',
+            'counted_again' => 'Counted (again)',
+        ],
+        'low_notification' => [
+            'title' => 'Low stock: :item at :location',
+            'body' => 'Still :quantity in stock (minimum :minimum).',
+            'open' => 'Open item',
+        ],
         'provider' => [
             'service_unreachable' => ':name cannot be reached. Try again later.',
             'call_failed' => 'The call to :name failed (:reason).',
@@ -4057,6 +4081,10 @@ return [
         'sent' => 'Message sent to :count employee(s)',
     ],
     'mobile' => [
+        'stock' => [
+            'not_found' => 'No item found for this code.',
+            'no_adjust' => 'You may not change stock.',
+        ],
         'projects' => [
             'reference' => 'Reference (project number)',
             'status' => 'Project status',

@@ -1278,6 +1278,30 @@ return [
             'price' => ':name – prix',
             'price_date' => ':name – date du prix',
         ],
+        'names' => [
+            'nl' => 'Nom (néerlandais)',
+            'fr' => 'Nom (français)',
+            'en' => 'Nom (anglais)',
+            'one_required' => 'Indiquez le nom dans au moins une langue.',
+        ],
+        'yearly_count' => [
+            'start' => 'Lancer l\'inventaire annuel',
+            'start_help' => 'Tant que l\'inventaire annuel est en cours, le stock peut uniquement être compté, sur la plateforme et dans l\'app : ajouter et prendre sont bloqués. Les lignes comptées sont marquées.',
+            'started' => 'Inventaire annuel lancé',
+            'stop' => 'Terminer l\'inventaire annuel',
+            'stop_help' => ':counted lignes de stock sur :total comptées. Une fois terminé, il est de nouveau possible d\'ajouter et de prendre.',
+            'stopped' => 'Inventaire annuel terminé',
+            'running' => 'Inventaire annuel en cours depuis le :date : :counted lignes de stock sur :total comptées. Seul le comptage est possible.',
+            'blocked' => 'L\'inventaire annuel est en cours : seul le comptage est possible.',
+            'counted_column' => 'Compté',
+            'not_counted' => 'Pas encore',
+            'counted_again' => 'Compté (à nouveau)',
+        ],
+        'low_notification' => [
+            'title' => 'Stock bas : :item à :location',
+            'body' => 'Encore :quantity en stock (minimum :minimum).',
+            'open' => 'Ouvrir l\'article',
+        ],
         'provider' => [
             'service_unreachable' => ':name n\'est pas joignable. Réessayez plus tard.',
             'call_failed' => 'L\'appel à :name a échoué (:reason).',
@@ -4057,6 +4081,10 @@ return [
         'sent' => 'Message envoyé à :count collaborateur(s)',
     ],
     'mobile' => [
+        'stock' => [
+            'not_found' => 'Aucun article trouvé pour ce code.',
+            'no_adjust' => 'Vous n\'êtes pas autorisé à modifier le stock.',
+        ],
         'projects' => [
             'reference' => 'Référence (numéro de projet)',
             'status' => 'Statut du projet',

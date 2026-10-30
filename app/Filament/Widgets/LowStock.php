@@ -37,6 +37,7 @@ class LowStock extends TableWidget
             ->columns([
                 TextColumn::make('item.name')
                     ->label(__('erp.resources.stock_item.singular'))
+                    ->state(fn (StockLevel $record): string => $record->item->localizedName())
                     ->weight('bold'),
                 TextColumn::make('location.name')
                     ->label(__('erp.resources.location.singular')),

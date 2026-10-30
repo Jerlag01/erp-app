@@ -579,6 +579,12 @@ Op een artikel kies je de locatie en daarna:
 
 Elke wijziging staat in de **historiek**. Artikelen onder de minimumvoorraad verschijnen bij **Lage voorraad** op het dashboard.
 
+## Namen, lage stock en de jaarlijkse telling
+
+- Geef de **naam van het artikel in het Nederlands, Frans en/of Engels**: één taal volstaat. Iedereen ziet de naam in zijn eigen taal, of anders de ingevulde.
+- Brengt een toevoeging, opname of telling een locatie **tot op of onder de minimumstock**, dan krijgen de beheerders en wie **Artikelen → Bewerken** heeft een **melding in het platform** (het belletje; geen e-mail).
+- **Jaarlijkse telling**: een beheerder klikt op **Jaarlijkse telling starten** in de stocklijst. Zolang ze loopt, kan de stock enkel **geteld** worden (vul in wat er echt is), op het platform en in de app: toevoegen en nemen zijn geblokkeerd. Getelde lijnen worden aangeduid en de lijst toont hoeveel er klaar zijn. **Jaarlijkse telling beëindigen** maakt toevoegen en nemen weer mogelijk.
+
 ## Leveranciers en stock per locatie
 
 - Een artikel kan **meerdere leveranciers** hebben, elk met een eigen **artikelnummer** en **prijs**. Duid er één aan als **voorkeur**: zijn prijs is de marktprijs van het artikel.
@@ -1259,6 +1265,7 @@ De app **PI ERP** brengt het belangrijkste van het platform naar je telefoon, oo
 - **Verlof**: verlof en **overuren als verlof** aanvragen, **ziekte melden** en een attest toevoegen (foto, bestand of meteen een foto nemen).
 - **Controles**: de **jaarlijkse controle** van het materieel van je ploeg invullen (enkel als er een lijst openstaat).
 - **Meer**: je gegevens, **toolboxmeetings** lezen en ondertekenen, **incident melden**, de **ideeënbus** en de **batterijdossiers** (604/605) invullen en ondertekenen, met de **plattegrond** die je tekent zoals op het platform (604), en de **batterijlokalen** (609): leveringsnota met handtekening, extra info, checklist en foto's (de ventilatieberekening en het BTV-verslag worden op het platform toegevoegd).
+- **Stock**: **scan het QR-label** van een artikel (of de barcode), of zoek het op, voor de foto, namen, referenties, leveranciers, fabrikant, EAN, omschrijving en opmerkingen, en de **stock op elke locatie**. Met **Voorraad (eigen locaties) → Verhogen / verlagen** kun je per locatie een aantal **toevoegen** of **nemen**; tijdens de jaarlijkse telling kun je enkel **tellen**.
 - **Projecten**: de 600- en 610–650-projecten die je ploeg uitvoert: referentie, omschrijving, adres, COW-code, contactpersoon (bellen of mailen) en projectleiders, of de **GPW** goedgekeurd is en voor welke periode (en de geplande dagen), de documenten, foto's, **elektrische schema's** en extra bestanden om te openen (geen offertes, facturen of plannen), en de **stuklijst**: voeg de artikels toe die je gebruikt hebt, uit de stocklijst of zelf omschreven. Je kunt alleen de lijnen verwijderen die je zelf toevoegde; op het platform toont de stuklijst wie ze toevoegde.
 - **Interventies**: een interventie **afsluiten** zoals op het platform (categorieën, COW-code en lokaal, gewerkte tijd, collega's, materiaal, posities zekering/automaat, gewijzigde borden en opmerkingen), zonder handtekening. Daarna reviewt een beheerder ze; een teruggestuurde interventie sluit je opnieuw af.
 - **Berichten**: de berichten die vanuit het platform verstuurd werden, in jouw taal.

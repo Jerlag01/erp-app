@@ -578,6 +578,12 @@ Sur un article, choisissez le site, puis :
 
 Chaque modification figure dans l'**historique**. Les articles sous le stock minimum apparaissent dans **Stock bas** sur le tableau de bord.
 
+## Noms, stock bas et inventaire annuel
+
+- Indiquez le **nom de l'article en néerlandais, français et/ou anglais** : une langue suffit. Chacun voit le nom dans sa langue, ou sinon celui qui est rempli.
+- Quand un ajout, une prise ou un comptage amène un site **au minimum de stock ou en dessous**, les administrateurs et ceux qui ont **Articles → Modifier** reçoivent une **notification dans la plateforme** (la cloche ; pas d'e-mail).
+- **Inventaire annuel** : un administrateur clique sur **Lancer l'inventaire annuel** dans la liste de stock. Tant qu'il est en cours, le stock peut uniquement être **compté** (indiquez ce qui est réellement présent), sur la plateforme et dans l'app : ajouter et prendre sont bloqués. Les lignes comptées sont marquées et la liste montre combien sont faites. **Terminer l'inventaire annuel** permet de nouveau d'ajouter et de prendre.
+
 ## Fournisseurs et stock par site
 
 - Un article peut avoir **plusieurs fournisseurs**, chacun avec son propre **numéro d'article** et son **prix**. Marquez-en un comme **préféré** : son prix est le prix du marché de l'article.
@@ -1258,6 +1264,7 @@ L'application **PI ERP** apporte l'essentiel de la plateforme sur votre téléph
 - **Congés** : demander un congé ou des **heures supplémentaires en congé**, **signaler une maladie** et ajouter un certificat (photo, fichier ou photo prise sur le moment).
 - **Contrôles** : compléter le **contrôle annuel** du matériel de votre équipe (seulement quand une liste est ouverte).
 - **Plus** : vos données, lire et signer les **toolbox meetings**, **signaler un incident**, la **boîte à idées** et compléter et signer les **dossiers batteries** (604/605), avec le **plan** que vous dessinez comme sur la plateforme (604), et les **locaux batteries** (609) : note de livraison avec signature, infos supplémentaires, checklist et photos (le calcul de ventilation et le rapport BTV sont ajoutés sur la plateforme).
+- **Stock** : **scannez l'étiquette QR** d'un article (ou son code-barres), ou cherchez-le, pour voir sa photo, ses noms, références, fournisseurs, fabricant, EAN, description et remarques, et le **stock sur chaque site**. Avec **Stock (propres sites) → Augmenter / diminuer**, vous **ajoutez** ou **prenez** une quantité par site ; pendant l'inventaire annuel, vous pouvez uniquement **compter**.
 - **Projets** : les projets 600 et 610–650 que votre équipe exécute : référence, description, adresse, code COW, personne de contact (appeler ou envoyer un e-mail) et chefs de projet, si le **GPW** est approuvé et pour quelle période (et les jours planifiés), les documents, photos, **schémas électriques** et fichiers extra à ouvrir (pas d'offres, factures ou plans), et la **liste de pièces** : ajoutez les articles utilisés, de la liste de stock ou décrits vous-même. Vous ne pouvez retirer que les lignes que vous avez ajoutées ; sur la plateforme, la liste de pièces montre qui les a ajoutées.
 - **Interventions** : **clôturer** une intervention comme sur la plateforme (catégories, code COW et local, temps presté, collègues, matériel, positions fusible/disjoncteur, tableaux modifiés et remarques), sans signature. Un administrateur la revoit ensuite ; une intervention renvoyée se clôture à nouveau.
 - **Messages** : les messages envoyés depuis la plateforme, dans votre langue.

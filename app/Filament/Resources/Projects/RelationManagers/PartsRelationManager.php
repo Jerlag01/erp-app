@@ -70,7 +70,7 @@ class PartsRelationManager extends RelationManager
                     ->live()
                     ->afterStateUpdated(function (mixed $state, Set $set): void {
                         if ($item = StockItem::find($state)) {
-                            $set('description', $item->name);
+                            $set('description', $item->localizedName());
                             $set('unit_id', $item->unit_id);
                         }
                     })
@@ -161,6 +161,9 @@ class PartsRelationManager extends RelationManager
             ->where('is_active', true)
             ->where(fn (Builder $query) => $query
                 ->where('name', 'like', $term)
+                ->orWhere('name_nl', 'like', $term)
+                ->orWhere('name_fr', 'like', $term)
+                ->orWhere('name_en', 'like', $term)
                 ->orWhere('manufacturer_reference', 'like', $term)
                 ->orWhere('distributor_reference', 'like', $term)
                 ->orWhere('ean', 'like', $term))
@@ -174,7 +177,7 @@ class PartsRelationManager extends RelationManager
 
     protected static function itemLabel(StockItem $item): string
     {
-        return trim($item->name.' — '.self::references($item), ' —');
+        return trim($item->localizedName().' — '.self::references($item), ' —');
     }
 
     protected static function references(StockItem $item): string

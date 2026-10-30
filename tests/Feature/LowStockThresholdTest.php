@@ -89,7 +89,7 @@ class LowStockThresholdTest extends TestCase
         $unit = Unit::factory()->create(['allows_decimals' => true, 'abbreviation' => 'm']);
 
         Livewire::test(CreateStockItem::class)
-            ->fillForm(['name' => 'XVB 3G2,5', 'unit_id' => $unit->id, 'low_stock_threshold' => 50])
+            ->fillForm(['name_nl' => 'XVB 3G2,5', 'unit_id' => $unit->id, 'low_stock_threshold' => 50])
             ->call('create')
             ->assertHasNoFormErrors();
 

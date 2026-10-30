@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * How much of one item is in stock at one location.
  */
-#[Fillable(['stock_item_id', 'location_id', 'quantity', 'min_quantity'])]
+#[Fillable(['stock_item_id', 'location_id', 'quantity', 'min_quantity', 'counted_at'])]
 class StockLevel extends Model
 {
     /**
@@ -88,6 +88,7 @@ class StockLevel extends Model
         return [
             'quantity' => 'decimal:3',
             'min_quantity' => 'decimal:3',
+            'counted_at' => 'datetime',
         ];
     }
 }

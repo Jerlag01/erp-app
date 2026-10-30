@@ -7,6 +7,7 @@ use App\Filament\Resources\StockItems\Tables\ThresholdColumn;
 use App\Models\Location;
 use App\Models\StockItem;
 use App\Models\StockLevel;
+use App\Support\StockCount;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -55,6 +56,14 @@ class LevelsRelationManager extends RelationManager
                     ->size('lg')
                     ->color(fn (StockLevel $record): string => $record->isLow() ? 'danger' : ((float) $record->quantity > 0 ? 'success' : 'gray')),
                 ThresholdColumn::make(),
+                // During the yearly count: when this row was counted.
+                TextColumn::make('counted_at')
+                    ->label(__('erp.stock.yearly_count.counted_column'))
+                    ->dateTime('d/m H:i')
+                    ->placeholder(__('erp.stock.yearly_count.not_counted'))
+                    ->badge()
+                    ->color(fn (StockLevel $record): string => $record->counted_at !== null ? 'success' : 'warning')
+                    ->visible(fn (): bool => app(StockCount::class)->active()),
                 TextColumn::make('value')
                     ->label(__('erp.stock.value'))
                     ->state(fn (StockLevel $record): ?float => $item->market_price !== null ? (float) $record->quantity * (float) $item->market_price : null)

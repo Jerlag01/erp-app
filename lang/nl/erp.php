@@ -1278,6 +1278,30 @@ return [
             'price' => ':name – prijs',
             'price_date' => ':name – prijsdatum',
         ],
+        'names' => [
+            'nl' => 'Naam (Nederlands)',
+            'fr' => 'Naam (Frans)',
+            'en' => 'Naam (Engels)',
+            'one_required' => 'Vul de naam in minstens één taal in.',
+        ],
+        'yearly_count' => [
+            'start' => 'Jaarlijkse telling starten',
+            'start_help' => 'Zolang de jaarlijkse telling loopt, kan de stock enkel geteld worden, op het platform en in de app: toevoegen en nemen zijn geblokkeerd. Getelde lijnen worden aangeduid.',
+            'started' => 'Jaarlijkse telling gestart',
+            'stop' => 'Jaarlijkse telling beëindigen',
+            'stop_help' => ':counted van :total stocklijnen geteld. Na het beëindigen kan er weer toegevoegd en genomen worden.',
+            'stopped' => 'Jaarlijkse telling beëindigd',
+            'running' => 'Jaarlijkse telling loopt sinds :date: :counted van :total stocklijnen geteld. Enkel tellen is mogelijk.',
+            'blocked' => 'De jaarlijkse telling loopt: enkel tellen is mogelijk.',
+            'counted_column' => 'Geteld',
+            'not_counted' => 'Nog niet',
+            'counted_again' => 'Geteld (opnieuw)',
+        ],
+        'low_notification' => [
+            'title' => 'Lage stock: :item in :location',
+            'body' => 'Nog :quantity in stock (minimum :minimum).',
+            'open' => 'Artikel openen',
+        ],
         'provider' => [
             'service_unreachable' => ':name is niet bereikbaar. Probeer het later opnieuw.',
             'call_failed' => 'De oproep naar :name is mislukt (:reason).',
@@ -4058,6 +4082,10 @@ return [
         'sent' => 'Bericht verstuurd naar :count medewerker(s)',
     ],
     'mobile' => [
+        'stock' => [
+            'not_found' => 'Geen artikel gevonden voor deze code.',
+            'no_adjust' => 'Je mag de stock niet wijzigen.',
+        ],
         'projects' => [
             'reference' => 'Referentie (projectnummer)',
             'status' => 'Projectstatus',

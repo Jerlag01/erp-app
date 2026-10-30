@@ -7,6 +7,7 @@ use App\Enums\RequestStatus;
 use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\ProjectController;
+use App\Http\Controllers\Api\V1\StockController;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
 use App\Models\Employee;
@@ -91,6 +92,9 @@ class ProfileResource extends JsonResource
             'unread_messages' => MessageController::unread($user),
             // Interventions the user can see, to close them in the app.
             'interventions' => app(Interventions::class)->enabled() && app(Interventions::class)->visibleTo($user)->exists(),
+            // Stock: scan items, see the stock everywhere; "stock_adjust" adds, takes and counts.
+            'stock' => StockController::canView($user),
+            'stock_adjust' => StockController::canView($user) && $user->hasPermission('stock.adjust'),
             // 600 and 610–650 projects a team of the user executes.
             'projects' => ProjectController::teamProjects($user)->exists(),
             'open_toolbox' => $gate->allows('viewAny', ToolboxMeeting::class)

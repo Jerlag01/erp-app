@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StockItems\Actions;
 
 use App\Actions\AdjustStock;
 use App\Models\StockLevel;
+use App\Support\StockCount;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\Icons\Heroicon;
@@ -20,16 +21,19 @@ class StockLevelActions
     public static function make(): array
     {
         $canAdjust = fn (): bool => modules()->stock() && (bool) auth()->user()?->hasPermission('stock.adjust');
+        // During the yearly count only counting is possible.
+        $counting = fn (): bool => app(StockCount::class)->active();
 
         return [
-            static::change('add', 1, Heroicon::OutlinedPlus, 'success')->visible($canAdjust),
-            static::change('remove', -1, Heroicon::OutlinedMinus, 'danger')->visible($canAdjust),
+            static::change('add', 1, Heroicon::OutlinedPlus, 'success')->visible(fn (): bool => $canAdjust() && ! $counting()),
+            static::change('remove', -1, Heroicon::OutlinedMinus, 'danger')->visible(fn (): bool => $canAdjust() && ! $counting()),
             Action::make('count')
-                ->label(__('erp.stock.count'))
-                ->icon(Heroicon::OutlinedCalculator)
-                ->color('gray')
+                ->label(fn (StockLevel $record): string => $counting() && $record->counted_at !== null ? __('erp.stock.yearly_count.counted_again') : __('erp.stock.count'))
+                ->icon(fn (StockLevel $record): Heroicon => $counting() && $record->counted_at !== null ? Heroicon::OutlinedCheckCircle : Heroicon::OutlinedCalculator)
+                ->color(fn (StockLevel $record): string => $counting() ? ($record->counted_at !== null ? 'success' : 'warning') : 'gray')
+                ->button(fn (): bool => $counting())
                 ->visible($canAdjust)
-                ->modalHeading(fn (StockLevel $record): string => __('erp.stock.count').': '.$record->item->name.' · '.$record->location->name)
+                ->modalHeading(fn (StockLevel $record): string => __('erp.stock.count').': '.$record->item->localizedName().' · '.$record->location->name)
                 ->modalDescription(fn (StockLevel $record): string => __('erp.stock.count_help', ['current' => $record->item->unit->format($record->quantity)]))
                 ->fillForm(fn (StockLevel $record): array => ['quantity' => (float) $record->quantity])
                 ->schema(fn (StockLevel $record): array => [
@@ -66,7 +70,7 @@ class StockLevelActions
             ->button()
             ->size('sm')
             ->modalWidth('sm')
-            ->modalHeading(fn (StockLevel $record): string => __("erp.stock.{$name}").': '.$record->item->name)
+            ->modalHeading(fn (StockLevel $record): string => __("erp.stock.{$name}").': '.$record->item->localizedName())
             ->modalDescription(fn (StockLevel $record): string => $record->location->name.' · '.__('erp.stock.in_stock', ['quantity' => $record->item->unit->format($record->quantity)]))
             ->fillForm(['quantity' => 1])
             ->schema(fn (StockLevel $record): array => [

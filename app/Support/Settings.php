@@ -46,6 +46,12 @@ class Settings
                 'privacy_email' => null,
             ],
             // HR calculations: the monthly advance (start value per statute, counted up to this day of the month).
+            // The yearly count (stocktake) of the stock: while on, stock can only be counted.
+            'stock' => [
+                'yearly_count' => false,
+                'yearly_count_started_at' => null,
+                'yearly_count_started_by' => null,
+            ],
             'hr' => [
                 'advance_worker' => 620,
                 'advance_servant' => 1000,
