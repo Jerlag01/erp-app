@@ -99,6 +99,8 @@ Wat iemand ziet en mag doen, hangt af van zijn **rol** en zijn **ploeg**.
 ## Rol HR (geen prestatiefiche)
 
 De rol **HR** ziet standaard enkel het eigen account, de **prestaties per maand** en de **HR-berekeningen**. Een rol met **Geen prestatiefiche** (zoals HR) heeft geen eigen prestatiefiche en staat niet in de **planning**, het **verlof** of de **ziektemeldingen**; ook zonder ploeg zijn ze geen gast. Alle andere modules geef je gewoon via de rechten van de rol.
+
+De rol **Administratie** werkt op dezelfde manier: geen prestatiefiche, planning of verlof en geen ploeg nodig. Ze ziet standaard de **prestaties per maand**; vink bij de rol aan wat de administratie verder nodig heeft (bv. Financieel).
 MD,
         ],
 
@@ -257,6 +259,11 @@ Een werknemer vraagt een wijziging (bv. nieuw adres) aan via **Mijn gegevens**. 
 ## Privacy
 
 Gevoelige gegevens zoals het rijksregisternummer worden **versleuteld** bewaard en zijn enkel zichtbaar met de juiste rechten.
+
+## Opzeggingstermijn en ouderschapsverlof
+
+- Met **Opzeg registreren** vul je het begin en het einde van de opzeggingstermijn in; de werknemer staat dan *In opzeg tot …* en kan één dag per week sollicitatieverlof nemen. De dag na de einddatum wordt de werknemer **automatisch uit dienst** gezet (login uit). Met **Opzeg intrekken** maak je het ongedaan.
+- In het tabblad **Ouderschapsverlof** schakel je het ouderschapsverlof van de werknemer in, met het kind, de vorm, de periode en het attest.
 MD,
         ],
 
@@ -327,6 +334,16 @@ Bij **Verlofaanvragen** keur je een aanvraag goed of weiger je ze (met een reden
 ## Tips
 
 Collega's zien in de kalender enkel "afwezig", nooit de reden van een ziekte.
+
+## Andere verlofsoorten
+
+- **Mobiliteitsverlof (MV)**: 1 dag per 27 000 km die in de prestaties van het **vorige jaar** geregistreerd zijn; vrij in te plannen via een verlofaanvraag en geldig tot 31 december. Geen attest. Telt als gewerkte dag.
+- **Anciënniteitsverlof (AN)**: 1 dag per jaar vanaf **25 jaar dienst** (vanaf de datum in dienst; niet voor interims); vrij in te plannen. Telt als gewerkte dag.
+- **Sollicitatieverlof (SV)**: tijdens een **opzeggingstermijn** één **volledige dag per week**, tot de einddatum. Telt als gewerkte (betaalde) dag.
+- **Economisch werkloos (EW)**: enkel ingevoerd door de beheerders; telt als niet gewerkt (betaald door de RVA), maar de **overuren blijven staan**. Geen attest.
+- **Klein verlet (KV)**: enkel door de beheerders, met de **reden** uit het koninklijk besluit van 28/08/1963 (bv. huwelijk 2 dagen, overlijden van een ouder 3 dagen) en een **attest**. Telt als volledige gewerkte dag.
+- **Werkongeval (WO)**: enkel door de beheerders, gekoppeld aan de **ongevalsmelding**. Betaald als het **attest binnen 48 uur** in het platform staat; anders tellen de dagen als **onbetaald verlof**. Er kan niets op ingepland worden.
+- **Ouderschapsverlof (OV)**: de beheerders schakelen het per werknemer in (bij de werknemer → Ouderschapsverlof: kind jonger dan 12, vorm volledig, 1/2, 1/5 of 1/10 met hun maximale duur, en het **attest**). Daarna voeren ze de OV-dagen in binnen die periode. Telt als niet gewerkt (RVA), de overuren blijven staan.
 MD,
         ],
 
@@ -370,6 +387,11 @@ Wat je meer werkt dan de te werken uren, komt bij je **meeruren-saldo**. Dat sal
 Medewerkers met het statuut **bediende** (personeelsregister) vullen geen uren en kilometers in: elke werkdag telt **8 uur**. Een halve dag verlof laat 4 gewerkte uren over; verlof, ziekte, opleiding en feestdagen tellen zoals bij iedereen, familiaal en onbetaald verlof tellen 0. De imputatie, opmerkingen en het versturen blijven hetzelfde. In de mobiele app hebben ze geen tabblad Prestaties.
 
 Staat het statuut van een werknemer op **Arbeidsongeschikt** (personeelsregister), dan staat elke werkdag als **Z (ziekte)** op de prestatiestaat, ook in de weken die nog komen. Bij het instellen kies je de eerste dag (standaard vandaag); verander je het statuut terug (bv. naar arbeider), dan vul je de **laatste dag ziekte** in (standaard gisteren). Elke periode wordt bewaard en staat bij de werknemer onder *Arbeidsongeschiktheid*.
+
+## Nachtwerk en codes
+
+- **Nachtwerk (N)**: uren tussen **20:00 en 06:00**. In het maandoverzicht staan de gewerkte uren dan met een **N** erachter (bv. *7,5N*), en het totaal aan nachturen staat bij de codes. Wie om 05:00 begint en de dag doorwerkt, doet geen nachtwerk. Een nachtploeg mag over middernacht lopen (bv. 22:00 → 06:00: aankomst vanaf 18:00, vertrek tot 08:00).
+- Nieuwe codes in het overzicht: **MV**, **AN**, **SV**, **KV** en betaald **WO** tellen als gewerkte dag; **EW** en **OV** tellen als niet gewerkt zonder overuren af te trekken; een **WO** zonder attest na 48 uur telt als onbetaald.
 MD,
         ],
 

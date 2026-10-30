@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\AbsenceType;
 use App\Enums\VacationStatus;
 use App\Enums\VacationType;
 use App\Support\WorkingDays;
@@ -139,20 +138,24 @@ class VacationRequest extends Model
             }
         });
 
-        static::saved(fn (self $request) => $request->syncOvertimeAbsence());
+        static::saved(fn (self $request) => $request->syncAbsence());
 
         static::deleted(fn (self $request) => $request->absence_id ? Absence::query()->find($request->absence_id)?->delete() : null);
     }
 
     /**
-     * An approved overtime request is an overtime absence (the "R" days of the prestation sheets);
-     * when it is no longer approved (cancelled, rejected, turned into vacation) the absence goes.
+     * An approved request other than vacation is an absence of its kind: overtime (R), mobility (MV),
+     * seniority (AN) or sollicitatieverlof (SV). When it is no longer approved (cancelled, rejected,
+     * turned into vacation) the absence goes.
      */
-    public function syncOvertimeAbsence(): void
+    public function syncAbsence(): void
     {
-        if ($this->isOvertime() && $this->status === VacationStatus::Approved) {
-            $absence = ($this->absence_id ? Absence::query()->find($this->absence_id) : null) ?? new Absence(['user_id' => $this->user_id, 'type' => AbsenceType::Overtime]);
+        $type = $this->type?->absenceType();
+
+        if ($type !== null && $this->status === VacationStatus::Approved) {
+            $absence = ($this->absence_id ? Absence::query()->find($this->absence_id) : null) ?? new Absence(['user_id' => $this->user_id, 'type' => $type]);
             $absence->fill([
+                'type' => $type,
                 'user_id' => $this->user_id,
                 'start_date' => $this->start_date,
                 'end_date' => $this->end_date,

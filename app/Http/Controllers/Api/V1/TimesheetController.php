@@ -106,7 +106,8 @@ class TimesheetController extends Controller
                     $validator->errors()->add("rows.{$index}.km_arrival", __('erp.mobile.errors.km_order'));
                 }
 
-                if (filled($row['arrival'] ?? null) && filled($row['departure'] ?? null) && $row['departure'] < $row['arrival']) {
+                // A departure before the arrival only for a night shift past midnight (e.g. 22:00 → 06:00).
+                if (filled($row['arrival'] ?? null) && filled($row['departure'] ?? null) && $row['departure'] < $row['arrival'] && ! Timesheets::isOvernight($row['arrival'], $row['departure'])) {
                     $validator->errors()->add("rows.{$index}.departure", __('erp.mobile.errors.time_order'));
                 }
 

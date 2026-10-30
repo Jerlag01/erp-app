@@ -75,7 +75,7 @@ class HrAdvances
     }
 
     /**
-     * @return array{total: float, vacation: float, vacation_counted: bool, family: float, unpaid: float, worked: float, base: float, advance: float}
+     * @return array{total: float, vacation: float, vacation_counted: bool, family: float, unpaid: float, rva: float, worked: float, base: float, advance: float}
      */
     public function calculate(Employee $employee, CarbonImmutable $from, CarbonImmutable $until, float $base): array
     {
@@ -86,7 +86,7 @@ class HrAdvances
             ->values();
 
         $total = (float) $workdays->count();
-        $excluded = ['vacation' => 0.0, 'family' => 0.0, 'unpaid' => 0.0];
+        $excluded = ['vacation' => 0.0, 'family' => 0.0, 'unpaid' => 0.0, 'rva' => 0.0];
 
         if ($employee->user_id !== null && $total > 0) {
             // Public holidays and IR days always count as worked.
@@ -106,14 +106,21 @@ class HrAdvances
                 ->whereDate('start_date', '<=', $until->toDateString())->whereDate('end_date', '>=', $from->toDateString())->get()
                 ->each(fn (VacationRequest $request) => $add('vacation', $request->start_date, $request->end_date, (bool) $request->half_day));
 
-            Absence::query()->where('user_id', $employee->user_id)->whereIn('type', [AbsenceType::Family, AbsenceType::Unpaid])
+            // Not worked: family and unpaid leave, a work accident without its certificate (unpaid), and
+            // what the RVA pays (economically unemployed, parental leave).
+            Absence::query()->where('user_id', $employee->user_id)->whereIn('type', [AbsenceType::Family, AbsenceType::Unpaid, AbsenceType::WorkAccident, AbsenceType::Economic, AbsenceType::Parental])
                 ->overlapping($from->toDateString(), $until->toDateString())->get()
-                ->each(fn (Absence $absence) => $add($absence->type === AbsenceType::Family ? 'family' : 'unpaid', $absence->start_date, $absence->end_date, (bool) $absence->half_day));
+                ->reject(fn (Absence $absence): bool => $absence->isPaidWorkAccident())
+                ->each(fn (Absence $absence) => $add(match ($absence->type) {
+                    AbsenceType::Family => 'family',
+                    AbsenceType::Economic, AbsenceType::Parental => 'rva',
+                    default => 'unpaid',
+                }, $absence->start_date, $absence->end_date, (bool) $absence->half_day));
         }
 
         // One vacation day (or less) in the period counts as a day worked.
         $vacationCounted = $excluded['vacation'] > 0 && $excluded['vacation'] <= 1;
-        $notWorked = ($vacationCounted ? 0 : $excluded['vacation']) + $excluded['family'] + $excluded['unpaid'];
+        $notWorked = ($vacationCounted ? 0 : $excluded['vacation']) + $excluded['family'] + $excluded['unpaid'] + $excluded['rva'];
         $worked = max(0.0, $total - $notWorked);
 
         return [
@@ -122,6 +129,7 @@ class HrAdvances
             'vacation_counted' => $vacationCounted,
             'family' => $excluded['family'],
             'unpaid' => $excluded['unpaid'],
+            'rva' => $excluded['rva'],
             'worked' => $worked,
             'base' => $base,
             'advance' => $total > 0 ? round($base * $worked / $total, 2) : 0.0,

@@ -37,6 +37,7 @@
                     <th>{{ __('erp.hr.advances.vacation') }}</th>
                     <th>{{ __('erp.hr.advances.family') }}</th>
                     <th>{{ __('erp.hr.advances.unpaid') }}</th>
+                    <th>{{ __('erp.hr.advances.rva') }}</th>
                     <th>{{ __('erp.hr.advances.worked') }}</th>
                     <th>{{ __('erp.hr.advances.advance') }}</th>
                 </tr>
@@ -51,16 +52,17 @@
                         <td>{{ $number($result['vacation']) }}@if ($result['vacation_counted'])*@endif</td>
                         <td>{{ $number($result['family']) }}</td>
                         <td>{{ $number($result['unpaid']) }}</td>
+                        <td>{{ $number($result['rva']) }}</td>
                         <td>{{ $number($result['worked']) }}</td>
                         <td>{{ $money($result['advance']) }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="8">{{ __('erp.hr.advances.none') }}</td></tr>
+                    <tr><td colspan="9">{{ __('erp.hr.advances.none') }}</td></tr>
                 @endforelse
             </tbody>
             @if ($rows !== [])
                 <tfoot>
-                    <tr><td colspan="7">{{ __('erp.pdf.total') }}</td><td>{{ $money(array_sum(array_map(fn ($row) => $row['result']['advance'], $rows))) }}</td></tr>
+                    <tr><td colspan="8">{{ __('erp.pdf.total') }}</td><td>{{ $money(array_sum(array_map(fn ($row) => $row['result']['advance'], $rows))) }}</td></tr>
                 </tfoot>
             @endif
         </table>

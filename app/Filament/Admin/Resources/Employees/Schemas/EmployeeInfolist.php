@@ -68,10 +68,18 @@ class EmployeeInfolist
                             ->schema([
                                 TextEntry::make('status')
                                     ->label(__('erp.employees.status'))
-                                    ->state(fn (Employee $record): string => $record->isEmployed() ? __('erp.employees.employed') : __('erp.employees.left_on_date', ['date' => $record->left_on->format('d/m/Y')]))
+                                    ->state(fn (Employee $record): string => match (true) {
+                                        $record->isInNotice() => __('erp.employees.notice.status', ['date' => $record->notice_ends_on->format('d/m/Y')]),
+                                        $record->isEmployed() => __('erp.employees.employed'),
+                                        default => __('erp.employees.left_on_date', ['date' => $record->left_on->format('d/m/Y')]),
+                                    })
                                     ->helperText(fn (Employee $record): ?string => $record->leaving_reason)
                                     ->badge()
-                                    ->color(fn (Employee $record): string => $record->isEmployed() ? 'success' : 'gray'),
+                                    ->color(fn (Employee $record): string => match (true) {
+                                        $record->isInNotice() => 'warning',
+                                        $record->isEmployed() => 'success',
+                                        default => 'gray',
+                                    }),
                                 TextEntry::make('employment_date')
                                     ->label(__('erp.employees.employment_date'))
                                     ->date('d/m/Y')

@@ -58,6 +58,7 @@ class HrTeamsFuelPassTest extends TestCase
 
         // Not in the planning, the prestation lists, vacation or sickness.
         $this->assertFalse(Planning::canAccess());
+        $this->assertTrue(TimesheetOverview::canAccess());
         $this->get('/my-vacation')->assertForbidden();
         $this->get('/my-absences')->assertForbidden();
         $ids = app(TimesheetReport::class)->employees(CarbonImmutable::parse('first day of this month'), CarbonImmutable::parse('last day of this month'))->pluck('id');
@@ -68,6 +69,31 @@ class HrTeamsFuelPassTest extends TestCase
         // A planner does not get them in the planning.
         $this->actingAs(User::factory()->admin()->create());
         $this->assertArrayNotHasKey($hr->id, Livewire::test(Planning::class)->instance()->personOptions());
+    }
+
+    #[Test]
+    public function the_administration_role_works_like_hr_without_a_team(): void
+    {
+        $role = Role::query()->where('name', 'Administratie')->sole();
+        $this->assertTrue($role->no_timesheet);
+        $this->assertFalse($role->is_admin);
+        // By default the monthly prestations.
+        $this->assertSame(['timesheets' => ['see_all', 'generate_pdf']], $role->permissions);
+
+        // Other modules come from the role's permissions, also without a team.
+        $role->update(['permissions' => [...$role->permissions, 'invoices' => ['view']]]);
+        $user = User::factory()->create(['role_id' => $role->id]);
+        $this->assertSame([], $user->teamIds());
+        $this->assertFalse($user->isGuest());
+        $this->assertTrue($user->hasPermission('invoices.view'));
+
+        // No prestation sheet, planning or leave.
+        $this->actingAs($user);
+        $this->assertFalse($user->hasTimesheet());
+        $this->assertFalse(Planning::canAccess());
+        $this->assertTrue(TimesheetOverview::canAccess());
+        $this->get('/my-vacation')->assertForbidden();
+        $this->getJson('/api/v1/me', $this->mobileAuth($user))->assertJsonPath('data.features.timesheets', false)->assertJsonPath('data.features.planning', false);
     }
 
     #[Test]

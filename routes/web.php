@@ -29,6 +29,7 @@ use App\Http\Controllers\MobileAppDownloadController;
 use App\Http\Controllers\MobileFloorPlanController;
 use App\Http\Controllers\MoveDocumentController;
 use App\Http\Controllers\OnboardingDocumentController;
+use App\Http\Controllers\ParentalLeaveDocumentController;
 use App\Http\Controllers\PeppolInboundController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\ProjectArchiveController;
@@ -103,6 +104,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/enersys-dossiers/{dossier}/documents/{document}', EnersysDocumentController::class)->whereNumber('dossier')->where('document', '[a-z_]+')->name('enersys.document');
     Route::get('/interventions/{report}/pdf', InterventionPdfController::class)->whereNumber('report')->name('interventions.pdf');
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');
+    Route::get('/parental-leaves/{leave}/certificate', ParentalLeaveDocumentController::class)->whereNumber('leave')->name('parental-leaves.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
     Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');

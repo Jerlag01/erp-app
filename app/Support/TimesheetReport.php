@@ -21,7 +21,13 @@ class TimesheetReport
      * Absence code per type of day, as in the Excel legend: R for overtime taken as time off (recuperatie
      * overuren), IR for the company inhaalrust days.
      */
-    public const CODES = ['vacation' => 'V', 'medical' => 'Z', 'overtime' => 'R', 'recuperation' => 'IR', 'family' => 'FV', 'justified' => 'GA', 'training' => 'OP', 'holiday' => 'F'];
+    public const CODES = [
+        'vacation' => 'V', 'medical' => 'Z', 'overtime' => 'R', 'recuperation' => 'IR', 'family' => 'FV', 'justified' => 'GA', 'training' => 'OP', 'holiday' => 'F',
+        'mobility' => 'MV', 'economic' => 'EW', 'short_leave' => 'KV', 'seniority' => 'AN', 'job_search' => 'SV', 'work_accident' => 'WO', 'parental' => 'OV',
+    ];
+
+    /** Night work: the hours of a day with work between 20:00 and 06:00 get this tag ("8N"); its total is in hours. */
+    public const NIGHT = 'N';
 
     /**
      * Codes counted in the left columns (year so far).
@@ -86,7 +92,7 @@ class TimesheetReport
         $last = $month->endOfMonth()->startOfDay();
         $working = $this->timesheets->days($user, $first, $last);
         $days = [];
-        $codes = array_fill_keys(array_values(self::CODES), 0.0);
+        $codes = array_fill_keys([...array_values(self::CODES), self::NIGHT], 0.0);
 
         foreach (CarbonPeriod::create($first, $last) as $date) {
             $key = $date->toDateString();
@@ -99,12 +105,16 @@ class TimesheetReport
                 $codes[$code] += $half ? 0.5 : 1;
             }
 
+            $night = (float) ($day['night'] ?? 0);
+            $codes[self::NIGHT] += $night;
+
             $categories = $day ? collect($day['rows'])->pluck('imputation')->filter()->map(fn (string $imputation): string => explode('-', $imputation)[0])->unique()->implode('/') : '';
 
             $days[$date->day] = [
                 'weekend' => $date->isWeekend(),
                 // A full absence shows its code; a worked day (also half a day off) its hours.
-                'value' => $worked > 0 ? self::number($worked) : ($code ?? ''),
+                // Night work: the hours with "N" behind them.
+                'value' => $worked > 0 ? self::number($worked).($night > 0 ? self::NIGHT : '') : ($code ?? ''),
                 'hours' => $worked,
                 'km' => (int) ($day['km'] ?? 0),
                 'imputation' => $categories,
@@ -167,7 +177,7 @@ class TimesheetReport
                 $data = $this->month($user, $month);
                 $rows[] = ['user' => $user, 'allowance' => (float) $user->vacation_days, 'year' => $this->yearToDate($user, $month), ...$data];
 
-                $summary[$user->id] ??= ['user' => $user, 'hours' => 0.0, 'total' => 0.0, 'km' => 0, 'mobility' => 0.0, 'codes' => array_fill_keys(array_values(self::CODES), 0.0)];
+                $summary[$user->id] ??= ['user' => $user, 'hours' => 0.0, 'total' => 0.0, 'km' => 0, 'mobility' => 0.0, 'codes' => array_fill_keys([...array_values(self::CODES), self::NIGHT], 0.0)];
                 $summary[$user->id]['hours'] += $data['hours'];
                 $summary[$user->id]['total'] += $data['total'];
                 $summary[$user->id]['km'] += $data['km'];

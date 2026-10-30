@@ -30,6 +30,29 @@ class ViewEmployee extends ViewRecord
     {
         return [
             EditAction::make(),
+            // Dismissed with a notice period (opzeggingstermijn): sollicitatieverlof until the end date, then
+            // "no longer in service" follows by itself (employees:end-notice).
+            Action::make('notice')
+                ->label(fn (Employee $record): string => $record->isInNotice() ? __('erp.employees.notice.change') : __('erp.employees.notice.start'))
+                ->icon(Heroicon::OutlinedClock)
+                ->color('warning')
+                ->visible(fn (Employee $record): bool => $record->isEmployed())
+                ->modalDescription(__('erp.employees.notice.help'))
+                ->fillForm(fn (Employee $record): array => ['notice_started_on' => $record->notice_started_on?->toDateString() ?? today()->toDateString(), 'notice_ends_on' => $record->notice_ends_on?->toDateString()])
+                ->schema([
+                    DatePicker::make('notice_started_on')->label(__('erp.employees.notice.started_on'))->native(false)->displayFormat('d/m/Y')->required(),
+                    DatePicker::make('notice_ends_on')->label(__('erp.employees.notice.ends_on'))->native(false)->displayFormat('d/m/Y')->afterOrEqual('notice_started_on')->required(),
+                ])
+                ->action(fn (Employee $record, array $data) => $record->update(['notice_started_on' => $data['notice_started_on'], 'notice_ends_on' => $data['notice_ends_on']]))
+                ->successNotificationTitle(__('erp.employees.notice.saved')),
+            Action::make('cancelNotice')
+                ->label(__('erp.employees.notice.cancel'))
+                ->icon(Heroicon::OutlinedXMark)
+                ->color('gray')
+                ->visible(fn (Employee $record): bool => $record->isInNotice())
+                ->requiresConfirmation()
+                ->action(fn (Employee $record) => $record->update(['notice_started_on' => null, 'notice_ends_on' => null]))
+                ->successNotificationTitle(__('erp.employees.notice.cancelled')),
             Action::make('endEmployment')
                 ->label(__('erp.employees.end_employment'))
                 ->icon(Heroicon::OutlinedUserMinus)

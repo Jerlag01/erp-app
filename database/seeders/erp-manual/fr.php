@@ -98,6 +98,8 @@ Ce que quelqu'un voit et peut faire dépend de son **rôle** et de son **équipe
 ## Rôle RH (pas de feuille de prestations)
 
 Le rôle **HR** ne voit par défaut que son propre compte, les **prestations par mois** et les **calculs RH**. Un rôle avec **Pas de feuille de prestations** (comme RH) n'a pas de feuille de prestations et ne figure pas dans le **planning**, les **congés** ou les **maladies** ; même sans équipe, ils ne sont pas invités. Tous les autres modules s'attribuent via les droits du rôle.
+
+Le rôle **Administratie** fonctionne de la même manière : pas de feuille de prestations, de planning ni de congés, et pas d'équipe nécessaire. Il voit par défaut les **prestations par mois** ; cochez dans le rôle ce dont l'administration a encore besoin (p. ex. Financier).
 MD,
         ],
 
@@ -256,6 +258,11 @@ Un employé demande une modification (p. ex. nouvelle adresse) via **Mes donnée
 ## Confidentialité
 
 Les données sensibles comme le numéro de registre national sont conservées **chiffrées** et visibles uniquement avec les droits adéquats.
+
+## Préavis et congé parental
+
+- Avec **Enregistrer le préavis**, vous indiquez le début et la fin du préavis ; le collaborateur est alors *En préavis jusqu'au …* et peut prendre un jour de congé de sollicitation par semaine. Le lendemain de la date de fin, il est **automatiquement mis hors service** (login désactivé). **Retirer le préavis** l'annule.
+- Dans l'onglet **Congé parental**, vous activez le congé parental du collaborateur, avec l'enfant, la forme, la période et l'attestation.
 MD,
         ],
 
@@ -326,6 +333,16 @@ Dans **Demandes de congé**, vous approuvez ou refusez une demande (avec une rai
 ## Conseil
 
 Les collègues ne voient dans le calendrier que « absent », jamais la raison d'une maladie.
+
+## Autres types de congé
+
+- **Congé mobilité (MV)** : 1 jour par 27 000 km enregistrés dans les prestations de **l'année précédente** ; à planifier librement via une demande de congé, valable jusqu'au 31 décembre. Pas d'attestation. Compte comme jour presté.
+- **Congé d'ancienneté (AN)** : 1 jour par an à partir de **25 ans de service** (depuis la date d'entrée ; pas pour les intérimaires) ; à planifier librement. Compte comme jour presté.
+- **Congé de sollicitation (SV)** : pendant un **préavis**, une **journée complète par semaine**, jusqu'à la date de fin. Compte comme jour presté (payé).
+- **Chômage économique (EW)** : encodé uniquement par les administrateurs ; compte comme non presté (payé par l'ONEM), mais les **heures supplémentaires restent**. Pas d'attestation.
+- **Petit chômage (KV)** : uniquement par les administrateurs, avec le **motif** de l'arrêté royal du 28/08/1963 (p. ex. mariage 2 jours, décès d'un parent 3 jours) et une **attestation**. Compte comme jour presté complet.
+- **Accident du travail (WO)** : uniquement par les administrateurs, lié à la **déclaration d'accident**. Payé si le **certificat est dans la plateforme dans les 48 heures** ; sinon, les jours comptent comme **congé sans solde**. Rien ne peut y être planifié.
+- **Congé parental (OV)** : les administrateurs l'activent par collaborateur (chez le collaborateur → Congé parental : enfant de moins de 12 ans, forme complète, 1/2, 1/5 ou 1/10 avec leur durée maximale, et **l'attestation**). Ils encodent ensuite les jours OV dans cette période. Compte comme non presté (ONEM), les heures supplémentaires restent.
 MD,
         ],
 
@@ -369,6 +386,11 @@ Ce que vous prestez au-delà des heures prévues s'ajoute à votre **solde d'heu
 Les collaborateurs avec le statut **employé** (registre du personnel) n'encodent ni heures ni kilomètres : chaque jour ouvrable compte **8 heures**. Une demi-journée de congé laisse 4 heures prestées ; congé, maladie, formation et jours fériés comptent comme pour tous, le congé familial et sans solde comptent 0. L'imputation, les remarques et l'envoi restent les mêmes. Dans l'application mobile, ils n'ont pas d'onglet Prestations.
 
 Lorsque le statut d'un collaborateur est **Incapacité de travail** (registre du personnel), chaque jour ouvrable figure comme **Z (maladie)** sur la feuille de prestations, y compris les semaines à venir. En le définissant, vous choisissez le premier jour (aujourd'hui par défaut) ; en remettant le statut (p. ex. ouvrier), vous indiquez le **dernier jour de maladie** (hier par défaut). Chaque période est conservée et affichée chez le collaborateur sous *Incapacité de travail*.
+
+## Travail de nuit et codes
+
+- **Travail de nuit (N)** : les heures entre **20:00 et 06:00**. Dans l'aperçu mensuel, les heures prestées sont alors suivies d'un **N** (p. ex. *7,5N*), et le total des heures de nuit figure dans les codes. Commencer à 05:00 et continuer la journée n'est pas du travail de nuit. Une équipe de nuit peut passer minuit (p. ex. 22:00 → 06:00 : arrivée à partir de 18:00, départ jusqu'à 08:00).
+- Nouveaux codes dans l'aperçu : **MV**, **AN**, **SV**, **KV** et **WO** payé comptent comme jour presté ; **EW** et **OV** comptent comme non presté sans déduire d'heures supplémentaires ; un **WO** sans certificat après 48 heures compte comme non payé.
 MD,
         ],
 

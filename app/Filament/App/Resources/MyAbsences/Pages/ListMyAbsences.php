@@ -60,7 +60,7 @@ class ListMyAbsences extends ListRecords
     }
 
     /**
-     * One list per kind of absence: medical, overtime as leave, family leave.
+     * One list per kind of absence the employee has (sickness always).
      *
      * @return array<string, Tab>
      */
@@ -69,7 +69,8 @@ class ListMyAbsences extends ListRecords
         $days = Absence::query()->where('user_id', auth()->id())->selectRaw('type, sum(days) as total')->groupBy('type')->pluck('total', 'type');
         $tabs = [];
 
-        foreach (AbsenceType::cases() as $type) {
+        // Sickness always (to report it), the other kinds only when the employee has them.
+        foreach (array_filter(AbsenceType::cases(), fn (AbsenceType $type): bool => $type === AbsenceType::Medical || isset($days[$type->value])) as $type) {
             $tabs[$type->value] = Tab::make($type->getLabel())
                 ->icon($type->getIcon())
                 ->badge(($total = (float) ($days[$type->value] ?? 0)) > 0 ? rtrim(rtrim(number_format($total, 1, ',', ''), '0'), ',').' '.__('erp.absences.days_short') : null)

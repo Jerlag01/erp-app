@@ -47,6 +47,7 @@
                         <th style="padding: .5rem;">{{ __('erp.hr.advances.vacation') }}</th>
                         <th style="padding: .5rem;">{{ __('erp.hr.advances.family') }}</th>
                         <th style="padding: .5rem;">{{ __('erp.hr.advances.unpaid') }}</th>
+                        <th style="padding: .5rem;">{{ __('erp.hr.advances.rva') }}</th>
                         <th style="padding: .5rem;">{{ __('erp.hr.advances.worked') }}</th>
                         <th style="padding: .5rem;">{{ __('erp.hr.advances.advance') }}</th>
                     </tr>
@@ -65,17 +66,18 @@
                             <td style="padding: .5rem;">{{ $number($result['vacation']) }}@if ($result['vacation_counted']) <span title="{{ __('erp.hr.advances.vacation_counted') }}">*</span>@endif</td>
                             <td style="padding: .5rem;">{{ $number($result['family']) }}</td>
                             <td style="padding: .5rem;">{{ $number($result['unpaid']) }}</td>
+                            <td style="padding: .5rem;">{{ $number($result['rva']) }}</td>
                             <td style="padding: .5rem;"><strong>{{ $number($result['worked']) }}</strong></td>
                             <td style="padding: .5rem;"><strong>{{ $money($result['advance']) }}</strong></td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" style="padding: 1rem; text-align: center; opacity: .7;">{{ __('erp.hr.advances.none') }}</td></tr>
+                        <tr><td colspan="9" style="padding: 1rem; text-align: center; opacity: .7;">{{ __('erp.hr.advances.none') }}</td></tr>
                     @endforelse
                 </tbody>
                 @if ($rows !== [])
                     <tfoot>
                         <tr style="text-align: right;">
-                            <td colspan="7" style="padding: .5rem;"><strong>{{ __('erp.pdf.total') }}</strong></td>
+                            <td colspan="8" style="padding: .5rem;"><strong>{{ __('erp.pdf.total') }}</strong></td>
                             <td style="padding: .5rem;"><strong>{{ $money($this->total()) }}</strong></td>
                         </tr>
                     </tfoot>

@@ -206,20 +206,102 @@ class Timesheets
         return (int) array_sum(array_map(fn (array $row): int => in_array($row['kind'], self::COUNTED, true) ? (self::rowKm($row) ?? 0) : 0, $rows));
     }
 
+    /** A night shift runs past midnight: it starts from this hour and ends by OVERNIGHT_UNTIL. */
+    public const OVERNIGHT_FROM = 18 * 60;
+
+    public const OVERNIGHT_UNTIL = 8 * 60;
+
+    /** Night work (N): between 20:00 and 06:00. */
+    public const NIGHT_FROM = 20 * 60;
+
+    public const NIGHT_UNTIL = 6 * 60;
+
     /**
      * Hours between arrival and departure (decimal, e.g. 06:15 → 13:30 = 7.25), or null when incomplete.
+     * A night shift may run past midnight (e.g. 22:00 → 06:00 = 8); any other departure before the
+     * arrival is not valid.
      */
     public static function hours(?string $arrival, ?string $departure): ?float
     {
-        if (blank($arrival) || blank($departure)) {
+        $span = self::span($arrival, $departure);
+
+        return $span === null ? null : round(($span[1] - $span[0]) / 60, 2);
+    }
+
+    /**
+     * Whether a departure before the arrival is a night shift past midnight.
+     */
+    public static function isOvernight(?string $arrival, ?string $departure): bool
+    {
+        $from = self::minutes($arrival);
+        $until = self::minutes($departure);
+
+        return $from !== null && $until !== null && $until < $from && $from >= self::OVERNIGHT_FROM && $until <= self::OVERNIGHT_UNTIL;
+    }
+
+    /**
+     * The minutes from midnight of the start and the end (the end past 24:00 for a night shift).
+     *
+     * @return array{0: int, 1: int}|null
+     */
+    protected static function span(?string $arrival, ?string $departure): ?array
+    {
+        $from = self::minutes($arrival);
+        $until = self::minutes($departure);
+
+        if ($from === null || $until === null) {
             return null;
         }
 
-        [$ah, $am] = array_map('intval', explode(':', $arrival));
-        [$dh, $dm] = array_map('intval', explode(':', $departure));
-        $minutes = ($dh * 60 + $dm) - ($ah * 60 + $am);
+        if ($until < $from) {
+            return self::isOvernight($arrival, $departure) ? [$from, $until + 1440] : null;
+        }
 
-        return $minutes >= 0 ? round($minutes / 60, 2) : null;
+        return [$from, $until];
+    }
+
+    protected static function minutes(?string $time): ?int
+    {
+        if (blank($time) || ! str_contains((string) $time, ':')) {
+            return null;
+        }
+
+        [$hours, $minutes] = array_map('intval', explode(':', (string) $time));
+
+        return $hours * 60 + $minutes;
+    }
+
+    /**
+     * Night hours (N) of the counted rows: work after 20:00, and work before 06:00 when it ends by then
+     * (an early start at 05:00 that goes on into the day is not night work).
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    public static function nightHours(array $rows): float
+    {
+        $night = 0;
+
+        foreach ($rows as $row) {
+            if (! in_array($row['kind'] ?? null, self::COUNTED, true) || ($span = self::span($row['arrival'] ?? null, $row['departure'] ?? null)) === null) {
+                continue;
+            }
+
+            [$from, $until] = $span;
+            // The evening: from 20:00 until midnight (and the next evening is never reached).
+            $night += max(0, min($until, 1440) - max($from, self::NIGHT_FROM));
+
+            // Until 06:00 in the morning: of the same day, or after midnight for a night shift.
+            foreach ([0, 1440] as $offset) {
+                $morningFrom = max($from, $offset);
+                $morningUntil = min($until, $offset + self::NIGHT_UNTIL);
+
+                if ($morningUntil > $morningFrom && $until <= $offset + self::NIGHT_UNTIL) {
+                    $night += $morningUntil - $morningFrom;
+                }
+            }
+        }
+
+        return round($night / 60, 2);
     }
 
     /**
@@ -391,6 +473,7 @@ class Timesheets
                 'credit' => $credit,
                 'total' => round($worked + $credit, 2),
                 'km' => $fixed ? 0 : self::km($rows),
+                'night' => $fixed ? 0.0 : self::nightHours($rows),
                 'remarks' => $record?->remarks,
             ];
         }
@@ -412,7 +495,7 @@ class Timesheets
         [$kmCarried, $overtimeCarried] = $this->carried($user, $monday, $record);
         $hours = round(array_sum(array_column($days, 'total')), 2);
         $km = (int) array_sum(array_column($days, 'km'));
-        $expected = (float) ($record?->expected_hours ?? $this->expectedHours());
+        $expected = self::expectedFor($record?->expected_hours ?? $this->expectedHours(), $days);
 
         $notes = [];
         foreach ($days as $index => $day) {
@@ -448,6 +531,23 @@ class Timesheets
             'overtime_new' => round($overtimeCarried + $hours - $expected, 2),
             'notes' => $notes,
         ];
+    }
+
+    /**
+     * The expected hours of a week, minus the days that keep the overtime (economically unemployed,
+     * parental leave): those are not worked, but not overtime either.
+     *
+     * @param  iterable<array{status: ?array<string, mixed>}>  $days
+     */
+    public static function expectedFor(float|int|string $expected, iterable $days): float
+    {
+        $off = 0.0;
+
+        foreach ($days as $day) {
+            $off += (float) ($day['status']['expected_off'] ?? 0);
+        }
+
+        return max(0.0, round((float) $expected - $off, 2));
     }
 
     /**
@@ -506,7 +606,7 @@ class Timesheets
             $overtime = $override?->overtime_carried !== null ? (float) $override->overtime_carried : $overtime;
             $weekDays = array_filter($days, fn (array $day): bool => $day['date']->betweenIncluded($week, $week->addDays(4)));
             $km += (int) array_sum(array_column($weekDays, 'km'));
-            $overtime += array_sum(array_column($weekDays, 'total')) - (float) ($override?->expected_hours ?? $this->expectedHours());
+            $overtime += array_sum(array_column($weekDays, 'total')) - self::expectedFor($override?->expected_hours ?? $this->expectedHours(), $weekDays);
         }
 
         return [
@@ -518,17 +618,22 @@ class Timesheets
     /**
      * Absences, vacation, trainings and public holidays per date: what is noted and credited.
      *
-     * @return array<string, array{type: string, note: string, credit: float, lunch_locked: bool}>
+     * @return array<string, array{type: string, note: string, credit: float, lunch_locked: bool, expected_off: float}>
      */
     public function statuses(User $user, CarbonImmutable $from, CarbonImmutable $until): array
     {
         $day = $this->dayHours();
         $statuses = [];
-        $set = function (CarbonInterface $start, CarbonInterface $end, string $type, string $note, float $credit, bool $lunchLocked) use (&$statuses, $from, $until): void {
+        // "expected_off": hours taken off the week's expected hours (economically unemployed, parental leave).
+        $set = function (CarbonInterface $start, CarbonInterface $end, string $type, string $note, float $credit, bool $lunchLocked, float $expectedOff = 0.0) use (&$statuses, $from, $until): void {
             foreach (CarbonPeriod::create(CarbonImmutable::instance($start)->max($from), CarbonImmutable::instance($end)->min($until)) as $date) {
-                $statuses[$date->toDateString()] ??= ['type' => $type, 'note' => $note, 'credit' => $credit, 'lunch_locked' => $lunchLocked];
+                $statuses[$date->toDateString()] ??= ['type' => $type, 'note' => $note, 'credit' => $credit, 'lunch_locked' => $lunchLocked, 'expected_off' => $expectedOff];
             }
         };
+        $label = fn (Absence $absence, string $suffix = ''): string => trim(__('erp.enums.absence_type.'.$absence->type->value, [], 'nl')
+            .($absence->type === AbsenceType::ShortLeave && filled($absence->reason) ? ': '.__('erp.short_leave.reasons.'.$absence->reason, [], 'nl') : '')
+            .($absence->half_day ? ' (halve dag)' : '').$suffix);
+        $hours = fn (Absence $absence): float => $absence->half_day ? $day / 2 : $day;
 
         // In order of priority: the first one found for a date wins.
         Holiday::query()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get()
@@ -541,6 +646,12 @@ class Timesheets
 
             $absences->where('type', AbsenceType::Medical)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'medical', $absence->half_day ? 'Ziekte (halve dag)' : 'Ziekte', $absence->half_day ? $day / 2 : $day, true));
+
+            // A work accident is paid with its certificate (or within 48 hours); without it, unpaid.
+            $absences->where('type', AbsenceType::WorkAccident)
+                ->each(fn (Absence $absence) => $absence->isPaidWorkAccident()
+                    ? $set($absence->start_date, $absence->end_date, 'work_accident', $label($absence), $hours($absence), true)
+                    : $set($absence->start_date, $absence->end_date, 'work_accident', $label($absence, ' – geen attest: onbetaald'), 0, false));
         }
 
         // The statute "arbeidsongeschikt" (employee register): every working day of the period is sickness, also while it is open.
@@ -563,6 +674,11 @@ class Timesheets
             VacationRequest::query()->vacation()->where('user_id', $user->id)->where('status', VacationStatus::Approved)
                 ->whereDate('start_date', '<=', $until->toDateString())->whereDate('end_date', '>=', $from->toDateString())->get()
                 ->each(fn (VacationRequest $request) => $set($request->start_date, $request->end_date, 'vacation', $request->half_day ? 'Verlof (halve dag)' : 'Verlof', $request->half_day ? $day / 2 : $day, true));
+
+            // Paid days off that count as worked: klein verlet, mobility, seniority and sollicitatieverlof.
+            foreach ([AbsenceType::ShortLeave, AbsenceType::Mobility, AbsenceType::Seniority, AbsenceType::JobSearch] as $type) {
+                $absences->where('type', $type)->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, $type->value, $label($absence), $hours($absence), true));
+            }
         }
 
         if (modules()->planning()) {
@@ -579,6 +695,11 @@ class Timesheets
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'justified', $absence->half_day ? 'Gewettigd afwezig (halve dag)' : 'Gewettigd afwezig', 0, false));
             $absences->where('type', AbsenceType::Overtime)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'overtime', 'Recuperatie overuren', 0, false));
+
+            // Not worked (paid by the RVA), but the overtime balance stays: the day is off the expected hours.
+            foreach ([AbsenceType::Economic, AbsenceType::Parental] as $type) {
+                $absences->where('type', $type)->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, $type->value, $label($absence), 0, false, $hours($absence)));
+            }
         }
 
         return $statuses;

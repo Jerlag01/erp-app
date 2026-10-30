@@ -98,6 +98,8 @@ What someone sees and may do depends on their **role** and their **team**.
 ## HR role (no prestation sheet)
 
 The role **HR** by default only sees its own account, the **prestations per month** and the **HR calculations**. A role with **No prestation sheet** (like HR) has no prestation sheet of its own and is not in the **planning**, **leave** or **sickness**; even without a team they are not guests. All other modules are given through the role's permissions as usual.
+
+The role **Administratie** works the same way: no prestation sheet, planning or leave, and no team needed. By default it sees the **prestations per month**; tick on the role what else the administration needs (e.g. Finance).
 MD,
         ],
 
@@ -256,6 +258,11 @@ An employee requests a change (e.g. a new address) through **My details**. The a
 ## Privacy
 
 Sensitive data such as the national register number is stored **encrypted** and only visible with the right permissions.
+
+## Notice period and parental leave
+
+- With **Register notice** you fill in the start and end of the notice period; the employee is then *In notice until …* and can take one day of job search leave a week. The day after the end date the employee is **automatically no longer in service** (login off). **Withdraw notice** undoes it.
+- In the **Parental leave** tab you enable the employee's parental leave, with the child, the form, the period and the certificate.
 MD,
         ],
 
@@ -326,6 +333,16 @@ Under **Vacation requests** you approve a request or refuse it (with a reason). 
 ## Tip
 
 Colleagues only see "absent" in the calendar, never the reason for a sickness.
+
+## Other kinds of leave
+
+- **Mobility leave (MV)**: 1 day per 27,000 km registered in the prestations of the **year before**; planned freely through a leave request and valid until 31 December. No certificate. Counts as a worked day.
+- **Seniority leave (AN)**: 1 day a year from **25 years of service** (from the date of employment; not for interim workers); planned freely. Counts as a worked day.
+- **Job search leave (SV)**: during a **notice period** one **full day a week**, until its end date. Counts as a worked (paid) day.
+- **Economic unemployment (EW)**: entered by administrators only; counts as not worked (paid by the RVA), but the **overtime stays**. No certificate.
+- **Short leave (KV)**: by administrators only, with the **reason** of the royal decree of 28/08/1963 (e.g. marriage 2 days, death of a parent 3 days) and a **certificate**. Counts as a full worked day.
+- **Work accident (WO)**: by administrators only, linked to the **accident report**. Paid when the **certificate is in the platform within 48 hours**; otherwise the days count as **unpaid leave**. Nothing can be planned on it.
+- **Parental leave (OV)**: administrators enable it per employee (on the employee → Parental leave: a child under 12, the form full, 1/2, 1/5 or 1/10 with its longest duration, and the **certificate**). Then they enter the OV days within that period. Counts as not worked (RVA), the overtime stays.
 MD,
         ],
 
@@ -369,6 +386,11 @@ What you work beyond the expected hours goes to your **overtime balance**, which
 Employees with the statute **bediende** (employee register) fill in no hours and no kilometres: every working day counts **8 hours**. Half a day of leave leaves 4 worked hours; leave, sickness, training and holidays count as for everyone, family and unpaid leave count 0. The imputation, remarks and sending stay the same. In the mobile app they have no Prestations tab.
 
 When an employee's statute is **Unfit for work** (employee register), every working day is **Z (sickness)** on the prestation sheet, also in the weeks to come. When setting it you choose the first day (today by default); when you change the statute back (e.g. to worker), you fill in the **last day of sickness** (yesterday by default). Every period is kept and shown on the employee under *Incapacity for work*.
+
+## Night work and codes
+
+- **Night work (N)**: hours between **20:00 and 06:00**. In the monthly overview the worked hours then show with an **N** behind them (e.g. *7,5N*), and the total night hours are with the codes. Starting at 05:00 and working on through the day is not night work. A night shift may run past midnight (e.g. 22:00 → 06:00: arrival from 18:00, departure until 08:00).
+- New codes in the overview: **MV**, **AN**, **SV**, **KV** and paid **WO** count as a worked day; **EW** and **OV** count as not worked without taking off overtime; a **WO** without certificate after 48 hours counts as unpaid.
 MD,
         ],
 

@@ -9,6 +9,7 @@ use App\Filament\Admin\Resources\Employees\Pages\ListEmployees;
 use App\Filament\Admin\Resources\Employees\Pages\ViewEmployee;
 use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\MedicalChecksRelationManager;
+use App\Filament\Admin\Resources\Employees\RelationManagers\ParentalLeavesRelationManager;
 use App\Filament\Admin\Resources\Employees\Schemas\EmployeeForm;
 use App\Filament\Admin\Resources\Employees\Schemas\EmployeeInfolist;
 use App\Filament\Admin\Resources\Employees\Tables\EmployeesTable;
@@ -101,6 +102,7 @@ class EmployeeResource extends Resource
         return [
             CertificatesRelationManager::class,
             MedicalChecksRelationManager::class,
+            ParentalLeavesRelationManager::class,
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Enums\VacationType;
 use App\Filament\App\Resources\MyVacations\Pages\ListMyVacations;
 use App\Filament\Resources\VacationRequests\VacationRequestResource;
 use App\Models\VacationRequest;
+use App\Support\LeaveEntitlements;
 use App\Support\Timesheets;
 use App\Support\WorkingDays;
 use BackedEnum;
@@ -99,18 +100,27 @@ class MyVacationResource extends Resource
         return parent::getEloquentQuery()->where('user_id', auth()->id());
     }
 
+    /**
+     * @return list<VacationType>
+     */
+    public static function requestableTypes(): array
+    {
+        return app(LeaveEntitlements::class)->requestable(auth()->user(), app(Timesheets::class)->enabled());
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->columns(2)
             ->components([
+                // Only what the employee has: mobility, seniority and sollicitatieverlof when earned / in notice.
                 ToggleButtons::make('type')
                     ->label(__('erp.vacations.type'))
-                    ->options(VacationType::class)
+                    ->options(fn (): array => collect(self::requestableTypes())->mapWithKeys(fn (VacationType $type): array => [$type->value => $type->getLabel()])->all())
                     ->default(VacationType::Vacation->value)
                     ->inline()
                     ->required()
-                    ->visible(fn (): bool => app(Timesheets::class)->enabled())
+                    ->visible(fn (): bool => count(self::requestableTypes()) > 1)
                     ->live()
                     ->columnSpanFull(),
                 DatePicker::make('start_date')
@@ -153,6 +163,11 @@ class MyVacationResource extends Resource
                     }
 
                     $year = $get('start_date') ? (int) substr((string) $get('start_date'), 0, 4) : (int) date('Y');
+                    $type = $get('type') instanceof VacationType ? $get('type') : VacationType::tryFrom((string) $get('type'));
+
+                    if ($type !== null && ($summary = app(LeaveEntitlements::class)->summary(auth()->user(), $type, $year)) !== null) {
+                        return __('erp.vacations.preview_days', ['days' => $days]).' '.$summary;
+                    }
 
                     return __('erp.vacations.preview', [
                         'days' => $days,

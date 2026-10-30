@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Absence;
 use App\Models\User;
 use App\Models\VacationRequest;
+use App\Support\LeaveEntitlements;
 use App\Support\Timesheets;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,7 +49,13 @@ class LeaveController extends Controller
             'year' => $year,
             'vacation' => $user->vacationBalance($year),
             'overtime' => $this->timesheets->enabled() ? $this->timesheets->overtimeBalance($user) : null,
-            'types' => array_map(fn (VacationType $type): array => ['value' => $type->value, 'label' => $type->getLabel()], $this->types()),
+            // What the user can ask, with what is left of mobility, seniority and sollicitatieverlof.
+            'types' => array_map(fn (VacationType $type): array => [
+                'value' => $type->value,
+                'label' => $type->getLabel(),
+                'balance' => app(LeaveEntitlements::class)->summary($user, $type, $year),
+                'full_days_only' => $type === VacationType::JobSearch,
+            ], $this->types($user)),
             'requests' => $requests->map(fn (VacationRequest $request): array => $this->request($request, $user))->values(),
             'absences' => $absences->map(fn (Absence $absence): array => $this->absence($absence, $user))->values(),
         ]]);
@@ -61,7 +68,7 @@ class LeaveController extends Controller
         }
 
         $data = $request->validate([
-            'type' => ['required', Rule::in(array_map(fn (VacationType $type): string => $type->value, $this->types()))],
+            'type' => ['required', Rule::in(array_map(fn (VacationType $type): string => $type->value, $this->types($request->user())))],
             'start_date' => ['required', 'date_format:Y-m-d'],
             'end_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:start_date'],
             'half_day' => ['nullable', 'boolean'],
@@ -128,9 +135,9 @@ class LeaveController extends Controller
     /**
      * @return list<VacationType>
      */
-    protected function types(): array
+    protected function types(User $user): array
     {
-        return $this->timesheets->enabled() ? VacationType::cases() : [VacationType::Vacation];
+        return app(LeaveEntitlements::class)->requestable($user, $this->timesheets->enabled());
     }
 
     /**

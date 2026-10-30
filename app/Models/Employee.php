@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Storage;
     'user_id', 'first_name', 'last_name',
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id',
     'private_email', 'private_phone', 'national_number', 'bank_account',
-    'place_of_birth', 'date_of_birth', 'employment_date', 'mother_tongue',
+    'place_of_birth', 'date_of_birth', 'employment_date', 'notice_started_on', 'notice_ends_on', 'mother_tongue',
     'employment_category', 'contract_term', 'is_mentor', 'is_interim', 'interim_agency', 'education_level',
     'driver_license_categories', 'driver_license_number', 'driver_license_expires_on', 'driver_license_files', 'driver_license_file_names',
     'size_pants', 'size_shirt', 'size_sweater', 'size_shoes',
@@ -162,6 +162,22 @@ class Employee extends Model
     public function medicalChecks(): HasMany
     {
         return $this->hasMany(EmployeeMedicalCheck::class)->orderByDesc('checked_on')->orderByDesc('id');
+    }
+
+    /**
+     * In a notice period (opzeggingstermijn): still employed, with the end date set.
+     */
+    public function isInNotice(): bool
+    {
+        return $this->isEmployed() && $this->notice_ends_on !== null;
+    }
+
+    /**
+     * @return HasMany<ParentalLeave, $this>
+     */
+    public function parentalLeaves(): HasMany
+    {
+        return $this->hasMany(ParentalLeave::class)->orderByDesc('starts_on');
     }
 
     /**
@@ -397,6 +413,8 @@ class Employee extends Model
             'bank_account' => 'encrypted',
             'date_of_birth' => 'date',
             'employment_date' => 'date',
+            'notice_started_on' => 'date',
+            'notice_ends_on' => 'date',
             'left_on' => 'date',
             'welcome_sent_at' => 'datetime',
             'employment_category' => EmploymentCategory::class,

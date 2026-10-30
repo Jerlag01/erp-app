@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
  * The certificate is uploaded by the administrator or, while there is none from the
  * administrator, by the employee; an administrator's certificate can only be downloaded.
  */
-#[Fillable(['user_id', 'type', 'start_date', 'end_date', 'half_day', 'days', 'note', 'document', 'document_name', 'document_source', 'document_uploaded_at', 'created_by'])]
+#[Fillable(['user_id', 'type', 'start_date', 'end_date', 'half_day', 'days', 'reason', 'incident_id', 'parental_leave_id', 'note', 'document', 'document_name', 'document_source', 'document_uploaded_at', 'created_by'])]
 class Absence extends Model
 {
     /** @use HasFactory<AbsenceFactory> */
@@ -48,6 +48,38 @@ class Absence extends Model
     }
 
     /**
+     * The accident report of a work accident (WO).
+     *
+     * @return BelongsTo<Incident, $this>
+     */
+    public function incident(): BelongsTo
+    {
+        return $this->belongsTo(Incident::class);
+    }
+
+    /**
+     * The parental leave an OV day belongs to.
+     *
+     * @return BelongsTo<ParentalLeave, $this>
+     */
+    public function parentalLeave(): BelongsTo
+    {
+        return $this->belongsTo(ParentalLeave::class);
+    }
+
+    /** A work accident needs its certificate within this many hours, or the days are unpaid. */
+    public const CERTIFICATE_HOURS = 48;
+
+    /**
+     * A work accident is paid with its certificate, or while the 48 hours to hand it in are running.
+     */
+    public function isPaidWorkAccident(): bool
+    {
+        return $this->type === AbsenceType::WorkAccident
+            && ($this->hasDocument() || ($this->created_at ?? now())->copy()->addHours(self::CERTIFICATE_HOURS)->isFuture());
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
@@ -68,7 +100,8 @@ class Absence extends Model
      */
     public function employeeMayUpload(): bool
     {
-        return $this->type->needsCertificate() && $this->document_source !== self::SOURCE_ADMIN;
+        // Not for what only administration enters (klein verlet, work accident).
+        return $this->type->needsCertificate() && ! $this->type->isAdministrationOnly() && $this->document_source !== self::SOURCE_ADMIN;
     }
 
     public static function directoryFor(int $userId): string
