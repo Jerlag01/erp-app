@@ -4007,6 +4007,14 @@ return [
         'sent' => 'Message envoyé à :count collaborateur(s)',
     ],
     'mobile' => [
+        'projects' => [
+            'reference' => 'Référence (numéro de projet)',
+            'status' => 'Statut du projet',
+            'part_added' => 'Article ajouté à la liste de pièces',
+            'part_removed' => 'Article retiré de la liste de pièces',
+            'not_your_part' => 'Vous ne pouvez retirer que les articles que vous avez ajoutés vous-même.',
+            'added_by' => 'Ajouté par',
+        ],
         'two_factor' => [
             'required' => 'Saisissez le code de votre application d\'authentification, ou le code que nous venons de vous envoyer par e-mail.',
             'invalid' => 'Ce code est incorrect ou a expiré.',

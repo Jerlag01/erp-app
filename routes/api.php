@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\MobileAuthController;
 use App\Http\Controllers\Api\V1\PlanningController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\PushTestController;
 use App\Http\Controllers\Api\V1\PushTokenController;
 use App\Http\Controllers\Api\V1\SuggestionController;
@@ -94,6 +95,16 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('/work-sites', [InterventionController::class, 'workSites'])->name('work-sites');
             Route::get('/{id}', [InterventionController::class, 'show'])->whereNumber('id')->name('show');
             Route::post('/{id}/close', [InterventionController::class, 'close'])->whereNumber('id')->name('close');
+        });
+
+        // The 600 and 610–650 projects a team of the employee executes.
+        Route::prefix('/projects')->name('projects.')->group(function (): void {
+            Route::get('/', [ProjectController::class, 'index'])->name('index');
+            Route::get('/stock-items', [ProjectController::class, 'stockItems'])->name('stock-items');
+            Route::get('/{id}', [ProjectController::class, 'show'])->whereNumber('id')->name('show');
+            Route::post('/{id}/parts', [ProjectController::class, 'addPart'])->whereNumber('id')->name('parts.add');
+            Route::delete('/{id}/parts/{part}', [ProjectController::class, 'removePart'])->whereNumber(['id', 'part'])->name('parts.remove');
+            Route::post('/{id}/files/{file}', [ProjectController::class, 'file'])->whereNumber(['id', 'file'])->name('file');
         });
 
         Route::prefix('/battery-rooms')->name('battery-rooms.')->group(function (): void {

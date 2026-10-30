@@ -4008,6 +4008,14 @@ return [
         'sent' => 'Bericht verstuurd naar :count medewerker(s)',
     ],
     'mobile' => [
+        'projects' => [
+            'reference' => 'Referentie (projectnummer)',
+            'status' => 'Projectstatus',
+            'part_added' => 'Artikel toegevoegd aan de stuklijst',
+            'part_removed' => 'Artikel verwijderd van de stuklijst',
+            'not_your_part' => 'Je kunt alleen artikels verwijderen die je zelf hebt toegevoegd.',
+            'added_by' => 'Toegevoegd door',
+        ],
         'two_factor' => [
             'required' => 'Geef de code van je authenticator-app in, of de code die we je net mailden.',
             'invalid' => 'Die code klopt niet of is verlopen.',

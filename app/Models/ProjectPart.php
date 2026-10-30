@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * A line on a project's part list: a stock item (or a free description) with a quantity and unit,
  * e.g. 150 m of cable. It does not take anything out of stock.
  */
-#[Fillable(['project_id', 'stock_item_id', 'description', 'quantity', 'unit_id', 'notes'])]
+#[Fillable(['project_id', 'stock_item_id', 'description', 'quantity', 'unit_id', 'notes', 'added_by'])]
 class ProjectPart extends Model
 {
     /**
@@ -35,6 +35,14 @@ class ProjectPart extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function adder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'added_by');
     }
 
     public function quantityLabel(): string

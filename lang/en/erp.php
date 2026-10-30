@@ -4007,6 +4007,14 @@ return [
         'sent' => 'Message sent to :count employee(s)',
     ],
     'mobile' => [
+        'projects' => [
+            'reference' => 'Reference (project number)',
+            'status' => 'Project status',
+            'part_added' => 'Item added to the part list',
+            'part_removed' => 'Item removed from the part list',
+            'not_your_part' => 'You can only remove items you added yourself.',
+            'added_by' => 'Added by',
+        ],
         'two_factor' => [
             'required' => 'Enter the code of your authenticator app, or the code we just e-mailed you.',
             'invalid' => 'That code is not correct or has expired.',

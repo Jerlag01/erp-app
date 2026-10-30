@@ -108,7 +108,7 @@ class PartsRelationManager extends RelationManager
 
         return $table
             ->recordTitleAttribute('description')
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['unit', 'stockItem.manufacturer']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['unit', 'stockItem.manufacturer', 'adder']))
             ->emptyStateHeading(__('erp.projects.parts.empty'))
             ->emptyStateIcon(Heroicon::OutlinedListBullet)
             ->paginated([25, 50, 100])
@@ -127,6 +127,11 @@ class PartsRelationManager extends RelationManager
                     ->label(__('erp.fields.notes'))
                     ->placeholder('—')
                     ->wrap()
+                    ->toggleable(),
+                // Lines employees added from the mobile app (the items they used).
+                TextColumn::make('adder.name')
+                    ->label(__('erp.mobile.projects.added_by'))
+                    ->placeholder('—')
                     ->toggleable(),
             ])
             ->headerActions([

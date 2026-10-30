@@ -6,6 +6,7 @@ use App\Enums\DriverLicenseCategory;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\MessageController;
+use App\Http\Controllers\Api\V1\ProjectController;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
 use App\Models\Employee;
@@ -89,6 +90,8 @@ class ProfileResource extends JsonResource
             'unread_messages' => MessageController::unread($user),
             // Interventions the user can see, to close them in the app.
             'interventions' => app(Interventions::class)->enabled() && app(Interventions::class)->visibleTo($user)->exists(),
+            // 600 and 610–650 projects a team of the user executes.
+            'projects' => ProjectController::teamProjects($user)->exists(),
             'open_toolbox' => $gate->allows('viewAny', ToolboxMeeting::class)
                 ? ToolboxMeeting::query()->published()->whereDoesntHave('participants', fn ($query) => $query->where('user_id', $user->id)->whereNotNull('signed_at'))->count()
                 : 0,

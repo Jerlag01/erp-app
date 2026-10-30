@@ -27,6 +27,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MobileAppDismissController;
 use App\Http\Controllers\MobileAppDownloadController;
 use App\Http\Controllers\MobileFloorPlanController;
+use App\Http\Controllers\MobileProjectFileController;
 use App\Http\Controllers\MoveDocumentController;
 use App\Http\Controllers\OnboardingDocumentController;
 use App\Http\Controllers\ParentalLeaveDocumentController;
@@ -75,6 +76,9 @@ Route::get('/mobile/floor-plan/{dossier}', MobileFloorPlanController::class)->wh
 
 // An attachment of a toolbox meeting through a short-lived signed link from the mobile app.
 Route::get('/toolbox-files/{meeting}/{index}', ToolboxAttachmentController::class)->whereNumber('index')->middleware('signed')->name('toolbox.attachment');
+
+// A project file for a team member through a short-lived signed link from the mobile app.
+Route::get('/project-files/{project}/{file}', MobileProjectFileController::class)->middleware('signed')->name('mobile.project-file');
 
 // Downloads and PDFs in the signed-in user's language.
 Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
