@@ -30,7 +30,7 @@ class ReportSickness
             throw ValidationException::withMessages(['end_date' => __('erp.vacations.errors.end_before_start')]);
         }
 
-        if (WorkingDays::count($start, $end, $halfDay) <= 0) {
+        if (WorkingDays::count($start, $end, $halfDay, $user->id) <= 0) {
             throw ValidationException::withMessages(['start_date' => __('erp.vacations.errors.no_working_days')]);
         }
 

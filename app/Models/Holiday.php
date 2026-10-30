@@ -77,7 +77,7 @@ class Holiday extends Model
             VacationRequest::query()
                 ->overlapping($date, $date)
                 ->each(function (VacationRequest $request): void {
-                    $request->days = WorkingDays::count($request->start_date, $request->end_date, $request->half_day);
+                    $request->days = WorkingDays::count($request->start_date, $request->end_date, $request->half_day, $request->user_id);
                     $request->saveQuietly();
                 });
         }

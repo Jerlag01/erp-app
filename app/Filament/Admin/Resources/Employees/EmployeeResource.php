@@ -8,6 +8,7 @@ use App\Filament\Admin\Resources\Employees\Pages\EditEmployee;
 use App\Filament\Admin\Resources\Employees\Pages\ListEmployees;
 use App\Filament\Admin\Resources\Employees\Pages\ViewEmployee;
 use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelationManager;
+use App\Filament\Admin\Resources\Employees\RelationManagers\InterimRecuperationDaysRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\MedicalChecksRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\ParentalLeavesRelationManager;
 use App\Filament\Admin\Resources\Employees\Schemas\EmployeeForm;
@@ -103,6 +104,7 @@ class EmployeeResource extends Resource
             CertificatesRelationManager::class,
             MedicalChecksRelationManager::class,
             ParentalLeavesRelationManager::class,
+            InterimRecuperationDaysRelationManager::class,
         ];
     }
 

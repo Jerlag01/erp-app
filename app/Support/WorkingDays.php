@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Models\Holiday;
 use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
@@ -12,7 +11,7 @@ use Illuminate\Support\Carbon;
  */
 class WorkingDays
 {
-    public static function count(CarbonInterface|string|null $start, CarbonInterface|string|null $end, bool $halfDay = false): float
+    public static function count(CarbonInterface|string|null $start, CarbonInterface|string|null $end, bool $halfDay = false, ?int $userId = null): float
     {
         if ($start === null || $end === null) {
             return 0.0;
@@ -25,11 +24,8 @@ class WorkingDays
             return 0.0;
         }
 
-        $holidays = Holiday::query()
-            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-            ->pluck('date')
-            ->map(fn (CarbonInterface $date): string => $date->toDateString())
-            ->all();
+        // With a person: their own IR days (an interim's can differ from the company's).
+        $holidays = RecuperationDays::daysOff($userId, $start, $end);
 
         $days = 0;
 

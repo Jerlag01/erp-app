@@ -150,7 +150,7 @@ class MyVacationResource extends Resource
                     ->rows(2)
                     ->columnSpanFull(),
                 Text::make(function (Get $get): string {
-                    $days = WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'));
+                    $days = WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'), auth()->id());
 
                     if ($get('type') === VacationType::Overtime->value || $get('type') === VacationType::Overtime) {
                         $overtime = app(Timesheets::class)->overtimeBalance(auth()->user());

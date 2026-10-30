@@ -7,7 +7,6 @@ use App\Enums\PlanningKind;
 use App\Enums\ProjectStatus;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
-use App\Models\Holiday;
 use App\Models\IncapacityPeriod;
 use App\Models\PlanningItem;
 use App\Models\Project;
@@ -194,12 +193,13 @@ class Planning
             ->get()
             ->each(fn (Training $training) => $training->participants->each(fn (User $participant) => $mark($participant->id, $training->start_date, $training->end_date, $training->note())));
 
-        // Company IR days (inhaalrust) are days off for everybody.
-        $recuperationDays = Holiday::query()->recuperationDays()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get();
+        // IR days (inhaalrust): the company's for everybody, adjusted per interim.
+        $ids = $userIds ?? User::query()->where('is_active', true)->pluck('id')->all();
 
-        if ($recuperationDays->isNotEmpty()) {
-            $ids = $userIds ?? User::query()->where('is_active', true)->pluck('id')->all();
-            $recuperationDays->each(fn (Holiday $day) => array_map(fn (int $userId) => $mark($userId, $day->date, $day->date, $day->label()), $ids));
+        foreach (RecuperationDays::forUsers(array_map('intval', $ids), $from, $until) as $userId => $recuperationDays) {
+            foreach ($recuperationDays as $date => $recuperation) {
+                $mark($userId, CarbonImmutable::parse($date), CarbonImmutable::parse($date), $recuperation['label']);
+            }
         }
 
         if (modules()->vacations()) {

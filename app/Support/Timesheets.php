@@ -636,10 +636,15 @@ class Timesheets
         $hours = fn (Absence $absence): float => $absence->half_day ? $day / 2 : $day;
 
         // In order of priority: the first one found for a date wins.
-        Holiday::query()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get()
-            ->each(fn (Holiday $holiday) => $holiday->isRecuperation()
-                ? $set($holiday->date, $holiday->date, 'recuperation', str_starts_with(mb_strtolower($holiday->name), 'inhaalrust') ? $holiday->name : trim('Inhaalrust: '.$holiday->name, ': '), $day, true)
-                : $set($holiday->date, $holiday->date, 'holiday', 'Feestdag: '.$holiday->name, $day, true));
+        // The public holidays and IR days of this person: an interim's can differ from the company's.
+        foreach (RecuperationDays::publicHolidaysFor($user->id, $from, $until) as $holiday) {
+            $set($holiday->date, $holiday->date, 'holiday', 'Feestdag: '.$holiday->name, $day, true);
+        }
+
+        foreach (RecuperationDays::forUser($user->id, $from, $until) as $date => $recuperation) {
+            $name = $recuperation['name'];
+            $set(CarbonImmutable::parse($date), CarbonImmutable::parse($date), 'recuperation', str_starts_with(mb_strtolower($name), 'inhaalrust') ? $name : trim('Inhaalrust: '.$name, ': '), $day, true);
+        }
 
         if (modules()->vacations()) {
             $absences = Absence::query()->where('user_id', $user->id)->overlapping($from->toDateString(), $until->toDateString())->get();

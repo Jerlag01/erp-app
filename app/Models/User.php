@@ -76,6 +76,16 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * IR days adjusted for this user as an interim (their own, or company IR days taken away).
+     *
+     * @return HasMany<InterimRecuperationDay, $this>
+     */
+    public function interimRecuperationDays(): HasMany
+    {
+        return $this->hasMany(InterimRecuperationDay::class);
+    }
+
+    /**
      * @return BelongsToMany<Team, $this>
      */
     public function teams(): BelongsToMany

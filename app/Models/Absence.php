@@ -166,7 +166,7 @@ class Absence extends Model
     {
         static::saving(function (self $absence): void {
             if ($absence->isDirty(['start_date', 'end_date', 'half_day']) || ! $absence->exists) {
-                $absence->days = WorkingDays::count($absence->start_date, $absence->end_date, (bool) $absence->half_day);
+                $absence->days = WorkingDays::count($absence->start_date, $absence->end_date, (bool) $absence->half_day, $absence->user_id);
             }
 
             if (blank($absence->document)) {

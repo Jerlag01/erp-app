@@ -6,6 +6,7 @@ use App\Enums\PlanningKind;
 use App\Filament\Pages\Planning as PlanningPage;
 use App\Models\Absence;
 use App\Models\Holiday;
+use App\Models\InterimRecuperationDay;
 use App\Models\OutlookEvent;
 use App\Models\PlanningItem;
 use App\Models\Training;
@@ -25,7 +26,7 @@ use Throwable;
  * an event per item, changed and removed together with the item. Uses an app registration with the
  * application permission Calendars.ReadWrite (Settings > Planning). The employee's mailbox is their
  * e-mail address in the platform. Absences (sickness, overtime as leave, family, unpaid and justified
- * leave), holidays and IR days, and trainings go along: one event per employee concerned, kept in
+ * leave), holidays and IR days (adjusted per interim), and trainings go along: one event per employee concerned, kept in
  * outlook_events. Failures are logged and never stop the planning itself.
  */
 class OutlookCalendar
@@ -124,7 +125,7 @@ class OutlookCalendar
      * Creates, changes or removes the events of an absence (its employee), a holiday or IR day
      * (every active employee) or a training (its participants), so the calendars follow the platform.
      */
-    public function syncEntry(Absence|Holiday|Training $source): void
+    public function syncEntry(Absence|Holiday|InterimRecuperationDay|Training $source): void
     {
         if (! $this->enabled()) {
             return;
@@ -188,12 +189,16 @@ class OutlookCalendar
      *
      * @return Collection<int, User>
      */
-    public function recipients(Absence|Holiday|Training $source): Collection
+    public function recipients(Absence|Holiday|InterimRecuperationDay|Training $source): Collection
     {
         $users = match (true) {
             $source instanceof Absence => new Collection(array_filter([$source->user()->first()])),
             $source instanceof Training => $source->participants()->get(),
-            default => User::query()->active()->get(),
+            // An IR day of an interim's own is in their calendar; a company IR day or holiday taken away in nobody's.
+            $source instanceof InterimRecuperationDay => new Collection(array_filter([$source->is_day_off ? $source->user()->first() : null])),
+            default => User::query()->active()
+                ->whereDoesntHave('interimRecuperationDays', fn ($query) => $query->whereDate('date', $source->date)->where('is_day_off', false))
+                ->get(),
         };
 
         return $users->filter(fn (User $user): bool => filled($user->email))->values();
@@ -205,10 +210,10 @@ class OutlookCalendar
      *
      * @return array<string, mixed>
      */
-    public function entryPayload(Absence|Holiday|Training $source, User $user): array
+    public function entryPayload(Absence|Holiday|InterimRecuperationDay|Training $source, User $user): array
     {
         $locale = $user->preferredLocale();
-        [$start, $end] = $source instanceof Holiday ? [$source->date, $source->date] : [$source->start_date, $source->end_date];
+        [$start, $end] = $source instanceof Holiday || $source instanceof InterimRecuperationDay ? [$source->date, $source->date] : [$source->start_date, $source->end_date];
 
         $payload = [
             'isAllDay' => true,
@@ -230,6 +235,10 @@ class OutlookCalendar
 
         if ($source instanceof Holiday) {
             return [...$payload, 'subject' => $source->label()];
+        }
+
+        if ($source instanceof InterimRecuperationDay) {
+            return [...$payload, 'subject' => trim('IR · '.($source->name ?: __('erp.recuperation_days.default_name', [], $locale)), ' ·')];
         }
 
         $details = array_filter([

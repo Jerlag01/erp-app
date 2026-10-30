@@ -7,6 +7,7 @@ use App\Models\Holiday;
 use App\Models\PlanningItem;
 use App\Models\User;
 use App\Support\Planning;
+use App\Support\RecuperationDays;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\JsonResponse;
@@ -80,8 +81,10 @@ class PlanningController extends Controller
             ->get()
             ->groupBy(fn (PlanningItem $item): string => $item->date->toDateString());
         $blocked = $this->planning->blockedDays([$employee->id], $from, $until, $viewer)[$employee->id] ?? [];
-        $holidays = Holiday::query()->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get()
-            ->keyBy(fn (Holiday $holiday): string => $holiday->date->toDateString());
+        // The employee's own public holidays and IR days (an interim's can differ from the company's).
+        $holidays = collect(RecuperationDays::publicHolidaysFor($employee->id, $from, $until))
+            ->map(fn (Holiday $holiday): string => $holiday->label())
+            ->union(collect(RecuperationDays::forUser($employee->id, $from, $until))->map(fn (array $day): string => $day['label']));
 
         $days = [];
 
@@ -91,7 +94,7 @@ class PlanningController extends Controller
                 'date' => $key,
                 'weekday' => $date->locale(app()->getLocale())->translatedFormat('l'),
                 'weekend' => $date->isWeekend(),
-                'holiday' => $holidays->get($key)?->label(),
+                'holiday' => $holidays->get($key),
                 'blocked' => $blocked[$key] ?? null,
                 'items' => ($items->get($key) ?? collect())->map(fn (PlanningItem $item): array => $this->item($item))->values(),
             ];

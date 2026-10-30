@@ -173,6 +173,16 @@ class Employee extends Model
     }
 
     /**
+     * IR days adjusted for this interim, through their login.
+     *
+     * @return HasMany<InterimRecuperationDay, $this>
+     */
+    public function interimRecuperationDays(): HasMany
+    {
+        return $this->hasMany(InterimRecuperationDay::class, 'user_id', 'user_id')->orderBy('date');
+    }
+
+    /**
      * @return HasMany<ParentalLeave, $this>
      */
     public function parentalLeaves(): HasMany

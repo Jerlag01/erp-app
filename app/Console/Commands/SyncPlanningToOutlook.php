@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Absence;
 use App\Models\Holiday;
+use App\Models\InterimRecuperationDay;
 use App\Models\PlanningItem;
 use App\Models\Training;
 use App\Support\OutlookCalendar;
@@ -38,6 +39,7 @@ class SyncPlanningToOutlook extends Command
             'Absences' => Absence::query()->whereDate('end_date', '>=', $from),
             'Trainings' => Training::query()->whereDate('end_date', '>=', $from),
             'Holidays and IR days' => Holiday::query()->whereDate('date', '>=', $from),
+            'IR days of interims' => InterimRecuperationDay::query()->where('is_day_off', true)->whereDate('date', '>=', $from),
         ];
 
         foreach ($entries as $label => $entryQuery) {

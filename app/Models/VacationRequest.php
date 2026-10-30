@@ -135,7 +135,7 @@ class VacationRequest extends Model
     {
         static::saving(function (self $request): void {
             if ($request->isDirty(['start_date', 'end_date', 'half_day']) || $request->days === null) {
-                $request->days = WorkingDays::count($request->start_date, $request->end_date, (bool) $request->half_day);
+                $request->days = WorkingDays::count($request->start_date, $request->end_date, (bool) $request->half_day, $request->user_id);
             }
         });
 

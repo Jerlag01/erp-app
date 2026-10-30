@@ -50,7 +50,7 @@ class SubmitVacationRequest
             throw ValidationException::withMessages(['end_date' => __('erp.vacations.errors.across_years')]);
         }
 
-        $days = WorkingDays::count($start, $end, $halfDay);
+        $days = WorkingDays::count($start, $end, $halfDay, $user->id);
 
         if ($days <= 0) {
             throw ValidationException::withMessages(['start_date' => __('erp.vacations.errors.no_working_days')]);

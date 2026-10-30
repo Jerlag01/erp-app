@@ -304,6 +304,7 @@ Demander et approuver des congés, prendre des heures supplémentaires en congé
 - **Personnel → Demandes de congé** : approuver ou refuser (avec le droit).
 - **Personnel → Calendrier des congés** : qui est absent quand.
 - **Personnel → Absences**, **Jours fériés** et **Jours de récupération (IR)** : pour l'administration.
+- **Intérimaires** : sur la page de l'employé (Personnel → employé), l'onglet **Récupération et jours fériés (intérim)** adapte librement leurs jours IR et jours fériés ; un intérimaire n'a pas toujours droit à chaque jour férié. **Retirer des jours de récupération ou fériés** (l'intérimaire travaille ce jour-là, il compte comme un jour ouvrable normal) ou **attribuer des jours de récupération** propres sur n'importe quel jour ouvrable ; **Annuler** rend le jour de récupération ou férié ou supprime le jour propre. La fiche de prestations, le planning, le décompte des congés, l'app et Outlook suivent.
 
 ## Demander un congé
 

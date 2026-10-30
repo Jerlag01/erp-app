@@ -304,6 +304,7 @@ Requesting and approving leave, taking overtime as paid leave, reporting sicknes
 - **Personnel → Vacation requests**: approving or refusing (with the permission).
 - **Personnel → Vacation calendar**: who is away when.
 - **Personnel → Absences**, **Public holidays** and **IR days**: for the administration.
+- **Interims**: on the employee page (Personnel → employee), the tab **IR days and holidays (interim)** adjusts their IR days and public holidays freely; interims are not always entitled to every holiday. **Take away IR days or holidays** (the interim works that day, it counts as a normal working day) or **assign IR days** of their own on any working day; **Undo** gives the company IR day or holiday back or removes their own day. The prestation sheet, the planning, the leave counts, the app and Outlook follow.
 
 ## Requesting leave
 
