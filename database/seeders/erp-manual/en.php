@@ -502,7 +502,7 @@ Viewing, creating, editing and deleting are separate permissions.
 
 ## Fuel passes
 
-Under **Fleet → Fuel passes** you add the fuel passes: the **card number** (19 digits), the **PIN code** (4 digits), the **expiry date** (month and year, e.g. 08/2028; red once expired) and the **vehicle**. The PIN code is never in the list: with **Show PIN** only the **members of the vehicle's team** and those with the permission **Fuel passes → Show PIN code** (ticked separately, also for administrators) see the code; every time is logged. Team members see the fuel passes of their vehicles even without the permission *View*.
+Under **Fleet → Fuel passes** you add the fuel passes: the **card number** (18 digits), the **PIN code** (4 digits), the **expiry date** (month and year, e.g. 08/2028; red once expired) and the **vehicle**. The PIN code is never in the list: with **Show PIN** only the **members of the vehicle's team** and those with the permission **Fuel passes → Show PIN code** (ticked separately, also for administrators) see the code; every time is logged. Team members see the fuel passes of their vehicles even without the permission *View*.
 MD,
         ],
 

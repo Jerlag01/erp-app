@@ -109,7 +109,7 @@ class TimesheetTest extends TestCase
         $week = app(Timesheets::class)->week($user, self::MONDAY);
         $days = collect($week['days'])->keyBy(fn (array $day): string => $day['date']->toDateString());
 
-        $this->assertSame(['Verlof', 'Ziekte', 'Familiaal verlof', 'Recuperatie overuren', 'Opleiding: BA5 – Securex, Gent'], $days->map(fn (array $day): string => $day['status']['note'])->values()->all());
+        $this->assertSame(['Verlof', 'Ziekte', 'Familiaal verlof', 'Recup', 'Opleiding: BA5 – Securex, Gent'], $days->map(fn (array $day): string => $day['status']['note'])->values()->all());
         $this->assertSame([8.0, 8.0, 0.0, 4.0, 8.0], $days->pluck('total')->values()->all());
         $this->assertSame(28.0, $week['hours']);
         $this->assertSame(-12.0, $week['overtime_now']);

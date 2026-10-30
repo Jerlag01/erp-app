@@ -165,7 +165,7 @@ class OutlookCalendarTest extends TestCase
 
         // Overtime as leave is not private, half a day is in the title.
         Absence::factory()->for($employee)->ofType(AbsenceType::Overtime)->create(['start_date' => '2026-11-20', 'end_date' => '2026-11-20', 'half_day' => true]);
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && $request['subject'] === 'Overuren als verlof (halve dag)' && $request['sensitivity'] === 'normal');
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && $request['subject'] === 'Recup (halve dag)' && $request['sensitivity'] === 'normal');
     }
 
     #[Test]

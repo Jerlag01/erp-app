@@ -699,7 +699,7 @@ class Timesheets
             $absences->where('type', AbsenceType::Justified)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'justified', $absence->half_day ? 'Gewettigd afwezig (halve dag)' : 'Gewettigd afwezig', 0, false));
             $absences->where('type', AbsenceType::Overtime)
-                ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'overtime', 'Recuperatie overuren', 0, false));
+                ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'overtime', 'Recup', 0, false));
 
             // Not worked (paid by the RVA), but the overtime balance stays: the day is off the expected hours.
             foreach ([AbsenceType::Economic, AbsenceType::Parental] as $type) {

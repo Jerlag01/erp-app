@@ -15,7 +15,7 @@ class FuelPassFactory extends Factory
     {
         return [
             'vehicle_id' => Vehicle::factory(),
-            'card_number' => fake()->unique()->numerify('7077###############'),
+            'card_number' => fake()->unique()->numerify('7077##############'),
             'pin_code' => fake()->numerify('####'),
             'expires_on' => now()->addYears(2)->endOfMonth()->toDateString(),
         ];

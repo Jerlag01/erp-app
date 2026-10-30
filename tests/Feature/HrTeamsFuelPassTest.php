@@ -121,14 +121,14 @@ class HrTeamsFuelPassTest extends TestCase
         $this->actingAs($manager);
 
         Livewire::test(ManageFuelPasses::class)
-            ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 1234 5678 9012 3', 'pin_code' => '123', 'expires_on' => '13/2028'])
+            ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 1234 5678 9012 345', 'pin_code' => '123', 'expires_on' => '13/2028'])
             ->assertHasActionErrors(['card_number', 'pin_code', 'expires_on']);
         Livewire::test(ManageFuelPasses::class)
-            ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 1234 5678 9012 345', 'pin_code' => '4821', 'expires_on' => '08/2028'])
+            ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 1234 5678 9012 34', 'pin_code' => '4821', 'expires_on' => '08/2028'])
             ->assertHasNoActionErrors();
 
         $pass = FuelPass::sole();
-        $this->assertSame('7077123456789012345', $pass->card_number);
+        $this->assertSame('707712345678901234', $pass->card_number);
         $this->assertSame('4821', $pass->pin_code);
         // Month and year: valid until the end of that month.
         $this->assertSame(['2028-08-31', '08/2028', false], [$pass->expires_on->toDateString(), $pass->expiryLabel(), $pass->isExpired()]);

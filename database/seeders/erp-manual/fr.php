@@ -502,7 +502,7 @@ Voir, créer, modifier et supprimer sont des droits distincts.
 
 ## Cartes carburant
 
-Dans **Parc automobile → Cartes carburant**, vous ajoutez les cartes : le **numéro de carte** (19 chiffres), le **code PIN** (4 chiffres), la **date d'expiration** (mois et année, p. ex. 08/2028 ; en rouge une fois expirée) et le **véhicule**. Le code PIN n'est jamais dans la liste : avec **Afficher le PIN**, seuls les **membres de l'équipe du véhicule** et ceux qui ont le droit **Cartes carburant → Afficher le code PIN** (à cocher séparément, même pour les administrateurs) voient le code ; chaque affichage est consigné. Les membres de l'équipe voient les cartes de leurs véhicules même sans le droit *Consulter*.
+Dans **Parc automobile → Cartes carburant**, vous ajoutez les cartes : le **numéro de carte** (18 chiffres), le **code PIN** (4 chiffres), la **date d'expiration** (mois et année, p. ex. 08/2028 ; en rouge une fois expirée) et le **véhicule**. Le code PIN n'est jamais dans la liste : avec **Afficher le PIN**, seuls les **membres de l'équipe du véhicule** et ceux qui ont le droit **Cartes carburant → Afficher le code PIN** (à cocher séparément, même pour les administrateurs) voient le code ; chaque affichage est consigné. Les membres de l'équipe voient les cartes de leurs véhicules même sans le droit *Consulter*.
 MD,
         ],
 

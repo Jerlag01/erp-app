@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A fuel pass of a vehicle: the card number (19 digits) and its PIN (4 digits, encrypted). The PIN is
+ * A fuel pass of a vehicle: the card number (18 digits) and its PIN (4 digits, encrypted). The PIN is
  * only shown to the members of the vehicle's team and to users with "fuel_passes.view_pin".
  */
 #[Fillable(['vehicle_id', 'card_number', 'pin_code', 'expires_on', 'notes'])]
@@ -22,7 +22,7 @@ class FuelPass extends Model
     /** @use HasFactory<FuelPassFactory> */
     use HasFactory;
 
-    public const CARD_PATTERN = '/^\d{19}$/';
+    public const CARD_PATTERN = '/^\d{18}$/';
 
     public const PIN_PATTERN = '/^\d{4}$/';
 

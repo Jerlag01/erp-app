@@ -503,7 +503,7 @@ Bekijken, aanmaken, bewerken en verwijderen zijn aparte rechten.
 
 ## Tankkaarten
 
-Bij **Wagenpark → Tankkaarten** voeg je de tankkaarten toe: het **kaartnummer** (19 cijfers), de **PIN-code** (4 cijfers), de **vervaldatum** (maand en jaar, bv. 08/2028; rood zodra vervallen) en het **voertuig**. De PIN-code staat nooit in de lijst: met **PIN tonen** zien enkel de **ploegleden van het voertuig** en wie het recht **Tankkaarten → PIN-code tonen** heeft (apart aan te vinken, ook bij beheerders) de code; elke keer wordt dat gelogd. Ploegleden zien de tankkaarten van hun voertuigen ook zonder het recht *Bekijken*.
+Bij **Wagenpark → Tankkaarten** voeg je de tankkaarten toe: het **kaartnummer** (18 cijfers), de **PIN-code** (4 cijfers), de **vervaldatum** (maand en jaar, bv. 08/2028; rood zodra vervallen) en het **voertuig**. De PIN-code staat nooit in de lijst: met **PIN tonen** zien enkel de **ploegleden van het voertuig** en wie het recht **Tankkaarten → PIN-code tonen** heeft (apart aan te vinken, ook bij beheerders) de code; elke keer wordt dat gelogd. Ploegleden zien de tankkaarten van hun voertuigen ook zonder het recht *Bekijken*.
 MD,
         ],
 
