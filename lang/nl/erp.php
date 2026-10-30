@@ -485,7 +485,7 @@ return [
             'vehicles' => 'Voertuigen',
             'assets' => 'Materieel',
             'asset_logs' => 'Schade & herstellingen',
-            'vacations' => 'Verlof (eigen ploeg)',
+            'vacations' => 'Verlof en afwezigheden (Beheren = van iedereen)',
             'order_references' => 'Bestelnummers',
             'locations' => 'Locaties',
             'stock_items' => 'Artikelen',

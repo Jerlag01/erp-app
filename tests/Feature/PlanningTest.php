@@ -282,18 +282,19 @@ class PlanningTest extends TestCase
         PlanningItem::factory()->for($employee)->create(['date' => '2026-10-13', 'description' => 'Inventory of the van']);
         Absence::factory()->for($employee)->create(['start_date' => '2026-10-14', 'end_date' => '2026-10-14']);
 
+        // A colleague in the team sees "absent", not the medical reason (first: within one test the panel's
+        // navigation is built once, for the first user).
+        $this->actingAs(User::factory()->inTeam($team)->create())->get('/planning?date=2026-10-12&display=list')
+            ->assertOk()
+            ->assertSee(__('erp.absences.absent'))
+            ->assertDontSee(AbsenceType::Medical->getLabel());
+
         foreach (['display=calendar&period=week', 'display=calendar&period=month', 'display=list&period=week'] as $query) {
             $this->actingAs($planner)->get("/planning?date=2026-10-12&{$query}")
                 ->assertOk()
                 ->assertSee($project->reference)
                 ->assertSee('Eva Peeters');
         }
-
-        // A colleague in the team sees "absent", not the medical reason.
-        $this->actingAs(User::factory()->inTeam($team)->create())->get('/planning?date=2026-10-12&display=list')
-            ->assertOk()
-            ->assertSee(__('erp.absences.absent'))
-            ->assertDontSee(AbsenceType::Medical->getLabel());
 
         $this->actingAs($planner)->get('/admin/planning?date=2026-10-12')->assertOk();
     }

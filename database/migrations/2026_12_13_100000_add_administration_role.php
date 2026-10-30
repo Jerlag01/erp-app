@@ -7,7 +7,8 @@ return new class extends Migration
 {
     /**
      * The role "Administratie": like HR, no prestation sheet (so not in the planning, vacation or
-     * sickness) and no team needed. By default it sees the monthly prestations; other modules are given
+     * sickness) and no team needed. By default it sees the monthly prestations and manages all leave and
+     * absences of everyone; other modules are given
      * through the role's permissions.
      */
     public function up(): void
@@ -19,7 +20,7 @@ return new class extends Migration
                 'is_admin' => false,
                 'is_guest' => false,
                 'no_timesheet' => true,
-                'permissions' => json_encode(['timesheets' => ['see_all', 'generate_pdf']]),
+                'permissions' => json_encode(['timesheets' => ['see_all', 'generate_pdf'], 'vacations' => ['view', 'approve', 'manage']]),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

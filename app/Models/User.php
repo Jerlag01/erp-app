@@ -356,6 +356,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * Manages all leave and absences of everyone: administrators, and those with "vacations.manage"
+     * (e.g. the role Administratie) — also without a team.
+     */
+    public function managesLeave(): bool
+    {
+        return modules()->vacations() && ($this->isAdmin() || $this->hasPermission('vacations.manage'));
+    }
+
+    /**
      * Whether the user has a prestation sheet: not with a role such as HR ("no timesheet"), which also
      * keeps them out of the planning, vacation and sickness.
      */

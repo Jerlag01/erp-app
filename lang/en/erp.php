@@ -485,7 +485,7 @@ return [
             'vehicles' => 'Vehicles',
             'assets' => 'Equipment',
             'asset_logs' => 'Damage & repairs',
-            'vacations' => 'Vacation (own team)',
+            'vacations' => 'Leave and absences (Manage = everyone\'s)',
             'order_references' => 'Order references',
             'locations' => 'Locations',
             'stock_items' => 'Stock items',

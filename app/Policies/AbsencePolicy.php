@@ -6,14 +6,15 @@ use App\Models\Absence;
 use App\Models\User;
 
 /**
- * Absences (medical, overtime as leave, family leave) are entered by administrators only.
+ * Absences are entered by administrators and those who manage all leave ("vacations.manage", e.g. the
+ * role Administratie).
  * Employees see their own on "My absences" and may upload a missing certificate there.
  */
 class AbsencePolicy
 {
     protected function admin(User $user): bool
     {
-        return modules()->vacations() && $user->isAdmin();
+        return $user->managesLeave();
     }
 
     public function viewAny(User $user): bool
@@ -23,7 +24,7 @@ class AbsencePolicy
 
     public function view(User $user, Absence $absence): bool
     {
-        return modules()->vacations() && ($user->isAdmin() || $absence->user_id === $user->id);
+        return modules()->vacations() && ($user->managesLeave() || $absence->user_id === $user->id);
     }
 
     public function create(User $user): bool

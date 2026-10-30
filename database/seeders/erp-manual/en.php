@@ -99,7 +99,7 @@ What someone sees and may do depends on their **role** and their **team**.
 
 The role **HR** by default only sees its own account, the **prestations per month** and the **HR calculations**. A role with **No prestation sheet** (like HR) has no prestation sheet of its own and is not in the **planning**, **leave** or **sickness**; even without a team they are not guests. All other modules are given through the role's permissions as usual.
 
-The role **Administratie** works the same way: no prestation sheet, planning or leave, and no team needed. By default it sees the **prestations per month**; tick on the role what else the administration needs (e.g. Finance).
+The role **Administratie** works the same way: no prestation sheet, planning or leave, and no team needed. By default it sees the **prestations per month** and manages **all leave and absences of everyone** (permission *Leave and absences → Manage*: entering absences, approving leave requests, parental leave), also without a team; tick on the role what else the administration needs (e.g. Finance).
 MD,
         ],
 

@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Resources\Absences\AbsenceResource;
+use App\Filament\Admin\Resources\ParentalLeaves\ParentalLeaveResource;
 use App\Filament\Pages\Announcement;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FinanceOverview;
@@ -43,6 +45,11 @@ class AppPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\Filament\App\Widgets')
+            // Absences and parental leave also here, for those who manage all leave (e.g. Administratie).
+            ->resources([
+                AbsenceResource::class,
+                ParentalLeaveResource::class,
+            ])
             ->pages([
                 Dashboard::class,
                 VacationCalendar::class,

@@ -9,7 +9,6 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Lets the administrators know in the platform that an employee reported sickness or uploaded a
@@ -23,7 +22,8 @@ class NotifyAbsenceAdministrators
 
     public function handle(Absence $absence, string $event): void
     {
-        $admins = User::query()->where('is_active', true)->whereHas('role', fn (Builder $query) => $query->where('is_admin', true))->get();
+        // Administrators and those who manage all leave (e.g. Administratie).
+        $admins = User::query()->where('is_active', true)->with('role')->get()->filter(fn (User $user): bool => $user->managesLeave());
 
         foreach ($admins as $admin) {
             $locale = $admin->preferredLocale() ?? config('app.locale');

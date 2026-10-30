@@ -99,7 +99,7 @@ Ce que quelqu'un voit et peut faire dépend de son **rôle** et de son **équipe
 
 Le rôle **HR** ne voit par défaut que son propre compte, les **prestations par mois** et les **calculs RH**. Un rôle avec **Pas de feuille de prestations** (comme RH) n'a pas de feuille de prestations et ne figure pas dans le **planning**, les **congés** ou les **maladies** ; même sans équipe, ils ne sont pas invités. Tous les autres modules s'attribuent via les droits du rôle.
 
-Le rôle **Administratie** fonctionne de la même manière : pas de feuille de prestations, de planning ni de congés, et pas d'équipe nécessaire. Il voit par défaut les **prestations par mois** ; cochez dans le rôle ce dont l'administration a encore besoin (p. ex. Financier).
+Le rôle **Administratie** fonctionne de la même manière : pas de feuille de prestations, de planning ni de congés, et pas d'équipe nécessaire. Il voit par défaut les **prestations par mois** et gère **tous les congés et absences de tous** (droit *Congés et absences → Gérer* : encoder les absences, approuver les demandes de congé, congé parental), même sans équipe ; cochez dans le rôle ce dont l'administration a encore besoin (p. ex. Financier).
 MD,
         ],
 

@@ -41,48 +41,56 @@ class ParentalLeavesRelationManager extends RelationManager
         return false;
     }
 
+    /**
+     * The form of a parental leave (also used by the overview under Personnel).
+     *
+     * @return list<mixed>
+     */
+    public static function fields(): array
+    {
+        return [
+            TextInput::make('child_name')->label(__('erp.parental_leave.child_name'))->required()->maxLength(150),
+            DatePicker::make('child_birth_date')->label(__('erp.parental_leave.child_birth_date'))->native(false)->displayFormat('d/m/Y')->maxDate(today())->required(),
+            ToggleButtons::make('form')
+                ->label(__('erp.parental_leave.form'))
+                ->options(collect(ParentalLeave::FORMS)->mapWithKeys(fn (int $months, string $form): array => [$form => __("erp.parental_leave.forms.{$form}").' ('.__('erp.parental_leave.max_months', ['months' => $months]).')'])->all())
+                ->default('full')
+                ->inline()
+                ->required()
+                ->live()
+                ->columnSpanFull(),
+            DatePicker::make('starts_on')->label(__('erp.fields.start_date'))->native(false)->displayFormat('d/m/Y')->required()->live(),
+            DatePicker::make('ends_on')
+                ->label(__('erp.fields.end_date'))
+                ->native(false)
+                ->displayFormat('d/m/Y')
+                ->afterOrEqual('starts_on')
+                ->required()
+                // The child under 12 at the start, and not longer than the form allows.
+                ->rule(fn (Get $get) => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                    if (filled($get('child_birth_date')) && filled($get('starts_on')) && filled($value)
+                        && ($problem = ParentalLeave::problem((string) $get('form'), (string) $get('child_birth_date'), (string) $get('starts_on'), (string) $value))) {
+                        $fail($problem);
+                    }
+                }),
+            FileUpload::make('document')
+                ->label(__('erp.parental_leave.document'))
+                ->helperText(__('erp.parental_leave.document_help'))
+                ->disk(ParentalLeave::DISK)
+                ->directory('parental-leaves')
+                ->visibility('private')
+                ->acceptedFileTypes(['image/*', 'application/pdf'])
+                ->maxSize(12288)
+                ->storeFileNamesIn('document_name')
+                ->required()
+                ->columnSpanFull(),
+            Textarea::make('notes')->label(__('erp.fields.notes'))->rows(2)->maxLength(2000)->columnSpanFull(),
+        ];
+    }
+
     public function form(Schema $schema): Schema
     {
-        return $schema
-            ->columns(2)
-            ->components([
-                TextInput::make('child_name')->label(__('erp.parental_leave.child_name'))->required()->maxLength(150),
-                DatePicker::make('child_birth_date')->label(__('erp.parental_leave.child_birth_date'))->native(false)->displayFormat('d/m/Y')->maxDate(today())->required(),
-                ToggleButtons::make('form')
-                    ->label(__('erp.parental_leave.form'))
-                    ->options(collect(ParentalLeave::FORMS)->mapWithKeys(fn (int $months, string $form): array => [$form => __("erp.parental_leave.forms.{$form}").' ('.__('erp.parental_leave.max_months', ['months' => $months]).')'])->all())
-                    ->default('full')
-                    ->inline()
-                    ->required()
-                    ->live()
-                    ->columnSpanFull(),
-                DatePicker::make('starts_on')->label(__('erp.fields.start_date'))->native(false)->displayFormat('d/m/Y')->required()->live(),
-                DatePicker::make('ends_on')
-                    ->label(__('erp.fields.end_date'))
-                    ->native(false)
-                    ->displayFormat('d/m/Y')
-                    ->afterOrEqual('starts_on')
-                    ->required()
-                    // The child under 12 at the start, and not longer than the form allows.
-                    ->rule(fn (Get $get) => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
-                        if (filled($get('child_birth_date')) && filled($get('starts_on')) && filled($value)
-                            && ($problem = ParentalLeave::problem((string) $get('form'), (string) $get('child_birth_date'), (string) $get('starts_on'), (string) $value))) {
-                            $fail($problem);
-                        }
-                    }),
-                FileUpload::make('document')
-                    ->label(__('erp.parental_leave.document'))
-                    ->helperText(__('erp.parental_leave.document_help'))
-                    ->disk(ParentalLeave::DISK)
-                    ->directory('parental-leaves')
-                    ->visibility('private')
-                    ->acceptedFileTypes(['image/*', 'application/pdf'])
-                    ->maxSize(12288)
-                    ->storeFileNamesIn('document_name')
-                    ->required()
-                    ->columnSpanFull(),
-                Textarea::make('notes')->label(__('erp.fields.notes'))->rows(2)->maxLength(2000)->columnSpanFull(),
-            ]);
+        return $schema->columns(2)->components(self::fields());
     }
 
     public function table(Table $table): Table

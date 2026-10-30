@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The certificate of a parental leave: for administrators only.
+ * The certificate of a parental leave: for those who manage leave (administrators, Administratie).
  */
 class ParentalLeaveDocumentController
 {
     public function __invoke(Request $request, ParentalLeave $leave): Response
     {
-        abort_unless($request->user()?->isAdmin() && filled($leave->document), 403);
+        abort_unless($request->user()?->managesLeave() && filled($leave->document), 403);
 
         $disk = Storage::disk(ParentalLeave::DISK);
         abort_unless($disk->exists($leave->document), 404);

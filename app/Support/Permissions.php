@@ -60,7 +60,8 @@ class Permissions
         'fuel_passes' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete', 'view_pin']],
         'assets' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete', 'control']],
         'asset_logs' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve']],
+        // "manage": all leave and absences of everyone (e.g. the role Administratie), not only the own teams.
+        'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve', 'manage']],
         'order_references' => ['module' => Modules::ORDERS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'locations' => ['module' => Modules::LOCATIONS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'stock_items' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete']],

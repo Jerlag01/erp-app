@@ -90,7 +90,8 @@ class VacationRequest extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->seesOnlyOwnTeams()) {
+        // Who manages all leave sees everyone's, also without a team.
+        if ($user->seesOnlyOwnTeams() && ! $user->managesLeave()) {
             $query->where(fn (Builder $query) => $query
                 ->where('vacation_requests.user_id', $user->id)
                 ->orWhereHas('user.teams', fn (Builder $query) => $query->whereIn('teams.id', $user->teamIds())));

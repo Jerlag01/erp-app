@@ -100,7 +100,7 @@ Wat iemand ziet en mag doen, hangt af van zijn **rol** en zijn **ploeg**.
 
 De rol **HR** ziet standaard enkel het eigen account, de **prestaties per maand** en de **HR-berekeningen**. Een rol met **Geen prestatiefiche** (zoals HR) heeft geen eigen prestatiefiche en staat niet in de **planning**, het **verlof** of de **ziektemeldingen**; ook zonder ploeg zijn ze geen gast. Alle andere modules geef je gewoon via de rechten van de rol.
 
-De rol **Administratie** werkt op dezelfde manier: geen prestatiefiche, planning of verlof en geen ploeg nodig. Ze ziet standaard de **prestaties per maand**; vink bij de rol aan wat de administratie verder nodig heeft (bv. Financieel).
+De rol **Administratie** werkt op dezelfde manier: geen prestatiefiche, planning of verlof en geen ploeg nodig. Ze ziet standaard de **prestaties per maand** en beheert **al het verlof en alle afwezigheden van iedereen** (recht *Verlof en afwezigheden → Beheren*: afwezigheden invoeren, verlofaanvragen goedkeuren, ouderschapsverlof), ook zonder ploeg; vink bij de rol aan wat de administratie verder nodig heeft (bv. Financieel).
 MD,
         ],
 

@@ -485,7 +485,7 @@ return [
             'vehicles' => 'Véhicules',
             'assets' => 'Matériel',
             'asset_logs' => 'Dégâts & réparations',
-            'vacations' => 'Congés (propre équipe)',
+            'vacations' => 'Congés et absences (Gérer = de tous)',
             'order_references' => 'Numéros de commande',
             'locations' => 'Sites',
             'stock_items' => 'Articles',

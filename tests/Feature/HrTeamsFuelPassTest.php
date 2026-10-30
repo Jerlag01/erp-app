@@ -77,8 +77,8 @@ class HrTeamsFuelPassTest extends TestCase
         $role = Role::query()->where('name', 'Administratie')->sole();
         $this->assertTrue($role->no_timesheet);
         $this->assertFalse($role->is_admin);
-        // By default the monthly prestations.
-        $this->assertSame(['timesheets' => ['see_all', 'generate_pdf']], $role->permissions);
+        // By default the monthly prestations, and all leave and absences of everyone.
+        $this->assertSame(['timesheets' => ['see_all', 'generate_pdf'], 'vacations' => ['view', 'approve', 'manage']], $role->permissions);
 
         // Other modules come from the role's permissions, also without a team.
         $role->update(['permissions' => [...$role->permissions, 'invoices' => ['view']]]);

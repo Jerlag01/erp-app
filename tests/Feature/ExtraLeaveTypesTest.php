@@ -4,14 +4,18 @@ namespace Tests\Feature;
 
 use App\Actions\SubmitVacationRequest;
 use App\Enums\AbsenceType;
+use App\Enums\VacationStatus;
 use App\Enums\VacationType;
 use App\Filament\Admin\Resources\Absences\Pages\ManageAbsences;
 use App\Filament\Admin\Resources\Employees\Pages\ViewEmployee;
 use App\Filament\Admin\Resources\Employees\RelationManagers\ParentalLeavesRelationManager;
+use App\Filament\Admin\Resources\ParentalLeaves\Pages\ManageParentalLeaves;
+use App\Filament\Resources\VacationRequests\Pages\ManageVacationRequests;
 use App\Models\Absence;
 use App\Models\Employee;
 use App\Models\Incident;
 use App\Models\ParentalLeave;
+use App\Models\Role;
 use App\Models\TimesheetDay;
 use App\Models\User;
 use App\Models\VacationRequest;
@@ -21,6 +25,7 @@ use App\Support\Planning;
 use App\Support\TimesheetReport;
 use App\Support\Timesheets;
 use Carbon\CarbonImmutable;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -265,5 +270,40 @@ class ExtraLeaveTypesTest extends TestCase
         $this->assertSame('7,5N', $month['days'][9]['value']);
         $this->assertSame('8', $month['days'][10]['value']);
         $this->assertSame(8.0, $month['codes']['N']);
+    }
+
+    #[Test]
+    public function administration_manages_all_leave_without_a_team(): void
+    {
+        $this->travelBack();
+        Filament::setCurrentPanel('app');
+        $administration = User::factory()->create(['role_id' => Role::query()->where('name', 'Administratie')->sole()->id]);
+        $this->assertSame([], $administration->teamIds());
+        $this->assertTrue($administration->managesLeave());
+        $employee = $this->employee();
+        $this->actingAs($administration);
+
+        // Absences of everyone, on the employee side.
+        $this->get('/absences')->assertOk();
+        Livewire::test(ManageAbsences::class)
+            ->callAction('create', ['user_id' => $employee->id, 'type' => 'economic', 'start_date' => today()->addWeek()->toDateString(), 'end_date' => today()->addWeek()->toDateString()])
+            ->assertHasNoActionErrors();
+        $this->assertSame(1, Absence::query()->where('user_id', $employee->id)->count());
+
+        // Leave requests of other teams: seen and approved.
+        $request = VacationRequest::factory()->for($employee)->create(['status' => VacationStatus::Pending]);
+        Livewire::test(ManageVacationRequests::class)
+            ->assertCanSeeTableRecords([$request])
+            ->callAction(TestAction::make('approve')->table($request));
+        $this->assertSame(VacationStatus::Approved, $request->fresh()->status);
+
+        // Parental leave too.
+        $this->get('/parental-leaves')->assertOk();
+        Livewire::test(ManageParentalLeaves::class)->assertSuccessful();
+
+        // An ordinary employee does not.
+        $this->actingAs($this->employee());
+        $this->get('/absences')->assertForbidden();
+        $this->get('/parental-leaves')->assertForbidden();
     }
 }

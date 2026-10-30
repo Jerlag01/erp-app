@@ -45,7 +45,7 @@ class VacationRequestPolicy
 
     public function delete(User $user, VacationRequest $request): bool
     {
-        return modules()->vacations() && $user->isAdmin();
+        return $user->managesLeave();
     }
 
     public function deleteAny(User $user): bool
