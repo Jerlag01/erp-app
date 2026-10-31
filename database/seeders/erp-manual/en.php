@@ -99,7 +99,9 @@ What someone sees and may do depends on their **role** and their **team**.
 
 The role **HR** by default only sees its own account, the **prestations per month** and the **HR calculations**. A role with **No prestation sheet** (like HR) has no prestation sheet of its own and is not in the **planning**, **leave** or **sickness**; even without a team they are not guests. All other modules are given through the role's permissions as usual.
 
-The role **Administratie** works the same way: no prestation sheet, planning or leave, and no team needed. By default it sees the **prestations per month** and manages **all leave and absences of everyone** (permission *Leave and absences → Manage*: entering absences, approving leave requests, parental leave), also without a team; tick on the role what else the administration needs (e.g. Finance).
+The role **Administratie** works the same way: no prestation sheet, planning or leave, and no team needed. By default it sees the **prestations per month** and manages **all leave and absences of everyone** (permission *Leave and absences → Manage*: entering absences, approving leave requests, parental leave), also without a team; tick on the role what else the administration needs (e.g. Finance). The **prestations per month** are also on the employee side, under **Personnel**, for whoever has *Prestations → See everyone's*.
+
+**See all teams**: who is not an administrator sees in many modules only what belongs to their own teams (projects, vehicles, equipment, IT, locations and stock, battery dossiers, …). Tick **See all teams** per module on the role to lift that limitation, e.g. for the administration in the team *Bureau*. It only changes what you see; what you may do still depends on the other permissions. Planning (*See everyone's planning*), prestations (*See everyone's*) and leave (*Manage*) already have their own permission to see everyone.
 MD,
         ],
 

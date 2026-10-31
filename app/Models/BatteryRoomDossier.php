@@ -152,7 +152,7 @@ class BatteryRoomDossier extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        $query->whereHas('project', fn (Builder $query) => $query->visibleTo($user));
+        $query->whereHas('project', fn (Builder $query) => $query->visibleTo($user, 'battery_rooms'));
     }
 
     /**

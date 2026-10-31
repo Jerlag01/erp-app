@@ -94,7 +94,7 @@ class Team extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->seesOnlyOwnTeams()) {
+        if ($user->seesOnlyOwnTeams('teams')) {
             $query->whereIn('teams.id', $user->teamIds());
         }
     }

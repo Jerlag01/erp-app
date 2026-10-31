@@ -173,9 +173,9 @@ class ItAsset extends Model
      *
      * @param  Builder<ItAsset>  $query
      */
-    public function scopeVisibleTo(Builder $query, User $user): void
+    public function scopeVisibleTo(Builder $query, User $user, string ...$areas): void
     {
-        if (! $user->seesOnlyOwnTeams()) {
+        if (! $user->seesOnlyOwnTeams('it_assets', ...$areas)) {
             return;
         }
 

@@ -553,6 +553,7 @@ return [
             'bae_orders' => 'BAE-bestellingen: zien, invullen en exporteren',
             'suppliers' => 'Batterijleveranciers beheren',
             'see_all' => 'Van iedereen zien',
+            'all_teams' => 'Alle ploegen zien (ploegbeperking opheffen)',
             'edit_all' => 'Van iedereen wijzigen (ook na verzenden)',
             'trainings' => 'Opleidingen plannen',
             'secrets' => 'Vertrouwelijke gegevens zien (wachtwoorden, codes, VPN-bestanden)',

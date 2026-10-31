@@ -553,6 +553,7 @@ return [
             'bae_orders' => 'Commandes BAE : voir, remplir et exporter',
             'suppliers' => 'Gérer les fournisseurs de batteries',
             'see_all' => 'Voir celles de tous',
+            'all_teams' => 'Voir toutes les équipes (lever la limite d\'équipe)',
             'edit_all' => 'Modifier celles de tous (même après envoi)',
             'trainings' => 'Planifier des formations',
             'secrets' => 'Voir les données confidentielles (mots de passe, codes, fichiers VPN)',

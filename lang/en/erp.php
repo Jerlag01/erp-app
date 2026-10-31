@@ -553,6 +553,7 @@ return [
             'bae_orders' => 'BAE orders: see, fill in and export',
             'suppliers' => 'Manage battery suppliers',
             'see_all' => 'See everyone\'s',
+            'all_teams' => 'See all teams (lift the team limitation)',
             'edit_all' => 'Change everyone\'s (also after sending)',
             'trainings' => 'Plan trainings',
             'secrets' => 'See confidential data (passwords, codes, VPN files)',

@@ -255,11 +255,22 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     /**
      * Whether visible records must be limited to the user's own teams.
-     * Administrators see everything; without the teams module there is nothing to limit by.
+     * Administrators see everything; without the teams module there is nothing to limit by. "all_teams" on
+     * one of the given areas (e.g. "projects") lifts the limit for that area.
      */
-    public function seesOnlyOwnTeams(): bool
+    public function seesOnlyOwnTeams(string ...$areas): bool
     {
-        return ! $this->isAdmin() && modules()->teams();
+        if ($this->isAdmin() || ! modules()->teams()) {
+            return false;
+        }
+
+        foreach ($areas as $area) {
+            if ($this->hasPermission($area.'.'.Permissions::ALL_TEAMS)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

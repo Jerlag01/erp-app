@@ -107,7 +107,7 @@ class BaeOrder extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        $query->whereHas('project', fn (Builder $query) => $query->visibleTo($user));
+        $query->whereHas('project', fn (Builder $query) => $query->visibleTo($user, 'batteries'));
     }
 
     /**

@@ -93,8 +93,8 @@ class AssetLog extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->seesOnlyOwnTeams()) {
-            $query->whereHas('asset', fn (Builder $query) => $query->visibleTo($user));
+        if ($user->seesOnlyOwnTeams('asset_logs', 'assets')) {
+            $query->whereHas('asset', fn (Builder $query) => $query->visibleTo($user, 'asset_logs'));
         }
     }
 

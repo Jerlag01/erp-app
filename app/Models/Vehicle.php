@@ -86,9 +86,9 @@ class Vehicle extends Model
      *
      * @param  Builder<Vehicle>  $query
      */
-    public function scopeVisibleTo(Builder $query, User $user): void
+    public function scopeVisibleTo(Builder $query, User $user, string ...$areas): void
     {
-        if ($user->seesOnlyOwnTeams()) {
+        if ($user->seesOnlyOwnTeams('vehicles', ...$areas)) {
             $query->where(fn (Builder $query) => $query
                 ->whereIn('vehicles.team_id', $user->teamIds())
                 ->orWhere('vehicles.driver_id', $user->id));

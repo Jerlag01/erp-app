@@ -97,10 +97,10 @@ class ItLicense extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->seesOnlyOwnTeams()) {
+        if ($user->seesOnlyOwnTeams('it_licenses')) {
             $query->whereHas('licenseSeats', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->whereIn('user_id', $user->teamMemberIds())
-                ->orWhereIn('it_asset_id', ItAsset::query()->visibleTo($user)->select('id'))));
+                ->orWhereIn('it_asset_id', ItAsset::query()->visibleTo($user, 'it_licenses')->select('id'))));
         }
     }
 

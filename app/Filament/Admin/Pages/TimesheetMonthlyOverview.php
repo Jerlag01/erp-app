@@ -17,7 +17,8 @@ use UnitEnum;
 
 /**
  * Everyone's prestation hours and kilometres per month, like the Excel "prestatiefiche power", with
- * PDFs of a month, two months or a year.
+ * PDFs of a month, two months or a year. On the admin side, and on the employee side for
+ * "timesheets.see_all" (e.g. the role Administratie).
  */
 class TimesheetMonthlyOverview extends Page
 {
@@ -41,7 +42,9 @@ class TimesheetMonthlyOverview extends Page
 
     public static function canAccess(): bool
     {
-        return modules()->timesheets() && (bool) auth()->user()?->isAdmin();
+        $user = auth()->user();
+
+        return modules()->timesheets() && $user !== null && ($user->isAdmin() || $user->hasPermission('timesheets.see_all'));
     }
 
     public static function getNavigationLabel(): string

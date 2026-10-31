@@ -49,7 +49,7 @@ class Interventions
 
         $canViewProjects = $user->hasPermission('projects.view');
 
-        if ($user->isAdmin() || ($canViewProjects && ! $user->seesOnlyOwnTeams())) {
+        if ($user->isAdmin() || ($canViewProjects && ! $user->seesOnlyOwnTeams('projects'))) {
             return $query;
         }
 

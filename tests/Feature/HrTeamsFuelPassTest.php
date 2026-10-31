@@ -132,7 +132,7 @@ class HrTeamsFuelPassTest extends TestCase
         $this->assertSame('4821', $pass->pin_code);
         // Month and year: valid until the end of that month.
         $this->assertSame(['2028-08-31', '08/2028', false], [$pass->expires_on->toDateString(), $pass->expiryLabel(), $pass->isExpired()]);
-        $this->assertTrue(FuelPass::factory()->make(['expires_on' => now()->subMonth()->endOfMonth()])->isExpired());
+        $this->assertTrue(FuelPass::factory()->make(['expires_on' => now()->subMonthNoOverflow()->endOfMonth()])->isExpired());
         $this->assertStringNotContainsString('4821', (string) \DB::table('fuel_passes')->value('pin_code'));
         $this->assertArrayNotHasKey('pin_code', $pass->toArray());
 

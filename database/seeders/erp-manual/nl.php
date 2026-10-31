@@ -100,7 +100,9 @@ Wat iemand ziet en mag doen, hangt af van zijn **rol** en zijn **ploeg**.
 
 De rol **HR** ziet standaard enkel het eigen account, de **prestaties per maand** en de **HR-berekeningen**. Een rol met **Geen prestatiefiche** (zoals HR) heeft geen eigen prestatiefiche en staat niet in de **planning**, het **verlof** of de **ziektemeldingen**; ook zonder ploeg zijn ze geen gast. Alle andere modules geef je gewoon via de rechten van de rol.
 
-De rol **Administratie** werkt op dezelfde manier: geen prestatiefiche, planning of verlof en geen ploeg nodig. Ze ziet standaard de **prestaties per maand** en beheert **al het verlof en alle afwezigheden van iedereen** (recht *Verlof en afwezigheden → Beheren*: afwezigheden invoeren, verlofaanvragen goedkeuren, ouderschapsverlof), ook zonder ploeg; vink bij de rol aan wat de administratie verder nodig heeft (bv. Financieel).
+De rol **Administratie** werkt op dezelfde manier: geen prestatiefiche, planning of verlof en geen ploeg nodig. Ze ziet standaard de **prestaties per maand** en beheert **al het verlof en alle afwezigheden van iedereen** (recht *Verlof en afwezigheden → Beheren*: afwezigheden invoeren, verlofaanvragen goedkeuren, ouderschapsverlof), ook zonder ploeg; vink bij de rol aan wat de administratie verder nodig heeft (bv. Financieel). De **prestaties per maand** staan voor wie *Prestaties → Van iedereen zien* heeft ook aan de medewerkerskant, bij **Personeel**.
+
+**Alle ploegen zien**: wie geen beheerder is, ziet in veel modules enkel wat bij de eigen ploegen hoort (projecten, voertuigen, materieel, IT, locaties en stock, batterijdossiers, …). Vink per module **Alle ploegen zien** aan bij de rol om die beperking op te heffen, bv. voor de administratie in de ploeg *Bureau*. Het verandert enkel wat je ziet; wat je mag doen hangt nog af van de andere rechten. Planning (*Ieders planning zien*), prestaties (*Van iedereen zien*) en verlof (*Beheren*) hebben al hun eigen recht om iedereen te zien.
 MD,
         ],
 

@@ -44,38 +44,44 @@ namespace App\Support;
  * Users can have their own permissions per area; they overrule the role's for that area (also to take
  * rights away, and also for explicit permissions such as "routers.secrets"). Only an administrator role
  * overrules everything (except the explicit permissions).
+ * "all_teams" on an area lifts the team limitation of that area: the role sees the records of every team
+ * there (e.g. Administratie in the team "Bureau"), not only those of its own teams. It changes what is
+ * seen, not what may be done: the other abilities still decide that.
  * A role stores them as {"vehicles": ["view", "update"], "assets": ["view"], ...}.
  * Administrator roles are granted everything and may also use the admin panel.
  */
 class Permissions
 {
+    /** Lifts the team limitation of an area (see seesOnlyOwnTeams on the user). */
+    public const ALL_TEAMS = 'all_teams';
+
     /**
      * Area => [module the area belongs to, abilities].
      *
      * @var array<string, array{module: string, abilities: list<string>}>
      */
     public const AREAS = [
-        'teams' => ['module' => Modules::TEAMS, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'vehicles' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'teams' => ['module' => Modules::TEAMS, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
+        'vehicles' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
         // Fuel passes of the vehicles; their PIN with "view_pin" (explicit) or as a member of the vehicle's team.
-        'fuel_passes' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete', 'view_pin']],
-        'assets' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete', 'control']],
-        'asset_logs' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'fuel_passes' => ['module' => Modules::FLEET, 'abilities' => ['view', 'create', 'update', 'delete', 'view_pin', 'all_teams']],
+        'assets' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete', 'control', 'all_teams']],
+        'asset_logs' => ['module' => Modules::ASSETS, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
         // "manage": all leave and absences of everyone (e.g. the role Administratie), not only the own teams.
-        'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve', 'manage']],
+        'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve', 'manage', 'all_teams']],
         'order_references' => ['module' => Modules::ORDERS, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'locations' => ['module' => Modules::LOCATIONS, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'stock_items' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'stock' => ['module' => Modules::STOCK, 'abilities' => ['adjust']],
+        'locations' => ['module' => Modules::LOCATIONS, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
+        'stock_items' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
+        'stock' => ['module' => Modules::STOCK, 'abilities' => ['adjust', 'all_teams']],
         'stock_prices' => ['module' => Modules::STOCK, 'abilities' => ['view', 'export']],
         'stock_master_data' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'it_assets' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'audit']],
-        'it_licenses' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'view_keys']],
-        'it_items' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout']],
+        'it_assets' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'audit', 'all_teams']],
+        'it_licenses' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'view_keys', 'all_teams']],
+        'it_items' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete', 'checkout', 'all_teams']],
         'it_master_data' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete']],
         'work_sites' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete', 'change_type', 'remarks']],
         'work_site_master_data' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf', 'copy', 'gpw', 'intervention_po']],
+        'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf', 'copy', 'gpw', 'intervention_po', 'all_teams']],
         'project_finance' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'manage']],
         'knowledge_base' => ['module' => Modules::KNOWLEDGE_BASE, 'abilities' => ['create', 'update', 'delete', 'download_pdf']],
         'waste' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
@@ -90,8 +96,8 @@ class Permissions
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
-        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'documents', 'documents_upload', 'bae_orders', 'suppliers', 'generate_pdf', 'edit_finished']],
-        'enersys' => ['module' => Modules::ENERSYS, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished']],
+        'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'documents', 'documents_upload', 'bae_orders', 'suppliers', 'generate_pdf', 'edit_finished', 'all_teams']],
+        'enersys' => ['module' => Modules::ENERSYS, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'generate_pdf', 'edit_finished', 'all_teams']],
         'cable_stripping' => ['module' => Modules::CABLE_STRIPPING, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'announcements' => ['module' => Modules::ANNOUNCEMENTS, 'abilities' => ['update']],
         'asbuilt' => ['module' => Modules::ASBUILT, 'abilities' => ['view', 'manage', 'library', 'reopen', 'delete']],
@@ -99,14 +105,14 @@ class Permissions
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'cable_calculations' => ['module' => Modules::CABLE_CALCULATOR, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
-        'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers']],
+        'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers', 'all_teams']],
         // Resetting a user's two-step verification (explicit: also administrators need it ticked).
         'security' => ['module' => null, 'abilities' => ['reset_two_factor']],
         // Messages from the platform to the mobile app (explicit: also administrators need it ticked).
         'push_messages' => ['module' => null, 'abilities' => ['send']],
         'access_control' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'onboarding' => ['module' => Modules::ONBOARDING, 'abilities' => ['manage', 'view_signatures', 'generate_pdf']],
-        'battery_rooms' => ['module' => Modules::BATTERY_ROOMS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'download_pdf']],
+        'battery_rooms' => ['module' => Modules::BATTERY_ROOMS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'download_pdf', 'all_teams']],
         // Estimated against planned workdays of projects: per user only (see USER_ONLY).
         'project_workdays' => ['module' => Modules::PROJECTS, 'abilities' => ['view']],
     ];

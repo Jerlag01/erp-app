@@ -58,7 +58,10 @@ class DeliveryFollowUp extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        $query->whereHas('project', fn (Builder $query) => $query->visibleTo($user));
+        // Each kind follows its own area's "all_teams" (Enersys deliveries or electrical boards).
+        $query->where(fn (Builder $query) => $query
+            ->where(fn (Builder $query) => $query->where('delivery_follow_ups.kind', self::ENERSYS)->whereHas('project', fn (Builder $query) => $query->visibleTo($user, 'enersys')))
+            ->orWhere(fn (Builder $query) => $query->where('delivery_follow_ups.kind', '!=', self::ENERSYS)->whereHas('project', fn (Builder $query) => $query->visibleTo($user, 'board_deliveries'))));
     }
 
     /**

@@ -354,9 +354,13 @@ class Project extends Model
      * that they are in the planning for. Like everywhere else in the ERP this rule only applies
      * while the teams module is on.
      */
-    public function scopeVisibleTo(Builder $query, User $user): void
+    /**
+     * @param  Builder<Project>  $query
+     * @param  string|null  $area  The area of a record that follows the project (e.g. "batteries"), whose "all_teams" counts too.
+     */
+    public function scopeVisibleTo(Builder $query, User $user, ?string $area = null): void
     {
-        if ($user->seesOnlyOwnTeams()) {
+        if ($user->seesOnlyOwnTeams(...array_filter(['projects', $area]))) {
             $query->where(fn (Builder $query) => $query
                 ->whereHas('leaders', fn (Builder $query) => $query->whereKey($user->id))
                 ->orWhereHas('teams', fn (Builder $query) => $query->whereKey($user->teamIds()))
@@ -366,7 +370,7 @@ class Project extends Model
 
     public function isVisibleTo(User $user): bool
     {
-        return ! $user->seesOnlyOwnTeams() || $this->isLedBy($user) || $this->teams()->whereKey($user->teamIds())->exists();
+        return ! $user->seesOnlyOwnTeams('projects') || $this->isLedBy($user) || $this->teams()->whereKey($user->teamIds())->exists();
     }
 
     public function isLedBy(User $user): bool

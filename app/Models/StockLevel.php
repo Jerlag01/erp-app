@@ -65,7 +65,7 @@ class StockLevel extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->seesOnlyOwnTeams() && modules()->locations()) {
+        if ($user->seesOnlyOwnTeams('stock', 'stock_items') && modules()->locations()) {
             $query->whereIn('stock_levels.location_id', $user->locationIds());
         }
     }

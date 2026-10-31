@@ -99,7 +99,9 @@ Ce que quelqu'un voit et peut faire dépend de son **rôle** et de son **équipe
 
 Le rôle **HR** ne voit par défaut que son propre compte, les **prestations par mois** et les **calculs RH**. Un rôle avec **Pas de feuille de prestations** (comme RH) n'a pas de feuille de prestations et ne figure pas dans le **planning**, les **congés** ou les **maladies** ; même sans équipe, ils ne sont pas invités. Tous les autres modules s'attribuent via les droits du rôle.
 
-Le rôle **Administratie** fonctionne de la même manière : pas de feuille de prestations, de planning ni de congés, et pas d'équipe nécessaire. Il voit par défaut les **prestations par mois** et gère **tous les congés et absences de tous** (droit *Congés et absences → Gérer* : encoder les absences, approuver les demandes de congé, congé parental), même sans équipe ; cochez dans le rôle ce dont l'administration a encore besoin (p. ex. Financier).
+Le rôle **Administratie** fonctionne de la même manière : pas de feuille de prestations, de planning ni de congés, et pas d'équipe nécessaire. Il voit par défaut les **prestations par mois** et gère **tous les congés et absences de tous** (droit *Congés et absences → Gérer* : encoder les absences, approuver les demandes de congé, congé parental), même sans équipe ; cochez dans le rôle ce dont l'administration a encore besoin (p. ex. Financier). Les **prestations par mois** figurent aussi côté collaborateur, sous **Personnel**, pour qui a *Prestations → Voir celles de tous*.
+
+**Voir toutes les équipes** : qui n'est pas administrateur ne voit dans beaucoup de modules que ce qui appartient à ses équipes (projets, véhicules, matériel, IT, sites et stock, dossiers batteries, …). Cochez par module **Voir toutes les équipes** dans le rôle pour lever cette limite, p. ex. pour l'administration dans l'équipe *Bureau*. Cela change uniquement ce que vous voyez ; ce que vous pouvez faire dépend toujours des autres droits. Le planning (*Voir le planning de tous*), les prestations (*Voir celles de tous*) et les congés (*Gérer*) ont déjà leur propre droit pour voir tout le monde.
 MD,
         ],
 

@@ -70,6 +70,6 @@ class ItTargetFields
         $user = auth()->user();
 
         return User::query()->active()->orderBy('name')
-            ->when($user?->seesOnlyOwnTeams(), fn (Builder $query) => $query->whereKey($user->teamMemberIds()));
+            ->when($user?->seesOnlyOwnTeams('it_assets', 'it_items', 'it_licenses'), fn (Builder $query) => $query->whereKey($user->teamMemberIds()));
     }
 }

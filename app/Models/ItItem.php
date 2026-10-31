@@ -115,7 +115,7 @@ class ItItem extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if (! $user->seesOnlyOwnTeams()) {
+        if (! $user->seesOnlyOwnTeams('it_items')) {
             return;
         }
 
@@ -125,7 +125,7 @@ class ItItem extends Model
             ->whereIn('it_items.location_id', $locations)
             ->orWhereHas('assignments', fn (Builder $query) => $query->whereNull('returned_at')->where(fn (Builder $query) => $query
                 ->whereIn('user_id', $user->teamMemberIds())
-                ->orWhereIn('it_asset_id', ItAsset::query()->visibleTo($user)->select('id')))));
+                ->orWhereIn('it_asset_id', ItAsset::query()->visibleTo($user, 'it_items')->select('id')))));
     }
 
     /**

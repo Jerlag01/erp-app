@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Pages\TimesheetMonthlyOverview;
 use App\Filament\Admin\Resources\Absences\AbsenceResource;
 use App\Filament\Admin\Resources\ParentalLeaves\ParentalLeaveResource;
 use App\Filament\Pages\Announcement;
@@ -59,6 +60,7 @@ class AppPanelProvider extends PanelProvider
                 Planning::class,
                 Timesheet::class,
                 TimesheetOverview::class,
+                TimesheetMonthlyOverview::class,
                 ToolboxOverview::class,
                 Announcement::class,
                 Onboarding::class,

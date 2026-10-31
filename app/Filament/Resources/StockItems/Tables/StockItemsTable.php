@@ -157,7 +157,7 @@ class StockItemsTable
 
         return Location::query()
             ->where('is_active', true)
-            ->when($user?->seesOnlyOwnTeams() && modules()->locations(), fn (Builder $query) => $query->whereKey($user->locationIds()))
+            ->when($user?->seesOnlyOwnTeams('stock_items', 'stock') && modules()->locations(), fn (Builder $query) => $query->whereKey($user->locationIds()))
             ->orderBy('name')
             ->get();
     }

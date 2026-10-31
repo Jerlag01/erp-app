@@ -60,7 +60,7 @@ class Location extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->seesOnlyOwnTeams()) {
+        if ($user->seesOnlyOwnTeams('locations')) {
             $query->whereIn('locations.id', $user->locationIds());
         }
     }

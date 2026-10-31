@@ -136,7 +136,7 @@ class Absence extends Model
     public function scopeVisibleTo(Builder $query, User $user): void
     {
         // Who manages all leave sees everyone's, also without a team.
-        if ($user->seesOnlyOwnTeams() && ! $user->managesLeave()) {
+        if ($user->seesOnlyOwnTeams('vacations') && ! $user->managesLeave()) {
             $query->where(fn (Builder $query) => $query
                 ->where('absences.user_id', $user->id)
                 ->orWhereHas('user.teams', fn (Builder $query) => $query->whereIn('teams.id', $user->teamIds())));

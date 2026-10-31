@@ -101,7 +101,7 @@ class FuelPass extends Model
     public function scopeVisibleTo(Builder $query, User $user): void
     {
         if ($user->hasPermission('fuel_passes.view')) {
-            $query->whereHas('vehicle', fn (Builder $query) => $query->visibleTo($user));
+            $query->whereHas('vehicle', fn (Builder $query) => $query->visibleTo($user, 'fuel_passes'));
 
             return;
         }
