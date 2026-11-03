@@ -308,6 +308,7 @@ Verlof aanvragen en goedkeuren, overuren opnemen als betaald verlof, ziekte meld
 - **Personeel → Verlofkalender**: wie wanneer afwezig is.
 - **Personeel → Afwezigheden**, **Feestdagen** en **Inhaalrustdagen (IR)**: voor de administratie.
 - **Interims**: op de pagina van de werknemer (Personeel → werknemer) past het tabblad **Inhaalrust en feestdagen (interim)** hun inhaalrustdagen en feestdagen vrij aan; een interim heeft niet altijd recht op elke feestdag. **Inhaalrust of feestdagen wegnemen** (de interim werkt die dag, die telt als gewone werkdag) of **inhaalrustdagen toekennen** op eender welke werkdag; **Ongedaan maken** geeft de inhaalrustdag of feestdag terug of verwijdert de eigen dag. De prestatiefiche, de planning, de verloftelling, de app en Outlook volgen mee.
+- **Interimkantoren** (Personeel → Interimkantoren): elk kantoor met zijn **contactpersonen** (naam en e-mailadres). Bij een interim kies je het **interimkantoor** in de fiche van de werknemer (of maak je het daar meteen aan). Bij het versturen van de **wekelijkse prestaties** krijgen de contactpersonen van het kantoor één e-mail met de prestatiefiches van **hun** interims, en enkel die.
 
 ## Verlof aanvragen
 

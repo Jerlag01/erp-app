@@ -6,6 +6,7 @@ use App\Enums\ContractTerm;
 use App\Enums\DriverLicenseCategory;
 use App\Enums\EducationLevel;
 use App\Enums\EmploymentCategory;
+use App\Filament\Admin\Resources\InterimOffices\InterimOfficeResource;
 use App\Models\Country;
 use App\Models\Employee;
 use App\Models\Role;
@@ -25,6 +26,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 
 class EmployeeForm
@@ -283,10 +285,14 @@ class EmployeeForm
                 ->helperText(__('erp.employees.is_interim_help'))
                 ->live()
                 ->inline(false),
-            TextInput::make('interim_agency')
+            // Its contacts also get the employee's weekly prestation sheets.
+            Select::make('interim_office_id')
                 ->label(__('erp.employees.interim_agency'))
-                ->placeholder('Randstad, Adecco, Start People…')
-                ->maxLength(150)
+                ->helperText(__('erp.interim_offices.employee_help'))
+                ->relationship('interimOffice', 'name', fn (Builder $query, ?Employee $record) => $query->where(fn (Builder $query) => $query->where('is_active', true)->when($record?->interim_office_id, fn (Builder $query, int $id) => $query->orWhereKey($id)))->orderBy('name'))
+                ->searchable()
+                ->preload()
+                ->createOptionForm(InterimOfficeResource::formComponents())
                 ->visible(fn (Get $get): bool => (bool) $get('is_interim')),
             Toggle::make('is_mentor')
                 ->label(__('erp.employees.is_mentor'))

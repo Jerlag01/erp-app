@@ -95,6 +95,7 @@ class HrAdvancesTest extends TestCase
 
         $this->actingAs(User::factory()->withPermissions(['hr_calculations' => ['view', 'manage']])->inTeam()->create());
         Livewire::test(HrAdvancesPage::class)
+            ->set('month', '2026-10')
             ->set('bases.workers', 650)
             ->set('until', '2026-10-14')
             ->callAction('saveDefaults');

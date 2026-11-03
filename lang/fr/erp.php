@@ -3214,6 +3214,16 @@ return [
             'no_section' => 'Aucune section jusqu\'à 300 mm² ne convient : utilisez des câbles en parallèle, une longueur plus courte ou une chute de tension admise plus élevée.',
         ],
     ],
+    'interim_offices' => [
+        'singular' => 'bureau intérim',
+        'plural' => 'Bureaux intérim',
+        'contacts' => 'Personnes de contact',
+        'contacts_help' => 'Elles reçoivent les feuilles de prestations hebdomadaires des intérimaires de ce bureau.',
+        'add_contact' => 'Ajouter une personne de contact',
+        'no_contacts' => 'Aucune personne de contact',
+        'employees' => 'Intérimaires',
+        'employee_help' => 'Les personnes de contact du bureau reçoivent aussi les feuilles de prestations hebdomadaires de ce collaborateur.',
+    ],
     'cable_stripping' => [
         'title' => 'Dénudage de câbles',
         'singular' => 'ligne',

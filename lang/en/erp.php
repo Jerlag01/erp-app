@@ -3214,6 +3214,16 @@ return [
             'no_section' => 'No section up to 300 mm² fits: use parallel cables, a shorter length or a higher allowed voltage drop.',
         ],
     ],
+    'interim_offices' => [
+        'singular' => 'interim office',
+        'plural' => 'Interim offices',
+        'contacts' => 'Contacts',
+        'contacts_help' => 'They get the weekly prestation sheets of this office\'s interims.',
+        'add_contact' => 'Add contact',
+        'no_contacts' => 'No contacts',
+        'employees' => 'Interims',
+        'employee_help' => 'The office\'s contacts also get this employee\'s weekly prestation sheets.',
+    ],
     'cable_stripping' => [
         'title' => 'Cable stripping',
         'singular' => 'line',

@@ -3215,6 +3215,16 @@ return [
             'no_section' => 'Geen sectie tot 300 mm² voldoet: gebruik parallelle kabels, een kortere lengte of een hogere toegelaten spanningsval.',
         ],
     ],
+    'interim_offices' => [
+        'singular' => 'interimkantoor',
+        'plural' => 'Interimkantoren',
+        'contacts' => 'Contactpersonen',
+        'contacts_help' => 'Ze krijgen de wekelijkse prestatiefiches van de interims van dit kantoor.',
+        'add_contact' => 'Contactpersoon toevoegen',
+        'no_contacts' => 'Geen contactpersonen',
+        'employees' => 'Interims',
+        'employee_help' => 'De contactpersonen van het kantoor krijgen ook de wekelijkse prestatiefiches van deze medewerker.',
+    ],
     'cable_stripping' => [
         'title' => 'Kabel ontmantelen',
         'singular' => 'lijn',

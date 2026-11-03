@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Storage;
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id',
     'private_email', 'private_phone', 'national_number', 'bank_account',
     'place_of_birth', 'date_of_birth', 'employment_date', 'notice_started_on', 'notice_ends_on', 'mother_tongue',
-    'employment_category', 'contract_term', 'is_mentor', 'is_interim', 'interim_agency', 'education_level',
+    'employment_category', 'contract_term', 'is_mentor', 'is_interim', 'interim_agency', 'interim_office_id', 'education_level',
     'driver_license_categories', 'driver_license_number', 'driver_license_expires_on', 'driver_license_files', 'driver_license_file_names',
     'size_pants', 'size_shirt', 'size_sweater', 'size_shoes',
     'emergency1_first_name', 'emergency1_last_name', 'emergency1_phone', 'emergency1_relation',
@@ -118,6 +118,16 @@ class Employee extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The interim office of an interim employee; its contacts also get the weekly prestation sheets.
+     *
+     * @return BelongsTo<InterimOffice, $this>
+     */
+    public function interimOffice(): BelongsTo
+    {
+        return $this->belongsTo(InterimOffice::class);
     }
 
     /**
@@ -361,6 +371,19 @@ class Employee extends Model
 
     protected static function booted(): void
     {
+        // Only interims have an office; its name stays in "interim_agency" for the lists and exports.
+        static::saving(function (self $employee): void {
+            if (! $employee->is_interim) {
+                $employee->interim_office_id = null;
+            }
+
+            if (! $employee->is_interim) {
+                $employee->interim_agency = null;
+            } elseif ($employee->interim_office_id && $employee->isDirty('interim_office_id')) {
+                $employee->interim_agency = InterimOffice::query()->whereKey($employee->interim_office_id)->value('name');
+            }
+        });
+
         // Delete through the models, so their PDFs are removed from the disk too.
         static::deleting(function (self $employee): void {
             $employee->certificates->each->delete();
