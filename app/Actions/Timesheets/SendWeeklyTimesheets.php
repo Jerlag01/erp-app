@@ -23,16 +23,17 @@ use Throwable;
 /**
  * Sends the prestation sheets of a week: one PDF per employee. Each employee gets their own sheet by
  * e-mail (in their language), and the general addresses of Settings > Prestations get one e-mail with
- * all sheets and a summary per employee. The contacts of an interim office get one e-mail with the sheets
- * of that office's interims. The weeks are then marked as sent, so employees can no longer change them.
+ * all sheets and a summary per employee. The sheets of interims are held for their interim office until
+ * someone with "timesheets.verify_interim" verifies them (InterimTimesheets). The weeks are then marked as
+ * sent, so employees can no longer change them.
  */
 class SendWeeklyTimesheets
 {
-    public function __construct(protected Timesheets $timesheets, protected TimesheetPdf $pdf) {}
+    public function __construct(protected Timesheets $timesheets, protected TimesheetPdf $pdf, protected InterimTimesheets $interims) {}
 
     /**
      * @param  iterable<User>|null  $users  everyone who fills in prestation sheets when null
-     * @return array{sent: bool, count: int, personal: int, interim: int, error: ?string}
+     * @return array{sent: bool, count: int, personal: int, interim: int, error: ?string} "interim": sheets held for verification
      */
     public function handle(CarbonImmutable $monday, ?iterable $users = null, bool $onlyUnsent = false): array
     {
@@ -66,13 +67,7 @@ class SendWeeklyTimesheets
             Storage::disk(TimesheetWeek::DISK)->put($path, $pdf);
 
             $files[$user->id] = ['data' => $pdf, 'name' => $name, 'mime' => 'application/pdf'];
-            $summary[$user->id] = '- **'.MailTemplates::escape($user->name).'**: '.MailTemplates::escape(sprintf(
-                '%s u · meeruren %s (saldo %s) · %s km',
-                number_format($week['hours'], 2, ',', ''),
-                ($week['overtime_now'] >= 0 ? '+' : '').number_format($week['overtime_now'], 2, ',', ''),
-                number_format($week['overtime_new'], 2, ',', ''),
-                number_format($week['km'], 0, ',', '.'),
-            ));
+            $summary[$user->id] = self::summaryLine($user, $week);
 
             TimesheetWeek::query()->updateOrCreate(
                 ['user_id' => $user->id, 'week_start' => $monday->toDateString()],
@@ -83,14 +78,15 @@ class SendWeeklyTimesheets
         }
 
         $sentToEmployees = $toEmployees ? $this->sendToEmployees($monday, $personal) : 0;
-        $sentToOffices = $this->sendToInterimOffices($monday, $offices, $files, $summary);
+        // Interims: held for their office until verified; those who verify are told.
+        $sentToOffices = $this->interims->hold($monday, $offices);
 
         if ($recipients === []) {
             return ['sent' => true, 'count' => $users->count(), 'personal' => $sentToEmployees, 'interim' => $sentToOffices, 'error' => null];
         }
 
         try {
-            Mail::to($recipients)->send($this->weekMail($monday, array_values($summary), array_values($files)));
+            Mail::to($recipients)->send(self::weekMail($monday, array_values($summary), array_values($files)));
         } catch (Throwable $exception) {
             Log::error('Weekly timesheets could not be sent', ['week' => $monday->toDateString(), 'error' => $exception->getMessage()]);
 
@@ -106,7 +102,7 @@ class SendWeeklyTimesheets
      * @param  list<string>  $summary
      * @param  list<array{data: string, name: string, mime: string}>  $files
      */
-    protected function weekMail(CarbonImmutable $monday, array $summary, array $files): SystemMail
+    public static function weekMail(CarbonImmutable $monday, array $summary, array $files): SystemMail
     {
         return new SystemMail(MailTemplateKey::TimesheetWeek, config('app.locale'), [
             'week' => (string) $monday->isoWeek(),
@@ -115,6 +111,22 @@ class SendWeeklyTimesheets
             'count' => (string) count($files),
             'summary' => new HtmlString(implode("\n", $summary)),
         ], $files);
+    }
+
+    /**
+     * "- **Anna**: 38,00 u · meeruren +0,00 (saldo 2,50) · 120 km", for the week e-mails.
+     *
+     * @param  array<string, mixed>  $week
+     */
+    public static function summaryLine(User $user, array $week): string
+    {
+        return '- **'.MailTemplates::escape($user->name).'**: '.MailTemplates::escape(sprintf(
+            '%s u · meeruren %s (saldo %s) · %s km',
+            number_format($week['hours'], 2, ',', ''),
+            ($week['overtime_now'] >= 0 ? '+' : '').number_format($week['overtime_now'], 2, ',', ''),
+            number_format($week['overtime_new'], 2, ',', ''),
+            number_format($week['km'], 0, ',', '.'),
+        ));
     }
 
     /**
@@ -141,37 +153,6 @@ class SendWeeklyTimesheets
             ->filter(fn (array $group): bool => $group['office']->contactAddresses() !== [])
             ->values()
             ->all();
-    }
-
-    /**
-     * Each interim office's contacts get one e-mail with the sheets of that office's interims (and only
-     * those). A failed e-mail is logged and does not stop the others. Returns how many offices got it.
-     *
-     * @param  list<array{office: InterimOffice, users: list<int>}>  $offices
-     * @param  array<int, array{data: string, name: string, mime: string}>  $files
-     * @param  array<int, string>  $summary
-     */
-    protected function sendToInterimOffices(CarbonImmutable $monday, array $offices, array $files, array $summary): int
-    {
-        $sent = 0;
-
-        foreach ($offices as ['office' => $office, 'users' => $userIds]) {
-            $theirFiles = array_values(array_intersect_key($files, array_flip($userIds)));
-
-            if ($theirFiles === []) {
-                continue;
-            }
-
-            try {
-                Mail::to(collect($office->contactAddresses())->map(fn (string $name, string $email): array => ['email' => $email, 'name' => $name])->values()->all())
-                    ->send($this->weekMail($monday, array_values(array_intersect_key($summary, array_flip($userIds))), $theirFiles));
-                $sent++;
-            } catch (Throwable $exception) {
-                Log::warning('Weekly timesheets could not be sent to the interim office', ['office' => $office->id, 'week' => $monday->toDateString(), 'error' => $exception->getMessage()]);
-            }
-        }
-
-        return $sent;
     }
 
     /**

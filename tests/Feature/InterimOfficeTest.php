@@ -5,13 +5,17 @@ namespace Tests\Feature;
 use App\Actions\Timesheets\SendWeeklyTimesheets;
 use App\Enums\MailTemplateKey;
 use App\Filament\Admin\Resources\InterimOffices\Pages\ManageInterimOffices;
+use App\Filament\Pages\InterimTimesheetVerification;
 use App\Mail\SystemMail;
 use App\Models\Employee;
 use App\Models\InterimOffice;
+use App\Models\Role;
 use App\Models\TimesheetDay;
+use App\Models\TimesheetWeek;
 use App\Models\User;
 use App\Support\Timesheets;
 use Carbon\CarbonImmutable;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -79,7 +83,7 @@ class InterimOfficeTest extends TestCase
     }
 
     #[Test]
-    public function the_contacts_of_the_interim_office_get_the_weekly_sheets_of_its_interims(): void
+    public function interim_sheets_wait_for_verification_and_then_go_to_their_office(): void
     {
         Mail::fake();
         settings()->save('timesheets', [...settings('timesheets'), 'recipients' => ['payroll@example.com'], 'send_to_employee' => false]);
@@ -89,27 +93,62 @@ class InterimOfficeTest extends TestCase
         $adecco->contacts()->create(['name' => 'Lien', 'email' => 'lien@adecco.example']);
         $empty = InterimOffice::factory()->create(['name' => 'Zonder contacten']);
 
-        $this->employee('Anna', true, $randstad);
+        $anna = $this->employee('Anna', true, $randstad);
         $this->employee('Bert', true, $randstad);
         $this->employee('Cas', true, $adecco);
         $this->employee('Dirk', true, $empty);
         $this->employee('Eva');
 
+        // Who verifies: administrators and the role Administratie; not an ordinary employee.
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com', 'locale' => 'nl']);
+        $administration = User::factory()->create(['email' => 'adm@example.com', 'role_id' => Role::query()->where('name', 'Administratie')->sole()->id]);
+        $employee = User::factory()->withPermissions(['timesheets' => ['see_all']])->inTeam()->create(['email' => 'emp@example.com']);
+
         $result = app(SendWeeklyTimesheets::class)->handle(CarbonImmutable::parse(self::MONDAY));
-        $this->assertSame([true, 5, 2], [$result['sent'], $result['count'], $result['interim']]);
+        $this->assertSame([true, 5, 3], [$result['sent'], $result['count'], $result['interim']]);
 
-        // The general addresses: everyone.
+        // The general addresses get everyone at once; the offices nothing yet.
         Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::TimesheetWeek && $mail->hasTo('payroll@example.com') && count($mail->files) === 5);
+        Mail::assertNotSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('sofie@randstad.example') || $mail->hasTo('lien@adecco.example'));
 
-        // Randstad: only its two interims, to both contacts.
-        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('sofie@randstad.example') && $mail->hasTo('tom@randstad.example')
-            && ! $mail->hasTo('payroll@example.com')
+        // The verifiers: a notification in the platform and an e-mail with a link.
+        foreach ([$admin, $administration] as $verifier) {
+            $this->assertSame(1, $verifier->notifications()->count());
+            Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::TimesheetInterimVerify && $mail->hasTo($verifier->email)
+                && str_contains($mail->rendered['html'], 'Randstad') && str_contains($mail->rendered['html'], InterimTimesheetVerification::getUrl(['week' => self::MONDAY], panel: 'app')));
+        }
+        $this->assertSame(0, $employee->notifications()->count());
+        Mail::assertNotSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('emp@example.com'));
+        Mail::assertSent(SystemMail::class, 3);
+
+        // The verification page: only for those who verify; the sheets per office.
+        Filament::setCurrentPanel('app');
+        $this->actingAs($employee)->get(InterimTimesheetVerification::getUrl(panel: 'app'))->assertForbidden();
+        $this->actingAs($administration)->get(InterimTimesheetVerification::getUrl(panel: 'app'))->assertOk()->assertSee('Randstad')->assertSee('Anna')->assertSee('Cas');
+
+        // They may open and correct the interim's sheet while it waits.
+        $this->assertTrue(app(Timesheets::class)->canEdit($administration, $anna, TimesheetWeek::query()->where('user_id', $anna->id)->sole()));
+
+        Livewire::test(InterimTimesheetVerification::class)
+            ->callAction(TestAction::make('verify')->arguments(['office' => $randstad->id, 'week' => self::MONDAY]))
+            ->assertNotified();
+
+        // Randstad: only its two interims, to both contacts; verified by whom.
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::TimesheetWeek
+            && $mail->hasTo('sofie@randstad.example') && $mail->hasTo('tom@randstad.example') && ! $mail->hasTo('payroll@example.com')
             && count($mail->files) === 2
             && str_contains($mail->rendered['html'], 'Anna') && str_contains($mail->rendered['html'], 'Bert') && ! str_contains($mail->rendered['html'], 'Cas'));
+        $week = TimesheetWeek::query()->where('user_id', $anna->id)->sole();
+        $this->assertSame($administration->id, $week->interim_verified_by);
+        $this->assertNotNull($week->interim_sent_at);
+        $this->assertFalse(app(Timesheets::class)->canEdit($administration, $anna, $week));
+        $this->assertSame(1, TimesheetWeek::query()->awaitingInterimVerification()->count());
+        Mail::assertNotSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('lien@adecco.example'));
 
-        // Adecco: only Cas.
-        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('lien@adecco.example') && count($mail->files) === 1 && str_contains($mail->files[0]['name'], 'cas'));
-        Mail::assertSent(SystemMail::class, 3);
+        // Sent again by the schedule: what went to the office is not held again.
+        app(SendWeeklyTimesheets::class)->handle(CarbonImmutable::parse(self::MONDAY), [$anna]);
+        $this->assertNotNull($week->fresh()->interim_sent_at);
+        $this->assertNotNull($week->fresh()->interim_verified_at);
     }
 
     #[Test]
@@ -124,6 +163,6 @@ class InterimOfficeTest extends TestCase
         $result = app(SendWeeklyTimesheets::class)->handle(CarbonImmutable::parse(self::MONDAY), [$anna]);
 
         $this->assertSame([true, 1], [$result['sent'], $result['interim']]);
-        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('sofie@randstad.example'));
+        $this->assertSame(1, TimesheetWeek::query()->awaitingInterimVerification()->count());
     }
 }

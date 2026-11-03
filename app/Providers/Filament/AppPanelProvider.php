@@ -10,6 +10,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FinanceOverview;
 use App\Filament\Pages\FinanceStatistics;
 use App\Filament\Pages\HrAdvances;
+use App\Filament\Pages\InterimTimesheetVerification;
 use App\Filament\Pages\Onboarding;
 use App\Filament\Pages\Planning;
 use App\Filament\Pages\Timesheet;
@@ -61,6 +62,7 @@ class AppPanelProvider extends PanelProvider
                 Timesheet::class,
                 TimesheetOverview::class,
                 TimesheetMonthlyOverview::class,
+                InterimTimesheetVerification::class,
                 ToolboxOverview::class,
                 Announcement::class,
                 Onboarding::class,

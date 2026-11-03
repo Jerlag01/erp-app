@@ -33,7 +33,8 @@ namespace App\Support;
  * "access_control.delete"). "onboarding.manage" manages the onboarding documents,
  * "onboarding.view_signatures" sees who signed them.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
- * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks.
+ * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks;
+ * "timesheets.verify_interim" verifies the weeks of interims before they go to their interim office.
  * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
  * "routers" covers the 4G routers, "routers.secrets" shows their login credentials and VPN files. The latter is
  * one of the EXPLICIT permissions: administrator roles do not get it automatically, it has to be ticked
@@ -93,7 +94,7 @@ class Permissions
         'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate', 'download_pdf']],
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
         'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other', 'trainings']],
-        'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf']],
+        'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf', 'verify_interim']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'batteries' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'input', 'prices', 'documents', 'documents_upload', 'bae_orders', 'suppliers', 'generate_pdf', 'edit_finished', 'all_teams']],

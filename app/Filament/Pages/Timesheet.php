@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\Timesheets\InterimTimesheets;
 use App\Actions\Timesheets\SaveTimesheetDay;
 use App\Actions\Timesheets\SendWeeklyTimesheets;
 use App\Enums\NavigationGroup;
@@ -67,7 +68,7 @@ class Timesheet extends Page implements HasSchemas
         $user = auth()->user();
 
         // Without a sheet of their own (e.g. HR) only to look at others.
-        return modules()->timesheets() && $user !== null && ($user->hasTimesheet() || $user->isAdmin() || $user->hasPermission('timesheets.see_all'));
+        return modules()->timesheets() && $user !== null && ($user->hasTimesheet() || $user->isAdmin() || $user->hasPermission('timesheets.see_all') || $user->hasPermission(InterimTimesheets::PERMISSION));
     }
 
     public static function getNavigationLabel(): string

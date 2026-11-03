@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Actions\Timesheets\InterimTimesheets;
 use App\Enums\AbsenceType;
 use App\Enums\EmploymentCategory;
 use App\Enums\VacationStatus;
@@ -104,7 +105,15 @@ class Timesheets
 
     public function canView(User $viewer, User $employee): bool
     {
-        return $this->enabled() && ($viewer->id === $employee->id || $viewer->isAdmin() || $viewer->hasPermission('timesheets.see_all'));
+        return $this->enabled() && ($viewer->id === $employee->id || $viewer->isAdmin() || $viewer->hasPermission('timesheets.see_all') || $this->verifiesInterim($viewer, $employee));
+    }
+
+    /**
+     * Who verifies the interims' weeks sees (and corrects, while waiting) an interim's sheet.
+     */
+    protected function verifiesInterim(User $viewer, User $employee): bool
+    {
+        return $viewer->hasPermission(InterimTimesheets::PERMISSION) && (bool) $employee->employee?->is_interim;
     }
 
     /**
@@ -118,6 +127,11 @@ class Timesheets
         }
 
         if ($viewer->isAdmin() || $viewer->hasPermission('timesheets.edit_all')) {
+            return true;
+        }
+
+        // An interim's week waiting for verification: who verifies may correct it first.
+        if ($week !== null && $week->interim_office_id !== null && $week->interim_verified_at === null && $this->verifiesInterim($viewer, $employee)) {
             return true;
         }
 

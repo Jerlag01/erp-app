@@ -31,6 +31,9 @@ enum MailTemplateKey: string implements HasLabel
 
     case TimesheetEmployee = 'timesheet_employee';
 
+    /** To those who verify the interims' weeks before they go to the interim office. */
+    case TimesheetInterimVerify = 'timesheet_interim_verify';
+
     case ClientWelcome = 'client_welcome';
 
     case ClientPasswordReset = 'client_password_reset';
@@ -68,6 +71,7 @@ enum MailTemplateKey: string implements HasLabel
             self::PlanningCreated, self::PlanningDeleted => [...$company, 'name', 'changed_by', 'items', 'planning_url'],
             self::PlanningUpdated => [...$company, 'name', 'changed_by', 'items', 'previous', 'planning_url'],
             self::TimesheetWeek => [...$company, 'week', 'from', 'until', 'count', 'summary'],
+            self::TimesheetInterimVerify => [...$company, 'name', 'week', 'from', 'until', 'count', 'summary', 'url'],
             self::TimesheetEmployee => [...$company, 'name', 'week', 'from', 'until', 'hours', 'overtime', 'balance', 'km'],
             self::ClientWelcome => [...$company, 'name', 'email', 'company', 'portal_name', 'portal_url', 'password_link', 'link_days', 'overviews'],
             self::GpwRequest => [...$company, 'contact_name', 'project', 'cow_code', 'address', 'description', 'period', 'from', 'until', 'remarks', 'requested_by', 'requester_email', 'approve_url', 'portal_url'],
