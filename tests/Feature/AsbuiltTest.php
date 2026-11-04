@@ -15,6 +15,7 @@ use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Mail\SystemMail;
 use App\Models\Asbuilt;
 use App\Models\AsbuiltLibraryFile;
+use App\Models\BatteryDossier;
 use App\Models\ClientUser;
 use App\Models\Project;
 use App\Models\Role;
@@ -22,12 +23,14 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
 use App\Models\WorkSiteContact;
+use App\Support\Asbuilts;
 use App\Support\ClientPortal;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -324,5 +327,77 @@ class AsbuiltTest extends TestCase
             // Livewire cannot parse a click with raw quotes ("Missing closing parenthesis"): the upload per category uses Js::from.
             ->assertSee("mountAction('upload', JSON.parse(", false)
             ->assertDontSee('mountAction(\'upload\', {&quot;', false);
+    }
+
+    #[Test]
+    public function a_battery_room_has_its_own_asbuilt_files_and_takes_the_wiring_diagram_of_its_closed_604(): void
+    {
+        $roomPlans = $this->library(AsbuiltCategory::RoomPlans, $this->site, 'plannen-02GAM.pdf');
+        $ventilation = $this->library(AsbuiltCategory::VentilationCalculations, $this->site, 'ventilatie-02GAM.pdf');
+        $evacuation = $this->library(AsbuiltCategory::RoomEvacuationLists, $this->site, 'evacuatielijst-02GAM.pdf');
+        $otherSite = $this->library(AsbuiltCategory::RoomPlans, WorkSite::factory()->create(), 'plannen-ander.pdf');
+        $roomExternal = $this->library(AsbuiltCategory::RoomExternalInfluences, null, 'extern-lokalen.pdf');
+        // The ordinary as-built files stay out of a battery room, and the other way around.
+        $external = $this->library(AsbuiltCategory::ExternalInfluences, null, 'extern.pdf');
+        $routes = $this->library(AsbuiltCategory::EvacuationRoutes, $this->site, 'evacuatie-02GAM.pdf');
+
+        $battery = Project::factory()->inCategory('604')->for($this->site)->create(['status' => ProjectStatus::InProgress]);
+        BatteryDossier::factory()->create(['project_id' => $battery->id]);
+        $room = Project::factory()->inCategory('609')->for($this->site)->create(['status' => ProjectStatus::InProgress, 'source_project_id' => $battery->id]);
+        $room->teams()->attach($this->team);
+        $room->update(['status' => ProjectStatus::Executed]);
+        $asbuilt = $room->refresh()->asbuilt;
+
+        $this->assertSame(AsbuiltCategory::forBatteryRoom(), $asbuilt->categories());
+        $this->assertEqualsCanonicalizing([$roomPlans->id, $ventilation->id, $evacuation->id, $roomExternal->id], $asbuilt->files()->pluck('asbuilt_library_file_id')->filter()->values()->all());
+        $this->assertNotContains($otherSite->id, $asbuilt->files()->pluck('asbuilt_library_file_id')->all());
+        $this->assertSame(0, $asbuilt->filesIn(AsbuiltCategory::WiringDiagrams)->count(), 'The 604 is not closed yet.');
+
+        $ordinary = $this->executedProject()->asbuilt;
+        $this->assertEqualsCanonicalizing([$external->id, $routes->id], $ordinary->files()->pluck('asbuilt_library_file_id')->all());
+
+        // Closing the 604: its wiring diagram (single-line diagram) goes into the battery room's as-built.
+        $battery->update(['status' => ProjectStatus::Closed]);
+        $wiring = $asbuilt->filesIn(AsbuiltCategory::WiringDiagrams)->sole();
+        $this->assertStringStartsWith('%PDF', Storage::disk('local')->get($wiring->path));
+        $this->assertStringContainsString('eendraadschema', $wiring->original_name);
+        $this->assertFalse(app(Asbuilts::class)->attachWiringDiagram($asbuilt->refresh()), 'Only once.');
+
+        // Uploads: only the battery room's categories; edited floor plans are a plain upload zone.
+        $this->actingAs($this->manager());
+        Storage::disk('local')->put('asbuilt/'.$asbuilt->id.'/grondplan.pdf', 'pdf');
+        Storage::disk('local')->put('asbuilt/'.$asbuilt->id.'/kabels.xlsx', 'xlsx');
+        app(Asbuilts::class)->addFiles($asbuilt, AsbuiltCategory::EditedFloorPlans->value, ['asbuilt/'.$asbuilt->id.'/grondplan.pdf'], [], auth()->user());
+        $this->assertSame(1, $asbuilt->filesIn(AsbuiltCategory::EditedFloorPlans)->count());
+        $this->expectException(ValidationException::class);
+        app(Asbuilts::class)->addFiles($asbuilt, AsbuiltCategory::CableDimensions->value, ['asbuilt/'.$asbuilt->id.'/kabels.xlsx'], [], auth()->user());
+    }
+
+    #[Test]
+    public function the_battery_room_zip_has_its_own_folders(): void
+    {
+        $this->library(AsbuiltCategory::VentilationCalculations, $this->site, 'ventilatie.pdf');
+        $room = Project::factory()->inCategory('609')->for($this->site)->create(['status' => ProjectStatus::InProgress]);
+        $room->teams()->attach($this->team);
+        $room->update(['status' => ProjectStatus::Executed]);
+        $asbuilt = $room->refresh()->asbuilt;
+
+        $this->actingAs($this->manager());
+        Livewire::test(ViewAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
+            ->assertSee(AsbuiltCategory::VentilationCalculations->getLabel())
+            ->assertSee(AsbuiltCategory::WiringDiagrams->getLabel())
+            ->assertDontSee(AsbuiltCategory::CableDimensions->getLabel())
+            ->assertActionHidden('technical');
+
+        app(Asbuilts::class)->close($asbuilt);
+        $zip = new ZipArchive;
+        $zip->open(Storage::disk('local')->path($asbuilt->refresh()->zip_path));
+        $names = array_map(fn (int $i): string => $zip->getNameIndex($i), range(0, $zip->numFiles - 1));
+
+        foreach (['0 - BTV control/', '1 - plans/', '2 - external influences/', '4 - wiring diagram/', '5 - evacuation list/', '6 - edited floor plans/'] as $folder) {
+            $this->assertContains($folder, $names);
+        }
+        $this->assertContains('3 - ventilation calculation/ventilatie.pdf', $names);
+        $this->assertNotContains('1 - cable dimensions/', $names);
     }
 }

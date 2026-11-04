@@ -1086,6 +1086,12 @@ return [
             'technical_documents' => 'Technische documenten',
             'external_influences' => 'Externe invloeden',
             'evacuation_routes' => 'Evacuatiewegen',
+            'room_plans' => 'Batterijlokaal: plannen',
+            'room_external_influences' => 'Batterijlokaal: externe invloedsfactoren',
+            'ventilation_calculations' => 'Batterijlokaal: ventilatieberekening',
+            'wiring_diagrams' => 'Batterijlokaal: eendraadschema',
+            'room_evacuation_lists' => 'Batterijlokaal: evacuatielijst',
+            'edited_floor_plans' => 'Batterijlokaal: aangepaste grondplannen',
         ],
         'asbuilt_status' => [
             'in_progress' => 'In uitvoering',
@@ -2803,6 +2809,7 @@ return [
         ],
     ],
     'asbuilt' => [
+        'wiring_diagram_file' => 'Eendraadschema :reference',
         'project_details' => 'Projectgegevens',
         'project_status' => 'Status project',
         'create' => 'As-built aanmaken',

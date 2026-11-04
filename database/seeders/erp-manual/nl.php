@@ -984,6 +984,8 @@ Plannen, elektrische schema's, evacuatiewegen, externe invloeden, technische doc
 1. Voeg bestanden toe per categorie (de uploadknop bij elke categorie of **Bestanden toevoegen**).
 2. **Keuring Normec BTV plannen**: kies de datum. De status wordt *Gepland voor Normec BTV*.
 3. Na de keuring: **Keuringsverslag BTV uploaden**. De as-built sluit automatisch af en wordt een ZIP met de naam *"610-012-02GAM - ASBUILT"* met een map per categorie (0 - BTV control, 1 - cable dimensions, … 8 - evacuation routes).
+
+**Batterijlokalen (609)** hebben hun eigen set as-builtbestanden: **BTV-keuring**, **plannen** (per COW-code), **externe invloedsfactoren** (globaal, voor alle batterijlokalen), **ventilatieberekening** (per COW-code), het **eendraadschema**, de **evacuatielijst** (per COW-code) en een uploadzone voor **aangepaste grondplannen**. Het eendraadschema komt automatisch uit het batterijdossier van het **604-project** waar het 609 op volgt, zodra dat 604 **afgesloten** is (je kan het ook zelf uploaden). De ZIP heeft dan de mappen 0 - BTV control, 1 - plans, 2 - external influences, 3 - ventilation calculation, 4 - wiring diagram, 5 - evacuation list en 6 - edited floor plans. Bij **As-built standaardbestanden** staan deze categorieën als *Batterijlokaal: …*.
 4. De klant krijgt een **e-mail** en downloadt de ZIP in de Global overview for Client.
 
 Met het recht **Heropenen** zet je een afgeronde as-built terug open.

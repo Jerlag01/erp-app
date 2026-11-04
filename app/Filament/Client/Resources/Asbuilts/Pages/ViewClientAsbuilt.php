@@ -31,11 +31,11 @@ class ViewClientAsbuilt extends ViewRecord
     /**
      * @return array<string, string>
      */
-    public static function uploadCategories(): array
+    public static function uploadCategories(?Asbuilt $asbuilt = null): array
     {
         return [
             AsbuiltCategory::GENERAL => __('erp.asbuilt.general_zone_client'),
-            ...collect(AsbuiltCategory::ordered())->filter(fn (AsbuiltCategory $category): bool => $category->clientMayUpload())
+            ...collect($asbuilt?->categories() ?? AsbuiltCategory::ordered())->filter(fn (AsbuiltCategory $category): bool => $category->clientMayUpload())
                 ->mapWithKeys(fn (AsbuiltCategory $category): array => [$category->value => $category->getLabel()])->all(),
         ];
     }
@@ -69,11 +69,11 @@ class ViewClientAsbuilt extends ViewRecord
                 ->modalDescription(__('erp.asbuilt.client_upload_help'))
                 ->fillForm(fn (array $arguments): array => ['category' => $arguments['category'] ?? AsbuiltCategory::GENERAL])
                 ->schema(fn (Asbuilt $record): array => [
-                    Select::make('category')->label(__('erp.asbuilt.category'))->options(self::uploadCategories())->required()->selectablePlaceholder(false),
+                    Select::make('category')->label(__('erp.asbuilt.category'))->options(self::uploadCategories($record))->required()->selectablePlaceholder(false),
                     ViewAsbuilt::upload('files', 'asbuilt/'.$record->id.'/client')->label(__('erp.asbuilt.files'))->required(),
                 ])
                 ->action(function (Asbuilt $record, array $data): void {
-                    abort_unless(array_key_exists($data['category'], self::uploadCategories()) && ! $record->isClosed(), 403);
+                    abort_unless(array_key_exists($data['category'], self::uploadCategories($record)) && ! $record->isClosed(), 403);
 
                     $files = app(Asbuilts::class)->addFiles($record, $data['category'], (array) $data['files'], (array) ($data['files_names'] ?? []), client: ClientPortal::user());
                     Notification::make()->title(trans_choice('erp.asbuilt.files_added', count($files), ['count' => count($files)]))->body(__('erp.asbuilt.client_upload_done'))->success()->send();

@@ -90,7 +90,7 @@ class ViewAsbuilt extends ViewRecord
                 ->schema(fn (Asbuilt $record): array => [
                     Select::make('category')
                         ->label(__('erp.asbuilt.category'))
-                        ->options(collect(AsbuiltCategory::ordered())->reject(fn (AsbuiltCategory $category): bool => $category === AsbuiltCategory::BtvReports)->mapWithKeys(fn (AsbuiltCategory $category): array => [$category->value => $category->getLabel()])->all())
+                        ->options(collect($record->categories())->reject(fn (AsbuiltCategory $category): bool => $category === AsbuiltCategory::BtvReports || $category->isRegister())->mapWithKeys(fn (AsbuiltCategory $category): array => [$category->value => $category->getLabel()])->all())
                         ->required(),
                     self::upload('files', 'asbuilt/'.$record->id)->label(__('erp.asbuilt.files'))->required(),
                 ])
@@ -102,7 +102,8 @@ class ViewAsbuilt extends ViewRecord
                 ->label(__('erp.asbuilt.technical_documents'))
                 ->icon(Heroicon::OutlinedDocumentText)
                 ->color('gray')
-                ->visible(fn (Asbuilt $record): bool => Gate::allows('update', $record))
+                // Battery rooms (609) have no technical documents.
+                ->visible(fn (Asbuilt $record): bool => Gate::allows('update', $record) && in_array(AsbuiltCategory::TechnicalDocuments, $record->categories(), true))
                 ->modalHeading(__('erp.asbuilt.technical_documents'))
                 ->modalDescription(__('erp.asbuilt.technical_help'))
                 ->schema(fn (Asbuilt $record): array => [
@@ -181,7 +182,7 @@ class ViewAsbuilt extends ViewRecord
         $files = $this->getRecord()->files()->with(['libraryFile.uploader', 'uploader', 'clientUploader'])->get()->groupBy('category');
         $grouped = [];
 
-        foreach (AsbuiltCategory::ordered() as $category) {
+        foreach ($this->getRecord()->categories() as $category) {
             $grouped[$category->value] = $files->get($category->value, collect())->all();
         }
 

@@ -23,7 +23,7 @@
 
     <x-filament::section :heading="__('erp.asbuilt.your_files')" :description="$asbuilt->isClosed() ? __('erp.asbuilt.closed_no_upload') : __('erp.asbuilt.client_upload_help')">
         <div style="display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));">
-            @foreach (\App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt::uploadCategories() as $key => $label)
+            @foreach (\App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt::uploadCategories($asbuilt) as $key => $label)
                 @php($files = $groups[$key] ?? [])
                 <div style="padding: .75rem 1rem; border-radius: .75rem; border: 1px solid rgb(148 163 184 / .35);">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: .5rem;">

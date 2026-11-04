@@ -11,6 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * routes"). Evacuation routes belong to a COW-code; external influences are global (in every
  * as-built); technical documents are a register picked from per as-built. The client may hand in evacuation routes, plans, external
  * influences and the ICC and Lmax calculations.
+ * Battery rooms (609) have their own set (forBatteryRoom): BTV control, plans and ventilation calculation
+ * per COW-code, their own global external influences, the wiring diagram (taken from the closed 604),
+ * the evacuation list per COW-code and edited floor plans.
  */
 enum AsbuiltCategory: string implements HasIcon, HasLabel
 {
@@ -32,6 +35,19 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
 
     case EvacuationRoutes = 'evacuation_routes';
 
+    // Battery rooms (609).
+    case RoomPlans = 'room_plans';
+
+    case RoomExternalInfluences = 'room_external_influences';
+
+    case VentilationCalculations = 'ventilation_calculations';
+
+    case WiringDiagrams = 'wiring_diagrams';
+
+    case RoomEvacuationLists = 'room_evacuation_lists';
+
+    case EditedFloorPlans = 'edited_floor_plans';
+
     /** Files the client hands in at once (mostly one ZIP), sorted afterwards. Not in the ZIP of the as-built. */
     public const GENERAL = 'general';
 
@@ -46,10 +62,14 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
             self::BtvReports => Heroicon::OutlinedClipboardDocumentCheck,
             self::CableDimensions => Heroicon::OutlinedArrowsPointingOut,
             self::IccCalculations, self::LmaxCalculations => Heroicon::OutlinedCalculator,
-            self::Plans => Heroicon::OutlinedMap,
+            self::Plans, self::RoomPlans => Heroicon::OutlinedMap,
+            self::VentilationCalculations => Heroicon::OutlinedCalculator,
+            self::WiringDiagrams => Heroicon::OutlinedBolt,
+            self::RoomEvacuationLists => Heroicon::OutlinedArrowRightStartOnRectangle,
+            self::EditedFloorPlans => Heroicon::OutlinedPencilSquare,
             self::ElectricalSchematics => Heroicon::OutlinedBolt,
             self::TechnicalDocuments => Heroicon::OutlinedDocumentText,
-            self::ExternalInfluences => Heroicon::OutlinedCloud,
+            self::ExternalInfluences, self::RoomExternalInfluences => Heroicon::OutlinedCloud,
             self::EvacuationRoutes => Heroicon::OutlinedArrowRightStartOnRectangle,
         };
     }
@@ -69,6 +89,12 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
             self::TechnicalDocuments => '6 - technical documents',
             self::ExternalInfluences => '7 - external influences',
             self::EvacuationRoutes => '8 - evacuation routes',
+            self::RoomPlans => '1 - plans',
+            self::RoomExternalInfluences => '2 - external influences',
+            self::VentilationCalculations => '3 - ventilation calculation',
+            self::WiringDiagrams => '4 - wiring diagram',
+            self::RoomEvacuationLists => '5 - evacuation list',
+            self::EditedFloorPlans => '6 - edited floor plans',
         };
     }
 
@@ -77,7 +103,7 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
      */
     public function perCowCode(): bool
     {
-        return $this === self::EvacuationRoutes;
+        return in_array($this, [self::EvacuationRoutes, self::RoomPlans, self::VentilationCalculations, self::RoomEvacuationLists], true);
     }
 
     /**
@@ -85,7 +111,7 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
      */
     public function isGlobal(): bool
     {
-        return $this === self::ExternalInfluences;
+        return in_array($this, [self::ExternalInfluences, self::RoomExternalInfluences], true);
     }
 
     /**
@@ -106,16 +132,41 @@ enum AsbuiltCategory: string implements HasIcon, HasLabel
 
     public function clientMayUpload(): bool
     {
-        return in_array($this, [self::EvacuationRoutes, self::Plans, self::ExternalInfluences, self::IccCalculations, self::LmaxCalculations], true);
+        return in_array($this, [self::EvacuationRoutes, self::Plans, self::ExternalInfluences, self::IccCalculations, self::LmaxCalculations, self::RoomPlans, self::RoomExternalInfluences, self::RoomEvacuationLists], true);
+    }
+
+    public function isForBatteryRoom(): bool
+    {
+        return in_array($this, self::forBatteryRoom(), true) && $this !== self::BtvReports;
     }
 
     /**
-     * The order on screen: the order of the ZIP.
+     * The order on screen of an ordinary as-built: the order of the ZIP.
      *
      * @return list<self>
      */
     public static function ordered(): array
     {
-        return self::cases();
+        return [self::BtvReports, self::CableDimensions, self::IccCalculations, self::LmaxCalculations, self::Plans, self::ElectricalSchematics, self::TechnicalDocuments, self::ExternalInfluences, self::EvacuationRoutes];
+    }
+
+    /**
+     * The as-built of a battery room (609), in the order of its ZIP.
+     *
+     * @return list<self>
+     */
+    public static function forBatteryRoom(): array
+    {
+        return [self::BtvReports, self::RoomPlans, self::RoomExternalInfluences, self::VentilationCalculations, self::WiringDiagrams, self::RoomEvacuationLists, self::EditedFloorPlans];
+    }
+
+    /**
+     * Every category, for the register: the ordinary ones, then the battery room ones.
+     *
+     * @return list<self>
+     */
+    public static function all(): array
+    {
+        return [...self::ordered(), ...array_values(array_filter(self::forBatteryRoom(), fn (self $category): bool => $category !== self::BtvReports))];
     }
 }

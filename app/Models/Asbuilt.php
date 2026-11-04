@@ -67,6 +67,24 @@ class Asbuilt extends Model
         return $this->files()->where('category', $category instanceof AsbuiltCategory ? $category->value : $category);
     }
 
+    /**
+     * A battery room (609) has its own set of categories.
+     */
+    public function isBatteryRoom(): bool
+    {
+        return $this->project?->category?->code === BatteryRoomDossier::CATEGORY;
+    }
+
+    /**
+     * The categories of this as-built, in the order of its ZIP.
+     *
+     * @return list<AsbuiltCategory>
+     */
+    public function categories(): array
+    {
+        return $this->isBatteryRoom() ? AsbuiltCategory::forBatteryRoom() : AsbuiltCategory::ordered();
+    }
+
     public function isClosed(): bool
     {
         return $this->status === AsbuiltStatus::Closed;

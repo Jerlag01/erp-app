@@ -12,6 +12,7 @@ use App\Models\InterventionReport;
 use App\Models\MoveDossier;
 use App\Models\Project;
 use App\Models\ProjectFile;
+use App\Support\Asbuilts;
 use App\Support\ProjectProgress;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -43,8 +44,9 @@ class CloseProject
             'archive_path' => $path,
         ])->saveQuietly();
 
-        // A closed 604 in Flanders or Brussels gets its 609 (battery room).
+        // A closed 604 in Flanders or Brussels gets its 609 (battery room); the 609 as-builts already made get its wiring diagram.
         app(CreateFollowUpProject::class)->handle($project);
+        app(Asbuilts::class)->sourceClosed($project);
     }
 
     /**

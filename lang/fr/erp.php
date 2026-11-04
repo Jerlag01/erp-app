@@ -1086,6 +1086,12 @@ return [
             'technical_documents' => 'Documents techniques',
             'external_influences' => 'Influences externes',
             'evacuation_routes' => 'Voies d\'évacuation',
+            'room_plans' => 'Local batteries : plans',
+            'room_external_influences' => 'Local batteries : facteurs d\'influences externes',
+            'ventilation_calculations' => 'Local batteries : calcul de ventilation',
+            'wiring_diagrams' => 'Local batteries : schéma unifilaire',
+            'room_evacuation_lists' => 'Local batteries : liste d\'évacuation',
+            'edited_floor_plans' => 'Local batteries : plans adaptés',
         ],
         'asbuilt_status' => [
             'in_progress' => 'En cours',
@@ -2802,6 +2808,7 @@ return [
         ],
     ],
     'asbuilt' => [
+        'wiring_diagram_file' => 'Schéma unifilaire :reference',
         'project_details' => 'Données du projet',
         'project_status' => 'Statut du projet',
         'create' => 'Créer l\'as-built',

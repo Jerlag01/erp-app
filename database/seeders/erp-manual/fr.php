@@ -983,6 +983,8 @@ Plans, schémas électriques, voies d'évacuation, influences externes, document
 1. Ajoutez des fichiers par catégorie (le bouton de téléversement de chaque catégorie ou **Ajouter des fichiers**).
 2. **Planifier le contrôle Normec BTV** : choisissez la date. Le statut devient *Planifié pour Normec BTV*.
 3. Après le contrôle : **Téléverser le rapport BTV**. L'as-built se clôture automatiquement en un ZIP nommé *« 610-012-02GAM - ASBUILT »* avec un dossier par catégorie (0 - BTV control, 1 - cable dimensions, … 8 - evacuation routes).
+
+**Les locaux batteries (609)** ont leur propre jeu de fichiers as-built : **contrôle BTV**, **plans** (par code COW), **facteurs d'influences externes** (globaux, pour tous les locaux batteries), **calcul de ventilation** (par code COW), le **schéma unifilaire**, la **liste d'évacuation** (par code COW) et une zone de dépôt pour les **plans adaptés**. Le schéma unifilaire vient automatiquement du dossier batteries du **projet 604** que le 609 suit, dès que ce 604 est **clôturé** (vous pouvez aussi le téléverser vous-même). Le ZIP a alors les dossiers 0 - BTV control, 1 - plans, 2 - external influences, 3 - ventilation calculation, 4 - wiring diagram, 5 - evacuation list et 6 - edited floor plans. Dans les fichiers standard as-built, ces catégories s'affichent comme *Local batteries : …*.
 4. Le client reçoit un **e-mail** et télécharge le ZIP dans le Global overview for Client.
 
 Avec le droit **Rouvrir**, vous rouvrez un as-built terminé.

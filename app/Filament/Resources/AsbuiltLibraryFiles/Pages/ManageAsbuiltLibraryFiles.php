@@ -34,7 +34,7 @@ class ManageAsbuiltLibraryFiles extends ManageRecords
                 ->schema([
                     Select::make('category')
                         ->label(__('erp.asbuilt.category'))
-                        ->options(collect(AsbuiltCategory::ordered())->mapWithKeys(fn (AsbuiltCategory $item): array => [$item->value => $item->getLabel()])->all())
+                        ->options(collect(AsbuiltCategory::all())->mapWithKeys(fn (AsbuiltCategory $item): array => [$item->value => $item->getLabel()])->all())
                         ->required()
                         ->live(),
                     Select::make('work_site_id')

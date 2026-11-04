@@ -2,14 +2,18 @@
 
 namespace App\Support;
 
+use App\Actions\Batteries\BatteryDocument;
 use App\Enums\AsbuiltCategory;
 use App\Enums\AsbuiltStatus;
 use App\Enums\MailTemplateKey;
+use App\Enums\ProjectStatus;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Mail\SystemMail;
 use App\Models\Asbuilt;
 use App\Models\AsbuiltFile;
 use App\Models\AsbuiltLibraryFile;
+use App\Models\BatteryDossier;
+use App\Models\BatteryRoomDossier;
 use App\Models\ClientUser;
 use App\Models\Project;
 use App\Models\User;
@@ -79,9 +83,80 @@ class Asbuilts
                 'created_by' => $by?->id,
             ]);
             $this->attach($asbuilt, $this->defaultFiles($project)->pluck('id')->all());
+            $this->attachWiringDiagram($asbuilt);
 
             return $asbuilt;
         });
+    }
+
+    /**
+     * The categories of a project's as-built: the battery room set for 609, else the ordinary one.
+     *
+     * @return list<AsbuiltCategory>
+     */
+    public function categoriesFor(Project $project): array
+    {
+        return $project->category?->code === BatteryRoomDossier::CATEGORY ? AsbuiltCategory::forBatteryRoom() : AsbuiltCategory::ordered();
+    }
+
+    /**
+     * Battery room (609): the wiring diagram (single-line diagram) of the 604 it follows, once that 604
+     * is closed. Added once; nothing when the 604 has no battery dossier.
+     */
+    public function attachWiringDiagram(Asbuilt $asbuilt): bool
+    {
+        $asbuilt->loadMissing('project.source');
+        $source = $asbuilt->project?->source;
+
+        if (! in_array(AsbuiltCategory::WiringDiagrams, $asbuilt->categories(), true) || $asbuilt->isClosed()
+            || $source === null || $source->status !== ProjectStatus::Closed
+            || $asbuilt->filesIn(AsbuiltCategory::WiringDiagrams)->whereNull('uploaded_by')->whereNull('uploaded_by_client_user_id')->exists()) {
+            return false;
+        }
+
+        $dossier = BatteryDossier::query()->where('project_id', $source->id)->latest('id')->first();
+
+        if ($dossier === null) {
+            return false;
+        }
+
+        try {
+            $pdf = app(BatteryDocument::class)->render($dossier, 'single_line');
+        } catch (Throwable $exception) {
+            Log::warning('The wiring diagram of the 604 could not be made for the as-built', ['asbuilt' => $asbuilt->id, 'project' => $source->id, 'error' => $exception->getMessage()]);
+
+            return false;
+        }
+
+        $name = Str::slug(__('erp.asbuilt.wiring_diagram_file', ['reference' => $source->reference])).'.pdf';
+        $path = 'asbuilt/'.$asbuilt->id.'/'.Str::random(8).'-'.$name;
+        Storage::disk(Asbuilt::DISK)->put($path, $pdf);
+
+        AsbuiltFile::query()->create([
+            'asbuilt_id' => $asbuilt->id,
+            'category' => AsbuiltCategory::WiringDiagrams->value,
+            'path' => $path,
+            'original_name' => $name,
+            'size' => strlen($pdf),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * A 604 was closed: the open as-builts of the 609 projects that follow it get its wiring diagram.
+     */
+    public function sourceClosed(Project $project): void
+    {
+        if (! $this->enabled()) {
+            return;
+        }
+
+        Asbuilt::query()
+            ->where('status', '!=', AsbuiltStatus::Closed)
+            ->whereHas('project', fn (Builder $query) => $query->where('source_project_id', $project->id))
+            ->get()
+            ->each(fn (Asbuilt $asbuilt) => $this->attachWiringDiagram($asbuilt));
     }
 
     /**
@@ -90,14 +165,16 @@ class Asbuilts
     public function defaultFiles(Project $project): Collection
     {
         $siteId = $project->work_site_id;
+        $categories = array_values(array_filter($this->categoriesFor($project), fn (AsbuiltCategory $category): bool => ! $category->isRegister()));
+        $perCowCode = array_values(array_filter($categories, fn (AsbuiltCategory $category): bool => $category->perCowCode()));
 
         return AsbuiltLibraryFile::query()
-            ->where('category', '!=', AsbuiltCategory::TechnicalDocuments->value)
+            ->whereIn('category', array_map(fn (AsbuiltCategory $category): string => $category->value, $categories))
             ->where(fn (Builder $query) => $query
                 ->when($siteId, fn (Builder $query) => $query->orWhere('work_site_id', $siteId))
                 ->orWhere(fn (Builder $query) => $query
                     ->whereNull('work_site_id')
-                    ->where('category', '!=', AsbuiltCategory::EvacuationRoutes->value)))
+                    ->whereNotIn('category', array_map(fn (AsbuiltCategory $category): string => $category->value, $perCowCode))))
             ->get();
     }
 
@@ -111,10 +188,13 @@ class Asbuilts
             return 0;
         }
 
+        // Only the as-builts with this category (ordinary ones or battery rooms).
         $asbuilts = Asbuilt::query()
+            ->with('project.category')
             ->where('status', '!=', AsbuiltStatus::Closed)
             ->when($file->work_site_id, fn (Builder $query, $site) => $query->whereHas('project', fn (Builder $query) => $query->where('work_site_id', $site)))
-            ->get();
+            ->get()
+            ->filter(fn (Asbuilt $asbuilt): bool => in_array($file->category, $asbuilt->categories(), true));
 
         return $asbuilts->sum(fn (Asbuilt $asbuilt): int => $this->attach($asbuilt, [$file->id]));
     }
@@ -153,7 +233,8 @@ class Asbuilts
     {
         $type = AsbuiltCategory::tryFrom($category);
 
-        if ($type === null && $category !== AsbuiltCategory::GENERAL) {
+        // Only the categories of this as-built (a battery room has its own set).
+        if (($type === null && $category !== AsbuiltCategory::GENERAL) || ($type !== null && ! in_array($type, $asbuilt->categories(), true))) {
             throw ValidationException::withMessages(['category' => __('validation.in', ['attribute' => 'category'])]);
         }
 
@@ -247,7 +328,7 @@ class Asbuilts
         $zip->open($temporary, ZipArchive::CREATE | ZipArchive::OVERWRITE);
         $used = [];
 
-        foreach (AsbuiltCategory::ordered() as $category) {
+        foreach ($asbuilt->categories() as $category) {
             $zip->addEmptyDir($category->folder());
         }
 

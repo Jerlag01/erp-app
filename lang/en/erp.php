@@ -1086,6 +1086,12 @@ return [
             'technical_documents' => 'Technical documents',
             'external_influences' => 'External influences',
             'evacuation_routes' => 'Evacuation routes',
+            'room_plans' => 'Battery room: plans',
+            'room_external_influences' => 'Battery room: external influence factors',
+            'ventilation_calculations' => 'Battery room: ventilation calculation',
+            'wiring_diagrams' => 'Battery room: wiring diagram',
+            'room_evacuation_lists' => 'Battery room: evacuation list',
+            'edited_floor_plans' => 'Battery room: edited floor plans',
         ],
         'asbuilt_status' => [
             'in_progress' => 'In progress',
@@ -2802,6 +2808,7 @@ return [
         ],
     ],
     'asbuilt' => [
+        'wiring_diagram_file' => 'Wiring diagram :reference',
         'project_details' => 'Project details',
         'project_status' => 'Project status',
         'create' => 'Create as-built',
