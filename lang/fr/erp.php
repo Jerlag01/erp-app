@@ -2351,6 +2351,8 @@ return [
             'created_title' => 'Nouveau dans votre planning',
             'updated_title' => 'Votre planning a été modifié',
             'deleted_title' => 'Retiré de votre planning',
+            'held_title' => 'Votre planning a changé pendant votre congé',
+            'held_body' => ':count modifications dans votre planning :',
             'open' => 'Voir le planning',
             'more' => '… et :count de plus',
         ],

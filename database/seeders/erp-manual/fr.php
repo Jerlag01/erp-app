@@ -460,7 +460,7 @@ Les jours de **maladie ou de congé familial** sont ignorés et signalés ; les 
 
 ## Notifications
 
-Chaque changement de votre planning vous est notifié dans la plateforme et sur votre téléphone (application mobile), et au choix par e-mail.
+Chaque changement de votre planning vous est notifié dans la plateforme et sur votre téléphone (application mobile), et au choix par e-mail. Si vous êtes en congé (aussi un jour férié ou un jour de récupération), la notification sur votre téléphone et l'e-mail attendent le dernier jour de votre congé à 18:00 (un week-end qui suit compte aussi : congé jusqu'au vendredi = dimanche soir). La copie aux adresses du planning part tout de suite.
 
 ## Agenda Outlook
 

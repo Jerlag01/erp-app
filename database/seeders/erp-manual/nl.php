@@ -461,7 +461,7 @@ Dagen met **ziekte of familiaal verlof** worden overgeslagen en gemeld; andere a
 
 ## Meldingen
 
-Elke wijziging in je planning krijg je als melding in het platform en op je telefoon (mobiele app), en naar keuze per e-mail.
+Elke wijziging in je planning krijg je als melding in het platform en op je telefoon (mobiele app), en naar keuze per e-mail. Ben je met verlof (ook een feestdag of IR-dag), dan wachten de melding op je telefoon en de e-mail tot de laatste dag van je verlof om 18:00 (een weekend erna telt mee: verlof tot vrijdag = zondagavond). De kopie naar de planningsadressen gaat meteen.
 
 ## Outlook-agenda
 

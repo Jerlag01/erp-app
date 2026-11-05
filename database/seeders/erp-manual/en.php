@@ -460,7 +460,7 @@ Days of **sickness or family leave** are skipped and reported; other absences sh
 
 ## Notifications
 
-Every change in your planning is notified in the platform and on your phone (mobile app), and optionally by e-mail.
+Every change in your planning is notified in the platform and on your phone (mobile app), and optionally by e-mail. When you are on leave (also a public holiday or IR day), the notification on your phone and the e-mail wait until the last day of your leave at 18:00 (a weekend right after counts too: leave until Friday = Sunday evening). The copy to the planning addresses goes at once.
 
 ## Outlook calendar
 

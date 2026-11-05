@@ -2351,6 +2351,8 @@ return [
             'created_title' => 'Nieuw in je planning',
             'updated_title' => 'Je planning is gewijzigd',
             'deleted_title' => 'Verwijderd uit je planning',
+            'held_title' => 'Je planning is gewijzigd tijdens je verlof',
+            'held_body' => ':count wijzigingen in je planning:',
             'open' => 'Planning bekijken',
             'more' => '… en nog :count',
         ],

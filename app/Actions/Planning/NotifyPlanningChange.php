@@ -5,8 +5,10 @@ namespace App\Actions\Planning;
 use App\Enums\MailTemplateKey;
 use App\Filament\Pages\Planning as PlanningPage;
 use App\Mail\SystemMail;
+use App\Models\HeldPlanningNotification;
 use App\Models\PlanningItem;
 use App\Models\User;
+use App\Support\LeavePushDelay;
 use App\Support\MailTemplates;
 use App\Support\Planning;
 use App\Support\PushNotifications;
@@ -21,7 +23,9 @@ use Throwable;
  * Tells an employee that items were added to, changed in or removed from their planning: in the
  * platform (unless they made the change themselves), always on their phone (the planning is made on
  * the platform, so also your own planning is pushed to your phone) and, when asked, by e-mail to them
- * with a copy to the addresses from Settings > Planning.
+ * with a copy to the addresses from Settings > Planning. While the employee is on leave (or a public
+ * holiday / IR day) the push and their e-mail wait until the last day of that leave (LeavePushDelay); the
+ * copy to the planning addresses goes at once.
  */
 class NotifyPlanningChange
 {
@@ -96,12 +100,23 @@ class NotifyPlanningChange
      */
     protected function push(User $employee, string $event, array $items, string $locale, string $date): void
     {
-        app(PushNotifications::class)->toUser(
-            $employee,
-            __("erp.planning.notifications.{$event}_title", [], $locale),
-            implode("\n", array_map(fn (PlanningItem $item): string => $item->summary($locale), array_slice($items, 0, 4))),
-            ['screen' => 'planning', 'date' => $date],
-        );
+        $title = __("erp.planning.notifications.{$event}_title", [], $locale);
+        $body = implode("\n", array_map(fn (PlanningItem $item): string => $item->summary($locale), array_slice($items, 0, 4)));
+        $data = ['screen' => 'planning', 'date' => $date];
+
+        // On leave: held until the last day of the leave (sent by planning:send-held-pushes).
+        if ($until = app(LeavePushDelay::class)->until($employee)) {
+            HeldPlanningNotification::query()->create([
+                'user_id' => $employee->id,
+                'channel' => HeldPlanningNotification::PUSH,
+                'payload' => ['title' => $title, 'body' => $body, 'data' => $data],
+                'send_at' => $until,
+            ]);
+
+            return;
+        }
+
+        app(PushNotifications::class)->toUser($employee, $title, $body, $data);
     }
 
     /**
@@ -116,16 +131,32 @@ class NotifyPlanningChange
             default => MailTemplateKey::PlanningDeleted,
         };
 
+        $values = [
+            'name' => $employee->name,
+            'changed_by' => $actor?->name ?? settings()->siteName(),
+            'items' => $this->markdownList($items, $locale),
+            'previous' => $this->markdownList($previous, $locale),
+            'planning_url' => PlanningPage::getUrl(['date' => $date], panel: 'app'),
+        ];
+        $copies = array_values(array_diff(app(Planning::class)->notifyAddresses(), [strtolower($employee->email)]));
+        $until = $employee->is_active ? app(LeavePushDelay::class)->until($employee) : null;
+
         try {
-            Mail::to($employee->email, $employee->name)
-                ->cc(array_values(array_diff(app(Planning::class)->notifyAddresses(), [strtolower($employee->email)])))
-                ->send(new SystemMail($key, $locale, [
-                    'name' => $employee->name,
-                    'changed_by' => $actor?->name ?? settings()->siteName(),
-                    'items' => $this->markdownList($items, $locale),
-                    'previous' => $this->markdownList($previous, $locale),
-                    'planning_url' => PlanningPage::getUrl(['date' => $date], panel: 'app'),
-                ]));
+            if ($until) {
+                // On leave: their e-mail waits until the last day of the leave; the copy goes at once.
+                HeldPlanningNotification::query()->create([
+                    'user_id' => $employee->id,
+                    'channel' => HeldPlanningNotification::MAIL,
+                    'payload' => ['key' => $key->value, 'locale' => $locale, 'values' => array_map(fn (mixed $value): ?string => $value === null ? null : (string) $value, $values), 'html' => ['items', 'previous']],
+                    'send_at' => $until,
+                ]);
+
+                if ($copies !== []) {
+                    Mail::to($copies)->send(new SystemMail($key, $locale, $values));
+                }
+            } else {
+                Mail::to($employee->email, $employee->name)->cc($copies)->send(new SystemMail($key, $locale, $values));
+            }
         } catch (Throwable $exception) {
             Log::warning('Planning mail could not be sent', ['user' => $employee->id, 'event' => $event, 'error' => $exception->getMessage()]);
 

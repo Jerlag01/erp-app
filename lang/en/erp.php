@@ -2351,6 +2351,8 @@ return [
             'created_title' => 'New in your planning',
             'updated_title' => 'Your planning was changed',
             'deleted_title' => 'Removed from your planning',
+            'held_title' => 'Your planning changed during your leave',
+            'held_body' => ':count changes to your planning:',
             'open' => 'View planning',
             'more' => '… and :count more',
         ],

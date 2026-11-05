@@ -12,3 +12,6 @@ Schedule::command('employees:end-notice')->dailyAt('00:30')->withoutOverlapping(
 Schedule::command('timesheets:send-weekly')
     ->weeklyOn((int) settings()->get('timesheets.send_day', 5), (string) settings()->get('timesheets.send_time', '18:00'))
     ->withoutOverlapping();
+
+// Planning notifications (push and e-mail) held while an employee was on leave: sent on the last day of the leave (see LeavePushDelay).
+Schedule::command('planning:send-held')->everyFiveMinutes()->withoutOverlapping();
