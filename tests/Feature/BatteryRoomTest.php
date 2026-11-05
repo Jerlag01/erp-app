@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Actions\Batteries\BatteryRoomDocument;
+use App\Actions\Batteries\CreateBatteryRoomProject;
+use App\Actions\Projects\CloseProject;
+use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BatteryRooms\BatteryRoomResource;
 use App\Filament\Resources\BatteryRooms\Pages\CreateBatteryRoom;
@@ -11,6 +14,7 @@ use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
@@ -249,5 +253,56 @@ class BatteryRoomTest extends TestCase
         // Without permission to make projects there is no "New".
         $this->actingAs($this->user(['view', 'create', 'update'], ['view']));
         $this->get(BatteryRoomResource::getUrl('create'))->assertForbidden();
+    }
+
+    #[Test]
+    public function the_609_takes_the_number_pictures_and_single_line_diagram_of_the_604(): void
+    {
+        $this->actingAs($this->user());
+        $battery = Project::factory()->inCategory('604')->for($this->site('2-VLA'))->create(['status' => ProjectStatus::Executed, 'number' => 12]);
+        $battery->teams()->attach($this->team);
+        Storage::disk('local')->put('projects/'.$battery->id.'/images/kast.jpg', 'jpeg');
+        ProjectFile::store($battery, ProjectFileSection::Images, 'projects/'.$battery->id.'/images/kast.jpg', 'Kast.jpg');
+        Storage::disk('local')->put('batteries/1/photos/a.jpg', 'a');
+        Storage::disk('local')->put('batteries/1/photos/b.png', 'b');
+        BatteryDossier::factory()->create(['project_id' => $battery->id, 'new_room' => 'A-1A006', 'photos' => ['batteries/1/photos/a.jpg', 'batteries/1/photos/b.png']]);
+
+        $battery->update(['status' => ProjectStatus::Closed]);
+
+        $room = Project::query()->where('source_project_id', $battery->id)->sole();
+        $this->assertSame(['604-0012-14EIN', '609-0012-14EIN'], [$battery->reference, $room->reference]);
+        $this->assertEqualsCanonicalizing(['Kast.jpg', '604-0012-14ein-01.jpg', '604-0012-14ein-02.png'], $room->filesIn(ProjectFileSection::Images)->pluck('name')->all());
+        $this->assertSame(['b'], [Storage::disk('local')->get($room->filesIn(ProjectFileSection::Images)->where('name', '604-0012-14ein-02.png')->sole()->latestVersion->path)]);
+        $diagram = $room->filesIn(ProjectFileSection::Schematics)->sole();
+        $this->assertStringStartsWith('%PDF', Storage::disk('local')->get($diagram->latestVersion->path));
+        // The 604 keeps its own picture.
+        $this->assertSame(1, $battery->filesIn(ProjectFileSection::Images)->count());
+
+        // Closed again after reopening: nothing is copied twice.
+        app(CloseProject::class)->reopen($battery, ProjectStatus::Executed);
+        $battery->refresh()->update(['status' => ProjectStatus::Closed]);
+        $this->assertSame([3, 1], [$room->filesIn(ProjectFileSection::Images)->count(), $room->filesIn(ProjectFileSection::Schematics)->count()]);
+    }
+
+    #[Test]
+    public function a_609_made_by_hand_takes_the_number_and_gets_the_files_when_the_604_closes(): void
+    {
+        $this->actingAs($user = $this->user());
+        $site = $this->site('4-WAL');
+        $battery = Project::factory()->inCategory('604')->for($site)->create(['status' => ProjectStatus::Executed, 'number' => 7]);
+        Project::factory()->inCategory('609')->for($this->site('2-VLA', 'OTHER'))->create(['number' => 8]);
+        BatteryDossier::factory()->create(['project_id' => $battery->id]);
+
+        $room = app(CreateBatteryRoomProject::class)->handle(['work_site_id' => $site->id, 'source_project_id' => $battery->id], $user)->project;
+        $this->assertSame('609-0007-14EIN', $room->reference);
+
+        // Number taken: the next free one.
+        $other = Project::factory()->inCategory('604')->for($site)->create(['number' => 8]);
+        $this->assertNotSame(8, app(CreateBatteryRoomProject::class)->handle(['work_site_id' => $site->id, 'source_project_id' => $other->id], $user)->project->number);
+
+        // Wallonia gets no 609 by itself, but the one made by hand gets the diagram.
+        $battery->update(['status' => ProjectStatus::Closed]);
+        $this->assertSame(1, Project::query()->where('source_project_id', $battery->id)->count());
+        $this->assertSame(1, $room->filesIn(ProjectFileSection::Schematics)->count());
     }
 }

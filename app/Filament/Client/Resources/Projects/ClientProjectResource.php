@@ -8,6 +8,7 @@ use App\Filament\Client\ClientResource;
 use App\Models\Project;
 use App\Support\ClientPortal;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
@@ -19,7 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * All projects of the categories the client user may see (600, 604, 605, 608, 610–650): number,
- * COW code, status and PO numbers. No amounts.
+ * COW code, status and PO numbers. No amounts. A closed battery room (609) shows its files, except the
+ * invoices, electrical schematics and plans (ClientPortal::sharedFiles()).
  */
 class ClientProjectResource extends ClientResource
 {
@@ -121,6 +123,16 @@ class ClientProjectResource extends ClientResource
                     ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->recordActions([
+                Action::make('files')
+                    ->label(__('erp.client_portal.files'))
+                    ->icon(Heroicon::OutlinedFolderOpen)
+                    ->visible(fn (Project $record): bool => ClientPortal::sharesFiles($record))
+                    ->modalHeading(fn (Project $record): string => __('erp.client_portal.files_of', ['reference' => $record->reference]))
+                    ->modalContent(fn (Project $record) => view('filament.client.project-files', ['project' => $record, 'files' => ClientPortal::sharedFiles($record)]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel(__('erp.actions.close')),
             ])
             ->filters([
                 SelectFilter::make('category')

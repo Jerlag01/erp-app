@@ -869,7 +869,7 @@ Après un remplacement de batteries (604) en **Flandre ou à Bruxelles**, le loc
 
 ## Comment naît un 609 ?
 
-- Quand un **projet 604 est clôturé** sur un code COW de l'area **1-VLA, 2-VLA ou 3-BRU**, la plateforme crée automatiquement un projet 609 sur le même code COW, avec la même équipe et le même chef de projet. Le numéro de local vient du dossier batteries du 604.
+- Quand un **projet 604 est clôturé** sur un code COW de l'area **1-VLA, 2-VLA ou 3-BRU**, la plateforme crée automatiquement un projet 609 sur le même code COW, avec la même équipe et le même chef de projet. Le numéro de local vient du dossier batteries du 604. Le 609 reçoit **le même numéro de projet** que le 604 (604-0012-02GAM devient 609-0012-02GAM), sauf si ce numéro est déjà utilisé en 609. Les **photos** du 604 (la zone Photos et les photos du dossier batteries) sont copiées dans le 609, et le **schéma unifilaire** est ajouté en PDF dans **Schémas électriques**. Un 609 créé à la main auparavant sur ce 604 les reçoit aussi à la clôture du 604.
 - Le **numéro de PO** n'est pas repris : le projet est en **Attente du PO**. Dès que Proximus donne le PO, ajoutez-le sur le projet avec **Ajouter un numéro de PO** ; la note de livraison l'affiche alors comme *Réf. client*.
 - Avec **Nouveau** dans **Locaux batteries**, créez un local batteries à la main : choisissez le code COW (ou le projet 604 qu'il suit) et le numéro de local. Le projet 609 est créé immédiatement (le droit de créer des projets est aussi nécessaire).
 
@@ -884,7 +884,7 @@ Après un remplacement de batteries (604) en **Flandre ou à Bruxelles**, le loc
 - **Checklist** : partout la même liste ; seuls le code COW et le numéro de local changent. Par point, cochez **OK** (vide = NOK) et indiquez l'**action à entreprendre** comme le client la communique. Le PDF est en paysage, sans papier à lettres.
 - **Photos & documents** : plusieurs photos, le calcul de ventilation et le rapport de contrôle BTV (PDF).
 
-Les documents sont imprimés dans la langue de la région (Flandre en néerlandais, Bruxelles selon Paramètres → Batteries), sauf si vous choisissez une langue. À la clôture du projet 609, les documents et fichiers sont repris dans l'archive.
+Les documents sont imprimés dans la langue de la région (Flandre en néerlandais, Bruxelles selon Paramètres → Batteries), sauf si vous choisissez une langue. À la clôture du projet 609, les documents et fichiers sont repris dans l'archive. Un 609 **clôturé** montre aussi ses fichiers dans le **portail client** (bouton **Fichiers** sur le projet), sauf les factures, les schémas électriques et les plans.
 
 ## Droits
 

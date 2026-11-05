@@ -2,9 +2,14 @@
 
 namespace App\Support;
 
+use App\Enums\ProjectFileSection;
+use App\Enums\ProjectStatus;
 use App\Models\ClientUser;
+use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\ProjectFile;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * The client portal ("Global overview for Client"): a separate panel with its own users, showing
@@ -41,6 +46,12 @@ class ClientPortal
     public const ROUTERS = 'routers';
 
     public const ROUTER_SECRETS = 'router_secrets';
+
+    /** Battery rooms (609): once closed, the client sees their files. */
+    public const FILE_CATEGORIES = ['609'];
+
+    /** Upload zones a client never sees: the invoices, the electrical schematics and the plans. */
+    public const HIDDEN_FILE_SECTIONS = [ProjectFileSection::Invoices, ProjectFileSection::Schematics, ProjectFileSection::Plans];
 
     public const PERMISSIONS = [
         self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::ASBUILT, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
@@ -99,5 +110,29 @@ class ClientPortal
     public static function may(string $permission): bool
     {
         return (bool) self::user()?->may($permission);
+    }
+
+    /**
+     * Whether the client sees the files of this project: a closed battery room (609).
+     */
+    public static function sharesFiles(Project $project): bool
+    {
+        return $project->status === ProjectStatus::Closed && in_array($project->category?->code, self::FILE_CATEGORIES, true);
+    }
+
+    /**
+     * The files of the project the client sees (none while it is not closed), per upload zone.
+     *
+     * @return Collection<int, ProjectFile>
+     */
+    public static function sharedFiles(Project $project): Collection
+    {
+        if (! self::sharesFiles($project)) {
+            return new Collection;
+        }
+
+        $hidden = array_map(fn (ProjectFileSection $section): string => $section->value, self::HIDDEN_FILE_SECTIONS);
+
+        return $project->files()->whereNotIn('section', $hidden)->whereHas('latestVersion')->with('latestVersion')->orderBy('section')->orderBy('name')->get();
     }
 }

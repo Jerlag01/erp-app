@@ -869,7 +869,7 @@ After a battery replacement (604) in **Flanders or Brussels** the battery room i
 
 ## How does a 609 start?
 
-- When a **604 project is closed** on a COW code in the area **1-VLA, 2-VLA or 3-BRU**, the platform automatically makes a 609 project on the same COW code, with the same team and project leader. The room number comes from the 604's battery dossier.
+- When a **604 project is closed** on a COW code in the area **1-VLA, 2-VLA or 3-BRU**, the platform automatically makes a 609 project on the same COW code, with the same team and project leader. The room number comes from the 604's battery dossier. The 609 gets **the same project number** as the 604 (604-0012-02GAM becomes 609-0012-02GAM), unless that number is already used in 609. The 604's **pictures** (the Pictures zone and the battery dossier photos) are copied to the 609, and the **single-line diagram** is added as a PDF under **Electrical schematics**. A 609 made by hand on that 604 earlier also gets them when the 604 closes.
 - The **PO number** is not taken over: the project is **Waiting for PO**. As soon as Proximus gives the PO, add it on the project with **Add PO number**; the delivery note then shows it as *Client ref.*
 - With **New** under **Battery rooms** you make a battery room by hand: choose the COW code (or the 604 project it follows) and the room number. The 609 project is made at once (this also needs the permission to create projects).
 
@@ -884,7 +884,7 @@ After a battery replacement (604) in **Flanders or Brussels** the battery room i
 - **Checklist**: the same list everywhere; only the COW code and room number differ. Per point you tick **OK** (empty = NOK) and fill in the **action to take** as the client supplies it. The PDF is landscape, without letterhead.
 - **Photos & documents**: several photos, the ventilation calculation and the BTV inspection report (PDF).
 
-The documents are printed in the language of the region (Flanders Dutch, Brussels as set under Settings → Batteries), unless you choose a language. When the 609 project is closed, the documents and files go into its archive.
+The documents are printed in the language of the region (Flanders Dutch, Brussels as set under Settings → Batteries), unless you choose a language. When the 609 project is closed, the documents and files go into its archive. A **closed** 609 also shows its files in the **client portal** (the **Files** button on the project), except the invoices, the electrical schematics and the plans.
 
 ## Permissions
 

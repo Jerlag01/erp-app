@@ -1,4 +1,4 @@
-{{-- The attendance list of a toolbox meeting, like the paper form, in the reader's language (A4 landscape). The subject is shown in Dutch and French, as entered. --}}
+{{-- The attendance list of a toolbox meeting, like the paper form, in the reader's language (A4 portrait, two participants per row). The subject is shown in Dutch and French, as entered. --}}
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
@@ -16,10 +16,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 3mm; }
         th, td { border: 1px solid #000; padding: 1.2mm 2mm; vertical-align: middle; }
         th { font-size: 11pt; text-align: center; }
-        td.name { font-family: 'DejaVu Sans', sans-serif; font-weight: bold; font-size: 9pt; width: 17%; }
-        td.sign { width: 16.33%; height: 11mm; text-align: center; }
+        td.name { font-family: 'DejaVu Sans', sans-serif; font-weight: bold; font-size: 9pt; width: 27%; }
+        td.sign { width: 23%; height: 12mm; text-align: center; }
         td.sign img { max-height: 10mm; max-width: 38mm; }
-        .lines p { margin: 6mm 0 0; }
+        .lines .line { margin: 7mm 0 0; border-bottom: 1px solid #000; padding-bottom: .5mm; }
     </style>
 </head>
 <body>
@@ -42,7 +42,7 @@
     <table>
         <thead>
             <tr>
-                @foreach ([0, 1, 2] as $column)
+                @foreach ([0, 1] as $column)
                     <th>{{ mb_strtoupper(__('erp.pdf.toolbox.name')) }}</th>
                     <th>{{ __('erp.pdf.toolbox.initials') }}</th>
                 @endforeach
@@ -51,7 +51,7 @@
         <tbody>
             @foreach ($rows as $pair)
                 <tr>
-                    @foreach ([0, 1, 2] as $column)
+                    @foreach ([0, 1] as $column)
                         <td class="name">{{ $pair[$column]['name'] ?? '' }}</td>
                         <td class="sign">
                             @if (! empty($pair[$column]['signature']))
@@ -66,9 +66,9 @@
 
     <div class="lines">
         <p class="label" style="margin-top: 7mm;">{{ __('erp.pdf.toolbox.remarks') }}</p>
-        <p>1.________________________________________________________________________________________________</p>
-        <p>2.________________________________________________________________________________________________</p>
-        <p>3.________________________________________________________________________________________________</p>
+        <div class="line">1.</div>
+        <div class="line">2.</div>
+        <div class="line">3.</div>
     </div>
 </body>
 </html>

@@ -10,6 +10,7 @@ use App\Http\Controllers\BatteryDeliveryDocumentController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\BatteryRoomController;
 use App\Http\Controllers\CableCalculationPdfController;
+use App\Http\Controllers\ClientProjectFileController;
 use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\ClientWelcomeLinkController;
 use App\Http\Controllers\EmployeeDocumentController;
@@ -60,6 +61,7 @@ Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
 // The VPN file of a router for the client portal (its own guard; checked in the controller).
 Route::get('/client-files/asbuilts/{asbuilt}/zip', [AsbuiltDownloadController::class, 'clientZip'])->whereNumber('asbuilt')->name('client.asbuilt.zip');
 Route::get('/client-files/asbuilt-files/{file}', [AsbuiltDownloadController::class, 'clientFile'])->whereNumber('file')->name('client.asbuilt.file');
+Route::get('/client-files/projects/{project}/files/{file}', ClientProjectFileController::class)->whereNumber(['project', 'file'])->name('client.project.file');
 Route::get('/client-files/routers/{router}/vpn', ClientRouterVpnController::class)->whereNumber('router')->name('client.routers.vpn');
 // The link in a client portal user's welcome mail: signed, valid for 7 days, and only until the password is set.
 Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->whereNumber('clientUser')->middleware('signed')->name('client.welcome');

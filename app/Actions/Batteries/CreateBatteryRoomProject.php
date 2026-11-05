@@ -2,6 +2,7 @@
 
 namespace App\Actions\Batteries;
 
+use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectStatus;
 use App\Models\BatteryRoomDossier;
 use App\Models\Project;
@@ -25,8 +26,12 @@ class CreateBatteryRoomProject
         return DB::transaction(function () use ($data, $by): BatteryRoomDossier {
             $source = filled($data['source_project_id'] ?? null) ? Project::query()->find($data['source_project_id']) : null;
 
+            $category = ProjectCategory::query()->where('code', BatteryRoomDossier::CATEGORY)->first();
+
             $project = Project::query()->create([
-                'project_category_id' => ProjectCategory::query()->where('code', BatteryRoomDossier::CATEGORY)->value('id'),
+                'project_category_id' => $category?->id,
+                // Following a 604: the same number (604-0012-02GAM → 609-0012-02GAM) when it is free.
+                'number' => CreateFollowUpProject::sameNumber($source, $category),
                 'work_site_id' => $data['work_site_id'],
                 'status' => ProjectStatus::WaitingForPo,
                 'notes' => $source ? __('battery_rooms.follow_up_note', ['reference' => $source->reference]) : null,

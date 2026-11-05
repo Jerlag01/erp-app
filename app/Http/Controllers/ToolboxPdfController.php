@@ -30,10 +30,10 @@ class ToolboxPdfController
 
         return Pdf::loadView('toolbox.pdf', [
             'meeting' => $meeting,
-            // Three participants per row on landscape paper.
-            'rows' => $attendees->chunk(3)->map(fn ($row) => $row->values())->values(),
+            // Two participants per row on portrait paper.
+            'rows' => $attendees->chunk(2)->map(fn ($row) => $row->values())->values(),
         ])
-            ->setPaper('a4', 'landscape')
+            ->setPaper('a4', 'portrait')
             ->stream(Str::slug('toolbox '.$meeting->meeting_month->format('Y m').' '.$meeting->title).'.pdf');
     }
 }

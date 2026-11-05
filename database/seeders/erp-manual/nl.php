@@ -870,7 +870,7 @@ Na een batterijvervanging (604) in **Vlaanderen of Brussel** wordt het batterijl
 
 ## Hoe ontstaat een 609?
 
-- Wordt een **604-project gesloten** op een COW-code in de area **1-VLA, 2-VLA of 3-BRU**, dan maakt het platform automatisch een 609-project op dezelfde COW-code, met dezelfde ploeg en projectleider. Het lokaalnummer komt uit het batterijdossier van de 604.
+- Wordt een **604-project gesloten** op een COW-code in de area **1-VLA, 2-VLA of 3-BRU**, dan maakt het platform automatisch een 609-project op dezelfde COW-code, met dezelfde ploeg en projectleider. Het lokaalnummer komt uit het batterijdossier van de 604. Het 609 krijgt **hetzelfde projectnummer** als de 604 (604-0012-02GAM wordt 609-0012-02GAM), tenzij dat nummer bij 609 al gebruikt is. De **foto's** van de 604 (de zone Foto's en de foto's van het batterijdossier) worden naar het 609 gekopieerd, en het **eendraadschema** komt als PDF bij **Elektrische schema's**. Een 609 dat je eerder met de hand op die 604 maakte, krijgt ze ook bij het sluiten van de 604.
 - Het **PO-nummer** wordt niet overgenomen: het project staat op **Wacht op PO**. Zodra Proximus het PO geeft, voeg je het toe op het project met **PO-nummer toevoegen**; de leveringsnota toont het dan als *Ref. klant*.
 - Met **Nieuw** bij **Batterijlokalen** maak je een batterijlokaal met de hand: kies de COW-code (of het 604-project waarop het volgt) en het lokaalnummer. Het 609-project wordt meteen aangemaakt (hiervoor is ook het recht om projecten aan te maken nodig).
 
@@ -885,7 +885,7 @@ Na een batterijvervanging (604) in **Vlaanderen of Brussel** wordt het batterijl
 - **Checklist**: overal dezelfde lijst; enkel de COW-code en het lokaalnummer verschillen. Per punt vink je **OK** aan (leeg = NOK) en vul je de **te nemen actie** in zoals de klant ze doorgeeft. De PDF staat liggend, zonder briefpapier.
 - **Foto's & documenten**: meerdere foto's, de ventilatieberekening en het BTV-keuringsverslag (PDF).
 
-De documenten worden afgedrukt in de taal van de regio (Vlaanderen Nederlands, Brussel volgens Instellingen → Batterijen), tenzij je een taal kiest. Bij het sluiten van het 609-project komen de documenten en bestanden mee in het archief.
+De documenten worden afgedrukt in de taal van de regio (Vlaanderen Nederlands, Brussel volgens Instellingen → Batterijen), tenzij je een taal kiest. Bij het sluiten van het 609-project komen de documenten en bestanden mee in het archief. Een **gesloten** 609 toont zijn bestanden ook in het **klantenportaal** (knop **Bestanden** bij het project), behalve de facturen, de elektrische schema's en de plannen.
 
 ## Rechten
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\MailTemplateKey;
+use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Enums\SiteLocationType;
 use App\Filament\Admin\Resources\ClientUsers\ClientUserResource;
@@ -23,6 +24,7 @@ use App\Models\ClientUser;
 use App\Models\MailTemplate;
 use App\Models\PlanningItem;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\Router;
 use App\Models\User;
 use App\Models\WorkSite;
@@ -438,5 +440,47 @@ class ClientPortalTest extends TestCase
         $this->assertFalse(auth()->guard(ClientPortal::GUARD)->check());
         $this->assertSame(1, $admin->notifications()->count());
         $this->get('/client')->assertRedirect('/client/login');
+    }
+
+    #[Test]
+    public function a_closed_battery_room_shows_its_files_except_invoices_schematics_and_plans(): void
+    {
+        Storage::fake('local');
+        $open = Project::factory()->inCategory('609')->create(['status' => ProjectStatus::InProgress]);
+        $closed = Project::factory()->inCategory('609')->create(['status' => ProjectStatus::Closed]);
+        $battery = Project::factory()->inCategory('604')->create(['status' => ProjectStatus::Closed]);
+        $files = [];
+
+        foreach ([ProjectFileSection::Images, ProjectFileSection::Documents, ProjectFileSection::Offers, ProjectFileSection::Invoices, ProjectFileSection::Schematics, ProjectFileSection::Plans] as $section) {
+            Storage::disk('local')->put("p/{$section->value}.png", 'x');
+            $files[$section->value] = ProjectFile::store($closed, $section, "p/{$section->value}.png", "{$section->value}.png");
+        }
+
+        Storage::disk('local')->put('p/open.png', 'x');
+        $openFile = ProjectFile::store($open, ProjectFileSection::Images, 'p/open.png', 'open.png');
+
+        $this->client([ClientPortal::PROJECTS, ClientPortal::ALL_PROJECTS]);
+        Livewire::test(ListClientProjects::class)
+            ->assertTableActionVisible('files', $closed)
+            ->assertTableActionHidden('files', $open)
+            ->assertTableActionHidden('files', $battery)
+            ->mountTableAction('files', $closed)
+            ->assertHasNoErrors();
+        $this->assertEqualsCanonicalizing(['images.png', 'documents.png', 'offers.png'], ClientPortal::sharedFiles($closed)->pluck('name')->all());
+        $this->assertSame([], ClientPortal::sharedFiles($open)->all());
+        $this->assertStringContainsString(route('client.project.file', [$closed, $files['images']]), view('filament.client.project-files', ['project' => $closed, 'files' => ClientPortal::sharedFiles($closed)])->render());
+
+        $this->get(route('client.project.file', [$closed, $files['documents']]))->assertOk();
+        foreach (['invoices', 'schematics', 'plans'] as $hidden) {
+            $this->get(route('client.project.file', [$closed, $files[$hidden]]))->assertNotFound();
+        }
+        $this->get(route('client.project.file', [$open, $openFile]))->assertNotFound();
+        $this->get(route('client.project.file', [$closed, $openFile]))->assertNotFound();
+
+        // Only their own projects without "all projects"; never with an ERP session.
+        $this->client([ClientPortal::PROJECTS]);
+        $this->get(route('client.project.file', [$closed, $files['documents']]))->assertNotFound();
+        auth()->guard(ClientPortal::GUARD)->logout();
+        $this->actingAs(User::factory()->admin()->create())->get(route('client.project.file', [$closed, $files['documents']]))->assertForbidden();
     }
 }
