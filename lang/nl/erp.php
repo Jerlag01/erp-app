@@ -178,7 +178,7 @@ return [
         ],
         'battery_rooms' => [
             'label' => 'Batterijlokalen (609)',
-            'help' => 'Na een batterijvervanging (604) in Vlaanderen of Brussel wordt het batterijlokaal in orde gebracht: leveringsnota, checklist, extra info en foto\'s, ventilatieberekening en BTV-keuring. Een gesloten 604-project in 1-VLA, 2-VLA of 3-BRU krijgt automatisch een 609-project.',
+            'help' => 'Na een batterijvervanging (604) in Vlaanderen of Brussel wordt het batterijlokaal in orde gebracht: leveringsnota, checklist, extra info en foto\'s, ventilatieberekening en BTV-keuring. Een 604-project in 1-VLA, 2-VLA of 3-BRU krijgt automatisch een 609-project zodra het op Te factureren komt (bij het afronden van het batterijdossier).',
         ],
         'board_deliveries' => [
             'label' => 'Opvolging elektrische borden',

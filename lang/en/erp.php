@@ -178,7 +178,7 @@ return [
         ],
         'battery_rooms' => [
             'label' => 'Battery rooms (609)',
-            'help' => 'After a battery replacement (604) in Flanders or Brussels the battery room is brought up to standard: delivery note, checklist, extra info and photos, ventilation calculation and BTV inspection. A closed 604 project in 1-VLA, 2-VLA or 3-BRU automatically gets a 609 project.',
+            'help' => 'After a battery replacement (604) in Flanders or Brussels the battery room is brought up to standard: delivery note, checklist, extra info and photos, ventilation calculation and BTV inspection. A 604 project in 1-VLA, 2-VLA or 3-BRU automatically gets a 609 project as soon as it goes to Invoicing to do (when its battery dossier is finished).',
         ],
         'board_deliveries' => [
             'label' => 'Electrical boards follow-up',

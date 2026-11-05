@@ -44,9 +44,9 @@ class CloseProject
             'archive_path' => $path,
         ])->saveQuietly();
 
-        // A closed 604 in Flanders or Brussels gets its 609 (battery room); the 609 as-builts already made get its wiring diagram.
+        // A 604 that skipped "invoicing to do" still gets its 609 (see Project::booted()); nothing is made twice.
         app(CreateFollowUpProject::class)->handle($project);
-        app(Asbuilts::class)->sourceClosed($project);
+        app(Asbuilts::class)->sourceDone($project);
     }
 
     /**

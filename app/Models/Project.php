@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Batteries\CreateBatteryRoomDossier;
 use App\Actions\Projects\CloseProject;
+use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Enums\SiteLocationType;
@@ -494,8 +495,9 @@ class Project extends Model
             app(CreateBatteryRoomDossier::class)->handle($project, $by instanceof User ? $by : null);
         });
 
-        // Status changes: closing (and "invoiced" on 610–650 projects) archives the project; a closed 604
-        // in Flanders or Brussels gets its 609 (see CloseProject).
+        // Status changes: closing (and "invoiced" on 610–650 projects) archives the project. A 604 whose
+        // works are done ("invoicing to do", set when its battery dossier is finished, or later) gets its
+        // 609 in Flanders or Brussels (see CreateFollowUpProject; CloseProject does it too).
         static::updated(function (self $project): void {
             if (! $project->wasChanged('status')) {
                 return;
@@ -505,6 +507,11 @@ class Project extends Model
                 app(CloseProject::class)->handle($project);
 
                 return;
+            }
+
+            if (CreateFollowUpProject::sourceDone($project)) {
+                app(CreateFollowUpProject::class)->handle($project);
+                app(Asbuilts::class)->sourceDone($project);
             }
 
             ProjectProgress::sync($project);

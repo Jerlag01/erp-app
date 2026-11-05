@@ -3,10 +3,10 @@
 namespace App\Support;
 
 use App\Actions\Batteries\BatteryDocument;
+use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\AsbuiltCategory;
 use App\Enums\AsbuiltStatus;
 use App\Enums\MailTemplateKey;
-use App\Enums\ProjectStatus;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Mail\SystemMail;
 use App\Models\Asbuilt;
@@ -100,8 +100,8 @@ class Asbuilts
     }
 
     /**
-     * Battery room (609): the wiring diagram (single-line diagram) of the 604 it follows, once that 604
-     * is closed. Added once; nothing when the 604 has no battery dossier.
+     * Battery room (609): the wiring diagram (single-line diagram) of the 604 it follows, once the works
+     * of that 604 are done ("invoicing to do" or later). Added once; nothing when the 604 has no battery dossier.
      */
     public function attachWiringDiagram(Asbuilt $asbuilt): bool
     {
@@ -109,7 +109,7 @@ class Asbuilts
         $source = $asbuilt->project?->source;
 
         if (! in_array(AsbuiltCategory::WiringDiagrams, $asbuilt->categories(), true) || $asbuilt->isClosed()
-            || $source === null || $source->status !== ProjectStatus::Closed
+            || ! CreateFollowUpProject::sourceDone($source)
             || $asbuilt->filesIn(AsbuiltCategory::WiringDiagrams)->whereNull('uploaded_by')->whereNull('uploaded_by_client_user_id')->exists()) {
             return false;
         }
@@ -144,9 +144,9 @@ class Asbuilts
     }
 
     /**
-     * A 604 was closed: the open as-builts of the 609 projects that follow it get its wiring diagram.
+     * The works of a 604 are done: the open as-builts of the 609 projects that follow it get its wiring diagram.
      */
-    public function sourceClosed(Project $project): void
+    public function sourceDone(Project $project): void
     {
         if (! $this->enabled()) {
             return;

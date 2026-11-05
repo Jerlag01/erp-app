@@ -15,12 +15,15 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * A 604 project (batteries) in Flanders or Brussels that is closed gets a 609 project (battery room) for
+ * A 604 project (batteries) in Flanders or Brussels whose works are done gets a 609 project (battery room) for
  * the same COW site, once, with the same project number (604-0012-02GAM → 609-0012-02GAM) unless the 609
  * already has that number. The PO number is not taken over: Proximus gives a new one later, which is
  * added on the project. The 609 waits for that PO.
  *
- * The 609s that follow the closed 604 (also one made by hand before) get the pictures of the 604 (its
+ * The works are done when the 604 goes to "invoicing to do" (finishing its battery dossier does that), or
+ * later: invoiced or closed, when a step was skipped.
+ *
+ * The 609s that follow the 604 (also one made by hand before) get the pictures of the 604 (its
  * picture zone and the photos of its battery dossier) and the single-line diagram of the battery dossier
  * in "Electrical schematics". The files are copies: the two projects keep their own.
  */
@@ -35,12 +38,22 @@ class CreateFollowUpProject
      */
     public const AREAS = ['1-VLA', '2-VLA', '3-BRU'];
 
+    /**
+     * The statuses of a 604 whose works are done: from here on it has its 609.
+     */
+    public const DONE_STATUSES = [ProjectStatus::InvoicingToDo, ProjectStatus::Invoiced, ProjectStatus::Closed];
+
+    public static function sourceDone(?Project $project): bool
+    {
+        return $project !== null && in_array($project->status, self::DONE_STATUSES, true);
+    }
+
     public function applies(Project $project): bool
     {
         $area = strtoupper(str_replace(' ', '', (string) $project->workSite?->area?->name));
 
         return $project->category?->code === self::SOURCE_CATEGORY
-            && $project->status === ProjectStatus::Closed
+            && self::sourceDone($project)
             && $project->work_site_id !== null
             && in_array($area, self::AREAS, true);
     }
@@ -50,7 +63,7 @@ class CreateFollowUpProject
      */
     public function handle(Project $project): ?Project
     {
-        if ($project->category?->code !== self::SOURCE_CATEGORY || $project->status !== ProjectStatus::Closed) {
+        if ($project->category?->code !== self::SOURCE_CATEGORY || ! self::sourceDone($project)) {
             return null;
         }
 
@@ -102,7 +115,7 @@ class CreateFollowUpProject
 
     /**
      * The pictures of the 604 (latest versions in its picture zone) and the photos of its battery dossier;
-     * a picture the 609 already has by that name is not copied again (the 604 can be closed again).
+     * a picture the 609 already has by that name is not copied again (each later status of the 604 runs this).
      */
     protected function copyPictures(Project $project, Project $followUp): void
     {

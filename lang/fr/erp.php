@@ -178,7 +178,7 @@ return [
         ],
         'battery_rooms' => [
             'label' => 'Locaux batteries (609)',
-            'help' => 'Après un remplacement de batteries (604) en Flandre ou à Bruxelles, le local batteries est mis en ordre : note de livraison, checklist, infos supplémentaires et photos, calcul de ventilation et contrôle BTV. Un projet 604 clôturé en 1-VLA, 2-VLA ou 3-BRU reçoit automatiquement un projet 609.',
+            'help' => 'Après un remplacement de batteries (604) en Flandre ou à Bruxelles, le local batteries est mis en ordre : note de livraison, checklist, infos supplémentaires et photos, calcul de ventilation et contrôle BTV. Un projet 604 en 1-VLA, 2-VLA ou 3-BRU reçoit automatiquement un projet 609 dès qu\'il passe à À facturer (à la clôture du dossier batteries).',
         ],
         'board_deliveries' => [
             'label' => 'Suivi des tableaux électriques',

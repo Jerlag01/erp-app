@@ -256,19 +256,22 @@ class BatteryRoomTest extends TestCase
     }
 
     #[Test]
-    public function the_609_takes_the_number_pictures_and_single_line_diagram_of_the_604(): void
+    public function finishing_the_battery_dossier_makes_the_609_with_the_number_pictures_and_single_line_diagram(): void
     {
-        $this->actingAs($this->user());
+        $this->actingAs($user = $this->user());
         $battery = Project::factory()->inCategory('604')->for($this->site('2-VLA'))->create(['status' => ProjectStatus::Executed, 'number' => 12]);
         $battery->teams()->attach($this->team);
         Storage::disk('local')->put('projects/'.$battery->id.'/images/kast.jpg', 'jpeg');
         ProjectFile::store($battery, ProjectFileSection::Images, 'projects/'.$battery->id.'/images/kast.jpg', 'Kast.jpg');
         Storage::disk('local')->put('batteries/1/photos/a.jpg', 'a');
         Storage::disk('local')->put('batteries/1/photos/b.png', 'b');
-        BatteryDossier::factory()->create(['project_id' => $battery->id, 'new_room' => 'A-1A006', 'photos' => ['batteries/1/photos/a.jpg', 'batteries/1/photos/b.png']]);
+        $dossier = BatteryDossier::factory()->create(['project_id' => $battery->id, 'new_room' => 'A-1A006', 'photos' => ['batteries/1/photos/a.jpg', 'batteries/1/photos/b.png']]);
 
-        $battery->update(['status' => ProjectStatus::Closed]);
+        // Finishing the dossier sets the 604 to "invoicing to do": that makes the 609, the 604 is not archived.
+        $dossier->finish($user);
 
+        $this->assertSame(ProjectStatus::InvoicingToDo, $battery->refresh()->status);
+        $this->assertNull($battery->archived_at);
         $room = Project::query()->where('source_project_id', $battery->id)->sole();
         $this->assertSame(['604-0012-14EIN', '609-0012-14EIN'], [$battery->reference, $room->reference]);
         $this->assertEqualsCanonicalizing(['Kast.jpg', '604-0012-14ein-01.jpg', '604-0012-14ein-02.png'], $room->filesIn(ProjectFileSection::Images)->pluck('name')->all());
@@ -278,14 +281,17 @@ class BatteryRoomTest extends TestCase
         // The 604 keeps its own picture.
         $this->assertSame(1, $battery->filesIn(ProjectFileSection::Images)->count());
 
-        // Closed again after reopening: nothing is copied twice.
+        // Invoiced and closed later, or closed again after reopening: nothing is made or copied twice.
+        $battery->update(['status' => ProjectStatus::Invoiced]);
+        $battery->refresh()->update(['status' => ProjectStatus::Closed]);
         app(CloseProject::class)->reopen($battery, ProjectStatus::Executed);
         $battery->refresh()->update(['status' => ProjectStatus::Closed]);
+        $this->assertSame(1, Project::query()->where('source_project_id', $battery->id)->count());
         $this->assertSame([3, 1], [$room->filesIn(ProjectFileSection::Images)->count(), $room->filesIn(ProjectFileSection::Schematics)->count()]);
     }
 
     #[Test]
-    public function a_609_made_by_hand_takes_the_number_and_gets_the_files_when_the_604_closes(): void
+    public function a_609_made_by_hand_takes_the_number_and_gets_the_files_when_the_604_is_done(): void
     {
         $this->actingAs($user = $this->user());
         $site = $this->site('4-WAL');
@@ -300,8 +306,8 @@ class BatteryRoomTest extends TestCase
         $other = Project::factory()->inCategory('604')->for($site)->create(['number' => 8]);
         $this->assertNotSame(8, app(CreateBatteryRoomProject::class)->handle(['work_site_id' => $site->id, 'source_project_id' => $other->id], $user)->project->number);
 
-        // Wallonia gets no 609 by itself, but the one made by hand gets the diagram.
-        $battery->update(['status' => ProjectStatus::Closed]);
+        // Wallonia gets no 609 by itself, but the one made by hand gets the diagram once the works are done.
+        $battery->update(['status' => ProjectStatus::InvoicingToDo]);
         $this->assertSame(1, Project::query()->where('source_project_id', $battery->id)->count());
         $this->assertSame(1, $room->filesIn(ProjectFileSection::Schematics)->count());
     }
