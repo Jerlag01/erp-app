@@ -7,6 +7,7 @@ use App\Filament\Admin\Resources\Absences\AbsenceResource;
 use App\Filament\Admin\Resources\ParentalLeaves\ParentalLeaveResource;
 use App\Filament\Pages\Announcement;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\DeliveryReports;
 use App\Filament\Pages\FinanceOverview;
 use App\Filament\Pages\FinanceStatistics;
 use App\Filament\Pages\HrAdvances;
@@ -66,6 +67,7 @@ class AppPanelProvider extends PanelProvider
                 ToolboxOverview::class,
                 Announcement::class,
                 Onboarding::class,
+                DeliveryReports::class,
                 HrAdvances::class,
             ])
             ->widgets([

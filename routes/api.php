@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\BatteryDossierController;
 use App\Http\Controllers\Api\V1\BatteryRoomController;
 use App\Http\Controllers\Api\V1\CableStrippingController;
+use App\Http\Controllers\Api\V1\DeliveryReportController;
 use App\Http\Controllers\Api\V1\IncidentController;
 use App\Http\Controllers\Api\V1\InterventionController;
 use App\Http\Controllers\Api\V1\LeaveController;
@@ -70,6 +71,10 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('/toolbox/{meeting}/read', [ToolboxController::class, 'read'])->whereNumber('meeting')->name('toolbox.read');
         Route::post('/toolbox/{meeting}/attachments/{index}', [ToolboxController::class, 'attachment'])->whereNumber(['meeting', 'index'])->name('toolbox.attachment');
         Route::post('/toolbox/{meeting}/sign', [ToolboxController::class, 'sign'])->whereNumber('meeting')->name('toolbox.sign');
+        Route::get('/delivery-reports', [DeliveryReportController::class, 'index'])->name('delivery-reports');
+        Route::post('/delivery-reports/{report}/link', [DeliveryReportController::class, 'link'])->whereNumber('report')->name('delivery-reports.link');
+        Route::post('/delivery-reports/{report}/sign', [DeliveryReportController::class, 'sign'])->whereNumber('report')->name('delivery-reports.sign');
+        Route::post('/signed-documents/{document}/link', [DeliveryReportController::class, 'documentLink'])->whereNumber('document')->name('signed-documents.link');
 
         // Battery (604, "bae") and Enersys (605) dossiers.
         Route::prefix('/dossiers/{kind}')->whereIn('kind', array_keys(BatteryDossierController::KINDS))->name('dossiers.')->group(function (): void {

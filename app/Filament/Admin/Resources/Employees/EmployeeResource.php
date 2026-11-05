@@ -11,6 +11,7 @@ use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelation
 use App\Filament\Admin\Resources\Employees\RelationManagers\InterimRecuperationDaysRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\MedicalChecksRelationManager;
 use App\Filament\Admin\Resources\Employees\RelationManagers\ParentalLeavesRelationManager;
+use App\Filament\Admin\Resources\Employees\RelationManagers\SignedDocumentsRelationManager;
 use App\Filament\Admin\Resources\Employees\Schemas\EmployeeForm;
 use App\Filament\Admin\Resources\Employees\Schemas\EmployeeInfolist;
 use App\Filament\Admin\Resources\Employees\Tables\EmployeesTable;
@@ -105,6 +106,7 @@ class EmployeeResource extends Resource
             MedicalChecksRelationManager::class,
             ParentalLeavesRelationManager::class,
             InterimRecuperationDaysRelationManager::class,
+            SignedDocumentsRelationManager::class,
         ];
     }
 

@@ -208,6 +208,16 @@ class Employee extends Model
         return $this->hasOne(EmployeeMedicalCheck::class)->latestOfMany('checked_on');
     }
 
+    /**
+     * The documents signed with the employee's login (by user_id).
+     *
+     * @return HasMany<SignedDocument, $this>
+     */
+    public function signedDocuments(): HasMany
+    {
+        return $this->hasMany(SignedDocument::class, 'user_id', 'user_id');
+    }
+
     public function fullName(): string
     {
         return trim("{$this->first_name} {$this->last_name}");

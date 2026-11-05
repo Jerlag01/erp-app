@@ -23,6 +23,7 @@ use App\Http\Controllers\IncidentPhotoController;
 use App\Http\Controllers\InterventionPdfController;
 use App\Http\Controllers\ItAssetLabelController;
 use App\Http\Controllers\ItAssetQrController;
+use App\Http\Controllers\ItDeliveryReportController;
 use App\Http\Controllers\KbDownloadController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MobileAppDismissController;
@@ -81,6 +82,8 @@ Route::get('/toolbox-files/{meeting}/{index}', ToolboxAttachmentController::clas
 
 // A project file for a team member through a short-lived signed link from the mobile app.
 Route::get('/project-files/{project}/{file}', MobileProjectFileController::class)->middleware('signed')->name('mobile.project-file');
+Route::get('/mobile/it-delivery-reports/{report}', [ItDeliveryReportController::class, 'signedShow'])->whereNumber('report')->middleware('signed')->name('mobile.it-delivery-report');
+Route::get('/mobile/signed-documents/{document}', [ItDeliveryReportController::class, 'signedDocumentLink'])->whereNumber('document')->middleware('signed')->name('mobile.signed-document');
 
 // Downloads and PDFs in the signed-in user's language.
 Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
@@ -115,6 +118,8 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
     Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');
     Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');
+    Route::get('/it-delivery-reports/{report}/pdf', [ItDeliveryReportController::class, 'show'])->whereNumber('report')->name('it.delivery-report');
+    Route::get('/signed-documents/{document}', [ItDeliveryReportController::class, 'signedDocument'])->whereNumber('document')->name('signed-documents.download');
     Route::get('/onboarding/documents/{document}', OnboardingDocumentController::class)->whereNumber('document')->name('onboarding.document');
     Route::get('/onboarding-signatures-pdf', [AccessExportController::class, 'onboarding'])->name('onboarding.signatures-pdf');
     Route::get('/access-badges-pdf', [AccessExportController::class, 'badges'])->name('access.badges-pdf');

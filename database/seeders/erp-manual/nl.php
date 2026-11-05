@@ -625,6 +625,7 @@ Alle IT-middelen, zoals in Snipe-IT: **hardware, licenties, accessoires, verbrui
 ## Zo werkt het
 
 - **Uitlenen** aan een gebruiker, een locatie of een ander toestel, eventueel met een datum *verwacht terug*. **Innemen** als het terugkomt.
+- **Ontvangstbewijs**: leen je hardware uit aan een **medewerker**, dan kan je meteen een ontvangstbewijs laten ondertekenen (staat standaard aan). Vul toestel, IMEI, oproepnummer, simkaart, toebehoren, staat en een eventueel ingeleverd oud toestel in, en teken eventueel zelf voor het bedrijf. Lege functie en standplaats komen van de medewerker. De medewerker krijgt een melding op het platform en in de app en ondertekent bij **Ontvangstbewijzen** (platform, onder HR) of in de app onder **Meer**, met *gelezen en goedgekeurd*. Het ontvangstbewijs staat in **de taal van de medewerker** (Nederlands, Frans of Engels, volgens zijn taalinstelling). Getekend komt de PDF bij zijn **Getekende documenten** (ook als tabblad bij de werknemer in het personeelsregister) en krijgt wie het toestel uitleende een melding. Neem je het toestel terug voor het getekend is, dan vervalt het ontvangstbewijs.
 - **Licenties** hebben plaatsen (seats) die je toewijst; je ziet hoeveel er nog vrij zijn en welke licenties binnenkort vervallen.
 - **Onderdelen** bouw je in een toestel in; **verbruiksgoederen** geef je uit.
 - Een **audit** bevestigt dat een toestel gezien is en plant de volgende.

@@ -6,6 +6,7 @@ use App\Enums\DriverLicenseCategory;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Api\V1\AssetCheckController;
 use App\Http\Controllers\Api\V1\CableStrippingController;
+use App\Http\Controllers\Api\V1\DeliveryReportController;
 use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\StockController;
@@ -100,6 +101,9 @@ class ProfileResource extends JsonResource
             'cable_stripping' => CableStrippingController::canUse($user),
             // 600 and 610–650 projects a team of the user executes.
             'projects' => ProjectController::teamProjects($user)->exists(),
+            // Delivery reports of IT assets: the menu item, and how many are still to sign.
+            'delivery_reports' => DeliveryReportController::available($user),
+            'open_delivery_reports' => DeliveryReportController::openCount($user),
             'open_toolbox' => $gate->allows('viewAny', ToolboxMeeting::class)
                 ? ToolboxMeeting::query()->published()->whereDoesntHave('participants', fn ($query) => $query->where('user_id', $user->id)->whereNotNull('signed_at'))->count()
                 : 0,

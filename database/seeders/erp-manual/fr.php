@@ -624,6 +624,7 @@ Tous les moyens IT, comme dans Snipe-IT : **hardware, licences, accessoires, con
 ## Comment ça marche
 
 - **Prêter** à un utilisateur, un site ou un autre appareil, éventuellement avec une date de *retour prévu*. **Reprendre** quand il revient.
+- **Accusé de réception** : quand vous prêtez du matériel à un **collaborateur**, vous pouvez directement faire signer un accusé de réception (activé par défaut). Indiquez l'appareil, l'IMEI, le numéro d'appel, la carte SIM, les accessoires, l'état et un éventuel ancien appareil repris, et signez éventuellement vous-même pour l'entreprise. Une fonction et un site vides sont repris du collaborateur. Le collaborateur reçoit une notification sur la plateforme et dans l'app et signe sous **Accusés de réception** (plateforme, sous RH) ou dans l'app sous **Plus**, avec *lu et approuvé*. L'accusé de réception est dans **la langue du collaborateur** (néerlandais, français ou anglais, selon son réglage de langue). Une fois signé, le PDF est classé dans ses **Documents signés** (aussi un onglet de l'employé dans le registre du personnel) et la personne qui a prêté l'appareil est prévenue. Si l'appareil est repris avant la signature, l'accusé de réception est supprimé.
 - Les **licences** ont des places (seats) à attribuer ; vous voyez combien sont libres et quelles licences expirent bientôt.
 - Les **composants** s'installent dans un appareil ; les **consommables** se distribuent.
 - Un **audit** confirme qu'un appareil a été vu et planifie le suivant.

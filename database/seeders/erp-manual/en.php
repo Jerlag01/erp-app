@@ -624,6 +624,7 @@ All IT assets, as in Snipe-IT: **hardware, licenses, accessories, consumables an
 ## How it works
 
 - **Check out** to a user, a location or another device, optionally with an *expected back* date. **Check in** when it comes back.
+- **Acknowledgement of receipt**: when you check hardware out to an **employee**, you can have an acknowledgement of receipt signed straight away (on by default). Fill in the device, IMEI, phone number, SIM card, accessories, condition and any old device returned, and optionally sign for the company yourself. An empty job title and place of work are taken from the employee. The employee gets a notification on the platform and in the app and signs under **Acknowledgements of receipt** (platform, under HR) or in the app under **More**, with *read and approved*. The acknowledgement is in **the employee's language** (Dutch, French or English, from their language setting). Once signed, the PDF goes to their **Signed documents** (also a tab on the employee in the personnel register) and whoever checked the device out is told. If the device is checked in before it is signed, the acknowledgement is dropped.
 - **Licenses** have seats that you assign; you see how many are free and which licenses expire soon.
 - **Components** are installed in a device; **consumables** are handed out.
 - An **audit** confirms a device was seen and plans the next one.
