@@ -99,8 +99,10 @@ class SaveBatteryDossier
                     }
                 }
 
-                if (array_key_exists('float_voltage', $row)) {
-                    $values['float_voltage'] = $number($row['float_voltage']);
+                foreach (['float_voltage', 'total_voltage', 'floating_total_voltage'] as $key) {
+                    if (array_key_exists($key, $row)) {
+                        $values[$key] = $number($row[$key]);
+                    }
                 }
             }
 

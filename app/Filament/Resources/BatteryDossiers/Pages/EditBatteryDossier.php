@@ -146,6 +146,9 @@ class EditBatteryDossier extends EditRecord
             // Enersys: float voltage and the block voltages while floating.
             'float_voltage' => $battery->float_voltage !== null ? (float) $battery->float_voltage : null,
             'floating_voltages' => array_values((array) $battery->floating_voltages),
+            // The total voltages are measured and filled in.
+            'total_voltage' => $battery->endVoltage(),
+            'floating_total_voltage' => $battery->floatingTotal(),
         ]])->all();
         // The PNG is made again by the editor when the drawing changes; it is not sent to the browser.
         $data['floor_plan_png'] = null;

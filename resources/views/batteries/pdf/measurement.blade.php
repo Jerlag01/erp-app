@@ -43,7 +43,7 @@
                                     @if ($density)<td class="num">{{ $battery->density($cell) !== null ? number_format($battery->density($cell), 3, ',', '') : '' }}</td>@endif
                                 </tr>
                             @endfor
-                            <tr><td colspan="{{ $density ? 3 : 2 }}"><strong>{{ __('battery_documents.measurement.end_voltage', ['battery' => $battery->label()]) }} {{ $battery->endVoltage($cells) !== null ? number_format($battery->endVoltage($cells), 2, ',', '').' V' : '' }}</strong></td></tr>
+                            <tr><td colspan="{{ $density ? 3 : 2 }}"><strong>{{ __('battery_documents.measurement.end_voltage', ['battery' => $battery->label()]) }} {{ $battery->endVoltage() !== null ? number_format($battery->endVoltage(), 2, ',', '').' V' : '' }}</strong></td></tr>
                         </table>
                         @if ($battery->id_number)<div class="muted" style="font-size: 7pt;">ID {{ $battery->id_number }}</div>@endif
                     </td>

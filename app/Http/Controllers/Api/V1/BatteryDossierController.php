@@ -95,6 +95,8 @@ class BatteryDossierController extends Controller
             'batteries.*.floating_voltages' => ['array', 'max:60'],
             'batteries.*.floating_voltages.*' => ['nullable', 'numeric'],
             'batteries.*.float_voltage' => ['nullable', 'numeric'],
+            'batteries.*.total_voltage' => ['nullable', 'numeric', 'min:0', 'max:999999'],
+            'batteries.*.floating_total_voltage' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'batteries.*.cable_type' => ['nullable', 'string', 'max:30'],
             'batteries.*.cable_length_m' => ['nullable', 'numeric', 'min:0'],
             'batteries.*.cables_positive' => ['nullable', 'integer', 'min:0', 'max:20'],
@@ -410,6 +412,9 @@ class BatteryDossierController extends Controller
                 'cell_densities' => $series($battery->cell_densities),
                 'float_voltage' => $battery->float_voltage !== null ? (float) $battery->float_voltage : null,
                 'floating_voltages' => $series($battery->floating_voltages),
+                // Measured and filled in, not added up from the cells.
+                'total_voltage' => $battery->endVoltage(),
+                'floating_total_voltage' => $battery->floatingTotal(),
                 'cable_type' => $battery->cable_type,
                 'cable_length_m' => $battery->cable_length_m !== null ? (float) $battery->cable_length_m : null,
                 'cables_positive' => $battery->cables_positive,

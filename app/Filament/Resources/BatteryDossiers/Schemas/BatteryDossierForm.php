@@ -406,23 +406,20 @@ class BatteryDossierForm
                     ]),
                 Grid::make(['default' => 1, 'xl' => 2])
                     ->schema(fn (Get $get): array => array_map(fn (int $position): Section => Section::make('Batt '.$position)
-                        ->description(function (Get $get) use ($position): string {
-                            $values = array_filter((array) $get("strings.{$position}.cell_voltages"), 'is_numeric');
-
-                            return __('erp.batteries.end_voltage', ['volts' => $values ? number_format(array_sum($values), 2, ',', '') : '—']);
-                        })
                         ->compact()
                         ->columns(['default' => 4, 'md' => 6])
-                        ->schema(array_merge(...array_map(fn (int $cell): array => array_values(array_filter([
+                        ->schema([...array_merge(...array_map(fn (int $cell): array => array_values(array_filter([
                             TextInput::make("strings.{$position}.cell_voltages.".($cell - 1))
                                 ->hiddenLabel()
                                 ->prefix((string) $cell)
                                 ->placeholder('V')
                                 ->numeric()
-                                ->step('any')
-                                ->live(onBlur: true),
+                                ->step('any'),
                             $density($get) ? TextInput::make("strings.{$position}.cell_densities.".($cell - 1))->hiddenLabel()->prefix('d')->placeholder('kg/l')->numeric()->step('any') : null,
-                        ])), range(1, max(1, min(60, (int) $get('cells_per_battery'))))))), self::positions($get))),
+                        ])), range(1, max(1, min(60, (int) $get('cells_per_battery')))))),
+                            // Measured over the whole battery and filled in, not added up from the cells.
+                            TextInput::make("strings.{$position}.total_voltage")->label(__('erp.batteries.total_voltage'))->numeric()->step('any')->suffix('V')->columnSpanFull(),
+                        ]), self::positions($get))),
             ]),
             self::signatureSection('measurement'),
             self::download('measurement'),

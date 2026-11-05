@@ -203,8 +203,7 @@ class EnersysDossierForm extends BatteryDossierForm
      */
     protected static function enersysMeasurementTab(): array
     {
-        $volt = fn (string $path): TextInput => TextInput::make($path)->hiddenLabel()->numeric()->step('any')->suffix('V')->live(onBlur: true);
-        $sum = fn (Get $get, string $path): string => ($values = array_filter((array) $get($path), 'is_numeric')) ? number_format(array_sum($values), 2, ',', '').' V' : '—';
+        $volt = fn (string $path): TextInput => TextInput::make($path)->hiddenLabel()->numeric()->step('any')->suffix('V');
 
         return [
             static::lockable('measurement', [
@@ -217,10 +216,6 @@ class EnersysDossierForm extends BatteryDossierForm
                     ]),
                 Grid::make(['default' => 1, 'xl' => 2])
                     ->schema(fn (Get $get): array => array_map(fn (int $position): Section => Section::make('Batt '.$position)
-                        ->description(fn (Get $get): string => __('erp.enersys.totals', [
-                            'off' => $sum($get, "strings.{$position}.cell_voltages"),
-                            'floating' => $sum($get, "strings.{$position}.floating_voltages"),
-                        ]))
                         ->compact()
                         ->columns(3)
                         ->schema([
@@ -233,6 +228,10 @@ class EnersysDossierForm extends BatteryDossierForm
                                 $volt("strings.{$position}.cell_voltages.".($block - 1)),
                                 $volt("strings.{$position}.floating_voltages.".($block - 1)),
                             ], range(1, max(1, min(24, (int) $get('cells_per_battery')))))),
+                            // The totals are measured over the whole battery and filled in, not added up from the blocks.
+                            Text::make(__('erp.enersys.total')),
+                            $volt("strings.{$position}.total_voltage")->hiddenLabel(),
+                            $volt("strings.{$position}.floating_total_voltage")->hiddenLabel(),
                         ]), static::positions($get))),
             ]),
             static::signatureSection('measurement'),

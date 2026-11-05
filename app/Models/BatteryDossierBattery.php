@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Fillable([
     'battery_dossier_id', 'position', 'id_number', 'cable_type', 'cable_length_m', 'cables_positive', 'cables_negative',
-    'cable_section', 'fuse_amperage', 'fuse_type', 'cell_voltages', 'cell_densities', 'float_voltage', 'floating_voltages',
+    'cable_section', 'fuse_amperage', 'fuse_type', 'cell_voltages', 'cell_densities', 'float_voltage', 'floating_voltages', 'total_voltage', 'floating_total_voltage',
 ])]
 class BatteryDossierBattery extends Model
 {
@@ -47,23 +47,19 @@ class BatteryDossierBattery extends Model
     }
 
     /**
-     * "Eindspanning": the sum of the measured cell voltages, or null when nothing was measured.
+     * "Eindspanning" (Enersys: the total disconnected): measured and filled in, not added up from the cells.
      */
-    public function endVoltage(int $cells): ?float
+    public function endVoltage(): ?float
     {
-        $values = array_filter(array_map(fn (int $cell): ?float => $this->voltage($cell), range(1, max(1, $cells))), fn (?float $value): bool => $value !== null);
-
-        return $values === [] ? null : round(array_sum($values), 3);
+        return $this->total_voltage !== null ? (float) $this->total_voltage : null;
     }
 
     /**
-     * Enersys: the sum of the block voltages while floating ("Totale batterijspanning" in vlotting).
+     * Enersys: the total battery voltage while floating, measured and filled in.
      */
-    public function floatingTotal(int $blocks): ?float
+    public function floatingTotal(): ?float
     {
-        $values = array_filter(array_map(fn (mixed $value): ?float => is_numeric($value) ? (float) $value : null, array_slice(array_values((array) $this->floating_voltages), 0, max(1, $blocks))), fn (?float $value): bool => $value !== null);
-
-        return $values === [] ? null : round(array_sum($values), 3);
+        return $this->floating_total_voltage !== null ? (float) $this->floating_total_voltage : null;
     }
 
     /**
@@ -80,6 +76,8 @@ class BatteryDossierBattery extends Model
             'cell_densities' => 'array',
             'float_voltage' => 'decimal:2',
             'floating_voltages' => 'array',
+            'total_voltage' => 'decimal:2',
+            'floating_total_voltage' => 'decimal:2',
         ];
     }
 }

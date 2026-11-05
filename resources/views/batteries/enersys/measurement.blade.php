@@ -15,11 +15,9 @@
     $groups = $dossier->batteries->chunk(2);
     $compact = $blocks > 6;
     $volt = fn ($value) => is_numeric($value) ? number_format((float) $value, 2, ',', '') : '';
-    $total = function (array $values) use ($blocks): string {
-        $numbers = array_filter(array_slice(array_values($values), 0, $blocks), 'is_numeric');
-
-        return $numbers === [] ? '' : number_format(array_sum($numbers), 2, ',', '').' V';
-    };
+    // The totals are measured and filled in, not added up from the blocks.
+    $total = fn (?float $value): string => $value === null ? '' : number_format($value, 2, ',', '').' V';
+    $totals = fn ($battery, string $field): ?float => $field === 'floating_voltages' ? $battery->floatingTotal() : $battery->endVoltage();
 @endphp
 
 @section('styles')
@@ -57,7 +55,7 @@
                                 @for ($block = 1; $block <= $blocks; $block++)
                                     <tr><td class="center">{{ $block }}</td><td class="num">{{ $volt(((array) $battery->cell_voltages)[$block - 1] ?? null) }} V</td><td class="num">{{ $volt(((array) $battery->floating_voltages)[$block - 1] ?? null) }} V</td></tr>
                                 @endfor
-                                <tr><td class="center">{{ __('battery_documents.measurement.total') }}</td><td class="num bold">{{ $total((array) $battery->cell_voltages) }}</td><td class="num bold">{{ $total((array) $battery->floating_voltages) }}</td></tr>
+                                <tr><td class="center">{{ __('battery_documents.measurement.total') }}</td><td class="num bold">{{ $total($battery->endVoltage()) }}</td><td class="num bold">{{ $total($battery->floatingTotal()) }}</td></tr>
                             </table>
                         </td>
                     @endforeach
@@ -79,7 +77,7 @@
                                 @for ($block = 1; $block <= $blocks; $block++)
                                     <tr><td style="width: 20%;" class="center">{{ $block }}</td><td class="num">{{ $volt(((array) $battery->{$field})[$block - 1] ?? null) }} V</td></tr>
                                 @endfor
-                                <tr class="head"><td colspan="2">{{ __('battery_documents.measurement.total_voltage') }} <strong>{{ $total((array) $battery->{$field}) }}</strong></td></tr>
+                                <tr class="head"><td colspan="2">{{ __('battery_documents.measurement.total_voltage') }} <strong>{{ $total($totals($battery, $field)) }}</strong></td></tr>
                             </table>
                         </td>
                     @endforeach

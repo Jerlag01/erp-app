@@ -1,6 +1,10 @@
 {{-- The floor plan editor (Alpine), shared by the dossier page and the mobile app's editor page. --}}
 <script>
         window.erpFloorPlan = function (config) {
+            // Fingers on the drawing (pointer id => screen position) and a running pinch; kept out of Alpine's state.
+            const pointers = new Map();
+            let pinch = null;
+
             return {
                 shapes: [],
                 state: config.state,
@@ -14,6 +18,8 @@
                 draft: null,
                 drag: null,
                 history: [],
+                view: { x: 0, y: 0, s: 1 },
+                pan: null,
                 W: {{ \App\Filament\Forms\FloorPlanEditor::WIDTH }},
                 H: {{ \App\Filament\Forms\FloorPlanEditor::HEIGHT }},
                 init() {
@@ -21,6 +27,60 @@
                     if (typeof initial === 'string') { try { initial = JSON.parse(initial); } catch (e) { initial = []; } }
                     this.shapes = Array.isArray(initial) ? initial : [];
                     this.render();
+                },
+                /** Zoom (1 = the whole plan) and the visible part, as the viewBox of the drawing. */
+                applyView() {
+                    const v = this.view;
+                    v.s = Math.min(8, Math.max(1, v.s));
+                    v.x = Math.min(this.W - this.W / v.s, Math.max(0, v.x));
+                    v.y = Math.min(this.H - this.H / v.s, Math.max(0, v.y));
+                    this.$refs.svg.setAttribute('viewBox', `${v.x} ${v.y} ${this.W / v.s} ${this.H / v.s}`);
+                },
+                /** Zooms by a factor, keeping the plan point under (clientX, clientY), or the centre, in place. */
+                zoomBy(factor, clientX = null, clientY = null) {
+                    const r = this.$refs.svg.getBoundingClientRect();
+                    const fx = clientX === null ? 0.5 : (clientX - r.left) / r.width;
+                    const fy = clientY === null ? 0.5 : (clientY - r.top) / r.height;
+                    const v = this.view;
+                    const px = v.x + fx * this.W / v.s, py = v.y + fy * this.H / v.s;
+                    v.s = Math.min(8, Math.max(1, v.s * factor));
+                    v.x = px - fx * this.W / v.s;
+                    v.y = py - fy * this.H / v.s;
+                    this.applyView();
+                },
+                resetView() {
+                    this.view = { x: 0, y: 0, s: 1 };
+                    this.applyView();
+                },
+                wheel(event) {
+                    // Ctrl + wheel (and a trackpad pinch) zooms; a plain wheel keeps scrolling the page.
+                    if (! event.ctrlKey && this.view.s === 1) return;
+                    event.preventDefault();
+                    if (event.ctrlKey) { this.zoomBy(Math.exp(-event.deltaY / 200), event.clientX, event.clientY); return; }
+                    const r = this.$refs.svg.getBoundingClientRect();
+                    this.view.x += event.deltaX * this.W / this.view.s / r.width;
+                    this.view.y += event.deltaY * this.H / this.view.s / r.height;
+                    this.applyView();
+                },
+                /** A second finger: stop what the first one was doing and start pinching / moving the view. */
+                startPinch() {
+                    if (this.draft) { this.draft = null; this.render(); }
+                    if (this.drag) { this.drag = null; this.shapes = JSON.parse(this.history.pop()); this.render(); }
+                    this.pan = null;
+                    const [a, b] = [...pointers.values()];
+                    const r = this.$refs.svg.getBoundingClientRect();
+                    pinch = { dist: Math.hypot(b.x - a.x, b.y - a.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, view: { ...this.view }, r };
+                },
+                movePinch() {
+                    const [a, b] = [...pointers.values()];
+                    const { dist, mx, my, view, r } = pinch;
+                    const s = Math.min(8, Math.max(1, view.s * Math.hypot(b.x - a.x, b.y - a.y) / dist));
+                    // The plan point that was under the middle of both fingers stays under it.
+                    const px = view.x + (mx - r.left) / r.width * this.W / view.s;
+                    const py = view.y + (my - r.top) / r.height * this.H / view.s;
+                    const nx = (a.x + b.x) / 2, ny = (a.y + b.y) / 2;
+                    this.view = { s, x: px - (nx - r.left) / r.width * this.W / s, y: py - (ny - r.top) / r.height * this.H / s };
+                    this.applyView();
                 },
                 point(event) {
                     const svg = this.$refs.svg;
@@ -54,8 +114,16 @@
                     this.commit();
                 },
                 down(event) {
-                    const p = this.point(event);
                     this.$refs.svg.setPointerCapture(event.pointerId);
+                    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                    if (pointers.size >= 2) { this.startPinch(); return; }
+                    if (pinch) return;
+                    const p = this.point(event);
+
+                    if (this.tool === 'pan') {
+                        this.pan = { x: event.clientX, y: event.clientY, view: { ...this.view }, r: this.$refs.svg.getBoundingClientRect() };
+                        return;
+                    }
 
                     if (this.tool === 'select') {
                         this.selected = this.hit(p);
@@ -77,6 +145,16 @@
                     this.render();
                 },
                 move(event) {
+                    if (pointers.has(event.pointerId)) pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                    if (pinch) { if (pointers.size >= 2) this.movePinch(); return; }
+
+                    if (this.pan) {
+                        const { x, y, view, r } = this.pan;
+                        this.view = { s: view.s, x: view.x - (event.clientX - x) * this.W / view.s / r.width, y: view.y - (event.clientY - y) * this.H / view.s / r.height };
+                        this.applyView();
+                        return;
+                    }
+
                     const p = this.point(event);
 
                     if (this.drag && this.selected !== null) {
@@ -93,7 +171,11 @@
                     else { d.x = Math.min(d.ox, p.x); d.y = Math.min(d.oy, p.y); d.wd = Math.abs(p.x - d.ox); d.ht = Math.abs(p.y - d.oy); }
                     this.render();
                 },
-                up() {
+                up(event) {
+                    pointers.delete(event.pointerId);
+                    // After a pinch nothing is drawn until every finger is lifted.
+                    if (pinch) { if (! pointers.size) pinch = null; return; }
+                    if (this.pan) { this.pan = null; return; }
                     if (this.drag) { this.drag = null; this.commit(); return; }
                     if (! this.draft) return;
 
@@ -130,7 +212,7 @@
                     const near = (x1, y1, x2, y2) => {
                         const l = (x2 - x1) ** 2 + (y2 - y1) ** 2;
                         const t = l ? Math.max(0, Math.min(1, ((p.x - x1) * (x2 - x1) + (p.y - y1) * (y2 - y1)) / l)) : 0;
-                        return Math.hypot(p.x - (x1 + t * (x2 - x1)), p.y - (y1 + t * (y2 - y1))) < 10;
+                        return Math.hypot(p.x - (x1 + t * (x2 - x1)), p.y - (y1 + t * (y2 - y1))) < 10 / this.view.s;
                     };
                     for (let i = this.shapes.length - 1; i >= 0; i--) {
                         const s = this.shapes[i];

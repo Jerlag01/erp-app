@@ -97,7 +97,7 @@ class EnersysDossierTest extends TestCase
             ->fillForm([
                 'average_temperature' => 21,
                 'strings' => [
-                    1 => ['float_voltage' => 54.4, 'cell_voltages' => [12.8, 12.8, 12.7, 12.8], 'floating_voltages' => [13.6, 13.6, 13.6, 13.6]],
+                    1 => ['float_voltage' => 54.4, 'cell_voltages' => [12.8, 12.8, 12.7, 12.8], 'floating_voltages' => [13.6, 13.6, 13.6, 13.6], 'total_voltage' => 51.2, 'floating_total_voltage' => 54.3],
                     2 => ['float_voltage' => 54.3, 'cell_voltages' => [12.7, 12.7, 12.7, 12.7], 'floating_voltages' => [13.5, 13.6, 13.6, 13.6]],
                 ],
             ])
@@ -106,15 +106,16 @@ class EnersysDossierTest extends TestCase
 
         $first = $dossier->fresh()->batteries[0];
         $this->assertSame('54.40', (string) $first->float_voltage);
-        $this->assertEqualsWithDelta(51.1, $first->endVoltage(4), 0.001);
-        $this->assertEqualsWithDelta(54.4, $first->floatingTotal(4), 0.001);
+        // The totals are what was filled in, not the sums of the blocks (51,1 V and 54,4 V).
+        $this->assertEqualsWithDelta(51.2, $first->endVoltage(), 0.001);
+        $this->assertEqualsWithDelta(54.3, $first->floatingTotal(), 0.001);
 
         // Three batteries: a row more.
         Livewire::test(EditEnersysDossier::class, ['record' => $dossier->getRouteKey()])
             ->fillForm(['new_count' => 3])
             ->call('save');
         $this->assertSame(3, $dossier->fresh()->batteries()->count());
-        $this->assertEqualsWithDelta(54.4, $dossier->fresh()->batteries[0]->floatingTotal(4), 0.001, 'Battery 1 keeps its measurements.');
+        $this->assertEqualsWithDelta(54.3, $dossier->fresh()->batteries[0]->floatingTotal(), 0.001, 'Battery 1 keeps its measurements.');
     }
 
     #[Test]
@@ -135,7 +136,13 @@ class EnersysDossierTest extends TestCase
 
         $this->actingAs($this->technician(['view', 'prices', 'generate_pdf']))->get(route('enersys.document', [$dossier, 'order']))->assertOk();
 
+        // The report shows the totals as filled in, not the sums of the blocks.
+        $dossier->syncBatteries();
+        $dossier->batteries()->orderBy('position')->first()->update(['cell_voltages' => [12.8, 12.8, 12.7, 12.8], 'floating_voltages' => [13.6, 13.6, 13.6, 13.6], 'total_voltage' => 51.2, 'floating_total_voltage' => 54.3]);
         $html = view('batteries.enersys.measurement', ['dossier' => $dossier->fresh(['batteries', 'project.workSite']), 'background' => null])->render();
+        $this->assertStringContainsString('51,20 V', $html);
+        $this->assertStringContainsString('54,30 V', $html);
+        $this->assertStringNotContainsString('51,10 V', $html);
         $this->assertStringContainsString('(In vlotting)', $html);
         $this->assertStringContainsString('Vlotspanning', $html);
         $this->assertStringContainsString('Jacobsveldweg', $html);

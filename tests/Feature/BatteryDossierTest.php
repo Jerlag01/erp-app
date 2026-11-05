@@ -144,7 +144,7 @@ class BatteryDossierTest extends TestCase
                 'new_count' => 3,
                 'average_temperature' => 19.5,
                 'strings' => [
-                    1 => ['cell_voltages' => $voltages, 'cable_type' => 'XVB', 'cable_length_m' => 6.5, 'cables_positive' => 2, 'cables_negative' => 2, 'cable_section' => '70', 'fuse_amperage' => '250', 'fuse_type' => 'gL-gL'],
+                    1 => ['cell_voltages' => $voltages, 'total_voltage' => 53.6, 'cable_type' => 'XVB', 'cable_length_m' => 6.5, 'cables_positive' => 2, 'cables_negative' => 2, 'cable_section' => '70', 'fuse_amperage' => '250', 'fuse_type' => 'gL-gL'],
                     2 => ['cell_voltages' => [2.2, 2.25]],
                 ],
                 'inspection' => ['cells_identical' => 'yes', 'damage' => 'no'],
@@ -155,10 +155,11 @@ class BatteryDossierTest extends TestCase
         $dossier->refresh();
         $this->assertSame(3, $dossier->batteries->count());
         $first = $dossier->batteries[0];
-        $this->assertEqualsWithDelta(53.52, $first->endVoltage(24), 0.001);
+        // The total voltage is what was filled in, not the sum of the cells (53,52 V).
+        $this->assertEqualsWithDelta(53.6, $first->endVoltage(), 0.001);
         $this->assertSame(['XVB', '6.50', 2, 2, '70', '250'], [$first->cable_type, $first->cable_length_m, $first->cables_positive, $first->cables_negative, $first->cable_section, $first->fuse_amperage]);
-        $this->assertEqualsWithDelta(4.45, $dossier->batteries[1]->endVoltage(24), 0.001);
-        $this->assertNull($dossier->batteries[2]->endVoltage(24));
+        $this->assertNull($dossier->batteries[1]->endVoltage(), 'Not filled in: no total, even with cells measured.');
+        $this->assertNull($dossier->batteries[2]->endVoltage());
         $this->assertSame('yes', $dossier->inspectionAnswer('cells_identical'));
         $this->assertSame('no', $dossier->inspectionAnswer('damage'));
 
@@ -168,7 +169,7 @@ class BatteryDossierTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertSame([1], $dossier->fresh()->batteries->pluck('position')->all());
-        $this->assertEqualsWithDelta(53.52, $dossier->fresh()->batteries[0]->endVoltage(24), 0.001, 'Battery 1 keeps its measurements.');
+        $this->assertEqualsWithDelta(53.6, $dossier->fresh()->batteries[0]->endVoltage(), 0.001, 'Battery 1 keeps its measurements.');
     }
 
     #[Test]

@@ -4,7 +4,10 @@
         'select' => __('erp.batteries.plan.select'), 'pen' => __('erp.batteries.plan.pen'), 'line' => __('erp.batteries.plan.line'),
         'arrow' => __('erp.batteries.plan.arrow'), 'dim' => __('erp.batteries.plan.dim'), 'rect' => __('erp.batteries.plan.rect'),
         'ellipse' => __('erp.batteries.plan.ellipse'), 'text' => __('erp.batteries.plan.text'),
+        'pan' => __('erp.batteries.plan.pan'),
     ];
+    $width = \App\Filament\Forms\FloorPlanEditor::WIDTH;
+    $height = \App\Filament\Forms\FloorPlanEditor::HEIGHT;
 @endphp
 <style>
     .erp-plan-editor { display: flex; flex-direction: column; gap: .5rem; }
@@ -35,6 +38,10 @@
     <button type="button" x-on:click="removeSelected()" :disabled="selected === null">{{ __('erp.batteries.plan.delete') }}</button>
     <button type="button" x-on:click="undo()">{{ __('erp.batteries.plan.undo') }}</button>
     <button type="button" x-on:click="clearAll()">{{ __('erp.batteries.plan.clear') }}</button>
+    <span class="sep"></span>
+    <button type="button" x-on:click="zoomBy(1 / 1.5)" :disabled="view.s <= 1" title="{{ __('erp.batteries.plan.zoom_out') }}" aria-label="{{ __('erp.batteries.plan.zoom_out') }}">−</button>
+    <button type="button" x-on:click="resetView()" title="{{ __('erp.batteries.plan.zoom_reset') }}" aria-label="{{ __('erp.batteries.plan.zoom_reset') }}" x-text="Math.round(view.s * 100) + '%'">100%</button>
+    <button type="button" x-on:click="zoomBy(1.5)" :disabled="view.s >= 8" title="{{ __('erp.batteries.plan.zoom_in') }}" aria-label="{{ __('erp.batteries.plan.zoom_in') }}">+</button>
 </div>
 
 <svg
@@ -43,14 +50,16 @@
     viewBox="0 0 {{ \App\Filament\Forms\FloorPlanEditor::WIDTH }} {{ \App\Filament\Forms\FloorPlanEditor::HEIGHT }}"
     x-on:pointerdown.prevent="down($event)"
     x-on:pointermove.prevent="move($event)"
-    x-on:pointerup="up()"
+    x-on:pointerup="up($event)"
+    x-on:pointercancel="up($event)"
+    x-on:wheel="wheel($event)"
     x-on:dblclick="edit($event)"
-    :style="{ cursor: tool === 'select' ? 'default' : 'crosshair' }"
+    :style="{ cursor: tool === 'select' ? 'default' : (tool === 'pan' ? 'grab' : 'crosshair') }"
 >
     <defs>
         <pattern id="erp-plan-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="1"/></pattern>
     </defs>
-    <rect width="100%" height="100%" fill="url(#erp-plan-grid)" x-show="grid"></rect>
+    <rect width="{{ $width }}" height="{{ $height }}" fill="url(#erp-plan-grid)" x-show="grid"></rect>
     <g x-ref="layer"></g>
 </svg>
 

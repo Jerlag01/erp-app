@@ -126,13 +126,15 @@ class MobileBatteryDossierApiTest extends TestCase
 
         $this->putJson("/api/v1/dossiers/enersys/{$dossier->id}", [
             'values' => ['leak_trays' => 2],
-            'batteries' => [1 => ['float_voltage' => 27.2, 'cell_voltages' => [12.8, 12.9], 'floating_voltages' => [13.6, 13.6]]],
+            'batteries' => [1 => ['float_voltage' => 27.2, 'cell_voltages' => [12.8, 12.9], 'floating_voltages' => [13.6, 13.6], 'total_voltage' => 25.8, 'floating_total_voltage' => 27.1]],
         ], $auth)->assertOk();
 
         $battery = $dossier->fresh()->batteries()->sole();
         $this->assertSame(2, (int) $dossier->fresh()->leak_trays);
         $this->assertSame([13.6, 13.6], $battery->floating_voltages);
         $this->assertSame('27.20', $battery->float_voltage);
+        $this->assertSame([25.8, 27.1], [$battery->endVoltage(), $battery->floatingTotal()]);
+        $this->getJson("/api/v1/dossiers/enersys/{$dossier->id}", $auth)->assertJsonPath('data.batteries.0.total_voltage', 25.8)->assertJsonPath('data.batteries.0.floating_total_voltage', 27.1);
     }
 
     #[Test]
