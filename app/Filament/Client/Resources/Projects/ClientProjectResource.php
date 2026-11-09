@@ -82,9 +82,11 @@ class ClientProjectResource extends ClientResource
                     ->searchable()
                     ->sortable()
                     ->copyable(),
-                // The number with the project's description under it, so the client sees what it belongs to.
+                // The number with the category's name ("604 · Batterijvervanging") and the project's description
+                // under it, so the client sees what it belongs to.
                 TextColumn::make('category.code')
                     ->label(__('erp.client_portal.category'))
+                    ->formatStateUsing(fn (Project $record): string => $record->category?->label() ?? '')
                     ->badge()
                     ->color('gray')
                     ->description(fn (Project $record): ?string => $record->short_description ?: null),

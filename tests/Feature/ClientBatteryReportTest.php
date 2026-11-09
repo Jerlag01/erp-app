@@ -15,6 +15,7 @@ use App\Models\BatteryDelivery;
 use App\Models\BatteryDossier;
 use App\Models\ClientUser;
 use App\Models\Project;
+use App\Models\ProjectCategory;
 use App\Models\ProjectFile;
 use App\Models\User;
 use App\Models\WorkSite;
@@ -115,8 +116,12 @@ class ClientBatteryReportTest extends TestCase
         Project::factory()->inCategory('604')->for($vla)->create(['status' => ProjectStatus::Closed]);
         Project::factory()->inCategory('604')->for($bru)->create(['status' => ProjectStatus::Closed]);
 
+        ProjectCategory::query()->where('code', '604')->update(['name' => 'Batterijvervanging']);
         $this->client();
-        Livewire::test(ListClientProjects::class)->assertSee('Batterijen vervangen kelder')->assertCanSeeTableRecords([$described]);
+        Livewire::test(ListClientProjects::class)
+            ->assertSee('Batterijen vervangen kelder')
+            ->assertCanSeeTableRecords([$described])
+            ->assertTableColumnFormattedStateSet('category.code', '604 · Batterijvervanging', $described);
 
         $areas = collect(Livewire::test(Dashboard::class)->instance()->areas())->keyBy('area');
         $this->assertSame([4, 2, 2, 50.0, 50.0], [$areas['1-VLA']['total'], $areas['1-VLA']['open'], $areas['1-VLA']['closed'], $areas['1-VLA']['open_percent'], $areas['1-VLA']['closed_percent']]);
