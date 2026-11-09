@@ -641,7 +641,7 @@ MD,
             'body' => <<<'MD'
 ## À quoi ça sert ?
 
-Les sites du client, chacun avec un **code COW** (p. ex. `02GAM`), une adresse, un type de bâtiment, une zone, une personne de contact, des photos et des remarques.
+Les sites du client, chacun avec un **code COW** (p. ex. `02GAM`), une adresse, un type de bâtiment, une zone, des personnes de contact, des photos et des remarques.
 
 ## Où ?
 
@@ -656,7 +656,7 @@ Les sites du client, chacun avec un **code COW** (p. ex. `02GAM`), une adresse, 
 ## Zones et personnes de contact
 
 - Une **zone** regroupe des sites et a **une ou plusieurs personnes de contact**.
-- Un site peut avoir sa propre personne de contact. Sinon, ce sont les personnes de contact de sa zone qui s'appliquent.
+- Un site (code COW) peut avoir **une ou plusieurs personnes de contact propres**, en plus de celles de sa zone. S'il n'en a pas, ce sont les personnes de contact de sa zone qui s'appliquent.
 - Une personne de contact a une **langue** (NL, FR ou EN) : les mails comme une demande de GPW sont envoyés dans cette langue.
 
 ## Où est-ce utilisé ?
@@ -688,7 +688,9 @@ Offre → En attente du PO → À planifier → Planifié → À exécuter → E
 ## Sur un projet
 
 - **Numéros PO** du client (10 chiffres, plusieurs possibles).
+- Chaque nouveau projet reçoit une **description courte** (obligatoire) : le client la voit dans son portail sous le numéro de catégorie.
 - Onglets **documents, photos, plans, schémas, fichiers supplémentaires, pièces, offres et factures**. Les fichiers ont des versions.
+- Un **604** a aussi l'onglet **Rapport de déchets** : téléchargez-y le rapport de déchets (PDF) dès que vous l'avez. Le client le voit avec les documents du projet dans son portail.
 - Les **chefs de projet** et les **équipes affectées** déterminent qui voit le projet.
 - Pour 610–650, une **barre d'avancement** montre les étapes (demande, visite, offre, PO, … jusqu'à la remise) ; cochez les étapes ou elles se cochent automatiquement. Quand **PO reçu** est coché, **« Ajouter un numéro PO »** ajoute un numéro PO à tout moment (en cochant l'étape sans numéro PO, cette fenêtre s'ouvre directement).
 - **Copier** démarre un nouveau projet à partir de celui-ci.
@@ -703,7 +705,7 @@ Ce droit ne fait partie d'**aucun rôle** : un administrateur le coche dans les 
 
 ## Droits
 
-Droits distincts pour voir, créer, modifier, supprimer, fichiers, pièces, PDF, copier et demander un GPW. Les offres et factures ne sont visibles qu'avec les droits financiers du projet ou en tant que chef de projet.
+Droits distincts pour voir, créer, modifier, supprimer, fichiers, pièces, PDF, copier, demander un GPW et supprimer des demandes GPW. Les offres et factures ne sont visibles qu'avec les droits financiers du projet ou en tant que chef de projet.
 MD,
         ],
 
@@ -717,11 +719,11 @@ Demander au client l'autorisation de travailler sur un site pendant une **pério
 ## Demander un GPW
 
 1. Ouvrez un projet avec le statut **À exécuter**.
-2. Cliquez sur **« Demander un GPW »**. Vous voyez à qui la demande sera envoyée.
+2. Cliquez sur **« Demander un GPW »** et cochez **à qui** la demande est envoyée : les personnes de contact propres du code COW sont cochées, vous pouvez y ajouter celles de la zone (seulement celles qui ont une adresse e-mail).
 3. Choisissez la **période** (du – jusqu'au) et ajoutez éventuellement des **remarques** (accès, clés, coupures).
 4. Cliquez sur **Envoyer la demande**.
 
-La demande est envoyée par e-mail à la ou aux **personnes de contact du site COW** (ou de la zone), chacune **dans sa langue**, avec vous en copie. Si le site n'a pas de personne de contact avec adresse e-mail, complétez-la d'abord sur le site ou la zone.
+La demande est envoyée par e-mail aux **personnes de contact choisies**, chacune **dans sa langue**, avec vous en copie. **Renvoyer** l'envoie aux mêmes personnes. Si le site n'a pas de personne de contact avec adresse e-mail, complétez-la d'abord sur le site ou la zone.
 
 ## Le client approuve
 
@@ -737,6 +739,7 @@ Dans l'onglet **Demandes de GPW** du projet, cliquez sur **Planifier** pour la d
 ## Droits et modèles
 
 - Demander : le droit **Projets → Demander des GPW**.
+- Supprimer : avec le droit **Projets → Supprimer des demandes GPW (à tout moment)**, vous supprimez une demande GPW quel que soit son statut (même approuvée ou planifiée), dans l'aperçu ou sur le projet. Ce qui est déjà au planning reste.
 - Les mails (demande, approuvé, refusé) se modifient dans **Modèles d'e-mail**.
 
 ## Aperçu et ajout manuel
@@ -799,7 +802,7 @@ Le dossier complet pour le remplacement de batteries sur les **projets 604** : i
 
 Dans **Livraisons de batteries**, suivez par projet la confirmation de commande, le type, la quantité et la date de livraison prévue, et cochez **livré**.
 
-Dans le portail client, le client voit par livraison si elle est **livrée** avec la **date de livraison effective** (le jour de la coche), quand l'**installation est planifiée** (la date d'exécution du dossier batteries, ou sinon le premier jour au planning) et une coche **exécuté** avec la date à laquelle le projet est passé à *exécuté*.
+Dans le portail client, le client voit les livraisons **encore à venir** : dès qu'une livraison est cochée **livrée**, elle disparaît de sa liste (vous la voyez toujours). Il voit quand l'**installation est planifiée** (la date d'exécution du dossier batteries, ou sinon le premier jour au planning) et une coche **exécuté** avec la date à laquelle le projet est passé à *exécuté*.
 
 Avec **Documents**, ajoutez par livraison trois fichiers : la **commande** au fournisseur, la **confirmation de commande** du fournisseur et le **bon de livraison** à l'arrivée. Ils figurent aussi sur le projet (onglet *Livraisons de batteries*). Ils sont internes : jamais visibles dans le portail client, et uniquement avec les droits **Voir et télécharger les documents de livraison** et **Téléverser les documents de livraison**.
 
@@ -967,9 +970,9 @@ Par projet, un **as-built** avec tous les fichiers par catégorie, le contrôle 
 
 ## Comment naît un as-built ?
 
-Dès qu'un projet passe au statut **Exécuté**, l'as-built est créé automatiquement avec le statut **En cours**. Pas pour les catégories exclues (par défaut 600, 604, 605, 606, 607 et 608.1 ; réglable dans Paramètres → Général). Les **fichiers standard** du code COW du projet, les influences externes et les fichiers standard généraux sont ajoutés directement.
+Dès qu'un projet passe au statut **À exécuter** (ou plus tard, si cette étape a été sautée), l'as-built est créé automatiquement avec le statut **En cours**. Pas pour les catégories exclues (par défaut 600, 604, 605, 606, 607 et 608.1 ; réglable dans Paramètres → Général). Les **fichiers standard** du code COW du projet, les influences externes et les fichiers standard généraux sont ajoutés directement.
 
-Le bouton **Créer l'as-built** sur le projet (droit *As-built → Gérer*) crée l'as-built plus tôt, avec les mêmes fichiers standard et le même déroulement. Quand le projet passe ensuite à *Exécuté*, aucun deuxième n'est créé. Chaque as-built indique s'il a été créé automatiquement ou manuellement (et par qui).
+Le bouton **Créer l'as-built** sur le projet (droit *As-built → Gérer*) crée l'as-built plus tôt, avec les mêmes fichiers standard et le même déroulement. Quand le projet passe ensuite à *À exécuter*, aucun deuxième n'est créé. Chaque as-built indique s'il a été créé automatiquement ou manuellement (et par qui).
 
 ## Catégories
 
@@ -992,7 +995,7 @@ Avec le droit **Rouvrir**, vous rouvrez un as-built terminé.
 
 ## Le client
 
-Dans le portail client (droit **As-builts**), le client suit le statut, télécharge le ZIP et fournit des fichiers : voies d'évacuation, plans, influences externes, ICC et Lmax, ou tout en un ZIP dans la **zone générale**. Les chefs de projet en sont avertis.
+Dans le portail client (droit **As-builts**), le client suit le statut, voit et télécharge **tous les fichiers** de l'as-built par catégorie (aussi pendant qu'il est en cours, pas seulement après la clôture), télécharge le ZIP à la fin et fournit des fichiers : voies d'évacuation, plans, influences externes, ICC et Lmax, ou tout en un ZIP dans la **zone générale**. Les chefs de projet en sont avertis.
 
 ## Droits
 
@@ -1223,7 +1226,7 @@ MD,
             'body' => <<<'MD'
 ## À quoi ça sert ?
 
-Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **aperçu en lecture seule** de leurs projets, demandes de GPW, livraisons de batteries, bornes et routeurs 4G. **Les prix ne sont jamais affichés.**
+Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **aperçu en lecture seule** de leurs projets, demandes de GPW, as-builts, dossiers batteries, livraisons de batteries, bornes et routeurs 4G. Les prix ne sont pas affichés, sauf dans la demande de facture d'un dossier batteries.
 
 ## Où ?
 
@@ -1234,7 +1237,7 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 
 1. Complétez nom, e-mail, entreprise et **langue**.
 2. Liez éventuellement une **personne de contact** (recherche par nom ou code COW) : l'utilisateur voit les projets sur les sites COW de cette personne. Ajoutez aussi des **projets attribués** séparément.
-3. Cochez ce qu'il peut voir : projets (avec les **catégories**), **demandes de GPW**, livraisons de batteries, bornes, routeurs 4G.
+3. Cochez ce qu'il peut voir : projets (avec les **catégories**), **demandes de GPW**, as-builts, **dossiers batteries (604)**, livraisons de batteries, bornes, routeurs 4G.
 4. Gardez **« Envoyer le mail de bienvenue »** activé : l'utilisateur reçoit un mail dans sa langue et choisit lui-même son mot de passe.
 
 ## Que voit le client ?
@@ -1243,6 +1246,9 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 - Mots de passe, codes de récupération, identifiants de routeur et fichiers VPN uniquement avec les droits 🔒.
 - Les bornes et routeurs sans code COW (p. ex. chez un client tiers) n'apparaissent jamais dans le portail.
 - Dans **Demandes de GPW**, il approuve ou refuse les demandes.
+- Dans la **liste des projets**, la description du projet figure sous le numéro de catégorie.
+- Sur le **tableau de bord**, il voit par **area** quelle part de ses projets est ouverte et quelle part est clôturée (en pourcentage, par rapport à tous les projets de cette area).
+- Dans **Dossiers batteries** (droit *Dossiers batteries (604)*) figure chaque projet 604 à partir de **À facturer**, avec le code COW et la description. Par projet : les **photos** du dossier batteries, le **rapport de mesure**, le **bon de livraison**, l'**inspection visuelle** et la **demande de facture** (PDF, générés à partir du dossier) et le **rapport de déchets** que vous téléchargez sur le projet. Les utilisateurs clients avec le droit *Projets* ont reçu ce droit automatiquement.
 
 Les mails (bienvenue, nouveau mot de passe) se modifient dans **Modèles d'e-mail**.
 

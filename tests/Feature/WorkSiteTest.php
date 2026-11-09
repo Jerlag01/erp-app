@@ -171,7 +171,7 @@ class WorkSiteTest extends TestCase
         $siteContact = WorkSiteContact::factory()->create(['first_name' => 'Sam', 'last_name' => 'Site']);
         $area = WorkSiteArea::factory()->hasAttached($areaContact, [], 'contacts')->create();
 
-        $withOwn = WorkSite::factory()->for($area, 'area')->create(['work_site_contact_id' => $siteContact->id]);
+        $withOwn = WorkSite::factory()->for($area, 'area')->hasAttached($siteContact, [], 'contacts')->create();
         $withoutOwn = WorkSite::factory()->for($area, 'area')->create();
 
         $this->assertTrue($withOwn->effectiveContact()->is($siteContact));
@@ -182,6 +182,17 @@ class WorkSiteTest extends TestCase
         $area->contacts()->attach($second);
         $this->assertEqualsCanonicalizing([$areaContact->id, $second->id], $withoutOwn->fresh()->effectiveContacts()->pluck('id')->all());
         $this->assertSame([$siteContact->id], $withOwn->fresh()->effectiveContacts()->pluck('id')->all());
+
+        // A COW code can have several direct contact persons too, set on the form; the area's stay apart.
+        $this->admin();
+        $other = WorkSiteContact::factory()->create(['first_name' => 'Cleo', 'last_name' => 'Site']);
+        Livewire::test(EditWorkSite::class, ['record' => $withOwn->getRouteKey()])
+            ->fillForm(['contacts' => [$siteContact->id, $other->id]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $withOwn = $withOwn->fresh();
+        $this->assertEqualsCanonicalizing([$siteContact->id, $other->id], $withOwn->effectiveContacts()->modelKeys());
+        $this->assertEqualsCanonicalizing([$siteContact->id, $other->id, $areaContact->id, $second->id], $withOwn->allContacts()->modelKeys());
     }
 
     #[Test]

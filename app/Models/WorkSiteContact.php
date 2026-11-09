@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A contact person for work sites, often from the building owner or a subcontractor.
@@ -27,11 +26,13 @@ class WorkSiteContact extends Model
     }
 
     /**
-     * @return HasMany<WorkSite, $this>
+     * The COW sites this person is a direct contact of.
+     *
+     * @return BelongsToMany<WorkSite, $this>
      */
-    public function workSites(): HasMany
+    public function workSites(): BelongsToMany
     {
-        return $this->hasMany(WorkSite::class);
+        return $this->belongsToMany(WorkSite::class);
     }
 
     /**

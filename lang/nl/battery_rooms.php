@@ -45,6 +45,8 @@ return [
     'quantities_help' => 'Vul de hoeveelheden in; lege velden worden als 0 afgedrukt, zoals in de Excel.',
     'checklist_help' => 'De lijst is overal dezelfde. Vink OK aan of laat leeg voor NOK, en vul de te nemen actie in zoals de klant ze doorgeeft.',
     'files_help' => 'Foto\'s van het lokaal, de ventilatieberekening en het keuringsverslag van BTV.',
+    'default_description' => 'Batterijlokaal',
+    'default_description_after' => 'Batterijlokaal na :reference',
     'follow_up_note' => 'Batterijlokaal na de vervanging van de batterijen in :reference.',
     'units' => ['m' => 'm', 'st' => 'st', 'u' => 'u'],
     'doc' => [

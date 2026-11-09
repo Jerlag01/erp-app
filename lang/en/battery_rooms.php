@@ -46,6 +46,8 @@ return [
     'quantities_help' => 'Fill in the quantities; empty fields are printed as 0, as in the Excel.',
     'checklist_help' => 'The list is the same everywhere. Tick OK or leave empty for NOK, and fill in the action to take as the client supplies it.',
     'files_help' => 'Photos of the room, the ventilation calculation and the BTV inspection report.',
+    'default_description' => 'Battery room',
+    'default_description_after' => 'Battery room after :reference',
     'follow_up_note' => 'Battery room after the battery replacement in :reference.',
     'units' => ['m' => 'm', 'st' => 'pcs', 'u' => 'h'],
     'doc' => [

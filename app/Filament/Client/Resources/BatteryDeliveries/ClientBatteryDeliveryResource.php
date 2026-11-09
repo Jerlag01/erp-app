@@ -9,16 +9,16 @@ use BackedEnum;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * The battery deliveries: project, order confirmation, battery model, pieces, planned and actual delivery
- * date, when the installation is planned and whether (and when) the project was executed. The cost, the
- * internal notes and the delivery documents are never shown.
+ * The battery deliveries still to come: project, order confirmation, battery model, pieces, planned
+ * delivery date, when the installation is planned and whether (and when) the project was executed. A
+ * delivery leaves this list once it is ticked "delivered". The cost, the internal notes and the delivery
+ * documents are never shown.
  */
 class ClientBatteryDeliveryResource extends ClientResource
 {
@@ -59,8 +59,10 @@ class ClientBatteryDeliveryResource extends ClientResource
     {
         $user = ClientPortal::user();
 
-        // Deliveries follow their project: only those of the projects the user sees.
+        // Deliveries follow their project: only those of the projects the user sees, and only until they
+        // are delivered (ticked "delivered" by the employees): the client's list holds what is still to come.
         return BatteryDelivery::query()
+            ->where('delivered', false)
             ->with(['project' => fn ($query) => $query->with(['workSite', 'batteryDossier'])->withMin('planningItems', 'date'), 'batteryModel'])
             ->whereHas('project', fn (Builder $query) => $user ? $user->restrictProjects($query) : $query->whereRaw('1 = 0'));
     }
@@ -102,15 +104,6 @@ class ClientBatteryDeliveryResource extends ClientResource
                     ->date('d/m/Y')
                     ->sortable()
                     ->placeholder('—'),
-                // Ticked in the employees' delivery overview ("delivered"), with the date it was ticked.
-                IconColumn::make('delivered')
-                    ->label(__('erp.client_portal.delivered'))
-                    ->boolean(),
-                TextColumn::make('delivered_at')
-                    ->label(__('erp.client_portal.actual_delivery'))
-                    ->date('d/m/Y')
-                    ->sortable()
-                    ->placeholder('—'),
                 TextColumn::make('installation_planned')
                     ->label(__('erp.client_portal.installation_planned'))
                     ->state(fn (BatteryDelivery $record): ?string => $record->plannedInstallationDate()?->format('d/m/Y'))
@@ -124,7 +117,6 @@ class ClientBatteryDeliveryResource extends ClientResource
                     ->placeholder('—'),
             ])
             ->filters([
-                TernaryFilter::make('delivered')->label(__('erp.client_portal.delivered')),
                 TernaryFilter::make('project_executed')
                     ->label(__('erp.client_portal.installation_executed'))
                     ->queries(

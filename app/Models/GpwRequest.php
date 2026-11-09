@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * requester plans a team in that period.
  */
 #[Fillable([
-    'project_id', 'requested_by', 'work_site_contact_id', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
+    'project_id', 'requested_by', 'work_site_contact_id', 'contact_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
     'status', 'source', 'mailed_at', 'decided_at', 'decided_by_client_user_id', 'decided_by_name', 'decision_note', 'team_id', 'planned_at', 'planned_by',
 ])]
 class GpwRequest extends Model
@@ -113,6 +113,7 @@ class GpwRequest extends Model
     {
         return [
             'status' => GpwStatus::class,
+            'contact_ids' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
             'mailed_at' => 'datetime',

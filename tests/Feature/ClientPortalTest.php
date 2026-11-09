@@ -119,7 +119,7 @@ class ClientPortalTest extends TestCase
     }
 
     #[Test]
-    public function battery_deliveries_show_delivery_planned_installation_and_execution_as_the_employees_record_them(): void
+    public function battery_deliveries_show_planned_installation_and_execution_and_leave_the_list_once_delivered(): void
     {
         $this->travelTo('2026-10-12 09:15:00');
         $delivery = BatteryDelivery::factory()->create(['order_confirmation' => '4141234']);
@@ -127,23 +127,14 @@ class ClientPortalTest extends TestCase
         $this->client([ClientPortal::BATTERY_DELIVERIES, ClientPortal::ALL_PROJECTS]);
 
         Livewire::test(ListClientBatteryDeliveries::class)
-            ->assertTableColumnStateSet('delivered', false, $delivery)
-            ->assertTableColumnStateSet('delivered_at', null, $delivery)
+            ->assertCanSeeTableRecords([$delivery])
             ->assertTableColumnStateSet('installation_planned', null, $delivery)
             ->assertTableColumnStateSet('project.executed_at', null, $delivery);
 
-        // Ticked "delivered" in the employees' overview: delivered with that day (this was not shown before).
-        $delivery->markDelivered(User::factory()->create());
         // Planned: first day in the planning, until the dossier has an execution date.
         PlanningItem::factory()->forProject($project)->create(['date' => '2026-10-20']);
         PlanningItem::factory()->forProject($project)->create(['date' => '2026-10-21']);
-
-        Livewire::test(ListClientBatteryDeliveries::class)
-            ->assertTableColumnStateSet('delivered', true, $delivery)
-            ->assertTableColumnFormattedStateSet('delivered_at', '12/10/2026', $delivery)
-            ->assertTableColumnStateSet('installation_planned', '20/10/2026', $delivery)
-            ->filterTable('delivered', true)
-            ->assertCanSeeTableRecords([$delivery]);
+        Livewire::test(ListClientBatteryDeliveries::class)->assertTableColumnStateSet('installation_planned', '20/10/2026', $delivery);
 
         BatteryDossier::factory()->create(['project_id' => $project->id, 'execution_date' => '2026-10-22']);
         $this->travelTo('2026-10-22 16:30:00');
@@ -152,6 +143,11 @@ class ClientPortalTest extends TestCase
         Livewire::test(ListClientBatteryDeliveries::class)
             ->assertTableColumnStateSet('installation_planned', '22/10/2026', $delivery)
             ->assertTableColumnFormattedStateSet('project.executed_at', '22/10/2026', $delivery);
+
+        // Ticked "delivered" in the employees' overview: it leaves the client's list (the employees still see it).
+        $delivery->markDelivered(User::factory()->create());
+        Livewire::test(ListClientBatteryDeliveries::class)->assertCanNotSeeTableRecords([$delivery]);
+        $this->assertTrue($delivery->fresh()->delivered);
 
         // The date stays while invoicing, and goes when the project is set back.
         $project->refresh()->update(['status' => ProjectStatus::InvoicingToDo]);
@@ -316,9 +312,9 @@ class ClientPortalTest extends TestCase
     public function a_client_sees_only_their_own_projects_unless_they_may_see_all(): void
     {
         $contact = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Janssens', 'company' => 'Proximus']);
-        $ownSite = WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_contact_id' => $contact->id]);
-        $areaSite = WorkSite::factory()->create(['cow_code' => '02E23', 'work_site_contact_id' => null, 'work_site_area_id' => WorkSiteArea::factory()->hasAttached($contact, [], 'contacts')->create()->id]);
-        $otherSite = WorkSite::factory()->create(['cow_code' => '03XYZ', 'work_site_contact_id' => WorkSiteContact::factory()->create()->id]);
+        $ownSite = WorkSite::factory()->hasAttached($contact, [], 'contacts')->create(['cow_code' => '02GAM']);
+        $areaSite = WorkSite::factory()->create(['cow_code' => '02E23', 'work_site_area_id' => WorkSiteArea::factory()->hasAttached($contact, [], 'contacts')->create()->id]);
+        $otherSite = WorkSite::factory()->hasAttached(WorkSiteContact::factory(), [], 'contacts')->create(['cow_code' => '03XYZ']);
 
         $atOwnSite = Project::factory()->inCategory('604')->for($ownSite)->create();
         $atAreaSite = Project::factory()->inCategory('610')->for($areaSite)->create();
@@ -367,7 +363,7 @@ class ClientPortalTest extends TestCase
     {
         Notification::fake();
         $contact = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Janssens', 'company' => 'Proximus', 'email' => 'marc@proximus.example']);
-        WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_contact_id' => $contact->id]);
+        WorkSite::factory()->hasAttached($contact, [], 'contacts')->create(['cow_code' => '02GAM']);
         $project = Project::factory()->inCategory('604')->create();
         $this->actingAs(User::factory()->admin()->create());
         Filament::setCurrentPanel('admin');

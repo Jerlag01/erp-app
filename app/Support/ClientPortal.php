@@ -37,6 +37,9 @@ class ClientPortal
     /** Follow the as-builts of the projects the user sees, download them when finished and hand in files. */
     public const ASBUILT = 'asbuilt';
 
+    /** The documents of finished battery replacements (604, from "to be invoiced"): see BatteryReports. */
+    public const BATTERY_REPORTS = 'battery_reports';
+
     public const BATTERY_DELIVERIES = 'battery_deliveries';
 
     public const CHARGING_STATIONS = 'charging_stations';
@@ -54,7 +57,7 @@ class ClientPortal
     public const HIDDEN_FILE_SECTIONS = [ProjectFileSection::Invoices, ProjectFileSection::Schematics, ProjectFileSection::Plans];
 
     public const PERMISSIONS = [
-        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::ASBUILT, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
+        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::ASBUILT, self::BATTERY_REPORTS, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
     ];
 
     /**

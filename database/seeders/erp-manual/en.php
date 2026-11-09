@@ -641,7 +641,7 @@ MD,
             'body' => <<<'MD'
 ## What is it for?
 
-The client's work sites, each with a **COW code** (e.g. `02GAM`), address, building type, area, contact person, photos and remarks.
+The client's work sites, each with a **COW code** (e.g. `02GAM`), address, building type, area, contact persons, photos and remarks.
 
 ## Where?
 
@@ -656,7 +656,7 @@ The client's work sites, each with a **COW code** (e.g. `02GAM`), address, build
 ## Areas and contact persons
 
 - An **area** groups work sites and has **one or more contact persons**.
-- A work site can have its own contact person. If it has none, the contact persons of its area apply.
+- A work site (COW code) can have **one or more contact persons of its own**, besides those of its area. If it has none, the contact persons of its area apply.
 - A contact person has a **language** (NL, FR or EN): mails such as a GPW request go in that language.
 
 ## Where is it used?
@@ -688,7 +688,9 @@ Offer → Waiting for PO → To be planned → Planned → To be executed → In
 ## On a project
 
 - The client's **PO numbers** (10 digits, several possible).
+- Every new project gets a **short description** (required): the client sees it in their portal under the category number.
 - Tabs for **documents, photos, plans, schematics, extra files, parts, offers and invoices**. Files have versions.
+- A **604** also has the tab **Waste report**: upload the waste report (PDF) there once you have it. The client sees it with the project's documents in their portal.
 - **Project leaders** and **assigned teams** decide who sees the project.
 - For 610–650 a **progress bar** shows the steps (request, site visit, offer, PO, … up to handed over); tick steps yourself or they are ticked automatically. Once **PO received** is ticked, **"Add PO number"** adds a PO number at any moment (ticking the step without a PO number opens that window straight away).
 - **Copy** starts a new project from this one.
@@ -703,7 +705,7 @@ This permission belongs to **no role**: an administrator ticks it in a **user's 
 
 ## Permissions
 
-Separate permissions for viewing, creating, editing, deleting, files, parts, PDFs, copying and requesting a GPW. Offers and invoices are only visible with the project finance permissions or as project leader.
+Separate permissions for viewing, creating, editing, deleting, files, parts, PDFs, copying, requesting a GPW and deleting GPW requests. Offers and invoices are only visible with the project finance permissions or as project leader.
 MD,
         ],
 
@@ -717,11 +719,11 @@ Asking the client for permission to work on a site during a given **period**, an
 ## Requesting a GPW
 
 1. Open a project with the status **To be executed**.
-2. Click **"Request GPW"**. You see who the request goes to.
+2. Click **"Request GPW"** and tick **who** the request goes to: the COW code's own contact persons are ticked, you can add those of the area (only people with an e-mail address).
 3. Choose the **period** (from – until) and optionally add **remarks** (access, keys, outages).
 4. Click **Send request**.
 
-The request is e-mailed to the **contact person(s) of the COW site** (or of its area), each in **their own language**, with you in copy. If the site has no contact person with an e-mail address, fill one in on the work site or area first.
+The request is e-mailed to the **chosen contact persons**, each in **their own language**, with you in copy. **Resend** sends it to the same people. If the site has no contact person with an e-mail address, fill one in on the work site or area first.
 
 ## The client approves
 
@@ -737,6 +739,7 @@ In the project's **GPW requests** tab, click **Plan** on the approved request: c
 ## Permissions and templates
 
 - Requesting: the permission **Projects → Request GPW**.
+- Deleting: with the permission **Projects → Delete GPW requests (at any moment)** you delete a GPW request whatever its status (also approved or planned), in the overview or on the project. What is already in the planning stays.
 - The mails (request, approved, refused) are edited under **E-mail templates**.
 
 ## Overview and adding by hand
@@ -799,7 +802,7 @@ The complete dossier for replacing batteries on **604 projects**: input, deliver
 
 Under **Battery deliveries** you follow up per project the order confirmation, type, quantity and planned delivery date, and tick **delivered**.
 
-In the client portal the client sees per delivery whether it is **delivered** with the **actual delivery date** (the day of the tick), when the **installation is planned** (the execution date of the battery dossier, or else the first day in the planning) and an **executed** check mark with the date the project went to *executed*.
+In the client portal the client sees the deliveries **still to come**: once a delivery is ticked **delivered**, it leaves their list (you still see it). They see when the **installation is planned** (the execution date of the battery dossier, or else the first day in the planning) and an **executed** check mark with the date the project went to *executed*.
 
 With **Documents** you add three files per delivery: the **order** to the supplier, the supplier's **order confirmation** and the **delivery note** on arrival. They are also on the project (tab *Battery deliveries*). They are internal: never visible in the client portal, and only with the permissions **See and download delivery documents** and **Upload delivery documents**.
 
@@ -967,9 +970,9 @@ Per project an **as-built** with all files per category, the inspection by **Nor
 
 ## How is an as-built made?
 
-As soon as a project gets the status **Executed**, the as-built is made automatically with the status **In progress**. Not for the excluded categories (by default 600, 604, 605, 606, 607 and 608.1; set under Settings → General). The **standard files** of the project's COW code, the external influences and the general standard files are added straight away.
+As soon as a project gets the status **To be executed** (or later, when that step was skipped), the as-built is made automatically with the status **In progress**. Not for the excluded categories (by default 600, 604, 605, 606, 607 and 608.1; set under Settings → General). The **standard files** of the project's COW code, the external influences and the general standard files are added straight away.
 
-The **Create as-built** button on the project (permission *As-built → Manage*) makes the as-built earlier, with the same standard files and workflow. When the project then becomes *Executed*, no second one is made. Each as-built shows whether it was made automatically or by hand (and by whom).
+The **Create as-built** button on the project (permission *As-built → Manage*) makes the as-built earlier, with the same standard files and workflow. When the project then becomes *To be executed*, no second one is made. Each as-built shows whether it was made automatically or by hand (and by whom).
 
 ## Categories
 
@@ -992,7 +995,7 @@ With the **Reopen** permission you reopen a finished as-built.
 
 ## The client
 
-In the client portal (permission **As-builts**) the client follows the status, downloads the ZIP and hands in files: evacuation routes, plans, external influences, ICC and Lmax, or everything in one ZIP in the **general zone**. The project leaders are notified.
+In the client portal (permission **As-builts**) the client follows the status, sees and downloads **every file** of the as-built per category (also while it is still in progress, not only once it is closed), downloads the ZIP at the end and hands in files: evacuation routes, plans, external influences, ICC and Lmax, or everything in one ZIP in the **general zone**. The project leaders are notified.
 
 ## Permissions
 
@@ -1223,7 +1226,7 @@ MD,
             'body' => <<<'MD'
 ## What is it for?
 
-A separate portal for the client (e.g. Proximus managers) with a **read-only overview** of their projects, GPW requests, battery deliveries, charging stations and 4G routers. **Prices are never shown.**
+A separate portal for the client (e.g. Proximus managers) with a **read-only overview** of their projects, GPW requests, as-builts, battery dossiers, battery deliveries, charging stations and 4G routers. Prices are not shown, except in the invoice request of a battery dossier.
 
 ## Where?
 
@@ -1234,7 +1237,7 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 
 1. Fill in name, e-mail, company and **language**.
 2. Optionally link a **contact person** (search by name or COW code): the user sees the projects at that contact person's COW sites. Also add separate **assigned projects**.
-3. Tick what they may see: projects (with the **categories**), **GPW requests**, battery deliveries, charging stations, 4G routers.
+3. Tick what they may see: projects (with the **categories**), **GPW requests**, as-builts, **battery dossiers (604)**, battery deliveries, charging stations, 4G routers.
 4. Keep **"Send welcome mail"** switched on: the user gets a mail in their language and chooses their own password.
 
 ## What does the client see?
@@ -1243,6 +1246,9 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 - Passwords, recovery codes, router logins and VPN files only with the 🔒 permissions.
 - Charging stations and routers without a COW code (e.g. at a third-party client) never appear in the portal.
 - Under **GPW requests** they approve or refuse requests.
+- In the **project list** the project's description is shown under the category number.
+- On the **dashboard** they see per **area** which share of their projects is open and which is closed (in percent, compared to all projects of that area).
+- Under **Battery dossiers** (permission *Battery dossiers (604)*) every 604 project shows up from **To be invoiced**, with the COW code and description. Per project: the **photos** of the battery dossier, the **measurement report**, **delivery note**, **visual inspection** and **invoice request** (PDF, made from the dossier) and the **waste report** you upload on the project. Client users with the *Projects* permission got this permission automatically.
 
 The mails (welcome, new password) are edited under **E-mail templates**.
 

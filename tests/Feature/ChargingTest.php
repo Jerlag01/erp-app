@@ -268,7 +268,7 @@ class ChargingTest extends TestCase
             ->fillForm([
                 'project_category_id' => $category, 'location_type' => SiteLocationType::Other->value, 'status' => 'offer',
                 'client_name' => 'Piet Peeters', 'client_company' => 'Fluvius', 'street' => 'Brusselsesteenweg', 'house_number' => '199',
-                'postal_code' => '9090', 'city' => 'Melle',
+                'postal_code' => '9090', 'city' => 'Melle', 'short_description' => 'Laadpaal Fluvius',
             ])
             ->call('create')
             ->assertHasNoFormErrors();

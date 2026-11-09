@@ -104,13 +104,28 @@ class AsbuiltTest extends TestCase
     }
 
     #[Test]
+    public function the_asbuilt_is_made_when_the_project_is_to_be_executed(): void
+    {
+        $project = Project::factory()->inCategory('610')->for($this->site)->create(['status' => ProjectStatus::Planned]);
+        $this->assertNull($project->asbuilt, 'Not yet while it is planned.');
+
+        $project->update(['status' => ProjectStatus::ToBeExecuted]);
+        $this->assertNotNull($project->fresh()->asbuilt);
+        $this->assertSame(Asbuilt::ORIGIN_AUTOMATIC, $project->fresh()->asbuilt->origin);
+
+        // Made straight away at "to be executed" too.
+        $this->assertNotNull(Project::factory()->inCategory('620')->for($this->site)->create(['status' => ProjectStatus::ToBeExecuted])->asbuilt);
+        $this->assertNull(Project::factory()->inCategory('620')->for($this->site)->create(['status' => ProjectStatus::Ordered])->asbuilt);
+    }
+
+    #[Test]
     public function files_are_added_per_category_and_the_btv_report_closes_it_into_a_zip_for_the_client(): void
     {
         $technical = $this->library(AsbuiltCategory::TechnicalDocuments, null, 'datasheet.pdf');
         $project = $this->executedProject();
         $asbuilt = $project->asbuilt;
         $contact = WorkSiteContact::factory()->create();
-        $this->site->update(['work_site_contact_id' => $contact->id]);
+        $this->site->contacts()->attach($contact);
         $client = ClientUser::factory()->withPermissions([ClientPortal::PROJECTS, ClientPortal::ASBUILT])->create(['email' => 'pm@proximus.example', 'locale' => 'fr', 'work_site_contact_id' => $contact->id]);
         $this->actingAs($this->manager());
 
@@ -178,7 +193,7 @@ class AsbuiltTest extends TestCase
 
         // The client of the project hands in a ZIP in the general zone and plans per category; the leader is told.
         $contact = WorkSiteContact::factory()->create();
-        $this->site->update(['work_site_contact_id' => $contact->id]);
+        $this->site->contacts()->attach($contact);
         $client = ClientUser::factory()->withPermissions([ClientPortal::PROJECTS, ClientPortal::ASBUILT])->create(['work_site_contact_id' => $contact->id, 'name' => 'Proximus PM']);
         $this->actingAs($client, ClientPortal::GUARD);
         Filament::setCurrentPanel(ClientPortal::PANEL);
@@ -193,6 +208,13 @@ class AsbuiltTest extends TestCase
 
         $this->assertSame(2, $asbuilt->files()->whereNotNull('uploaded_by_client_user_id')->count());
         $this->assertSame(2, $leader->notifications()->count());
+
+        // The client also sees and downloads what the employees put in, while the as-built is still open.
+        Storage::disk('local')->put('asbuilt/'.$asbuilt->id.'/meetrapport.pdf', 'pdf');
+        [$employeeFile] = app(Asbuilts::class)->addFiles($asbuilt, AsbuiltCategory::BtvReports->value, ['asbuilt/'.$asbuilt->id.'/meetrapport.pdf'], [], $leader);
+        $this->assertFalse($asbuilt->fresh()->isClosed());
+        Livewire::test(ViewClientAsbuilt::class, ['record' => $asbuilt->getRouteKey()])->assertSee('meetrapport.pdf')->assertSee('icc.xlsx');
+        $this->get(route('client.asbuilt.file', $employeeFile))->assertOk()->assertDownload('meetrapport.pdf');
 
         // Categories the client may not hand in are refused.
         Livewire::test(ViewClientAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
@@ -246,7 +268,7 @@ class AsbuiltTest extends TestCase
     public function an_asbuilt_made_with_the_button_is_not_made_again_when_the_project_is_executed(): void
     {
         $evacuation = $this->library(AsbuiltCategory::EvacuationRoutes, $this->site, 'evacuatie.pdf');
-        $project = Project::factory()->inCategory('620')->for($this->site)->create(['status' => ProjectStatus::ToBeExecuted]);
+        $project = Project::factory()->inCategory('620')->for($this->site)->create(['status' => ProjectStatus::Planned]);
         $project->teams()->attach($this->team);
         $manager = $this->manager();
 
@@ -264,8 +286,9 @@ class AsbuiltTest extends TestCase
         $this->assertTrue($asbuilt->creator->is($manager));
         $this->assertSame([$evacuation->id], $asbuilt->files()->pluck('asbuilt_library_file_id')->all());
 
-        // The button is gone, and executing the project keeps that one as-built.
+        // The button is gone, and "to be executed" (where it is made automatically) keeps that one as-built.
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('createAsbuilt')->assertActionVisible('asbuilt');
+        $project->refresh()->update(['status' => ProjectStatus::ToBeExecuted]);
         $project->refresh()->update(['status' => ProjectStatus::Executed]);
         $this->assertSame(1, Asbuilt::query()->where('project_id', $project->id)->count());
         $this->assertSame($asbuilt->id, $project->fresh()->asbuilt->id);

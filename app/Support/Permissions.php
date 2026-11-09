@@ -35,6 +35,7 @@ namespace App\Support;
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks;
  * "timesheets.verify_interim" verifies the weeks of interims before they go to their interim office.
+ * "projects.gpw_delete" deletes GPW requests of the projects the user sees, whatever their status.
  * "charging" covers the charging stations, "charging.secrets" shows their passwords and recovery codes.
  * "routers" covers the 4G routers, "routers.secrets" shows their login credentials and VPN files. The latter is
  * one of the EXPLICIT permissions: administrator roles do not get it automatically, it has to be ticked
@@ -82,7 +83,7 @@ class Permissions
         'it_master_data' => ['module' => Modules::IT, 'abilities' => ['view', 'create', 'update', 'delete']],
         'work_sites' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete', 'change_type', 'remarks']],
         'work_site_master_data' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf', 'copy', 'gpw', 'intervention_po', 'all_teams']],
+        'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf', 'copy', 'gpw', 'gpw_delete', 'intervention_po', 'all_teams']],
         'project_finance' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'manage']],
         'knowledge_base' => ['module' => Modules::KNOWLEDGE_BASE, 'abilities' => ['create', 'update', 'delete', 'download_pdf']],
         'waste' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],

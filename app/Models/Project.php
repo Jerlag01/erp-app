@@ -169,6 +169,14 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function wasteReports(): HasMany
+    {
+        return $this->filesIn(ProjectFileSection::WasteReports);
+    }
+
+    /**
      * @return HasMany<ProjectPart, $this>
      */
     public function parts(): HasMany
@@ -461,10 +469,6 @@ class Project extends Model
                 $project->cow_code = null;
             }
 
-            if (! $category->has_short_description) {
-                $project->short_description = null;
-            }
-
             if (! $project->isThirdParty() && ($project->isDirty('work_site_id') || blank($project->cow_code))) {
                 $project->cow_code = $project->workSite?->cow_code ?? $project->cow_code;
             }
@@ -484,8 +488,8 @@ class Project extends Model
         static::created(function (self $project): void {
             ProjectProgress::sync($project);
 
-            // Executed: the as-built of the project starts (not for the excluded categories).
-            if ($project->status === ProjectStatus::Executed) {
+            // From "to be executed" on: the as-built of the project starts (not for the excluded categories).
+            if (Asbuilts::startsAt($project->status)) {
                 app(Asbuilts::class)->createFor($project);
             }
 
@@ -516,7 +520,7 @@ class Project extends Model
 
             ProjectProgress::sync($project);
 
-            if ($project->status === ProjectStatus::Executed) {
+            if (Asbuilts::startsAt($project->status)) {
                 app(Asbuilts::class)->createFor($project);
             }
         });

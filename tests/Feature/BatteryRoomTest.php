@@ -240,12 +240,13 @@ class BatteryRoomTest extends TestCase
         $site = $this->site('1-VLA', '02GAM', '9000');
 
         Livewire::test(CreateBatteryRoom::class)
-            ->fillForm(['work_site_id' => $site->id, 'room_number' => 'B-0.12'])
+            ->fillForm(['work_site_id' => $site->id, 'room_number' => 'B-0.12', 'short_description' => 'Batterijlokaal kelder'])
             ->call('create')
             ->assertHasNoFormErrors();
 
         $room = BatteryRoomDossier::query()->latest('id')->firstOrFail();
         $project = $room->project;
+        $this->assertSame('Batterijlokaal kelder', $project->short_description);
         $this->assertSame(['609', '02GAM', ProjectStatus::WaitingForPo, 'B-0.12'], [$project->category->code, $project->cow_code, $project->status, $room->room_number]);
         $this->assertTrue($project->isLedBy($user));
         $this->assertTrue($project->isVisibleTo($user));
@@ -274,6 +275,8 @@ class BatteryRoomTest extends TestCase
         $this->assertNull($battery->archived_at);
         $room = Project::query()->where('source_project_id', $battery->id)->sole();
         $this->assertSame(['604-0012-14EIN', '609-0012-14EIN'], [$battery->reference, $room->reference]);
+        // The 609 gets a description (the 604 has none here): "Batterijlokaal na …".
+        $this->assertSame(__('battery_rooms.default_description_after', ['reference' => '604-0012-14EIN'], 'nl'), $room->short_description);
         $this->assertEqualsCanonicalizing(['Kast.jpg', '604-0012-14ein-01.jpg', '604-0012-14ein-02.png'], $room->filesIn(ProjectFileSection::Images)->pluck('name')->all());
         $this->assertSame(['b'], [Storage::disk('local')->get($room->filesIn(ProjectFileSection::Images)->where('name', '604-0012-14ein-02.png')->sole()->latestVersion->path)]);
         $diagram = $room->filesIn(ProjectFileSection::Schematics)->sole();

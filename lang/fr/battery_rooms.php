@@ -45,6 +45,8 @@ return [
     'quantities_help' => 'Indiquez les quantités ; les champs vides sont imprimés comme 0, comme dans l\'Excel.',
     'checklist_help' => 'La liste est partout la même. Cochez OK ou laissez vide pour NOK, et indiquez l\'action à entreprendre comme le client la communique.',
     'files_help' => 'Photos du local, le calcul de ventilation et le rapport de contrôle de BTV.',
+    'default_description' => 'Local batteries',
+    'default_description_after' => 'Local batteries après :reference',
     'follow_up_note' => 'Local batteries après le remplacement des batteries dans :reference.',
     'units' => ['m' => 'm', 'st' => 'pc', 'u' => 'h'],
     'doc' => [

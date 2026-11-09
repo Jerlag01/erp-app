@@ -47,10 +47,10 @@ class WorkSiteInfolist
                                 TextEntry::make('area.name')
                                     ->label(__('erp.resources.work_site_area.singular'))
                                     ->placeholder('—'),
-                                TextEntry::make('contact')
-                                    ->label(__('erp.fields.contact_person'))
+                                TextEntry::make('contacts')
+                                    ->label(__('erp.work_sites.contacts'))
                                     ->state(fn (WorkSite $record): ?string => $record->contactLabels())
-                                    ->helperText(fn (WorkSite $record): ?string => $record->contact === null && $record->area?->contacts->isNotEmpty() ? __('erp.work_sites.contact_from_area') : null)
+                                    ->helperText(fn (WorkSite $record): ?string => $record->contacts->isEmpty() && $record->area?->contacts->isNotEmpty() ? __('erp.work_sites.contact_from_area') : null)
                                     ->placeholder('—'),
                                 TextEntry::make('contact_phone')
                                     ->label(__('erp.fields.phone'))

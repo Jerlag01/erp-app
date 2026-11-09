@@ -1,7 +1,8 @@
-{{-- In the client portal: the steps of the as-built and what this client handed in, with an upload per category. --}}
+{{-- In the client portal: the steps of the as-built and every file in it per category (to download), with an upload where the client may hand in files. --}}
 @php
     $asbuilt = $getRecord();
     $groups = $this->clientFiles();
+    $uploadable = \App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt::uploadCategories($asbuilt);
     $size = fn (int $bytes) => \Illuminate\Support\Number::fileSize($bytes, precision: 1);
     $steps = [
         ['done' => true, 'label' => __('erp.asbuilt.steps.created'), 'date' => $asbuilt->created_at?->format('d/m/Y')],
@@ -23,15 +24,16 @@
 
     <x-filament::section :heading="__('erp.asbuilt.your_files')" :description="$asbuilt->isClosed() ? __('erp.asbuilt.closed_no_upload') : __('erp.asbuilt.client_upload_help')">
         <div style="display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));">
-            @foreach (\App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt::uploadCategories($asbuilt) as $key => $label)
+            @foreach (\App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt::visibleCategories($asbuilt) as $key => $label)
                 @php($files = $groups[$key] ?? [])
+                @continue($files === [] && ! array_key_exists($key, $uploadable))
                 <div style="padding: .75rem 1rem; border-radius: .75rem; border: 1px solid rgb(148 163 184 / .35);">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: .5rem;">
                         <strong>{{ $label }}</strong>
-                        @unless ($asbuilt->isClosed())
+                        @if (! $asbuilt->isClosed() && array_key_exists($key, $uploadable))
                             <x-filament::icon-button icon="heroicon-o-arrow-up-tray" size="sm" :label="__('erp.asbuilt.client_upload')" :tooltip="__('erp.asbuilt.client_upload')"
                                 wire:click="mountAction('upload', {{ \Illuminate\Support\Js::from(['category' => $key]) }})" />
-                        @endunless
+                        @endif
                     </div>
                     @forelse ($files as $file)
                         <div style="font-size: .85rem; margin-top: .35rem; overflow-wrap: anywhere;">

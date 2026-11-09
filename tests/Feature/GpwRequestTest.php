@@ -40,7 +40,7 @@ class GpwRequestTest extends TestCase
     protected function project(ProjectStatus $status = ProjectStatus::ToBeExecuted): Project
     {
         $this->contact ??= WorkSiteContact::factory()->create(['first_name' => 'Sophie', 'last_name' => 'Dubois', 'email' => 'sophie@proximus.example', 'locale' => 'fr']);
-        $site = WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_contact_id' => $this->contact->id]);
+        $site = WorkSite::factory()->hasAttached($this->contact, [], 'contacts')->create(['cow_code' => '02GAM']);
 
         return Project::factory()->inCategory('610')->for($site)->create(['status' => $status]);
     }
@@ -117,7 +117,7 @@ class GpwRequestTest extends TestCase
         $gpw = $this->gpw($project, $requester);
         Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->rendered['subject'] === 'GPW 02GAM '.$gpw->period());
 
-        $project->workSite->update(['work_site_contact_id' => null]);
+        $project->workSite->contacts()->detach();
         $this->expectException(ValidationException::class);
         $this->gpw($project->fresh(), $requester);
     }
@@ -163,7 +163,7 @@ class GpwRequestTest extends TestCase
         $project = $this->project();
         $requester = $this->requester($project);
         $gpw = $this->gpw($project, $requester);
-        $otherGpw = $this->gpw($other = Project::factory()->inCategory('610')->create(['status' => ProjectStatus::ToBeExecuted, 'work_site_id' => WorkSite::factory()->create(['work_site_contact_id' => WorkSiteContact::factory()->create()->id])->id]), $this->requester($other));
+        $otherGpw = $this->gpw($other = Project::factory()->inCategory('610')->create(['status' => ProjectStatus::ToBeExecuted, 'work_site_id' => WorkSite::factory()->hasAttached(WorkSiteContact::factory(), [], 'contacts')->create()->id]), $this->requester($other));
 
         $client = ClientUser::factory()->withPermissions([ClientPortal::PROJECTS, ClientPortal::GPW])->create(['work_site_contact_id' => $this->contact->id, 'name' => 'Sophie Dubois']);
         $this->actingAs($client, ClientPortal::GUARD);
@@ -245,7 +245,7 @@ class GpwRequestTest extends TestCase
         $noMail = WorkSiteContact::factory()->create(['email' => null]);
         $area = WorkSiteArea::factory()->create();
         $area->contacts()->attach([$dutch->id, $french->id, $noMail->id]);
-        $site = WorkSite::factory()->create(['work_site_contact_id' => null, 'work_site_area_id' => $area->id]);
+        $site = WorkSite::factory()->create(['work_site_area_id' => $area->id]);
         $project = Project::factory()->inCategory('610')->for($site)->create(['status' => ProjectStatus::ToBeExecuted]);
         $requester = $this->requester($project, email: 'jan@power.example');
 
@@ -265,5 +265,62 @@ class GpwRequestTest extends TestCase
         $this->actingAs($client, ClientPortal::GUARD);
         Filament::setCurrentPanel(ClientPortal::PANEL);
         Livewire::test(ListClientGpwRequests::class)->assertCanSeeTableRecords([$gpw]);
+    }
+
+    #[Test]
+    public function the_requester_chooses_among_the_sites_own_contacts_and_those_of_the_area(): void
+    {
+        Mail::fake();
+        $area = WorkSiteArea::factory()->create(['name' => '1-VLA']);
+        $areaContact = WorkSiteContact::factory()->create(['first_name' => 'Ann', 'last_name' => 'Area', 'email' => 'ann@proximus.example', 'locale' => 'nl']);
+        $area->contacts()->attach($areaContact);
+        $own = WorkSiteContact::factory()->create(['first_name' => 'Bert', 'last_name' => 'Site', 'email' => 'bert@proximus.example', 'locale' => 'nl']);
+        $second = WorkSiteContact::factory()->create(['first_name' => 'Cleo', 'last_name' => 'Site', 'email' => 'cleo@proximus.example', 'locale' => 'en']);
+        $withoutMail = WorkSiteContact::factory()->create(['email' => null]);
+        $site = WorkSite::factory()->for($area, 'area')->create(['cow_code' => '05ABC']);
+        $site->contacts()->attach([$own->id, $second->id, $withoutMail->id]);
+        $project = Project::factory()->inCategory('610')->for($site)->create(['status' => ProjectStatus::ToBeExecuted]);
+        $stranger = WorkSiteContact::factory()->create(['email' => 'other@example.com']);
+        $requester = $this->requester($project);
+        $this->actingAs($requester);
+        Filament::setCurrentPanel('app');
+
+        // Both own contacts are ticked; the area's contact can be added; people without e-mail are not offered.
+        $this->assertEqualsCanonicalizing([$own->id, $second->id], RequestGpw::contactsFor($project)->modelKeys());
+        $this->assertEqualsCanonicalizing([$own->id, $second->id, $areaContact->id], array_keys(RequestGpw::candidateOptions($project)));
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('requestGpw')
+            ->assertSchemaStateSet(['contact_ids' => [$own->id, $second->id]]);
+
+        $dates = ['starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeek()->addDay()->toDateString()];
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('requestGpw', [...$dates, 'contact_ids' => []])
+            ->assertHasActionErrors(['contact_ids']);
+        // Someone of another site cannot be chosen, not in the form and not by sending the id anyway.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('requestGpw', [...$dates, 'contact_ids' => [$second->id, $stranger->id]])
+            ->assertHasActionErrors(['contact_ids.1']);
+        $this->assertSame([$second->id], app(RequestGpw::class)->handle($project, $requester, [...$dates, 'contact_ids' => [$second->id, $stranger->id]])->contact_ids);
+        GpwRequest::query()->delete();
+        Mail::fake();
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('requestGpw', [...$dates, 'contact_ids' => [$second->id, $areaContact->id]])
+            ->assertHasNoActionErrors();
+
+        // Only the chosen people of this site and its area get it (each in their own language).
+        $gpw = GpwRequest::query()->sole();
+        $this->assertEqualsCanonicalizing([$second->id, $areaContact->id], $gpw->contact_ids);
+        Mail::assertSent(SystemMail::class, 2);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('cleo@proximus.example'));
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('ann@proximus.example'));
+        Mail::assertNotSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('bert@proximus.example') || $mail->hasTo('other@example.com'));
+
+        // Sending it again goes to the same people, also when the site's contacts changed meanwhile.
+        $site->contacts()->detach($second);
+        Mail::fake();
+        $this->assertTrue(app(RequestGpw::class)->mail($gpw->fresh()));
+        Mail::assertSent(SystemMail::class, 2);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('cleo@proximus.example'));
     }
 }

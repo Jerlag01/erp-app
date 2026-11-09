@@ -16,8 +16,9 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
 
 /**
- * One as-built in the client portal: its status, the ZIP once finished, and the upload zone for
- * the files the client provides (per category, or at once in the general zone, e.g. one ZIP).
+ * One as-built in the client portal: its status, every file in it per category (to download, also
+ * while the as-built is still open), the ZIP once finished, and the upload zone for the files the
+ * client provides (per category, or at once in the general zone, e.g. one ZIP).
  */
 class ViewClientAsbuilt extends ViewRecord
 {
@@ -41,17 +42,32 @@ class ViewClientAsbuilt extends ViewRecord
     }
 
     /**
-     * What this client handed in, per category.
+     * Every category the client sees: the general zone and the categories of this as-built.
+     *
+     * @return array<string, string>
+     */
+    public static function visibleCategories(Asbuilt $asbuilt): array
+    {
+        return [
+            AsbuiltCategory::GENERAL => __('erp.asbuilt.general_zone_client'),
+            ...collect($asbuilt->categories())->mapWithKeys(fn (AsbuiltCategory $category): array => [$category->value => $category->getLabel()])->all(),
+        ];
+    }
+
+    /**
+     * Every file of the as-built, per category: the client sees and downloads them all, not only what
+     * they handed in, and not only once the as-built is finished.
      *
      * @return array<string, list<AsbuiltFile>>
      */
     public function clientFiles(): array
     {
         return $this->getRecord()->files()
-            ->where(fn ($query) => $query
-                ->whereNotNull('uploaded_by_client_user_id')
-                ->orWhereHas('libraryFile', fn ($query) => $query->whereNotNull('uploaded_by_client_user_id')))
-            ->with('libraryFile', 'clientUploader')->get()->groupBy('category')->map->all()->all();
+            ->with('libraryFile', 'clientUploader')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (AsbuiltFile $file): bool => $file->storagePath() !== null)
+            ->groupBy('category')->map->values()->map->all()->all();
     }
 
     protected function getHeaderActions(): array

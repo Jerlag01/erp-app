@@ -33,6 +33,7 @@ use App\Support\ProjectProgress;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -172,7 +173,7 @@ class ViewProject extends ViewRecord
                         ->label(__('erp.resources.work_site.singular'))
                         ->relationship('workSite', 'cow_code')
                         ->searchable(),
-                    TextInput::make('short_description')->label(__('erp.projects.short_description'))->maxLength(255),
+                    TextInput::make('short_description')->label(__('erp.projects.short_description'))->maxLength(255)->required(),
                     Toggle::make('with_files')->label(__('erp.projects.copy.with_files')),
                 ])
                 ->action(function (Project $record, array $data, CopyProject $copy): void {
@@ -298,11 +299,21 @@ class ViewProject extends ViewRecord
                 ->visible(fn (Project $record): bool => Gate::allows('requestGpw', $record))
                 ->authorize(fn (Project $record): bool => Gate::allows('requestGpw', $record))
                 ->modalHeading(__('erp.gpw.request_heading'))
-                ->modalDescription(fn (Project $record): string => ($recipients = RequestGpw::recipientsText($record))
-                    ? __('erp.gpw.request_help', ['recipients' => $recipients])
+                ->modalDescription(fn (Project $record): string => RequestGpw::candidatesFor($record)->isNotEmpty()
+                    ? __('erp.gpw.request_help_choose')
                     : __('erp.gpw.errors.no_contact'))
                 ->modalSubmitActionLabel(__('erp.gpw.send'))
-                ->schema([
+                // The site's own contacts are ticked (or else those of the area); any of both can be chosen.
+                ->fillForm(fn (Project $record): array => ['contact_ids' => RequestGpw::contactsFor($record)->modelKeys()])
+                ->schema(fn (Project $record): array => [
+                    CheckboxList::make('contact_ids')
+                        ->label(__('erp.gpw.recipients'))
+                        ->options(RequestGpw::candidateOptions($record))
+                        ->descriptions(RequestGpw::candidateSources($record))
+                        ->required()
+                        ->validationMessages(['required' => __('erp.gpw.errors.no_recipient')])
+                        ->bulkToggleable()
+                        ->visible(RequestGpw::candidatesFor($record)->isNotEmpty()),
                     Grid::make(2)->schema([
                         DatePicker::make('starts_on')->label(__('erp.gpw.starts_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->required()->live(),
                         DatePicker::make('ends_on')->label(__('erp.gpw.ends_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->afterOrEqual('starts_on')->required(),

@@ -142,7 +142,7 @@ class ProjectController extends Controller
 
     protected function find(User $user, int $id): Project
     {
-        return self::teamProjects($user)->with(['category', 'workSite.contact', 'workSite.area.contacts', 'latestGpwRequest', 'leaders'])->findOrFail($id);
+        return self::teamProjects($user)->with(['category', 'workSite.contacts', 'workSite.area.contacts', 'latestGpwRequest', 'leaders'])->findOrFail($id);
     }
 
     /**

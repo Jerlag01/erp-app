@@ -7,6 +7,7 @@ use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\AsbuiltCategory;
 use App\Enums\AsbuiltStatus;
 use App\Enums\MailTemplateKey;
+use App\Enums\ProjectStatus;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Mail\SystemMail;
 use App\Models\Asbuilt;
@@ -32,8 +33,9 @@ use Throwable;
 use ZipArchive;
 
 /**
- * The as-built workflow: an as-built is made when a project becomes "executed" (not for the
- * excluded categories) with the standard files of its COW-code and the global ones; employees and the client add files;
+ * The as-built workflow: an as-built is made when a project becomes "to be executed" (or later, when that
+ * step was skipped; not for the excluded categories) with the standard files of its COW-code and the
+ * global ones; employees and the client add files, and the client sees and downloads every file meanwhile;
  * the Normec BTV inspection is planned; uploading the BTV report closes it into a ZIP with a folder
  * per category, which the client of the project downloads (and is told about by e-mail).
  */
@@ -52,6 +54,15 @@ class Asbuilts
         return array_values(array_map('strval', (array) settings()->get('asbuilt.excluded_categories', ['600', '604', '605', '606', '607', '608.1'])));
     }
 
+    /**
+     * The statuses at which the as-built of a project is made: "to be executed", or a later step of the
+     * works when "to be executed" was skipped.
+     */
+    public static function startsAt(?ProjectStatus $status): bool
+    {
+        return in_array($status, [ProjectStatus::ToBeExecuted, ProjectStatus::InProgress, ProjectStatus::Executed], true);
+    }
+
     public function appliesTo(Project $project): bool
     {
         return $this->enabled() && $project->category !== null && ! in_array((string) $project->category->code, self::excludedCategories(), true);
@@ -61,7 +72,7 @@ class Asbuilts
      * The as-built of a project, made when it does not exist yet, with the standard files: those of
      * its COW-code and the general ones (not the technical documents, which are picked by hand).
      * A project has one as-built: made by hand with the button ($by) or automatically when it is
-     * executed, whichever comes first; the other way then returns the existing one.
+     * to be executed, whichever comes first; the other way then returns the existing one.
      */
     public function createFor(Project $project, ?User $by = null): ?Asbuilt
     {

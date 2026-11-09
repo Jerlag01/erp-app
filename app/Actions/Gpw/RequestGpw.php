@@ -20,8 +20,9 @@ use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
- * Asks the contact person of the project's COW site for a GPW in a period: the request is stored and
- * mailed to the contact, in their language, with a copy to the requester. The mail links to a page
+ * Asks contact persons of the project's COW site for a GPW in a period: the requester picks them from the
+ * site's own contacts and those of its area; the request is stored with them and mailed to each, in
+ * their language, with a copy to the requester. The mail links to a page
  * where the contact approves or refuses it; client portal users who see the project can do so too.
  */
 class RequestGpw
@@ -30,14 +31,52 @@ class RequestGpw
     public bool $mailFailed = false;
 
     /**
-     * The contact persons a GPW request for this project goes to: the COW site's contact, or else the
-     * contacts of its area — those with an e-mail address.
+     * The contact persons ticked by default: the COW site's own contacts, or else the contacts of its
+     * area — those with an e-mail address.
      *
      * @return Collection<int, WorkSiteContact>
      */
     public static function contactsFor(Project $project): Collection
     {
         return ($project->workSite?->effectiveContacts() ?? new Collection)->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->values();
+    }
+
+    /**
+     * Everyone a GPW request for this project can be sent to: the site's own contacts and those of its
+     * area, with an e-mail address.
+     *
+     * @return Collection<int, WorkSiteContact>
+     */
+    public static function candidatesFor(Project $project): Collection
+    {
+        $project->loadMissing('workSite.contacts', 'workSite.area.contacts');
+
+        return ($project->workSite?->allContacts() ?? new Collection)->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->values();
+    }
+
+    /**
+     * The choices of the request window: "Sophie Dubois — sophie@… (FR)" by id.
+     *
+     * @return array<int, string>
+     */
+    public static function candidateOptions(Project $project): array
+    {
+        return self::candidatesFor($project)->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => $contact->fullName().' — '.$contact->email.' ('.strtoupper($contact->preferredLocale()).')'])->all();
+    }
+
+    /**
+     * Where each choice comes from: "COW-code 02GAM" or "Area 1-VLA".
+     *
+     * @return array<int, string>
+     */
+    public static function candidateSources(Project $project): array
+    {
+        $site = $project->workSite;
+        $own = $site?->contacts->modelKeys() ?? [];
+
+        return self::candidatesFor($project)->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => in_array($contact->id, $own, true)
+            ? __('erp.gpw.contact_of_site', ['cow' => $site?->cow_code])
+            : __('erp.gpw.contact_of_area', ['area' => $site?->area?->name])])->all();
     }
 
     /**
@@ -49,17 +88,24 @@ class RequestGpw
     }
 
     /**
-     * @param  array{starts_on: string, ends_on: string, remarks?: string|null}  $data
+     * @param  array{starts_on: string, ends_on: string, remarks?: string|null, contact_ids?: list<int|string>|null}  $data  without contact_ids: the default ones
      */
     public function handle(Project $project, User $actor, array $data): GpwRequest
     {
         abort_unless(Gate::forUser($actor)->allows('requestGpw', $project), 403);
 
-        $contacts = self::contactsFor($project);
+        if (self::candidatesFor($project)->isEmpty()) {
+            throw ValidationException::withMessages(['starts_on' => __('erp.gpw.errors.no_contact')]);
+        }
+
+        // Only people of this site or its area, whatever the form sends.
+        $contacts = array_key_exists('contact_ids', $data)
+            ? self::candidatesFor($project)->whereIn('id', array_map('intval', (array) $data['contact_ids']))->values()
+            : self::contactsFor($project);
         $contact = $contacts->first();
 
         if ($contact === null) {
-            throw ValidationException::withMessages(['starts_on' => __('erp.gpw.errors.no_contact')]);
+            throw ValidationException::withMessages(['contact_ids' => __('erp.gpw.errors.no_recipient')]);
         }
 
         $from = CarbonImmutable::parse($data['starts_on'])->startOfDay();
@@ -77,6 +123,7 @@ class RequestGpw
             'project_id' => $project->id,
             'requested_by' => $actor->id,
             'work_site_contact_id' => $contact->id,
+            'contact_ids' => $contacts->modelKeys(),
             'contact_name' => mb_substr($contacts->map(fn (WorkSiteContact $contact): string => $contact->fullName())->implode(', '), 0, 500),
             'contact_email' => mb_substr($contacts->pluck('email')->implode(', '), 0, 1000),
             'locale' => $contact->preferredLocale(),
@@ -107,7 +154,8 @@ class RequestGpw
 
     /**
      * One mail per contact person, each in their own language; the requester gets a copy of the first.
-     * The contacts are those of the site now, or else the addresses the request was first sent to.
+     * The contacts are those chosen for the request (with their e-mail address as it is now), or else
+     * the addresses the request was first sent to.
      */
     public function mail(GpwRequest $request): bool
     {
@@ -115,7 +163,11 @@ class RequestGpw
         $project = $request->project;
         $requester = $request->requester;
 
-        $recipients = self::contactsFor($project)->map(fn (WorkSiteContact $contact): array => [$contact->email, $contact->fullName(), $contact->preferredLocale()]);
+        $recipients = WorkSiteContact::query()
+            ->whereKey(filled($request->contact_ids) ? (array) $request->contact_ids : array_filter([$request->work_site_contact_id]))
+            ->get()
+            ->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))
+            ->map(fn (WorkSiteContact $contact): array => [$contact->email, $contact->fullName(), $contact->preferredLocale()]);
 
         if ($recipients->isEmpty()) {
             $recipients = collect(explode(',', $request->contact_email))->map(fn (string $email): array => [trim($email), $request->contact_name, $request->locale]);

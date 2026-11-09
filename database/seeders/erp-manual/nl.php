@@ -642,7 +642,7 @@ MD,
             'body' => <<<'MD'
 ## Waarvoor?
 
-De werflocaties van de klant, elk met een **COW-code** (bv. `02GAM`), adres, gebouwtype, area, contactpersoon, foto's en opmerkingen.
+De werflocaties van de klant, elk met een **COW-code** (bv. `02GAM`), adres, gebouwtype, area, contactpersonen, foto's en opmerkingen.
 
 ## Waar?
 
@@ -657,7 +657,7 @@ De werflocaties van de klant, elk met een **COW-code** (bv. `02GAM`), adres, geb
 ## Areas en contactpersonen
 
 - Een **area** groepeert werflocaties en heeft **een of meer contactpersonen**.
-- Een werflocatie kan een eigen contactpersoon hebben. Heeft ze er geen, dan gelden de contactpersonen van haar area.
+- Een werflocatie (COW-code) kan **een of meer eigen contactpersonen** hebben, naast de contactpersonen van haar area. Heeft ze er geen, dan gelden de contactpersonen van haar area.
 - Een contactpersoon heeft een **taal** (NL, FR of EN): mails zoals een GPW-aanvraag gaan in die taal.
 
 ## Waar wordt het gebruikt?
@@ -689,7 +689,9 @@ Offerte → Wacht op PO → Te plannen → Ingepland → Uit te voeren → In ui
 ## Op een project
 
 - **PO-nummers** van de klant (10 cijfers, meerdere mogelijk).
+- Elk nieuw project krijgt een **korte omschrijving** (verplicht): de klant ziet ze in zijn portaal onder het categorienummer.
 - Tabbladen voor **documenten, foto's, plannen, schema's, extra bestanden, onderdelen, offertes en facturen**. Bestanden hebben versies.
+- Een **604** heeft ook het tabblad **Afvalrapport**: upload daar het afvalrapport (PDF) zodra je het hebt. De klant ziet het bij de documenten van het project in zijn portaal.
 - **Projectleiders** en **toegewezen ploegen** bepalen wie het project ziet.
 - Voor 610–650 toont een **voortgangsbalk** de stappen (aanvraag, werfbezoek, offerte, PO, … tot overgedragen); vink stappen aan of ze worden automatisch aangevinkt. Is **PO ontvangen** aangevinkt, dan voeg je met **"PO-nummer toevoegen"** op elk moment een PO-nummer toe (bij het aanvinken zonder PO-nummer opent dat venster meteen).
 - **Kopiëren** start een nieuw project vanuit dit project.
@@ -704,7 +706,7 @@ Dit recht hoort bij **geen enkele rol**: een beheerder vinkt het aan bij de **ei
 
 ## Rechten
 
-Aparte rechten voor bekijken, aanmaken, bewerken, verwijderen, bestanden, onderdelen, PDF's, kopiëren en GPW aanvragen. Offertes en facturen zie je enkel met de financiële projectrechten of als projectleider.
+Aparte rechten voor bekijken, aanmaken, bewerken, verwijderen, bestanden, onderdelen, PDF's, kopiëren, GPW aanvragen en GPW-aanvragen verwijderen. Offertes en facturen zie je enkel met de financiële projectrechten of als projectleider.
 MD,
         ],
 
@@ -718,11 +720,11 @@ De klant toestemming vragen om in een bepaalde **periode** op een site te werken
 ## Een GPW aanvragen
 
 1. Open een project met de status **Uit te voeren**.
-2. Klik op **"GPW aanvragen"**. Je ziet naar wie de aanvraag gaat.
+2. Klik op **"GPW aanvragen"** en vink aan **naar wie** de aanvraag gaat: de eigen contactpersonen van de COW-code staan aangevinkt, de contactpersonen van de area kan je erbij kiezen (enkel wie een e-mailadres heeft).
 3. Kies de **periode** (van – tot en met) en vul eventueel **opmerkingen** in (toegang, sleutels, onderbrekingen).
 4. Klik op **Aanvraag versturen**.
 
-De aanvraag gaat per e-mail naar de **contactperso(o)n(en) van de COW-site** (of van de area), elk in **zijn eigen taal**, met jou in kopie. Heeft de site geen contactpersoon met e-mailadres, dan vul je die eerst in bij de werflocatie of area.
+De aanvraag gaat per e-mail naar de **gekozen contactpersonen**, elk in **zijn eigen taal**, met jou in kopie. **Opnieuw versturen** gaat naar dezelfde personen. Heeft de site (en haar area) geen contactpersoon met e-mailadres, dan vul je die eerst in bij de werflocatie of area.
 
 ## De klant keurt goed
 
@@ -738,6 +740,7 @@ In het tabblad **GPW-aanvragen** van het project klik je bij de goedgekeurde aan
 ## Rechten en sjablonen
 
 - Aanvragen: het recht **Projecten → GPW aanvragen**.
+- Verwijderen: met het recht **Projecten → GPW-aanvragen verwijderen (op elk moment)** verwijder je een GPW-aanvraag, wat haar status ook is (ook goedgekeurd of ingepland), in het overzicht of op het project. Wat al in de planning staat, blijft staan.
 - De mails (aanvraag, goedgekeurd, geweigerd) pas je aan bij **E-mailsjablonen**.
 
 ## Overzicht en manueel toevoegen
@@ -800,7 +803,7 @@ Het volledige dossier voor het vervangen van batterijen op **604-projecten**: in
 
 Bij **Overzicht levering batterijen** volg je per project de orderbevestiging, het type, het aantal en de geplande leveringsdatum op, en vink je **geleverd** aan.
 
-In het klantenportaal ziet de klant per levering of ze **geleverd** is met de **werkelijke leverdatum** (de dag van het vinkje), wanneer de **installatie gepland** is (de datum uitvoering van het batterijdossier, of anders de eerste dag in de planning) en een vinkje **uitgevoerd** met de datum waarop het project naar *uitgevoerd* ging.
+In het klantenportaal ziet de klant de leveringen die nog **moeten komen**: zodra een levering als **geleverd** aangevinkt is, verdwijnt ze uit zijn lijst (jij ziet ze nog wel). Hij ziet wanneer de **installatie gepland** is (de datum uitvoering van het batterijdossier, of anders de eerste dag in de planning) en een vinkje **uitgevoerd** met de datum waarop het project naar *uitgevoerd* ging.
 
 Met **Documenten** voeg je per levering drie bestanden toe: de **bestelling** aan de leverancier, de **orderbevestiging** van de leverancier en de **leveringsbon** bij aankomst. Ze staan ook op het project (tabblad *Batterijleveringen*). Ze zijn intern: nooit zichtbaar in het klantenportaal, en enkel met de rechten **Leveringsdocumenten zien en downloaden** en **Leveringsdocumenten uploaden**.
 
@@ -968,9 +971,9 @@ Per project een **as-built** met alle bestanden per categorie, de keuring door *
 
 ## Hoe ontstaat een as-built?
 
-Zodra een project de status **Uitgevoerd** krijgt, wordt de as-built automatisch aangemaakt met de status **In uitvoering**. Niet voor de uitgesloten categorieën (standaard 600, 604, 605, 606, 607 en 608.1; in te stellen bij Instellingen → Algemeen). De **standaardbestanden** van de COW-code van het project, de externe invloeden en de algemene standaardbestanden worden meteen toegevoegd.
+Zodra een project de status **Uit te voeren** krijgt (of later, als die stap overgeslagen werd), wordt de as-built automatisch aangemaakt met de status **In uitvoering**. Niet voor de uitgesloten categorieën (standaard 600, 604, 605, 606, 607 en 608.1; in te stellen bij Instellingen → Algemeen). De **standaardbestanden** van de COW-code van het project, de externe invloeden en de algemene standaardbestanden worden meteen toegevoegd.
 
-Met de knop **As-built aanmaken** op het project (recht *As-built → Beheren*) maak je de as-built al vroeger aan, met dezelfde standaardbestanden en werkwijze. Wordt het project daarna *Uitgevoerd*, dan wordt er geen tweede aangemaakt. Bij elke as-built staat of hij automatisch of manueel (en door wie) werd aangemaakt.
+Met de knop **As-built aanmaken** op het project (recht *As-built → Beheren*) maak je de as-built al vroeger aan, met dezelfde standaardbestanden en werkwijze. Wordt het project daarna *Uit te voeren*, dan wordt er geen tweede aangemaakt. Bij elke as-built staat of hij automatisch of manueel (en door wie) werd aangemaakt.
 
 ## Categorieën
 
@@ -993,7 +996,7 @@ Met het recht **Heropenen** zet je een afgeronde as-built terug open.
 
 ## De klant
 
-In het klantenportaal (recht **As-builts**) volgt de klant de status op, downloadt hij de ZIP en levert hij bestanden aan: evacuatiewegen, plannen, externe invloeden, ICC en Lmax, of alles in één ZIP in de **algemene zone**. De projectleiders krijgen daarvan een melding.
+In het klantenportaal (recht **As-builts**) volgt de klant de status op, ziet en downloadt hij **alle bestanden** van de as-built per categorie (ook terwijl ze nog loopt, niet pas na het afsluiten), downloadt hij op het einde de ZIP en levert hij bestanden aan: evacuatiewegen, plannen, externe invloeden, ICC en Lmax, of alles in één ZIP in de **algemene zone**. De projectleiders krijgen daarvan een melding.
 
 ## Rechten
 
@@ -1224,7 +1227,7 @@ MD,
             'body' => <<<'MD'
 ## Waarvoor?
 
-Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-lezen overzicht** van hun projecten, GPW-aanvragen, batterijleveringen, laadpalen en 4G-routers. **Prijzen worden nooit getoond.**
+Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-lezen overzicht** van hun projecten, GPW-aanvragen, as-builts, batterijdossiers, batterijleveringen, laadpalen en 4G-routers. Prijzen worden niet getoond, behalve in de factuuraanvraag van een batterijdossier.
 
 ## Waar?
 
@@ -1235,7 +1238,7 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 
 1. Vul naam, e-mail, bedrijf en **taal** in.
 2. Koppel eventueel een **contactpersoon** (zoek op naam of COW-code): de gebruiker ziet de projecten op de COW-sites van die contactpersoon. Voeg ook losse **toegewezen projecten** toe.
-3. Vink aan wat hij mag zien: projecten (met de **categorieën**), **GPW-aanvragen**, batterijleveringen, laadpalen, 4G-routers.
+3. Vink aan wat hij mag zien: projecten (met de **categorieën**), **GPW-aanvragen**, as-builts, **batterijdossiers (604)**, batterijleveringen, laadpalen, 4G-routers.
 4. Laat **"Welkomstmail sturen"** aan: de gebruiker krijgt een mail in zijn taal en kiest zelf zijn wachtwoord.
 
 ## Wat ziet de klant?
@@ -1244,6 +1247,9 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 - Wachtwoorden, herstelcodes, routerlogins en VPN-bestanden enkel met de 🔒-rechten.
 - Laadpalen en routers zonder COW-code (bv. bij een derde klant) verschijnen nooit in het portaal.
 - Bij **GPW-aanvragen** keurt hij aanvragen goed of weigert hij ze.
+- In de **projectenlijst** staat onder het categorienummer de omschrijving van het project.
+- Op het **dashboard** ziet hij per **area** welk deel van zijn projecten open is en welk deel afgesloten (in procent, tegenover alle projecten van die area).
+- Bij **Batterijdossiers** (recht *Batterijdossiers (604)*) staat elk 604-project vanaf **Te factureren**, met de COW-code en omschrijving. Per project: de **foto's** van het batterijdossier, het **meetrapport**, de **leveringsnota**, de **visuele keuring** en de **factuuraanvraag** (PDF, gemaakt uit het dossier) en het **afvalrapport** dat je op het project uploadt. Klantgebruikers met het recht *Projecten* kregen dit recht automatisch.
 
 De mails (welkom, nieuw wachtwoord) pas je aan bij **E-mailsjablonen**.
 

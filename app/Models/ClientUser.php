@@ -76,8 +76,8 @@ class ClientUser extends Authenticatable implements FilamentUser, HasAppAuthenti
     }
 
     /**
-     * Ids of the COW sites whose contact person is this user's contact: the site's own contact, or the
-     * area's contacts for a site without one (as WorkSite::effectiveContacts()).
+     * Ids of the COW sites whose contact person is this user's contact: one of the site's own contacts,
+     * or the area's contacts for a site without own ones (as WorkSite::effectiveContacts()).
      *
      * @return Builder<WorkSite>
      */
@@ -89,9 +89,9 @@ class ClientUser extends Authenticatable implements FilamentUser, HasAppAuthenti
             ->select('work_sites.id')
             ->when($contactId === null, fn (Builder $query) => $query->whereRaw('1 = 0'))
             ->where(fn (Builder $query) => $query
-                ->where('work_site_contact_id', $contactId)
+                ->whereHas('contacts', fn (Builder $query) => $query->whereKey($contactId))
                 ->orWhere(fn (Builder $query) => $query
-                    ->whereNull('work_site_contact_id')
+                    ->whereDoesntHave('contacts')
                     ->whereHas('area.contacts', fn (Builder $query) => $query->whereKey($contactId))));
     }
 

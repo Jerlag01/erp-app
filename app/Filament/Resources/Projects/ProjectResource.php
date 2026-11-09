@@ -20,6 +20,7 @@ use App\Filament\Resources\Projects\RelationManagers\OffersRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\PartsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\PlansRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\SchematicsRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\WasteReportsRelationManager;
 use App\Filament\Resources\Projects\Schemas\ProjectForm;
 use App\Filament\Resources\Projects\Schemas\ProjectInfolist;
 use App\Filament\Resources\Projects\Tables\ProjectsTable;
@@ -104,6 +105,7 @@ class ProjectResource extends Resource
             PlansRelationManager::class,
             SchematicsRelationManager::class,
             ExtraFilesRelationManager::class,
+            WasteReportsRelationManager::class,
             OffersRelationManager::class,
             InvoicesRelationManager::class,
         ];

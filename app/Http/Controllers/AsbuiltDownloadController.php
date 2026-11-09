@@ -49,11 +49,11 @@ class AsbuiltDownloadController
     }
 
     /**
-     * A client downloads what they handed in themselves.
+     * A client downloads any file of an as-built they follow, also while it is still open.
      */
     public function clientFile(AsbuiltFile $file): StreamedResponse
     {
-        abort_unless($file->asbuilt && $this->clientMay($file->asbuilt) && ($file->uploaded_by_client_user_id ?? $file->libraryFile?->uploaded_by_client_user_id) !== null, 403);
+        abort_unless($file->asbuilt && $this->clientMay($file->asbuilt), 403);
 
         return $this->send($file->storagePath(), $file->fileName());
     }

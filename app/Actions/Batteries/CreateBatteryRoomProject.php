@@ -33,6 +33,7 @@ class CreateBatteryRoomProject
                 // Following a 604: the same number (604-0012-02GAM → 609-0012-02GAM) when it is free.
                 'number' => CreateFollowUpProject::sameNumber($source, $category),
                 'work_site_id' => $data['work_site_id'],
+                'short_description' => filled($data['short_description'] ?? null) ? trim((string) $data['short_description']) : self::description($source),
                 'status' => ProjectStatus::WaitingForPo,
                 'notes' => $source ? __('battery_rooms.follow_up_note', ['reference' => $source->reference]) : null,
                 'created_by' => $by->id,
@@ -51,5 +52,19 @@ class CreateBatteryRoomProject
 
             return $dossier;
         });
+    }
+
+    /**
+     * The description of a battery room project: that of the 604 it follows, else "Batterijlokaal".
+     */
+    public static function description(?Project $source): string
+    {
+        $locale = (string) config('app.locale');
+
+        return match (true) {
+            filled($source?->short_description) => (string) $source->short_description,
+            $source !== null => __('battery_rooms.default_description_after', ['reference' => $source->reference], $locale),
+            default => __('battery_rooms.default_description', [], $locale),
+        };
     }
 }

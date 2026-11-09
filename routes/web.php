@@ -10,6 +10,7 @@ use App\Http\Controllers\BatteryDeliveryDocumentController;
 use App\Http\Controllers\BatteryDocumentController;
 use App\Http\Controllers\BatteryRoomController;
 use App\Http\Controllers\CableCalculationPdfController;
+use App\Http\Controllers\ClientBatteryReportController;
 use App\Http\Controllers\ClientProjectFileController;
 use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\ClientWelcomeLinkController;
@@ -63,6 +64,10 @@ Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
 Route::get('/client-files/asbuilts/{asbuilt}/zip', [AsbuiltDownloadController::class, 'clientZip'])->whereNumber('asbuilt')->name('client.asbuilt.zip');
 Route::get('/client-files/asbuilt-files/{file}', [AsbuiltDownloadController::class, 'clientFile'])->whereNumber('file')->name('client.asbuilt.file');
 Route::get('/client-files/projects/{project}/files/{file}', ClientProjectFileController::class)->whereNumber(['project', 'file'])->name('client.project.file');
+// The documents of a finished battery replacement (604) for the client portal (checked in the controller).
+Route::get('/client-files/battery-reports/{project}/documents/{document}', [ClientBatteryReportController::class, 'document'])->whereNumber('project')->name('client.battery-report.document');
+Route::get('/client-files/battery-reports/{project}/photos/{index}', [ClientBatteryReportController::class, 'photo'])->whereNumber(['project', 'index'])->name('client.battery-report.photo');
+Route::get('/client-files/battery-reports/{project}/waste-reports/{file}', [ClientBatteryReportController::class, 'wasteReport'])->whereNumber(['project', 'file'])->name('client.battery-report.waste');
 Route::get('/client-files/routers/{router}/vpn', ClientRouterVpnController::class)->whereNumber('router')->name('client.routers.vpn');
 // The link in a client portal user's welcome mail: signed, valid for 7 days, and only until the password is set.
 Route::get('/client-welcome/{clientUser}', ClientWelcomeLinkController::class)->whereNumber('clientUser')->middleware('signed')->name('client.welcome');

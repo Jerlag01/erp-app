@@ -104,9 +104,6 @@ class ProjectCategoryResource extends Resource
                         }
                     })
                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
-                Toggle::make('has_short_description')
-                    ->label(__('erp.projects.has_short_description'))
-                    ->helperText(__('erp.projects.has_short_description_help')),
                 Toggle::make('is_active')
                     ->label(__('erp.fields.active'))
                     ->helperText(__('erp.projects.category_active_help'))
@@ -138,9 +135,6 @@ class ProjectCategoryResource extends Resource
                     ->badge()
                     ->color('gray')
                     ->description(fn (ProjectCategory $record): string => __('erp.projects.example', ['reference' => self::exampleReference($record)])),
-                IconColumn::make('has_short_description')
-                    ->label(__('erp.projects.short_description'))
-                    ->boolean(),
                 TextColumn::make('projects_count')
                     ->label(__('erp.resources.project.plural'))
                     ->badge()

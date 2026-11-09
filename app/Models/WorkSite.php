@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[Fillable([
     'cow_code', 'building_type', 'country_id', 'street', 'house_number', 'addition', 'postal_code', 'city', 'state',
-    'work_site_area_id', 'work_site_contact_id', 'images', 'rooms',
+    'work_site_area_id', 'images', 'rooms',
 ])]
 class WorkSite extends Model
 {
@@ -72,13 +73,13 @@ class WorkSite extends Model
     }
 
     /**
-     * The site's own contact person (see effectiveContacts() for the fallback to the area).
+     * The site's own (direct) contact persons; see effectiveContacts() for the fallback to the area.
      *
-     * @return BelongsTo<WorkSiteContact, $this>
+     * @return BelongsToMany<WorkSiteContact, $this>
      */
-    public function contact(): BelongsTo
+    public function contacts(): BelongsToMany
     {
-        return $this->belongsTo(WorkSiteContact::class, 'work_site_contact_id');
+        return $this->belongsToMany(WorkSiteContact::class)->orderBy('last_name')->orderBy('first_name');
     }
 
     /**
@@ -98,17 +99,27 @@ class WorkSite extends Model
     }
 
     /**
-     * The site's own contact person, or else the contact persons of its area.
+     * The site's own contact persons, or else the contact persons of its area.
      *
      * @return Collection<int, WorkSiteContact>
      */
     public function effectiveContacts(): Collection
     {
-        if ($this->contact) {
-            return new Collection([$this->contact]);
+        if ($this->contacts->isNotEmpty()) {
+            return $this->contacts;
         }
 
         return $this->area?->contacts ?? new Collection;
+    }
+
+    /**
+     * Every contact person of the site: its own ones first, then those of its area (each once).
+     *
+     * @return Collection<int, WorkSiteContact>
+     */
+    public function allContacts(): Collection
+    {
+        return $this->contacts->concat($this->area?->contacts ?? [])->unique('id')->values();
     }
 
     /**

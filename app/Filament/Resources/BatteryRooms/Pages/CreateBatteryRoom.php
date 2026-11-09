@@ -40,7 +40,12 @@ class CreateBatteryRoom extends CreateRecord
                         ->all())
                     ->searchable()
                     ->live()
-                    ->afterStateUpdated(fn (?int $state, Set $set) => $state ? $set('work_site_id', Project::query()->find($state)?->work_site_id) : null)
+                    ->afterStateUpdated(function (?int $state, Set $set): void {
+                        if ($source = $state ? Project::query()->find($state) : null) {
+                            $set('work_site_id', $source->work_site_id);
+                            $set('short_description', $source->short_description);
+                        }
+                    })
                     ->columnSpanFull(),
                 Select::make('work_site_id')
                     ->label(__('battery_rooms.fields.cow_code'))
@@ -49,6 +54,11 @@ class CreateBatteryRoom extends CreateRecord
                     ->searchable()
                     ->required()
                     ->exists('work_sites', 'id'),
+                TextInput::make('short_description')
+                    ->label(__('erp.projects.short_description'))
+                    ->required()
+                    ->maxLength(255)
+                    ->columnSpanFull(),
                 TextInput::make('room_number')
                     ->label(__('battery_rooms.fields.room_number'))
                     ->helperText(__('battery_rooms.fields.room_number_help'))

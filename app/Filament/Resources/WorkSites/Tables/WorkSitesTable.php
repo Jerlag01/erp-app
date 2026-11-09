@@ -28,7 +28,7 @@ class WorkSitesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['country', 'area.contacts', 'contact']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['country', 'area.contacts', 'contacts']))
             ->defaultSort('cow_code')
             ->searchPlaceholder(__('erp.work_sites.search'))
             ->columns([

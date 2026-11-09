@@ -124,11 +124,12 @@ class ProjectForm
                                     ->preload()
                                     ->required($usesWorkSite)
                                     ->visible(fn (Get $get): bool => $usesWorkSite($get) && modules()->workSites()),
+                                // Every project has a description (required for new ones; older projects may still lack it).
                                 TextInput::make('short_description')
                                     ->label(__('erp.projects.short_description'))
                                     ->placeholder(__('erp.projects.short_description_placeholder'))
                                     ->maxLength(255)
-                                    ->visible(fn (Get $get): bool => (bool) $category($get)?->has_short_description)
+                                    ->required(fn (string $operation): bool => $operation === 'create')
                                     ->columnSpanFull(),
                                 // The estimate is filled in by whoever makes the project; comparing it with the planning is for "project_workdays.view".
                                 TextInput::make('estimated_workdays')

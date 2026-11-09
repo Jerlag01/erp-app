@@ -82,10 +82,12 @@ class ClientProjectResource extends ClientResource
                     ->searchable()
                     ->sortable()
                     ->copyable(),
+                // The number with the project's description under it, so the client sees what it belongs to.
                 TextColumn::make('category.code')
                     ->label(__('erp.client_portal.category'))
                     ->badge()
-                    ->color('gray'),
+                    ->color('gray')
+                    ->description(fn (Project $record): ?string => $record->short_description ?: null),
                 TextColumn::make('cow_code')
                     ->label(__('erp.client_portal.cow_code'))
                     ->fontFamily(FontFamily::Mono)
@@ -137,7 +139,7 @@ class ClientProjectResource extends ClientResource
             ->filters([
                 SelectFilter::make('category')
                     ->label(__('erp.client_portal.category'))
-                    ->options(array_combine($categories, $categories))
+                    ->options(array_intersect_key(ClientPortal::categoryOptions(), array_flip($categories)))
                     ->query(fn (Builder $query, array $data) => $query->when($data['value'], fn (Builder $query, string $code) => $query->whereHas('category', fn (Builder $query) => $query->where('code', $code)))),
                 SelectFilter::make('status')
                     ->label(__('erp.client_portal.status'))

@@ -33,7 +33,7 @@ class MobileProjectApiTest extends TestCase
     protected function project(Team $team, string $category = '620', string $cowCode = '02GAM'): Project
     {
         $contact = WorkSiteContact::factory()->create(['first_name' => 'Jan', 'last_name' => 'Peeters', 'company' => null, 'phone' => '0470 12 34 56']);
-        $site = WorkSite::factory()->create(['cow_code' => $cowCode, 'work_site_contact_id' => $contact->id]);
+        $site = WorkSite::factory()->hasAttached($contact, [], 'contacts')->create(['cow_code' => $cowCode]);
         $project = Project::factory()->inCategory($category)->for($site)->create([
             'short_description' => 'New distribution board',
             'status' => ProjectStatus::ToBeExecuted,

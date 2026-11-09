@@ -42,7 +42,7 @@ class GpwOverviewTest extends TestCase
     protected function project(ProjectStatus $status = ProjectStatus::ToBeExecuted): Project
     {
         $contact = WorkSiteContact::factory()->create(['email' => fake()->unique()->safeEmail()]);
-        $project = Project::factory()->inCategory('610')->for(WorkSite::factory()->create(['work_site_contact_id' => $contact->id]))->create(['status' => $status]);
+        $project = Project::factory()->inCategory('610')->for(WorkSite::factory()->hasAttached($contact, [], 'contacts')->create())->create(['status' => $status]);
         $project->teams()->attach($this->team);
 
         return $project;
@@ -165,5 +165,26 @@ class GpwOverviewTest extends TestCase
         // Without the GPW permission no button.
         $this->actingAs(User::factory()->withPermissions(['projects' => ['view']])->inTeam($this->team)->create());
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('addManualGpw');
+    }
+
+    #[Test]
+    public function gpw_requests_are_deleted_at_any_moment_with_the_permission(): void
+    {
+        $approved = GpwRequest::factory()->for($this->project())->create(['status' => GpwStatus::Approved]);
+        $pending = GpwRequest::factory()->for($this->project())->create(['status' => GpwStatus::Pending]);
+
+        // Without "projects.gpw_delete": no delete, not in the overview nor on the project.
+        $this->actingAs($this->user());
+        Livewire::test(ListGpwRequests::class)->assertActionHidden(TestAction::make('delete')->table($approved));
+        Livewire::test(GpwRequestsRelationManager::class, ['ownerRecord' => $approved->project, 'pageClass' => ViewProject::class])
+            ->assertActionHidden(TestAction::make('delete')->table($approved));
+
+        // With it: also an approved (or planned) request, from the overview and from the project.
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view', 'gpw', 'gpw_delete']])->inTeam($this->team)->create());
+        Livewire::test(ListGpwRequests::class)->callAction(TestAction::make('delete')->table($approved));
+        Livewire::test(GpwRequestsRelationManager::class, ['ownerRecord' => $pending->project, 'pageClass' => ViewProject::class])
+            ->callAction(TestAction::make('delete')->table($pending));
+
+        $this->assertSame(0, GpwRequest::query()->count());
     }
 }

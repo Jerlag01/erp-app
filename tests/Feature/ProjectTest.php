@@ -75,7 +75,8 @@ class ProjectTest extends TestCase
         $withDescription = Project::factory()->inCategory('607')->for($site)->create(['short_description' => 'Nieuwe verlichting']);
         $this->assertSame('607-0001-02GAM', $withDescription->reference);
         $this->assertSame('Nieuwe verlichting', $withDescription->short_description);
-        $this->assertNull(Project::factory()->inCategory('604')->for($site)->create(['short_description' => 'x'])->short_description);
+        // Every category keeps the description now (it is required for new projects).
+        $this->assertSame('Batterijen vervangen', Project::factory()->inCategory('604')->for($site)->create(['short_description' => 'Batterijen vervangen'])->short_description);
     }
 
     #[Test]
@@ -135,6 +136,7 @@ class ProjectTest extends TestCase
             ->assertFormFieldHidden('poNumbers')
             ->fillForm([
                 'client_name' => 'Jan Peeters',
+                'short_description' => 'Laadpaal thuis',
                 'client_phone' => '0470 12 34 56',
                 'street' => 'Kerkstraat',
                 'house_number' => '5',
@@ -368,7 +370,12 @@ class ProjectTest extends TestCase
         Filament::setCurrentPanel('app');
 
         Livewire::test(CreateProject::class)
-            ->fillForm(['project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id])
+            ->fillForm(['project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id, 'short_description' => ''])
+            ->call('create')
+            ->assertHasFormErrors(['short_description' => 'required']);
+
+        Livewire::test(CreateProject::class)
+            ->fillForm(['project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id, 'short_description' => 'Batterijen vervangen'])
             ->call('create')
             ->assertHasNoFormErrors();
 

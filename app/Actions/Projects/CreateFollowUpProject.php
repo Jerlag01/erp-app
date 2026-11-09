@@ -3,6 +3,7 @@
 namespace App\Actions\Projects;
 
 use App\Actions\Batteries\BatteryDocument;
+use App\Actions\Batteries\CreateBatteryRoomProject;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Models\BatteryDossier;
@@ -81,6 +82,7 @@ class CreateFollowUpProject
                 'project_category_id' => $category->id,
                 'number' => self::sameNumber($project, $category),
                 'work_site_id' => $project->work_site_id,
+                'short_description' => CreateBatteryRoomProject::description($project),
                 'status' => ProjectStatus::WaitingForPo,
                 'notes' => __('battery_rooms.follow_up_note', ['reference' => $project->reference]),
                 'created_by' => $project->created_by,

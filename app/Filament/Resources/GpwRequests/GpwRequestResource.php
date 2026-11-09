@@ -15,6 +15,7 @@ use App\Models\User;
 use BackedEnum;
 use Closure;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -86,9 +87,23 @@ class GpwRequestResource extends Resource
         return false;
     }
 
+    /**
+     * With "projects.gpw_delete": at any moment, whatever the status (also approved or planned). The
+     * planning made from it stays.
+     */
     public static function canDelete(Model $record): bool
     {
-        return false;
+        $user = auth()->user();
+
+        return $user instanceof User && modules()->projects() && $user->hasPermission('projects.gpw_delete');
+    }
+
+    public static function deleteAction(): DeleteAction
+    {
+        return DeleteAction::make()
+            ->visible(fn (GpwRequest $record): bool => static::canDelete($record))
+            ->authorize(fn (GpwRequest $record): bool => static::canDelete($record))
+            ->modalDescription(__('erp.gpw.delete_help'));
     }
 
     public static function getNavigationBadge(): ?string
@@ -193,6 +208,7 @@ class GpwRequestResource extends Resource
 
                         Notification::make()->title(__('erp.gpw.decision_saved'))->success()->send();
                     }),
+                static::deleteAction(),
             ]);
     }
 

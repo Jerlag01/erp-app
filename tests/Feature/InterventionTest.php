@@ -119,6 +119,7 @@ class InterventionTest extends TestCase
                 'project_category_id' => $category,
                 'work_site_id' => $site->id,
                 'work_order_number' => 'wo 654321',
+                'short_description' => 'Storing gelijkrichter',
                 'interventionCategories' => [$this->category('PREPARE')->id, $this->category('CONNECT')->id],
                 'intervention_subcategory_id' => $colibri->id,
             ])
@@ -283,6 +284,7 @@ class InterventionTest extends TestCase
             'project_category_id' => $category,
             'work_site_id' => $site->id,
             'work_order_number' => $wo,
+            'short_description' => 'Storing gelijkrichter',
             'interventionCategories' => [$this->category('PREPARE')->id],
             'intervention_subcategory_id' => $this->category('COLIBRI')->id,
         ];
