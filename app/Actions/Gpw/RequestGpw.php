@@ -21,9 +21,10 @@ use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
- * Asks contact persons of the project's COW site for a GPW in a period: the requester picks them from the
- * site's own contacts and those of its area; the request is stored with them and mailed to each, in
- * their language, with a copy to the requester. The mail links to a page
+ * Asks contact persons for a GPW in a period: the requester picks who it goes to — any contact person
+ * with an e-mail address (the site's own contacts are suggested, then those of its area), also people
+ * without a client portal login, who decide with the buttons in the mail. The request is stored with them
+ * and mailed to each, in their language, with a copy to the requester. The mail links to a page
  * where the contact approves or refuses it; client portal users who see the project can do so too.
  */
 class RequestGpw
@@ -56,28 +57,37 @@ class RequestGpw
     }
 
     /**
-     * The choices of the request window: "Sophie Dubois — sophie@… (FR)" by id.
+     * The suggestions of the request window (the site's and the area's contacts): "Sophie Dubois — sophie@… (FR)" by id.
      *
      * @return array<int, string>
      */
     public static function candidateOptions(Project $project): array
     {
-        return self::candidatesFor($project)->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => $contact->fullName().' — '.$contact->email.' ('.strtoupper($contact->preferredLocale()).')'])->all();
+        return self::candidatesFor($project)->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => self::optionLabel($contact)])->all();
+    }
+
+    public static function optionLabel(WorkSiteContact $contact): string
+    {
+        return trim($contact->fullName().($contact->company ? ' ('.$contact->company.')' : '').' — '.$contact->email.' ('.strtoupper($contact->preferredLocale()).')');
     }
 
     /**
-     * Where each choice comes from: "COW-code 02GAM" or "Area 1-VLA".
+     * Any contact person with an e-mail address, by name, company or e-mail.
      *
      * @return array<int, string>
      */
-    public static function candidateSources(Project $project): array
+    public static function searchRecipients(string $search): array
     {
-        $site = $project->workSite;
-        $own = $site?->contacts->modelKeys() ?? [];
+        $term = '%'.addcslashes($search, '%_\\').'%';
 
-        return self::candidatesFor($project)->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => in_array($contact->id, $own, true)
-            ? __('erp.gpw.contact_of_site', ['cow' => $site?->cow_code])
-            : __('erp.gpw.contact_of_area', ['area' => $site?->area?->name])])->all();
+        return WorkSiteContact::query()
+            ->whereNotNull('email')->where('email', '!=', '')
+            ->where(fn ($query) => $query->where('first_name', 'like', $term)->orWhere('last_name', 'like', $term)->orWhere('company', 'like', $term)->orWhere('email', 'like', $term))
+            ->orderBy('last_name')->orderBy('first_name')
+            ->limit(50)
+            ->get()
+            ->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => self::optionLabel($contact)])
+            ->all();
     }
 
     /**
@@ -95,18 +105,16 @@ class RequestGpw
     {
         abort_unless(Gate::forUser($actor)->allows('requestGpw', $project), 403);
 
-        if (self::candidatesFor($project)->isEmpty()) {
-            throw ValidationException::withMessages(['starts_on' => __('erp.gpw.errors.no_contact')]);
-        }
-
-        // Only people of this site or its area, whatever the form sends.
+        // The chosen people (any contact person with an e-mail address), or else the site's (or area's) contacts.
         $contacts = array_key_exists('contact_ids', $data)
-            ? self::candidatesFor($project)->whereIn('id', array_map('intval', (array) $data['contact_ids']))->values()
+            ? WorkSiteContact::query()->whereKey(array_map('intval', (array) $data['contact_ids']))->whereNotNull('email')->where('email', '!=', '')->get()
             : self::contactsFor($project);
         $contact = $contacts->first();
 
         if ($contact === null) {
-            throw ValidationException::withMessages(['contact_ids' => __('erp.gpw.errors.no_recipient')]);
+            throw ValidationException::withMessages(array_key_exists('contact_ids', $data)
+                ? ['contact_ids' => __('erp.gpw.errors.no_recipient')]
+                : ['starts_on' => __('erp.gpw.errors.no_contact')]);
         }
 
         $from = CarbonImmutable::parse($data['starts_on'])->startOfDay();
@@ -154,7 +162,7 @@ class RequestGpw
     }
 
     /**
-     * One mail per contact person, each in their own language; the requester gets a copy of the first.
+     * One mail to all chosen contact persons (one per language), the requester in copy of the first.
      * The contacts are those chosen for the request (with their e-mail address as it is now), or else
      * the addresses the request was first sent to.
      */
@@ -177,15 +185,22 @@ class RequestGpw
         // A new mailing: the keys of earlier mails that were not used stop working.
         GpwRequestKey::query()->where('gpw_request_id', $request->id)->whereNull('used_at')->whereNull('revoked_at')->update(['revoked_at' => now()]);
 
-        try {
-            foreach ($recipients->values() as $index => [$email, $name, $locale, $contactId]) {
-                // Each recipient their own key: "Approve" and "Refuse" work straight from their mail.
-                [$token] = GpwRequestKey::issue($request, $email, $name, $locale, $contactId);
+        // Everyone it goes to, shown in every mail.
+        $everyone = $recipients->map(fn (array $recipient): string => $recipient[1].' ('.$recipient[0].')')->implode(', ');
 
-                Mail::to($email, $name)
+        try {
+            // One mail with all recipients in it (per language, as a mail has one language), so they see who
+            // else got it; its "Approve" and "Refuse" buttons carry the key of that mail.
+            foreach ($recipients->groupBy(fn (array $recipient): string => $recipient[2])->values() as $index => $group) {
+                $locale = $group->first()[2];
+                $names = $group->map(fn (array $recipient): string => $recipient[1])->implode(', ');
+                [$token] = GpwRequestKey::issue($request, $group->pluck(0)->implode(', '), $names, $locale, $group->count() === 1 ? $group->first()[3] : null);
+
+                Mail::to($group->map(fn (array $recipient): array => ['email' => $recipient[0], 'name' => $recipient[1]])->all())
                     ->cc($index === 0 && $requester?->email ? [$requester->email] : [])
                     ->send(new SystemMail(MailTemplateKey::GpwRequest, $locale, [
-                        'contact_name' => $name,
+                        'contact_name' => $names,
+                        'recipients' => $everyone,
                         'project' => $project->reference,
                         'cow_code' => $project->workSite?->cow_code ?? $project->cow_code ?? '—',
                         'address' => $project->addressLine() ?? $project->workSite?->addressLine() ?? '—',

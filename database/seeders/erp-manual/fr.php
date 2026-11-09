@@ -719,15 +719,15 @@ Demander au client l'autorisation de travailler sur un site pendant une **pério
 ## Demander un GPW
 
 1. Ouvrez un projet avec le statut **À exécuter**.
-2. Cliquez sur **« Demander un GPW »** et cochez **à qui** la demande est envoyée : les personnes de contact propres du code COW sont cochées, vous pouvez y ajouter celles de la zone (seulement celles qui ont une adresse e-mail).
+2. Cliquez sur **« Demander un GPW »** et choisissez **à qui** la demande est envoyée : les personnes de contact du code COW (ou sinon de la zone) sont déjà choisies. Vous pouvez chercher **toute autre personne de contact** avec une adresse e-mail (par nom, société ou e-mail) ou ajouter tout de suite une **nouvelle personne** avec nom, e-mail et langue. Ces personnes n'ont pas besoin d'un login pour le portail client : elles décident avec les boutons du mail.
 3. Choisissez la **période** (du – jusqu'au) et ajoutez éventuellement des **remarques** (accès, clés, coupures).
 4. Cliquez sur **Envoyer la demande**.
 
-La demande est envoyée par e-mail aux **personnes de contact choisies**, chacune **dans sa langue**, avec vous en copie. **Renvoyer** l'envoie aux mêmes personnes. Si le site n'a pas de personne de contact avec adresse e-mail, complétez-la d'abord sur le site ou la zone.
+La demande est envoyée dans **un seul e-mail à toutes les personnes de contact choisies** (chacun voit à qui elle a été envoyée ; en cas de langues différentes, un e-mail par langue), avec vous en copie. **Renvoyer** l'envoie aux mêmes personnes. Si le site n'a pas de personne de contact avec adresse e-mail, complétez-la d'abord sur le site ou la zone.
 
 ## Le client approuve
 
-- Directement **depuis le mail**, sans se connecter : chaque destinataire a ses propres boutons **Approuver** et **Refuser**. Approuver est enregistré tout de suite ; pour refuser, il indique seulement la raison. Les boutons portent une **clé personnelle** : ils ne fonctionnent que via ce lien, une seule fois et tant que la demande est ouverte. Ensuite (ou après un renvoi, une décision par quelqu'un d'autre ou la fin de la période), le client doit se connecter au portail. La demande indique le nom de la personne qui a décidé.
+- Directement **depuis le mail**, sans se connecter : l'e-mail contient les boutons **Approuver** et **Refuser**. Approuver est enregistré tout de suite ; pour refuser, il indique seulement la raison. Les boutons portent une **clé personnelle** : ils ne fonctionnent que via ce lien, une seule fois et tant que la demande est ouverte. Ensuite (ou après un renvoi, une décision par quelqu'un d'autre ou la fin de la période), le client doit se connecter au portail. La demande indique les noms des destinataires de l'e-mail depuis lequel la décision a été prise.
 - Via le lien **Voir le GPW** du mail, le client voit d'abord la demande et décide là.
 - Ou dans le **Global overview for Client** (le portail client), onglet **Demandes de GPW**.
 
@@ -1250,6 +1250,7 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 - Dans la **liste des projets**, la description du projet figure sous le numéro de catégorie. Pour un **604**, la **livraison des batteries** est affichée : *À livrer* avec la date de livraison prévue tant que les batteries ne sont pas livrées, puis *Livré*. La colonne **Exécution planifiée** montre le premier et le dernier jour du projet dans notre planning.
 - En cliquant sur un projet, il voit un **aperçu** : code COW, adresse, statut, les demandes GPW et les **chefs de projet avec leur adresse e-mail**. Il n'y voit pas de fichiers.
 - **Livraisons de batteries** ne montre que les livraisons de ses propres projets, sauf s'il peut voir *Tous les projets*.
+- Avec le droit **Fichiers standard as-built par code COW**, il choisit dans **Fichiers standard as-built** un code COW (même sans projet dans sa liste) et fournit ou remplace les fichiers de chaque catégorie liée à un code COW (voies d'évacuation, plans, calcul de ventilation et liste d'évacuation des locaux batteries). Ils entrent directement dans le registre et dans les as-builts en cours de ce code COW. Il ne supprime que ce qu'un client a téléchargé. Les fichiers généraux (influences externes) n'y figurent pas.
 - Sur le **tableau de bord**, il voit par **area** quelle part de ses projets est ouverte et quelle part est clôturée (en pourcentage, par rapport à tous les projets de cette area).
 - Dans **Dossiers batteries** (droit *Dossiers batteries (604)*) figure chaque projet 604 à partir de **À facturer**, avec le code COW et la description. Par projet : les **photos** du dossier batteries, le **rapport de mesure**, le **bon de livraison**, l'**inspection visuelle** et la **demande de facture** (PDF, générés à partir du dossier) et le **rapport de déchets** que vous téléchargez sur le projet. Les utilisateurs clients avec le droit *Projets* ont reçu ce droit automatiquement.
 

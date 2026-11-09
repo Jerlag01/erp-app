@@ -64,6 +64,7 @@ Route::get('/it/{asset}', ItAssetQrController::class)->name('it.qr');
 // The VPN file of a router for the client portal (its own guard; checked in the controller).
 Route::get('/client-files/asbuilts/{asbuilt}/zip', [AsbuiltDownloadController::class, 'clientZip'])->whereNumber('asbuilt')->name('client.asbuilt.zip');
 Route::get('/client-files/asbuilt-files/{file}', [AsbuiltDownloadController::class, 'clientFile'])->whereNumber('file')->name('client.asbuilt.file');
+Route::get('/client-files/asbuilt-standard-files/{file}', [AsbuiltDownloadController::class, 'clientLibrary'])->whereNumber('file')->name('client.asbuilt.library');
 Route::get('/client-files/projects/{project}/files/{file}', ClientProjectFileController::class)->whereNumber(['project', 'file'])->name('client.project.file');
 // The documents of a finished battery replacement (604) for the client portal (checked in the controller).
 Route::get('/client-files/battery-reports/{project}/documents/{document}', [ClientBatteryReportController::class, 'document'])->whereNumber('project')->name('client.battery-report.document');

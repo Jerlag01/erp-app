@@ -76,8 +76,9 @@ class ClientUser extends Authenticatable implements FilamentUser, HasAppAuthenti
     }
 
     /**
-     * Ids of the COW sites whose contact person is this user's contact: one of the site's own contacts,
-     * or the area's contacts for a site without own ones (as WorkSite::effectiveContacts()).
+     * Ids of the COW sites of this user's contact person: by default every site in their area(s) — the
+     * areas they are a contact of, and the areas of the sites they are a direct contact of — and the sites
+     * they are a direct contact of (also without area).
      *
      * @return Builder<WorkSite>
      */
@@ -90,9 +91,31 @@ class ClientUser extends Authenticatable implements FilamentUser, HasAppAuthenti
             ->when($contactId === null, fn (Builder $query) => $query->whereRaw('1 = 0'))
             ->where(fn (Builder $query) => $query
                 ->whereHas('contacts', fn (Builder $query) => $query->whereKey($contactId))
-                ->orWhere(fn (Builder $query) => $query
-                    ->whereDoesntHave('contacts')
-                    ->whereHas('area.contacts', fn (Builder $query) => $query->whereKey($contactId))));
+                ->orWhereIn('work_sites.work_site_area_id', $this->contactAreaIds()));
+    }
+
+    /**
+     * The areas of this user's contact person: those they are a contact of, and those of the sites they
+     * are a direct contact of.
+     *
+     * @return list<int>
+     */
+    public function contactAreaIds(): array
+    {
+        $contactId = $this->work_site_contact_id;
+
+        if ($contactId === null) {
+            return [];
+        }
+
+        return WorkSiteArea::query()
+            ->whereHas('contacts', fn (Builder $query) => $query->whereKey($contactId))
+            ->pluck('id')
+            ->merge(WorkSite::query()->whereNotNull('work_site_area_id')->whereHas('contacts', fn (Builder $query) => $query->whereKey($contactId))->pluck('work_site_area_id'))
+            ->map(fn (mixed $id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -146,6 +169,26 @@ class ClientUser extends Authenticatable implements FilamentUser, HasAppAuthenti
             ->whereIn("{$table}.work_site_id", $this->contactWorkSiteIds())
             ->orWhereIn("{$table}.work_site_id", $projectSites)
             ->when($orOwnProject, fn (Builder $query) => $query->orWhereIn("{$table}.project_id", $this->ownProjectIds())));
+    }
+
+    /**
+     * Limits a query of COW-codes (work sites) to this user's: those of their contact (their areas) and
+     * of their own projects, unless they may see all.
+     *
+     * @param  Builder<WorkSite>  $query
+     * @return Builder<WorkSite>
+     */
+    public function restrictWorkSites(Builder $query): Builder
+    {
+        if ($this->seesAllProjects()) {
+            return $query;
+        }
+
+        $projectSites = Project::query()->select('work_site_id')->whereNotNull('work_site_id')->whereIn('projects.id', $this->ownProjectIds());
+
+        return $query->where(fn (Builder $query) => $query
+            ->whereIn('work_sites.id', $this->contactWorkSiteIds())
+            ->orWhereIn('work_sites.id', $projectSites));
     }
 
     /**

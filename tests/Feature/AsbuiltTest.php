@@ -8,6 +8,9 @@ use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
 use App\Filament\Client\Resources\Asbuilts\Pages\ListClientAsbuilts;
 use App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt;
+use App\Filament\Client\Resources\AsbuiltStandardFiles\ClientAsbuiltStandardFileResource;
+use App\Filament\Client\Resources\AsbuiltStandardFiles\Pages\ListClientAsbuiltStandardFiles;
+use App\Filament\Client\Resources\AsbuiltStandardFiles\Pages\ViewClientAsbuiltStandardFiles;
 use App\Filament\Resources\AsbuiltLibraryFiles\Pages\ManageAsbuiltLibraryFiles;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Filament\Resources\Asbuilts\Pages\ViewAsbuilt;
@@ -22,6 +25,7 @@ use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
+use App\Models\WorkSiteArea;
 use App\Models\WorkSiteContact;
 use App\Support\Asbuilts;
 use App\Support\ClientPortal;
@@ -101,6 +105,36 @@ class AsbuiltTest extends TestCase
         $project->update(['status' => ProjectStatus::InvoicingToDo]);
         $project->update(['status' => ProjectStatus::Executed]);
         $this->assertSame(1, Asbuilt::query()->where('project_id', $project->id)->count());
+    }
+
+    #[Test]
+    public function a_command_makes_the_missing_asbuilts_of_projects_already_to_be_executed(): void
+    {
+        $evacuation = $this->library(AsbuiltCategory::EvacuationRoutes, $this->site, 'evacuatie.pdf');
+        // Projects from before the change: already to be executed or in progress, without as-built.
+        $missing = collect([ProjectStatus::ToBeExecuted, ProjectStatus::InProgress])->map(function (ProjectStatus $status): Project {
+            $project = Project::factory()->inCategory('610')->for($this->site)->create(['status' => ProjectStatus::Planned]);
+            Project::query()->whereKey($project->id)->update(['status' => $status->value]);
+
+            return $project;
+        });
+        $planned = Project::factory()->inCategory('610')->for($this->site)->create(['status' => ProjectStatus::Planned]);
+        $excluded = Project::factory()->inCategory('604')->for($this->site)->create(['status' => ProjectStatus::Planned]);
+        Project::query()->whereKey($excluded->id)->update(['status' => ProjectStatus::ToBeExecuted->value]);
+        $existing = $this->executedProject();
+
+        $this->artisan('asbuilts:create-missing', ['--dry-run' => true])->expectsOutputToContain('2 project(s)')->assertSuccessful();
+        $this->assertSame(1, Asbuilt::query()->count());
+
+        $this->artisan('asbuilts:create-missing')->expectsOutputToContain('As-builts made: 2')->assertSuccessful();
+        $missing->each(fn (Project $project) => $this->assertSame([$evacuation->id], $project->fresh()->asbuilt->files()->pluck('asbuilt_library_file_id')->all()));
+        $this->assertSame(Asbuilt::ORIGIN_AUTOMATIC, $missing->first()->fresh()->asbuilt->origin);
+        $this->assertNull($planned->fresh()->asbuilt);
+        $this->assertNull($excluded->fresh()->asbuilt);
+        $this->assertSame(1, Asbuilt::query()->where('project_id', $existing->id)->count());
+
+        // Run again: nothing left to do.
+        $this->artisan('asbuilts:create-missing')->expectsOutputToContain('Every project that needs an as-built has one.')->assertSuccessful();
     }
 
     #[Test]
@@ -442,5 +476,67 @@ class AsbuiltTest extends TestCase
         }
         $this->assertContains('3 - ventilation calculation/ventilatie.pdf', $names);
         $this->assertNotContains('1 - cable dimensions/', $names);
+    }
+
+    #[Test]
+    public function a_client_hands_in_and_replaces_the_standard_files_of_a_cow_code_without_a_project(): void
+    {
+        $contact = WorkSiteContact::factory()->create();
+        $area = WorkSiteArea::factory()->hasAttached($contact, [], 'contacts')->create(['name' => '1-VLA']);
+        $this->site->update(['work_site_area_id' => $area->id]);
+        $withoutProject = WorkSite::factory()->create(['cow_code' => '09NEW', 'work_site_area_id' => $area->id]);
+        $elsewhere = WorkSite::factory()->create(['cow_code' => '03XYZ']);
+        $staffFile = $this->library(AsbuiltCategory::EvacuationRoutes, $this->site, 'evacuatie-personeel.pdf');
+        $open = $this->executedProject();
+
+        $client = ClientUser::factory()->withPermissions([ClientPortal::ASBUILT_LIBRARY])->create(['work_site_contact_id' => $contact->id]);
+        $this->actingAs($client, ClientPortal::GUARD);
+        Filament::setCurrentPanel(ClientPortal::PANEL);
+
+        // Every COW-code of their area, also one without a project; not those of others.
+        Livewire::test(ListClientAsbuiltStandardFiles::class)->assertCanSeeTableRecords([$this->site, $withoutProject])->assertCanNotSeeTableRecords([$elsewhere]);
+        $this->get(ClientAsbuiltStandardFileResource::getUrl('view', ['record' => $elsewhere]))->assertNotFound();
+        // Only the categories of a COW-code, never the global ones.
+        $this->assertSame(array_map(fn (AsbuiltCategory $category): string => $category->value, Asbuilts::cowCodeCategories()), array_keys(ViewClientAsbuiltStandardFiles::zones()));
+        $this->assertArrayNotHasKey(AsbuiltCategory::ExternalInfluences->value, ViewClientAsbuiltStandardFiles::zones());
+
+        Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $withoutProject->getRouteKey()])
+            ->callAction('upload', ['category' => AsbuiltCategory::VentilationCalculations->value, 'files' => [UploadedFile::fake()->create('ventilatie.pdf', 10)]])
+            ->assertHasNoActionErrors();
+        $ventilation = AsbuiltLibraryFile::query()->where('work_site_id', $withoutProject->id)->sole();
+        $this->assertSame([AsbuiltCategory::VentilationCalculations, $client->id], [$ventilation->category, $ventilation->uploaded_by_client_user_id]);
+
+        // Uploaded for a COW-code with an open as-built: it goes into that as-built at once.
+        Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $this->site->getRouteKey()])
+            ->callAction('upload', ['category' => AsbuiltCategory::EvacuationRoutes->value, 'files' => [UploadedFile::fake()->create('evacuatie-klant.pdf', 10)]])
+            ->assertHasNoActionErrors()
+            ->assertSee('evacuatie-personeel.pdf')
+            ->assertSee('evacuatie-klant.pdf');
+        $clientFile = AsbuiltLibraryFile::query()->where('original_name', 'evacuatie-klant.pdf')->sole();
+        $this->assertTrue($open->asbuilt->files()->where('asbuilt_library_file_id', $clientFile->id)->exists());
+        $this->get(route('client.asbuilt.library', $clientFile))->assertOk()->assertDownload('evacuatie-klant.pdf');
+        $this->get(route('client.asbuilt.library', $this->library(AsbuiltCategory::EvacuationRoutes, $elsewhere, 'ander.pdf')))->assertForbidden();
+
+        // The employees' files cannot be removed by a client.
+        Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $this->site->getRouteKey()])->callAction('remove', arguments: ['file' => $staffFile->id]);
+        $this->assertModelExists($staffFile);
+
+        // Replacing a file (also one of the employees) keeps it in the as-builts with the new content.
+        Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $this->site->getRouteKey()])
+            ->callAction('replace', ['file' => UploadedFile::fake()->createWithContent('evacuatie-2027.pdf', 'nieuw')], ['file' => $staffFile->id])
+            ->assertHasNoActionErrors();
+        $staffFile->refresh();
+        $this->assertSame('evacuatie-2027.pdf', $staffFile->original_name);
+        $this->assertSame('nieuw', Storage::disk('local')->get($staffFile->path));
+        $this->assertTrue($open->asbuilt->files()->where('asbuilt_library_file_id', $staffFile->id)->exists());
+
+        // They remove what a client uploaded.
+        Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $this->site->getRouteKey()])->callAction('remove', arguments: ['file' => $clientFile->id]);
+        $this->assertModelMissing($clientFile);
+
+        // Without the permission: no access.
+        $client->update(['permissions' => [ClientPortal::PROJECTS]]);
+        $this->actingAs($client->fresh(), ClientPortal::GUARD);
+        $this->get(ClientAsbuiltStandardFileResource::getUrl())->assertForbidden();
     }
 }

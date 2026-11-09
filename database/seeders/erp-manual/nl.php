@@ -720,15 +720,15 @@ De klant toestemming vragen om in een bepaalde **periode** op een site te werken
 ## Een GPW aanvragen
 
 1. Open een project met de status **Uit te voeren**.
-2. Klik op **"GPW aanvragen"** en vink aan **naar wie** de aanvraag gaat: de eigen contactpersonen van de COW-code staan aangevinkt, de contactpersonen van de area kan je erbij kiezen (enkel wie een e-mailadres heeft).
+2. Klik op **"GPW aanvragen"** en kies **naar wie** de aanvraag gaat: de contactpersonen van de COW-code (of anders van de area) staan al gekozen. Je kan **elke andere contactpersoon** met een e-mailadres zoeken (op naam, bedrijf of e-mail) of meteen een **nieuwe persoon** toevoegen met naam, e-mail en taal. Die personen hebben geen login voor het klantenportaal nodig: ze beslissen met de knoppen in de mail.
 3. Kies de **periode** (van – tot en met) en vul eventueel **opmerkingen** in (toegang, sleutels, onderbrekingen).
 4. Klik op **Aanvraag versturen**.
 
-De aanvraag gaat per e-mail naar de **gekozen contactpersonen**, elk in **zijn eigen taal**, met jou in kopie. **Opnieuw versturen** gaat naar dezelfde personen. Heeft de site (en haar area) geen contactpersoon met e-mailadres, dan vul je die eerst in bij de werflocatie of area.
+De aanvraag gaat in **één e-mail naar alle gekozen contactpersonen** samen (zo ziet iedereen naar wie ze ging; bij verschillende talen één e-mail per taal), met jou in kopie. **Opnieuw versturen** gaat naar dezelfde personen. Heeft de site (en haar area) geen contactpersoon met e-mailadres, dan vul je die eerst in bij de werflocatie of area.
 
 ## De klant keurt goed
 
-- Rechtstreeks **vanuit de mail**, zonder aan te melden: elke ontvanger heeft eigen knoppen **Goedkeuren** en **Weigeren**. Goedkeuren gaat meteen door; bij weigeren vult hij enkel de reden in. De knoppen dragen een **persoonlijke sleutel**: ze werken enkel via die link, één keer en zolang de aanvraag openstaat. Daarna (of na opnieuw versturen, beslist door iemand anders, of na de periode) moet de klant zich aanmelden in het portaal. Bij de aanvraag staat de naam van wie besliste.
+- Rechtstreeks **vanuit de mail**, zonder aan te melden: de e-mail heeft de knoppen **Goedkeuren** en **Weigeren**. Goedkeuren gaat meteen door; bij weigeren vult hij enkel de reden in. De knoppen dragen een **persoonlijke sleutel**: ze werken enkel via die link, één keer en zolang de aanvraag openstaat. Daarna (of na opnieuw versturen, beslist door iemand anders, of na de periode) moet de klant zich aanmelden in het portaal. Bij de aanvraag staan de namen van de ontvangers van de e-mail waaruit beslist werd.
 - Via de link **GPW bekijken** in de mail ziet de klant eerst de aanvraag en beslist hij daar.
 - Of in de **Global overview for Client** (het klantenportaal), tabblad **GPW-aanvragen**.
 
@@ -1251,6 +1251,7 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 - In de **projectenlijst** staat onder het categorienummer de omschrijving van het project. Bij een **604** staat de **batterijlevering**: *Te leveren* met de verwachte leverdatum zolang de batterijen niet geleverd zijn, daarna *Geleverd*. De kolom **Gepland in uitvoering** toont de eerste en laatste dag van het project in onze planning.
 - Klikt hij op een project, dan ziet hij een **overzicht**: COW-code, adres, status, de GPW-aanvragen en de **projectleiders met hun e-mailadres**. Bestanden ziet hij daar niet.
 - **Batterijleveringen** toont enkel de leveringen van zijn eigen projecten, tenzij hij *Alle projecten* mag zien.
+- Met het recht **As-built standaardbestanden per COW-code** kiest hij bij **As-built standaardbestanden** een COW-code (ook zonder project in zijn lijst) en levert hij per categorie die bij een COW-code hoort (evacuatiewegen, plannen, ventilatieberekening en evacuatielijst van batterijlokalen) de bestanden aan of vervangt hij ze. Ze komen meteen in het register en in de lopende as-builts van die COW-code. Hij verwijdert enkel wat een klant uploadde. De algemene bestanden (externe invloeden) staan daar niet.
 - Op het **dashboard** ziet hij per **area** welk deel van zijn projecten open is en welk deel afgesloten (in procent, tegenover alle projecten van die area).
 - Bij **Batterijdossiers** (recht *Batterijdossiers (604)*) staat elk 604-project vanaf **Te factureren**, met de COW-code en omschrijving. Per project: de **foto's** van het batterijdossier, het **meetrapport**, de **leveringsnota**, de **visuele keuring** en de **factuuraanvraag** (PDF, gemaakt uit het dossier) en het **afvalrapport** dat je op het project uploadt. Klantgebruikers met het recht *Projecten* kregen dit recht automatisch.
 

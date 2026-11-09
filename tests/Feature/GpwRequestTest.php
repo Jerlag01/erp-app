@@ -297,11 +297,31 @@ class GpwRequestTest extends TestCase
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
             ->callAction('requestGpw', [...$dates, 'contact_ids' => []])
             ->assertHasActionErrors(['contact_ids']);
-        // Someone of another site cannot be chosen, not in the form and not by sending the id anyway.
+        // Anyone with an e-mail address can be chosen, also a contact of another site, or a new person
+        // added in the window (who has no client portal login).
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
             ->callAction('requestGpw', [...$dates, 'contact_ids' => [$second->id, $stranger->id]])
-            ->assertHasActionErrors(['contact_ids.1']);
-        $this->assertSame([$second->id], app(RequestGpw::class)->handle($project, $requester, [...$dates, 'contact_ids' => [$second->id, $stranger->id]])->contact_ids);
+            ->assertHasNoActionErrors();
+        $this->assertEqualsCanonicalizing([$second->id, $stranger->id], GpwRequest::query()->sole()->contact_ids);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('other@example.com'));
+
+        // Someone without e-mail address is no recipient.
+        try {
+            app(RequestGpw::class)->handle($project, $requester, [...$dates, 'contact_ids' => [$withoutMail->id]]);
+            $this->fail('A request without any e-mail address was made.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('contact_ids', $exception->errors());
+        }
+
+        // A new person, added from the request window.
+        GpwRequest::query()->delete();
+        Mail::fake();
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('requestGpw')
+            ->assertSchemaComponentExists('contact_ids');
+        $newPerson = WorkSiteContact::query()->create(['first_name' => 'Nina', 'last_name' => 'Nieuw', 'email' => 'nina@extern.example', 'locale' => 'en']);
+        $this->assertArrayHasKey($newPerson->id, RequestGpw::searchRecipients('nina'));
+        $this->assertArrayNotHasKey($withoutMail->id, RequestGpw::searchRecipients((string) $withoutMail->last_name));
         GpwRequest::query()->delete();
         Mail::fake();
 
@@ -401,5 +421,30 @@ class GpwRequestTest extends TestCase
         $link = $this->directLinks()['sophie@proximus.example']['approve'];
         GpwRequestKey::query()->where('gpw_request_id', $expired->id)->update(['expires_at' => now()->subMinute()]);
         $this->get($link)->assertRedirect(ClientPortal::loginUrl());
+    }
+
+    #[Test]
+    public function several_recipients_get_one_mail_together_and_see_who_it_went_to(): void
+    {
+        $project = $this->project();
+        $marc = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Peeters', 'email' => 'marc@proximus.example', 'locale' => 'fr']);
+        $nl = WorkSiteContact::factory()->create(['first_name' => 'Ann', 'last_name' => 'Claes', 'email' => 'ann@proximus.example', 'locale' => 'nl']);
+        $requester = $this->requester($project, email: 'jan@power.example');
+        $gpw = $this->gpw($project, $requester, ['contact_ids' => [$this->contact->id, $marc->id, $nl->id]]);
+
+        // Sophie and Marc (both French) in one mail, Ann (Dutch) in her own; everyone sees all three.
+        Mail::assertSent(SystemMail::class, 2);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('sophie@proximus.example') && $mail->hasTo('marc@proximus.example')
+            && $mail->hasCc('jan@power.example')
+            && str_contains(strip_tags($mail->rendered['html']), 'Sophie Dubois (sophie@proximus.example), Marc Peeters (marc@proximus.example), Ann Claes (ann@proximus.example)'));
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('ann@proximus.example') && ! $mail->hasTo('sophie@proximus.example')
+            && str_contains(strip_tags($mail->rendered['html']), 'Marc Peeters (marc@proximus.example)'));
+        $this->assertSame(2, GpwRequestKey::query()->where('gpw_request_id', $gpw->id)->count());
+
+        // A button of the shared mail: the decision carries the names of that mail.
+        $link = $this->directLinks()['sophie@proximus.example']['approve'];
+        $token = substr(parse_url($link, PHP_URL_PATH), strlen('/gpw/key/'), 48);
+        $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk();
+        $this->assertSame([GpwStatus::Approved, 'Sophie Dubois, Marc Peeters'], [$gpw->fresh()->status, $gpw->fresh()->decided_by_name]);
     }
 }

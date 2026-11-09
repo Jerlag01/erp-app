@@ -18,6 +18,7 @@ use App\Filament\Resources\MoveDossiers\MoveDossierResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\Projects\Schemas\ProjectForm;
+use App\Filament\Resources\WorkSites\Schemas\WorkSiteContactFields;
 use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
@@ -26,6 +27,7 @@ use App\Models\MoveDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectPoNumber;
+use App\Models\WorkSiteContact;
 use App\Support\Asbuilts;
 use App\Support\Interventions;
 use App\Support\PdfAccess;
@@ -33,7 +35,6 @@ use App\Support\ProjectProgress;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -299,21 +300,25 @@ class ViewProject extends ViewRecord
                 ->visible(fn (Project $record): bool => Gate::allows('requestGpw', $record))
                 ->authorize(fn (Project $record): bool => Gate::allows('requestGpw', $record))
                 ->modalHeading(__('erp.gpw.request_heading'))
-                ->modalDescription(fn (Project $record): string => RequestGpw::candidatesFor($record)->isNotEmpty()
-                    ? __('erp.gpw.request_help_choose')
-                    : __('erp.gpw.errors.no_contact'))
+                ->modalDescription(__('erp.gpw.request_help_choose'))
                 ->modalSubmitActionLabel(__('erp.gpw.send'))
                 // The site's own contacts are ticked (or else those of the area); any of both can be chosen.
                 ->fillForm(fn (Project $record): array => ['contact_ids' => RequestGpw::contactsFor($record)->modelKeys()])
                 ->schema(fn (Project $record): array => [
-                    CheckboxList::make('contact_ids')
+                    // Anyone with an e-mail address (also without a portal login); the site's and area's contacts
+                    // are offered first, a new person can be added here.
+                    Select::make('contact_ids')
                         ->label(__('erp.gpw.recipients'))
+                        ->helperText(__('erp.gpw.recipients_help'))
+                        ->multiple()
+                        ->searchable()
                         ->options(RequestGpw::candidateOptions($record))
-                        ->descriptions(RequestGpw::candidateSources($record))
+                        ->getSearchResultsUsing(fn (string $search): array => RequestGpw::candidateOptions($record) + RequestGpw::searchRecipients($search))
+                        ->getOptionLabelsUsing(fn (array $values): array => WorkSiteContact::query()->whereKey($values)->get()->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => RequestGpw::optionLabel($contact)])->all())
+                        ->createOptionForm(fn (): array => array_map(fn ($field) => $field->getName() === 'email' ? $field->required() : $field, WorkSiteContactFields::make()))
+                        ->createOptionUsing(fn (array $data): int => WorkSiteContact::query()->create($data)->getKey())
                         ->required()
-                        ->validationMessages(['required' => __('erp.gpw.errors.no_recipient')])
-                        ->bulkToggleable()
-                        ->visible(RequestGpw::candidatesFor($record)->isNotEmpty()),
+                        ->validationMessages(['required' => __('erp.gpw.errors.no_recipient')]),
                     Grid::make(2)->schema([
                         DatePicker::make('starts_on')->label(__('erp.gpw.starts_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->required()->live(),
                         DatePicker::make('ends_on')->label(__('erp.gpw.ends_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->afterOrEqual('starts_on')->required(),

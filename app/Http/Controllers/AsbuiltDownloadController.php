@@ -7,6 +7,7 @@ use App\Models\AsbuiltFile;
 use App\Models\AsbuiltLibraryFile;
 use App\Models\ClientUser;
 use App\Models\Project;
+use App\Models\WorkSite;
 use App\Support\Asbuilts;
 use App\Support\ClientPortal;
 use Illuminate\Support\Facades\Auth;
@@ -70,6 +71,19 @@ class AsbuiltDownloadController
         abort_unless($file->asbuilt && $this->clientMay($file->asbuilt), 403);
 
         return $this->send($file->storagePath(), $file->fileName());
+    }
+
+    /**
+     * A standard file of a COW-code the client user maintains (the as-built standard files of the portal).
+     */
+    public function clientLibrary(AsbuiltLibraryFile $file): StreamedResponse
+    {
+        $user = Auth::guard(ClientPortal::GUARD)->user();
+        abort_unless($user instanceof ClientUser && $user->is_active && modules()->asbuilt() && $user->may(ClientPortal::ASBUILT_LIBRARY)
+            && $file->work_site_id !== null && $file->category->perCowCode()
+            && $user->restrictWorkSites(WorkSite::query()->whereKey($file->work_site_id))->exists(), 403);
+
+        return $this->send($file->path, $file->original_name);
     }
 
     public static function clientMay(Asbuilt $asbuilt): bool

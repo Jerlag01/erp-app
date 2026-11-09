@@ -18,6 +18,7 @@ use App\Models\BatteryRoomDossier;
 use App\Models\ClientUser;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WorkSite;
 use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -297,6 +298,75 @@ class Asbuilts
         }
 
         return $files;
+    }
+
+    /**
+     * The categories whose standard files belong to one COW-code (not the global or general ones): the
+     * upload zones per COW-code, also in the client portal.
+     *
+     * @return list<AsbuiltCategory>
+     */
+    public static function cowCodeCategories(): array
+    {
+        return array_values(array_filter(AsbuiltCategory::all(), fn (AsbuiltCategory $category): bool => $category->perCowCode()));
+    }
+
+    /**
+     * Standard files of a COW-code, uploaded straight into the register (by an employee or a client): they
+     * also go to the as-builts of that COW-code that are still open.
+     *
+     * @param  list<string>  $paths  stored on the private disk
+     * @param  array<string, string>  $names  original file names by path
+     * @return list<AsbuiltLibraryFile>
+     */
+    public function addCowCodeFiles(WorkSite $site, AsbuiltCategory $category, array $paths, array $names, ?User $user = null, ?ClientUser $client = null): array
+    {
+        if (! $category->perCowCode()) {
+            throw ValidationException::withMessages(['category' => __('validation.in', ['attribute' => 'category'])]);
+        }
+
+        $disk = Storage::disk(AsbuiltLibraryFile::DISK);
+        $files = [];
+
+        foreach (array_values(array_filter($paths)) as $path) {
+            $name = (string) ($names[$path] ?? basename($path));
+            $files[] = $library = AsbuiltLibraryFile::query()->create([
+                'category' => $category,
+                'work_site_id' => $site->id,
+                'title' => pathinfo($name, PATHINFO_FILENAME),
+                'path' => $path,
+                'original_name' => $name,
+                'size' => $disk->exists($path) ? (int) $disk->size($path) : 0,
+                'uploaded_by' => $user?->id,
+                'uploaded_by_client_user_id' => $client?->id,
+            ]);
+            $this->spreadToOpen($library);
+        }
+
+        return $files;
+    }
+
+    /**
+     * A new version of a standard file: the as-builts that use it get the new one (closed ZIPs keep theirs).
+     */
+    public function replaceCowCodeFile(AsbuiltLibraryFile $file, string $path, ?string $name, ?User $user = null, ?ClientUser $client = null): void
+    {
+        $disk = Storage::disk(AsbuiltLibraryFile::DISK);
+        $previous = $file->path;
+        $name = $name ?: basename($path);
+
+        $file->update([
+            'title' => pathinfo($name, PATHINFO_FILENAME),
+            'path' => $path,
+            'original_name' => $name,
+            'size' => $disk->exists($path) ? (int) $disk->size($path) : 0,
+            'uploaded_by' => $user?->id,
+            'uploaded_by_client_user_id' => $client?->id,
+        ]);
+
+        if ($previous !== $path) {
+            $disk->delete($previous);
+        }
     }
 
     public function planBtv(Asbuilt $asbuilt, CarbonInterface|string|null $date): void

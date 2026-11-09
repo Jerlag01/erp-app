@@ -332,8 +332,17 @@ class ClientPortalTest extends TestCase
         $client->update(['work_site_contact_id' => $contact->id]);
         $client->projects()->attach($assigned);
 
+        // By default everything in their area(s): also a site of the area with its own (other) contact, and
+        // the area of a site they are a direct contact of.
+        $areaWithOtherContact = WorkSite::factory()->hasAttached(WorkSiteContact::factory(), [], 'contacts')->create(['cow_code' => '02E99', 'work_site_area_id' => $areaSite->work_site_area_id]);
+        $ownSiteArea = WorkSiteArea::factory()->create(['name' => '3-BRU']);
+        $ownSite->update(['work_site_area_id' => $ownSiteArea->id]);
+        $neighbour = WorkSite::factory()->create(['cow_code' => '03NBR', 'work_site_area_id' => $ownSiteArea->id]);
+        $inArea = Project::factory()->inCategory('610')->for($areaWithOtherContact)->create();
+        $inOwnSiteArea = Project::factory()->inCategory('604')->for($neighbour)->create();
+
         Livewire::test(ListClientProjects::class)
-            ->assertCanSeeTableRecords([$atOwnSite, $atAreaSite, $assigned])
+            ->assertCanSeeTableRecords([$atOwnSite, $atAreaSite, $assigned, $inArea, $inOwnSiteArea])
             ->assertCanNotSeeTableRecords([$otherClient]);
         Livewire::test(ListClientBatteryDeliveries::class)->assertCanSeeTableRecords([$ownDelivery])->assertCanNotSeeTableRecords([$otherDelivery]);
         // The assigned project's site counts as the client's own site too.

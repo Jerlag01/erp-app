@@ -134,7 +134,7 @@ class MailTemplateResource extends Resource
             'contact_name' => 'Marc Janssens', 'project' => '610-012-02GAM', 'cow_code' => '02GAM', 'address' => 'Stationsstraat 1, 9000 Gent',
             'description' => 'Vervangen gelijkrichter', 'period' => today()->addWeek()->format('d/m/Y').' – '.today()->addWeek()->addDays(2)->format('d/m/Y'),
             'from' => today()->addWeek()->format('d/m/Y'), 'until' => today()->addWeek()->addDays(2)->format('d/m/Y'), 'remarks' => 'Toegang via achterpoort',
-            'requested_by' => 'Jan Janssens', 'requester_email' => 'jan@example.com', 'approve_url' => url('/'), 'reject_url' => url('/'), 'view_url' => url('/'), 'portal_url' => url('/client'),
+            'requested_by' => 'Jan Janssens', 'requester_email' => 'jan@example.com', 'recipients' => 'Sophie Dubois (sophie@example.com), Marc Peeters (marc@example.com)', 'approve_url' => url('/'), 'reject_url' => url('/'), 'view_url' => url('/'), 'portal_url' => url('/client'),
             'decided_by' => 'Marc Janssens', 'note' => '—', 'project_url' => url('/'),
             'file_name' => '610-012-02GAM - ASBUILT.zip',
             'author' => 'Jan Janssens', 'type' => 'idee', 'submitted_on' => today()->format('d/m/Y'), 'message' => 'Goed idee, we nemen het mee in het volgende overleg.', 'url' => url('/'),

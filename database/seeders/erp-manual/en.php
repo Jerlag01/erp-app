@@ -719,15 +719,15 @@ Asking the client for permission to work on a site during a given **period**, an
 ## Requesting a GPW
 
 1. Open a project with the status **To be executed**.
-2. Click **"Request GPW"** and tick **who** the request goes to: the COW code's own contact persons are ticked, you can add those of the area (only people with an e-mail address).
+2. Click **"Request GPW"** and choose **who** the request goes to: the contact persons of the COW code (or else of the area) are already chosen. You can search **any other contact person** with an e-mail address (by name, company or e-mail) or add a **new person** straight away with name, e-mail and language. They don't need a client portal login: they decide with the buttons in the mail.
 3. Choose the **period** (from – until) and optionally add **remarks** (access, keys, outages).
 4. Click **Send request**.
 
-The request is e-mailed to the **chosen contact persons**, each in **their own language**, with you in copy. **Resend** sends it to the same people. If the site has no contact person with an e-mail address, fill one in on the work site or area first.
+The request goes in **one e-mail to all chosen contact persons** together (so everyone sees who it went to; with different languages one e-mail per language), with you in copy. **Resend** sends it to the same people. If the site has no contact person with an e-mail address, fill one in on the work site or area first.
 
 ## The client approves
 
-- Straight **from the mail**, without logging in: each recipient has their own **Approve** and **Refuse** buttons. Approve goes through at once; to refuse they only fill in the reason. The buttons carry a **personal key**: they only work through that link, once and while the request is open. After that (or after a resend, a decision by someone else or the end of the period) the client has to log in to the portal. The request shows the name of whoever decided.
+- Straight **from the mail**, without logging in: the e-mail has the **Approve** and **Refuse** buttons. Approve goes through at once; to refuse they only fill in the reason. The buttons carry a **personal key**: they only work through that link, once and while the request is open. After that (or after a resend, a decision by someone else or the end of the period) the client has to log in to the portal. The request shows the names of the recipients of the e-mail the decision came from.
 - Through the **View the GPW** link in the mail the client sees the request first and decides there.
 - Or in the **Global overview for Client** (the client portal), **GPW requests** tab.
 
@@ -1250,6 +1250,7 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 - In the **project list** the project's description is shown under the category number. For a **604** the **battery delivery** is shown: *To be delivered* with the expected delivery date while the batteries are not delivered, then *Delivered*. The column **Planned execution** shows the first and last day of the project in our planning.
 - Clicking a project shows an **overview**: COW code, address, status, the GPW requests and the **project leaders with their e-mail address**. No files are shown there.
 - **Battery deliveries** only shows the deliveries of their own projects, unless they may see *All projects*.
+- With the permission **As-built standard files per COW code** they pick a COW code under **As-built standard files** (also without a project in their list) and hand in or replace the files of each category that belongs to a COW code (evacuation routes, plans, ventilation calculation and evacuation list of battery rooms). They go straight into the register and into the open as-builts of that COW code. They only remove what a client uploaded. The general files (external influences) are not there.
 - On the **dashboard** they see per **area** which share of their projects is open and which is closed (in percent, compared to all projects of that area).
 - Under **Battery dossiers** (permission *Battery dossiers (604)*) every 604 project shows up from **To be invoiced**, with the COW code and description. Per project: the **photos** of the battery dossier, the **measurement report**, **delivery note**, **visual inspection** and **invoice request** (PDF, made from the dossier) and the **waste report** you upload on the project. Client users with the *Projects* permission got this permission automatically.
 

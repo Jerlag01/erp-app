@@ -40,6 +40,9 @@ class ClientPortal
     /** The documents of finished battery replacements (604, from "to be invoiced"): see BatteryReports. */
     public const BATTERY_REPORTS = 'battery_reports';
 
+    /** Upload and replace the as-built standard files of the COW-codes the user sees (also without a project). */
+    public const ASBUILT_LIBRARY = 'asbuilt_library';
+
     public const BATTERY_DELIVERIES = 'battery_deliveries';
 
     public const CHARGING_STATIONS = 'charging_stations';
@@ -57,7 +60,7 @@ class ClientPortal
     public const HIDDEN_FILE_SECTIONS = [ProjectFileSection::Invoices, ProjectFileSection::Schematics, ProjectFileSection::Plans];
 
     public const PERMISSIONS = [
-        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::ASBUILT, self::BATTERY_REPORTS, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
+        self::PROJECTS, self::ALL_PROJECTS, self::GPW, self::ASBUILT, self::ASBUILT_LIBRARY, self::BATTERY_REPORTS, self::BATTERY_DELIVERIES, self::CHARGING_STATIONS, self::CHARGING_SECRETS, self::ROUTERS, self::ROUTER_SECRETS,
     ];
 
     /**

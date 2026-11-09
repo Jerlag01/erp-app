@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * The personal key of one recipient of a GPW request mail (see RequestGpw::mail): the links "Approve"
- * and "Refuse" carry it, so that person decides without logging in. Only the hash is stored; a key works
+ * The key of one GPW request mail (see RequestGpw::mail; one mail goes to all its recipients): the links
+ * "Approve" and "Refuse" carry it, so the recipients decide without logging in; the decision is recorded
+ * with the names the mail went to. Only the hash is stored; a key works
  * once, until expires_at, and not after it was revoked (a new mailing) or the request was decided.
  */
 #[Fillable(['gpw_request_id', 'work_site_contact_id', 'name', 'email', 'locale', 'token_hash', 'expires_at', 'used_at', 'revoked_at'])]

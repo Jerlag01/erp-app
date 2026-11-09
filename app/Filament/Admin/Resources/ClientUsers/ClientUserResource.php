@@ -8,6 +8,7 @@ use App\Filament\Admin\Actions\ResetTwoFactorAction;
 use App\Models\ClientUser;
 use App\Models\Project;
 use App\Models\WorkSite;
+use App\Models\WorkSiteArea;
 use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
 use BackedEnum;
@@ -258,9 +259,12 @@ class ClientUserResource extends Resource
             ->orderBy('cow_code')
             ->pluck('cow_code');
 
+        $areas = WorkSiteArea::query()->whereKey((new ClientUser(['work_site_contact_id' => $contactId]))->contactAreaIds())->orderBy('name')->pluck('name');
+
         return $codes->isEmpty()
             ? __('erp.client_portal.contact_no_sites')
-            : __('erp.client_portal.contact_sites', ['count' => $codes->count(), 'codes' => $codes->take(20)->implode(', ').($codes->count() > 20 ? ', …' : '')]);
+            : trim(($areas->isNotEmpty() ? __('erp.client_portal.contact_areas', ['areas' => $areas->implode(', ')]).' · ' : '')
+                .__('erp.client_portal.contact_sites', ['count' => $codes->count(), 'codes' => $codes->take(20)->implode(', ').($codes->count() > 20 ? ', …' : '')]));
     }
 
     /**

@@ -83,6 +83,16 @@ class WorkSite extends Model
     }
 
     /**
+     * The as-built standard files of this COW-code (evacuation routes, battery room plans, …).
+     *
+     * @return HasMany<AsbuiltLibraryFile, $this>
+     */
+    public function asbuiltLibraryFiles(): HasMany
+    {
+        return $this->hasMany(AsbuiltLibraryFile::class);
+    }
+
+    /**
      * @return HasMany<WorkSiteRemark, $this>
      */
     public function remarks(): HasMany
