@@ -728,7 +728,8 @@ De aanvraag gaat per e-mail naar de **gekozen contactpersonen**, elk in **zijn e
 
 ## De klant keurt goed
 
-- Via de **link in de mail**: de klant ziet de aanvraag en klikt op **Goedkeuren** of **Weigeren** (met een reden).
+- Rechtstreeks **vanuit de mail**, zonder aan te melden: elke ontvanger heeft eigen knoppen **Goedkeuren** en **Weigeren**. Goedkeuren gaat meteen door; bij weigeren vult hij enkel de reden in. De knoppen dragen een **persoonlijke sleutel**: ze werken enkel via die link, één keer en zolang de aanvraag openstaat. Daarna (of na opnieuw versturen, beslist door iemand anders, of na de periode) moet de klant zich aanmelden in het portaal. Bij de aanvraag staat de naam van wie besliste.
+- Via de link **GPW bekijken** in de mail ziet de klant eerst de aanvraag en beslist hij daar.
 - Of in de **Global overview for Client** (het klantenportaal), tabblad **GPW-aanvragen**.
 
 Bij goedkeuring gaat het project naar **Te plannen** en krijg jij een melding in het platform, op je telefoon en per e-mail.

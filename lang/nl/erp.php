@@ -2753,6 +2753,10 @@ return [
             'open' => 'Project openen',
         ],
         'page' => [
+            'approving' => 'Uw goedkeuring wordt verstuurd als :name …',
+            'reject_reason' => 'Waarom weigert u de aanvraag? (verplicht)',
+            'link_used' => 'Deze link werkt niet meer',
+            'link_used_body' => 'De knoppen in de e-mail werken één keer en zolang de aanvraag openstaat. Meld u aan om de GPW-aanvraag te bekijken.',
             'title' => 'GPW-aanvraag :project',
             'period' => 'Periode',
             'address' => 'Adres',

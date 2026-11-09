@@ -727,7 +727,8 @@ La demande est envoyée par e-mail aux **personnes de contact choisies**, chacun
 
 ## Le client approuve
 
-- Via le **lien dans le mail** : le client voit la demande et clique sur **Approuver** ou **Refuser** (avec une raison).
+- Directement **depuis le mail**, sans se connecter : chaque destinataire a ses propres boutons **Approuver** et **Refuser**. Approuver est enregistré tout de suite ; pour refuser, il indique seulement la raison. Les boutons portent une **clé personnelle** : ils ne fonctionnent que via ce lien, une seule fois et tant que la demande est ouverte. Ensuite (ou après un renvoi, une décision par quelqu'un d'autre ou la fin de la période), le client doit se connecter au portail. La demande indique le nom de la personne qui a décidé.
+- Via le lien **Voir le GPW** du mail, le client voit d'abord la demande et décide là.
 - Ou dans le **Global overview for Client** (le portail client), onglet **Demandes de GPW**.
 
 Après approbation, le projet passe à **À planifier** et vous recevez une notification dans la plateforme, sur votre téléphone et par e-mail.

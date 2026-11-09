@@ -2753,6 +2753,10 @@ return [
             'open' => 'Open project',
         ],
         'page' => [
+            'approving' => 'Your approval is being sent as :name …',
+            'reject_reason' => 'Why do you refuse the request? (required)',
+            'link_used' => 'This link no longer works',
+            'link_used_body' => 'The buttons in the e-mail work once and while the request is open. Log in to see the GPW request.',
             'title' => 'GPW request :project',
             'period' => 'Period',
             'address' => 'Address',

@@ -6,6 +6,7 @@ use App\Enums\GpwStatus;
 use App\Enums\MailTemplateKey;
 use App\Mail\SystemMail;
 use App\Models\GpwRequest;
+use App\Models\GpwRequestKey;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkSiteContact;
@@ -167,14 +168,20 @@ class RequestGpw
             ->whereKey(filled($request->contact_ids) ? (array) $request->contact_ids : array_filter([$request->work_site_contact_id]))
             ->get()
             ->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))
-            ->map(fn (WorkSiteContact $contact): array => [$contact->email, $contact->fullName(), $contact->preferredLocale()]);
+            ->map(fn (WorkSiteContact $contact): array => [$contact->email, $contact->fullName(), $contact->preferredLocale(), $contact->id]);
 
         if ($recipients->isEmpty()) {
-            $recipients = collect(explode(',', $request->contact_email))->map(fn (string $email): array => [trim($email), $request->contact_name, $request->locale]);
+            $recipients = collect(explode(',', $request->contact_email))->map(fn (string $email): array => [trim($email), $request->contact_name, $request->locale, null]);
         }
 
+        // A new mailing: the keys of earlier mails that were not used stop working.
+        GpwRequestKey::query()->where('gpw_request_id', $request->id)->whereNull('used_at')->whereNull('revoked_at')->update(['revoked_at' => now()]);
+
         try {
-            foreach ($recipients->values() as $index => [$email, $name, $locale]) {
+            foreach ($recipients->values() as $index => [$email, $name, $locale, $contactId]) {
+                // Each recipient their own key: "Approve" and "Refuse" work straight from their mail.
+                [$token] = GpwRequestKey::issue($request, $email, $name, $locale, $contactId);
+
                 Mail::to($email, $name)
                     ->cc($index === 0 && $requester?->email ? [$requester->email] : [])
                     ->send(new SystemMail(MailTemplateKey::GpwRequest, $locale, [
@@ -189,7 +196,9 @@ class RequestGpw
                         'remarks' => $request->remarks ?? '—',
                         'requested_by' => $requester?->name ?? settings()->siteName(),
                         'requester_email' => $requester?->email ?? '',
-                        'approve_url' => self::decisionUrl($request, $locale),
+                        'approve_url' => route('gpw.key.approve', $token),
+                        'reject_url' => route('gpw.key.reject', $token),
+                        'view_url' => self::decisionUrl($request, $locale),
                         'portal_url' => ClientPortal::loginUrl(),
                     ]));
             }

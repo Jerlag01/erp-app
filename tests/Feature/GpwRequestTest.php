@@ -13,6 +13,7 @@ use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Mail\SystemMail;
 use App\Models\ClientUser;
 use App\Models\GpwRequest;
+use App\Models\GpwRequestKey;
 use App\Models\MailTemplate;
 use App\Models\PlanningItem;
 use App\Models\Project;
@@ -322,5 +323,83 @@ class GpwRequestTest extends TestCase
         $this->assertTrue(app(RequestGpw::class)->mail($gpw->fresh()));
         Mail::assertSent(SystemMail::class, 2);
         Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('cleo@proximus.example'));
+    }
+
+    /**
+     * The "Approve" and "Refuse" links per recipient of the mails sent so far.
+     *
+     * @return array<string, array{approve: string, reject: string}>
+     */
+    protected function directLinks(): array
+    {
+        $links = [];
+        Mail::assertSent(SystemMail::class, function (SystemMail $mail) use (&$links): bool {
+            preg_match('#href="([^"]+/gpw/key/[A-Za-z0-9]{48}/approve)"#', $mail->rendered['html'], $approve);
+            preg_match('#href="([^"]+/gpw/key/[A-Za-z0-9]{48}/reject)"#', $mail->rendered['html'], $reject);
+            $links[$mail->to[0]['address']] = ['approve' => html_entity_decode($approve[1] ?? ''), 'reject' => html_entity_decode($reject[1] ?? '')];
+
+            return true;
+        });
+
+        return $links;
+    }
+
+    #[Test]
+    public function each_recipient_approves_or_refuses_straight_from_the_mail_with_a_personal_key(): void
+    {
+        $project = $this->project();
+        $other = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Peeters', 'email' => 'marc@proximus.example', 'locale' => 'nl']);
+        $project->workSite->contacts()->attach($other);
+        $gpw = $this->gpw($project, $this->requester($project));
+        $links = $this->directLinks();
+
+        // Each recipient has their own links; the keys themselves are not stored.
+        $this->assertNotSame($links['sophie@proximus.example']['approve'], $links['marc@proximus.example']['approve']);
+        $this->assertSame(2, GpwRequestKey::query()->where('gpw_request_id', $gpw->id)->count());
+        $this->assertStringNotContainsString(GpwRequestKey::query()->value('token_hash'), $links['sophie@proximus.example']['approve']);
+
+        // "Approve" without logging in: the page sends it by itself (in the recipient's language).
+        $page = $this->get($links['marc@proximus.example']['approve'])->assertOk()->assertSee('id="gpw-approve"', escape: false)->assertSee('Marc Peeters');
+        $token = substr(parse_url($links['marc@proximus.example']['approve'], PHP_URL_PATH), strlen('/gpw/key/'), 48);
+        $this->assertSame(GpwStatus::Pending, $gpw->fresh()->status, 'Opening the link alone sends nothing yet.');
+        $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk()->assertSee(GpwStatus::Approved->getLabel());
+
+        $gpw->refresh();
+        $this->assertSame([GpwStatus::Approved, 'Marc Peeters'], [$gpw->status, $gpw->decided_by_name]);
+
+        // Every key of the request is used now: the links send the client to the portal login.
+        $this->get($links['marc@proximus.example']['approve'])->assertRedirect(ClientPortal::loginUrl());
+        $this->get($links['sophie@proximus.example']['reject'])->assertRedirect(ClientPortal::loginUrl());
+        $this->post(route('gpw.key.decide', $token), ['decision' => 'reject', 'note' => 'Toch niet'])->assertRedirect(ClientPortal::loginUrl());
+        $this->assertSame(GpwStatus::Approved, $gpw->fresh()->status);
+        $this->get('/gpw/key/'.str_repeat('a', 48).'/approve')->assertRedirect(ClientPortal::loginUrl());
+    }
+
+    #[Test]
+    public function refusing_asks_the_reason_and_a_new_mailing_replaces_the_old_keys(): void
+    {
+        $project = $this->project();
+        $gpw = $this->gpw($project, $this->requester($project));
+        $old = $this->directLinks()['sophie@proximus.example'];
+
+        // Sent again: the earlier links stop working.
+        Mail::fake();
+        app(RequestGpw::class)->mail($gpw->fresh());
+        $links = $this->directLinks()['sophie@proximus.example'];
+        $this->get($old['reject'])->assertRedirect(ClientPortal::loginUrl());
+
+        $token = substr(parse_url($links['reject'], PHP_URL_PATH), strlen('/gpw/key/'), 48);
+        $this->get($links['reject'])->assertOk()->assertSee(__('erp.gpw.page.reject_reason', [], 'fr'));
+        $this->from($links['reject'])->post(route('gpw.key.decide', $token), ['decision' => 'reject'])->assertRedirect($links['reject'])->assertSessionHasErrors('note');
+        $this->post(route('gpw.key.decide', $token), ['decision' => 'reject', 'note' => 'Pas possible cette semaine'])->assertOk();
+
+        $gpw->refresh();
+        $this->assertSame([GpwStatus::Rejected, 'Sophie Dubois', 'Pas possible cette semaine'], [$gpw->status, $gpw->decided_by_name, $gpw->decision_note]);
+
+        // An expired key does not work either.
+        $expired = $this->gpw($project, $this->requester($project));
+        $link = $this->directLinks()['sophie@proximus.example']['approve'];
+        GpwRequestKey::query()->where('gpw_request_id', $expired->id)->update(['expires_at' => now()->subMinute()]);
+        $this->get($link)->assertRedirect(ClientPortal::loginUrl());
     }
 }

@@ -727,7 +727,8 @@ The request is e-mailed to the **chosen contact persons**, each in **their own l
 
 ## The client approves
 
-- Through the **link in the mail**: the client sees the request and clicks **Approve** or **Refuse** (with a reason).
+- Straight **from the mail**, without logging in: each recipient has their own **Approve** and **Refuse** buttons. Approve goes through at once; to refuse they only fill in the reason. The buttons carry a **personal key**: they only work through that link, once and while the request is open. After that (or after a resend, a decision by someone else or the end of the period) the client has to log in to the portal. The request shows the name of whoever decided.
+- Through the **View the GPW** link in the mail the client sees the request first and decides there.
 - Or in the **Global overview for Client** (the client portal), **GPW requests** tab.
 
 Once approved, the project goes to **To be planned** and you get a notification in the platform, on your phone and by e-mail.

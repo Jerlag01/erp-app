@@ -19,6 +19,7 @@ use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
 use App\Http\Controllers\GdprController;
 use App\Http\Controllers\GpwDecisionController;
+use App\Http\Controllers\GpwKeyController;
 use App\Http\Controllers\IncidentPdfController;
 use App\Http\Controllers\IncidentPhotoController;
 use App\Http\Controllers\InterventionPdfController;
@@ -147,6 +148,10 @@ Route::post('/peppol/inbound/{secret}', PeppolInboundController::class)
 // The link in a GPW request mail: the contact person approves or refuses the request (signed, until the period ends).
 Route::get('/gpw/{gpwRequest}', [GpwDecisionController::class, 'show'])->whereNumber('gpwRequest')->middleware('signed')->name('gpw.decide');
 Route::post('/gpw/{gpwRequest}', [GpwDecisionController::class, 'decide'])->whereNumber('gpwRequest')->middleware(['signed', 'throttle:20,1']);
+// The buttons in a GPW request mail: the recipient's personal key decides without logging in (see GpwKeyController).
+Route::get('/gpw/key/{token}/approve', [GpwKeyController::class, 'approve'])->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:30,1')->name('gpw.key.approve');
+Route::get('/gpw/key/{token}/reject', [GpwKeyController::class, 'reject'])->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:30,1')->name('gpw.key.reject');
+Route::post('/gpw/key/{token}', [GpwKeyController::class, 'decide'])->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:20,1')->name('gpw.key.decide');
 
 // The link in the welcome mail: signed, valid for 7 days, and only until the password is set.
 Route::get('/welcome/{user}', WelcomeLinkController::class)->middleware('signed')->name('welcome');

@@ -1,5 +1,13 @@
-{{-- The public page of a GPW request link: the request, and approve / refuse buttons while it is pending. --}}
-@php($project = $gpw->project)
+{{--
+    The public page of a GPW request link: the request, and approve / refuse buttons while it is pending.
+    From the buttons in the mail (a personal key, see GpwKeyController) $mode is "approve" (sent at once by
+    the page itself, with a button in case scripts are off) or "reject" (the reason is asked).
+--}}
+@php
+    $project = $gpw->project;
+    $mode ??= null;
+    $action ??= null;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
@@ -54,7 +62,28 @@
             <dt>{{ __('erp.gpw.page.requested_by') }}</dt><dd>{{ $gpw->requester?->name ?? settings()->siteName() }}</dd>
         </dl>
 
-        @if ($gpw->isPending())
+        @if ($gpw->isPending() && $mode === 'approve')
+            <form method="post" action="{{ $action }}" id="gpw-approve">
+                @csrf
+                <input type="hidden" name="decision" value="approve">
+                <p>{{ __('erp.gpw.page.approving', ['name' => $decider ?? '']) }}</p>
+                <div class="buttons">
+                    <button class="approve" type="submit">{{ __('erp.gpw.approve') }}</button>
+                </div>
+            </form>
+            <script>document.getElementById('gpw-approve').submit();</script>
+        @elseif ($gpw->isPending() && $mode === 'reject')
+            <form method="post" action="{{ $action }}">
+                @csrf
+                <input type="hidden" name="decision" value="reject">
+                <label for="note">{{ __('erp.gpw.page.reject_reason') }}</label>
+                <textarea id="note" name="note" maxlength="2000" required autofocus>{{ old('note') }}</textarea>
+                @error('note') <p class="error">{{ __('erp.gpw.page.note_required') }}</p> @enderror
+                <div class="buttons">
+                    <button class="reject" type="submit">{{ __('erp.gpw.reject') }}</button>
+                </div>
+            </form>
+        @elseif ($gpw->isPending())
             <form method="post">
                 @csrf
                 <label for="note">{{ __('erp.gpw.page.note') }}</label>
