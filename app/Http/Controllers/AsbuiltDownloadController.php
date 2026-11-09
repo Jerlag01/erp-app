@@ -7,10 +7,12 @@ use App\Models\AsbuiltFile;
 use App\Models\AsbuiltLibraryFile;
 use App\Models\ClientUser;
 use App\Models\Project;
+use App\Support\Asbuilts;
 use App\Support\ClientPortal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -41,11 +43,23 @@ class AsbuiltDownloadController
         return $this->send($asbuilt->zip_path, $asbuilt->zipName());
     }
 
-    public function clientZip(Asbuilt $asbuilt): StreamedResponse
+    /**
+     * The client's ZIP: the final one once the as-built is closed, before that one made on the spot from
+     * what is in it now, with the same folders.
+     */
+    public function clientZip(Asbuilt $asbuilt, Asbuilts $asbuilts): StreamedResponse|BinaryFileResponse
     {
-        abort_unless($this->clientMay($asbuilt) && $asbuilt->isClosed(), 403);
+        abort_unless($this->clientMay($asbuilt), 403);
 
-        return $this->send($asbuilt->zip_path, $asbuilt->zipName());
+        if ($asbuilt->isClosed() && filled($asbuilt->zip_path) && Storage::disk(Asbuilt::DISK)->exists($asbuilt->zip_path)) {
+            return $this->send($asbuilt->zip_path, $asbuilt->zipName());
+        }
+
+        return response()->download($asbuilts->buildZip($asbuilt), $asbuilt->zipName(), [
+            'Content-Type' => 'application/zip',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ])->deleteFileAfterSend();
     }
 
     /**

@@ -328,11 +328,13 @@ class Asbuilts
     }
 
     /**
-     * Zips every file into a folder per category, closes the as-built and tells the client.
+     * The ZIP of the as-built as it is now, in a temporary file: an (empty) folder per category
+     * ("0 - BTV control", "1 - cable dimensions", …) with its files. The client's general zone is not in
+     * it. Used when closing, and for the client's download while the as-built is still open.
      */
-    public function close(Asbuilt $asbuilt): void
+    public function buildZip(Asbuilt $asbuilt): string
     {
-        $asbuilt->loadMissing('project', 'files.libraryFile');
+        $asbuilt->load('project', 'files.libraryFile');
         $disk = Storage::disk(Asbuilt::DISK);
         $temporary = tempnam(sys_get_temp_dir(), 'asbuilt');
         $zip = new ZipArchive;
@@ -355,8 +357,18 @@ class Asbuilts
             $used[] = $name;
             $zip->addFile($disk->path($path), $name);
         }
-
         $zip->close();
+
+        return $temporary;
+    }
+
+    /**
+     * Zips every file into a folder per category, closes the as-built and tells the client.
+     */
+    public function close(Asbuilt $asbuilt): void
+    {
+        $disk = Storage::disk(Asbuilt::DISK);
+        $temporary = $this->buildZip($asbuilt);
 
         $target = 'asbuilt/'.$asbuilt->id.'/'.Str::random(8).'-'.Str::slug($asbuilt->project?->reference ?? 'asbuilt').'-asbuilt.zip';
         $previous = $asbuilt->zip_path;

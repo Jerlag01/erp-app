@@ -108,10 +108,10 @@ class ClientAsbuiltResource extends ClientResource
                 SelectFilter::make('status')->label(__('erp.client_portal.status'))->options(AsbuiltStatus::class),
             ])
             ->recordActions([
+                // At any moment: the final ZIP once closed, else one of what is in it now.
                 Action::make('zip')
                     ->label(__('erp.asbuilt.download_zip'))
                     ->icon(Heroicon::OutlinedArrowDownTray)
-                    ->visible(fn (Asbuilt $record): bool => $record->isClosed())
                     ->url(fn (Asbuilt $record): string => route('client.asbuilt.zip', $record)),
                 ViewAction::make(),
             ]);

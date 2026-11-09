@@ -996,7 +996,7 @@ Avec le droit **Rouvrir**, vous rouvrez un as-built terminé.
 
 ## Le client
 
-Dans le portail client (droit **As-builts**), le client suit le statut, voit et télécharge **tous les fichiers** de l'as-built par catégorie (aussi pendant qu'il est en cours, pas seulement après la clôture), télécharge le ZIP à la fin et fournit des fichiers : voies d'évacuation, plans, influences externes, ICC et Lmax, ou tout en un ZIP dans la **zone générale**. Les chefs de projet en sont avertis.
+Dans le portail client (droit **As-builts**), le client suit le statut, voit et télécharge **tous les fichiers** de l'as-built, avec **chaque catégorie** comme vous les voyez (aussi pendant qu'il est en cours, pas seulement après la clôture), télécharge **à tout moment le ZIP** avec les mêmes dossiers (0 - BTV control, 1 - cable dimensions, … ; après la clôture le ZIP définitif) et fournit des fichiers : voies d'évacuation, plans, influences externes, ICC et Lmax, ou tout en un ZIP dans la **zone générale**. Les chefs de projet en sont avertis.
 
 ## Droits
 

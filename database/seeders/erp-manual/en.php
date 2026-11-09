@@ -996,7 +996,7 @@ With the **Reopen** permission you reopen a finished as-built.
 
 ## The client
 
-In the client portal (permission **As-builts**) the client follows the status, sees and downloads **every file** of the as-built per category (also while it is still in progress, not only once it is closed), downloads the ZIP at the end and hands in files: evacuation routes, plans, external influences, ICC and Lmax, or everything in one ZIP in the **general zone**. The project leaders are notified.
+In the client portal (permission **As-builts**) the client follows the status, sees and downloads **every file** of the as-built, with **every category** as you see them (also while it is still in progress, not only once it is closed), downloads **the ZIP at any moment** with the same folders (0 - BTV control, 1 - cable dimensions, …; once closed, the final ZIP) and hands in files: evacuation routes, plans, external influences, ICC and Lmax, or everything in one ZIP in the **general zone**. The project leaders are notified.
 
 ## Permissions
 

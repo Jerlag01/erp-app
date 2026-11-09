@@ -216,6 +216,26 @@ class AsbuiltTest extends TestCase
         Livewire::test(ViewClientAsbuilt::class, ['record' => $asbuilt->getRouteKey()])->assertSee('meetrapport.pdf')->assertSee('icc.xlsx');
         $this->get(route('client.asbuilt.file', $employeeFile))->assertOk()->assertDownload('meetrapport.pdf');
 
+        // Every category shows, also the empty ones, as on the employees' side.
+        Livewire::test(ViewClientAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
+            ->assertSee(AsbuiltCategory::EvacuationRoutes->getLabel())
+            ->assertSee(AsbuiltCategory::CableDimensions->getLabel())
+            ->assertActionVisible('zip');
+
+        // The ZIP can be downloaded before it is closed, with the same folders as the final one.
+        $response = $this->get(route('client.asbuilt.zip', $asbuilt))->assertOk()->assertDownload($asbuilt->zipName());
+        $zipFile = tempnam(sys_get_temp_dir(), 'test');
+        copy($response->baseResponse->getFile()->getPathname(), $zipFile);
+        $zip = new ZipArchive;
+        $zip->open($zipFile);
+        $names = array_map(fn (int $i): string => $zip->getNameIndex($i), range(0, $zip->numFiles - 1));
+        $zip->close();
+        @unlink($zipFile);
+        $this->assertContains(AsbuiltCategory::BtvReports->folder().'/meetrapport.pdf', $names);
+        $this->assertContains(AsbuiltCategory::EvacuationRoutes->folder().'/', $names);
+        $this->assertContains(AsbuiltCategory::IccCalculations->folder().'/icc.xlsx', $names);
+        $this->assertFalse($asbuilt->fresh()->isClosed());
+
         // Categories the client may not hand in are refused.
         Livewire::test(ViewClientAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
             ->callAction('upload', ['category' => AsbuiltCategory::BtvReports->value, 'files' => [UploadedFile::fake()->create('nep.pdf', 5)]])

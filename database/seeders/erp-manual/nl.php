@@ -997,7 +997,7 @@ Met het recht **Heropenen** zet je een afgeronde as-built terug open.
 
 ## De klant
 
-In het klantenportaal (recht **As-builts**) volgt de klant de status op, ziet en downloadt hij **alle bestanden** van de as-built per categorie (ook terwijl ze nog loopt, niet pas na het afsluiten), downloadt hij op het einde de ZIP en levert hij bestanden aan: evacuatiewegen, plannen, externe invloeden, ICC en Lmax, of alles in één ZIP in de **algemene zone**. De projectleiders krijgen daarvan een melding.
+In het klantenportaal (recht **As-builts**) volgt de klant de status op, ziet en downloadt hij **alle bestanden** van de as-built, met **elke categorie** zoals jij ze ziet (ook terwijl ze nog loopt, niet pas na het afsluiten), downloadt hij **op elk moment de ZIP** met dezelfde mappen (0 - BTV control, 1 - cable dimensions, …; na het afsluiten de definitieve ZIP) en levert hij bestanden aan: evacuatiewegen, plannen, externe invloeden, ICC en Lmax, of alles in één ZIP in de **algemene zone**. De projectleiders krijgen daarvan een melding.
 
 ## Rechten
 

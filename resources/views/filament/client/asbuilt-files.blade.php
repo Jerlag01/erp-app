@@ -26,7 +26,6 @@
         <div style="display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));">
             @foreach (\App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt::visibleCategories($asbuilt) as $key => $label)
                 @php($files = $groups[$key] ?? [])
-                @continue($files === [] && ! array_key_exists($key, $uploadable))
                 <div style="padding: .75rem 1rem; border-radius: .75rem; border: 1px solid rgb(148 163 184 / .35);">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: .5rem;">
                         <strong>{{ $label }}</strong>

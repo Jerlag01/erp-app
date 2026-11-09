@@ -42,15 +42,16 @@ class ViewClientAsbuilt extends ViewRecord
     }
 
     /**
-     * Every category the client sees: the general zone and the categories of this as-built.
+     * Every category the client sees, as on the employees' side: each category of this as-built in
+     * order (also while empty), the general zone last.
      *
      * @return array<string, string>
      */
     public static function visibleCategories(Asbuilt $asbuilt): array
     {
         return [
-            AsbuiltCategory::GENERAL => __('erp.asbuilt.general_zone_client'),
             ...collect($asbuilt->categories())->mapWithKeys(fn (AsbuiltCategory $category): array => [$category->value => $category->getLabel()])->all(),
+            AsbuiltCategory::GENERAL => __('erp.asbuilt.general_zone_client'),
         ];
     }
 
@@ -73,10 +74,10 @@ class ViewClientAsbuilt extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            // At any moment: the final ZIP once closed, else one of what is in it now (same folders).
             Action::make('zip')
                 ->label(__('erp.asbuilt.download_zip'))
                 ->icon(Heroicon::OutlinedArrowDownTray)
-                ->visible(fn (Asbuilt $record): bool => $record->isClosed())
                 ->url(fn (Asbuilt $record): string => route('client.asbuilt.zip', $record)),
             Action::make('upload')
                 ->label(__('erp.asbuilt.client_upload'))
