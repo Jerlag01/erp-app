@@ -121,7 +121,7 @@ class HrTeamsFuelPassTest extends TestCase
         $this->actingAs($manager);
 
         Livewire::test(ManageFuelPasses::class)
-            ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 1234 5678 9012 345', 'pin_code' => '123', 'expires_on' => '13/2028'])
+            ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 12AB 5678', 'pin_code' => '123', 'expires_on' => '13/2028'])
             ->assertHasActionErrors(['card_number', 'pin_code', 'expires_on']);
         Livewire::test(ManageFuelPasses::class)
             ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => '7077 1234 5678 9012 34', 'pin_code' => '4821', 'expires_on' => '08/2028'])
@@ -129,6 +129,15 @@ class HrTeamsFuelPassTest extends TestCase
 
         $pass = FuelPass::sole();
         $this->assertSame('707712345678901234', $pass->card_number);
+
+        // The length of the card number differs per supplier.
+        foreach (['7002 1234 5678 9012', '7077 1234 5678 9012 3456 78'] as $number) {
+            Livewire::test(ManageFuelPasses::class)
+                ->callAction('create', ['vehicle_id' => $vehicle->id, 'card_number' => $number, 'pin_code' => '1111', 'expires_on' => '08/2028'])
+                ->assertHasNoActionErrors();
+        }
+        $this->assertSame(['7002123456789012', '7077123456789012345678'], FuelPass::query()->whereKeyNot($pass->id)->orderBy('id')->pluck('card_number')->all());
+        FuelPass::query()->whereKeyNot($pass->id)->delete();
         $this->assertSame('4821', $pass->pin_code);
         // Month and year: valid until the end of that month.
         $this->assertSame(['2028-08-31', '08/2028', false], [$pass->expires_on->toDateString(), $pass->expiryLabel(), $pass->isExpired()]);

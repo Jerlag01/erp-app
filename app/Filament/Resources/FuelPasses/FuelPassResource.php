@@ -80,12 +80,13 @@ class FuelPassResource extends Resource
                     ->required()
                     ->dehydrateStateUsing(fn (?string $state): string => preg_replace('/\D/', '', (string) $state))
                     ->rule(fn () => function (string $attribute, mixed $value, \Closure $fail): void {
-                        if (! preg_match(FuelPass::CARD_PATTERN, preg_replace('/\D/', '', (string) $value))) {
+                        // Digits and spaces only (no letters dropped silently); any length.
+                        if (! preg_match('/^[\d\s]+$/', (string) $value) || ! preg_match(FuelPass::CARD_PATTERN, preg_replace('/\D/', '', (string) $value))) {
                             $fail(__('erp.fuel_passes.card_number_invalid'));
                         }
                     })
                     ->unique(ignoreRecord: true)
-                    ->maxLength(30)
+                    ->maxLength(80)
                     ->extraInputAttributes(['inputmode' => 'numeric', 'style' => 'font-family: var(--erp-mono);']),
                 // Changed only by typing a new one; never shown in the form.
                 TextInput::make('pin_code')
