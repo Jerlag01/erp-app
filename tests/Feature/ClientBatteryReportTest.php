@@ -2,24 +2,30 @@
 
 namespace Tests\Feature;
 
+use App\Enums\GpwStatus;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Filament\Client\Pages\Dashboard;
+use App\Filament\Client\Resources\BatteryDeliveries\Pages\ListClientBatteryDeliveries;
 use App\Filament\Client\Resources\BatteryReports\ClientBatteryReportResource;
 use App\Filament\Client\Resources\BatteryReports\Pages\ListClientBatteryReports;
 use App\Filament\Client\Resources\BatteryReports\Pages\ViewClientBatteryReport;
+use App\Filament\Client\Resources\Projects\ClientProjectResource;
 use App\Filament\Client\Resources\Projects\Pages\ListClientProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\WasteReportsRelationManager;
 use App\Models\BatteryDelivery;
 use App\Models\BatteryDossier;
 use App\Models\ClientUser;
+use App\Models\GpwRequest;
+use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectFile;
 use App\Models\User;
 use App\Models\WorkSite;
 use App\Models\WorkSiteArea;
+use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -145,5 +151,54 @@ class ClientBatteryReportTest extends TestCase
         $this->assertSame([0, false], [$tile['count'], $tile['highlight']]);
         $this->client([ClientPortal::PROJECTS, ClientPortal::ALL_PROJECTS]);
         $this->assertNull(collect(Livewire::test(Dashboard::class)->instance()->tiles())->firstWhere('label', __('erp.client_portal.deliveries_to_come')));
+    }
+
+    #[Test]
+    public function the_project_list_shows_the_delivery_and_planned_execution_and_a_project_shows_its_overview_without_files(): void
+    {
+        $contact = WorkSiteContact::factory()->create();
+        $site = $this->site('1-VLA', '07OWN');
+        $site->update(['street' => 'Kerkstraat', 'house_number' => '5', 'postal_code' => '2000', 'city' => 'Antwerpen']);
+        $site->contacts()->attach($contact);
+        $project = Project::factory()->inCategory('604')->for($site)->create(['status' => ProjectStatus::Planned, 'short_description' => 'Batterijen vervangen kelder']);
+        $delivery = BatteryDelivery::factory()->for($project)->create(['planned_delivery_date' => '2026-11-20', 'order_confirmation' => 'OC-OWN']);
+        PlanningItem::factory()->forProject($project)->create(['date' => '2026-11-24']);
+        PlanningItem::factory()->forProject($project)->create(['date' => '2026-11-26']);
+        $leader = User::factory()->create(['name' => 'Jan Leider', 'email' => 'jan.leider@power.example']);
+        $project->leaders()->attach($leader);
+        GpwRequest::factory()->for($project)->create(['status' => GpwStatus::Approved, 'starts_on' => '2026-11-24', 'ends_on' => '2026-11-26']);
+        ProjectFile::store($project, ProjectFileSection::Documents, UploadedFile::fake()->create('intern-plan.pdf', 5), 'intern-plan.pdf');
+
+        $otherDelivery = BatteryDelivery::factory()->for(Project::factory()->inCategory('604')->for($this->site('2-VLA', '08OTH'))->create())->create(['order_confirmation' => 'OC-OTHER']);
+
+        // Only their own projects' deliveries, unless they may see all.
+        $client = ClientUser::factory()->withPermissions([ClientPortal::PROJECTS, ClientPortal::BATTERY_DELIVERIES])->create(['project_categories' => ClientPortal::categories(), 'work_site_contact_id' => $contact->id]);
+        $this->actingAs($client, ClientPortal::GUARD);
+        Filament::setCurrentPanel(ClientPortal::PANEL);
+        Livewire::test(ListClientBatteryDeliveries::class)->assertCanSeeTableRecords([$delivery])->assertCanNotSeeTableRecords([$otherDelivery]);
+
+        // In the project list: "To be delivered" with the expected date, and the days in our planning.
+        Livewire::test(ListClientProjects::class)
+            ->assertTableColumnStateSet('battery_delivery', __('erp.client_portal.to_be_delivered').' · 20/11/2026', $project)
+            ->assertTableColumnStateSet('planned_execution', '24/11/2026 – 26/11/2026', $project);
+        $delivery->markDelivered(User::factory()->create());
+        Livewire::test(ListClientProjects::class)->assertTableColumnStateSet('battery_delivery', __('erp.client_portal.delivered_state'), $project);
+
+        // The overview of the project: COW code, address, status, GPW and the leaders' e-mail, no files.
+        $this->get(ClientProjectResource::getUrl('view', ['record' => $project]))
+            ->assertOk()
+            ->assertSee('07OWN')
+            ->assertSee('Kerkstraat 5')
+            ->assertSee($project->fresh()->status->getLabel())
+            ->assertSee('24/11/2026')
+            ->assertSee(GpwStatus::Approved->getLabel())
+            ->assertSee('Jan Leider')
+            ->assertSee('jan.leider@power.example')
+            ->assertDontSee('intern-plan.pdf');
+
+        // Not a project of another client.
+        $this->get(ClientProjectResource::getUrl('view', ['record' => $otherDelivery->project]))->assertNotFound();
+        $client->update(['permissions' => [ClientPortal::PROJECTS, ClientPortal::BATTERY_DELIVERIES, ClientPortal::ALL_PROJECTS]]);
+        Livewire::test(ListClientBatteryDeliveries::class)->assertCanSeeTableRecords([$otherDelivery]);
     }
 }

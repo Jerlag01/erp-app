@@ -1247,7 +1247,9 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 - Passwords, recovery codes, router logins and VPN files only with the 🔒 permissions.
 - Charging stations and routers without a COW code (e.g. at a third-party client) never appear in the portal.
 - Under **GPW requests** they approve or refuse requests.
-- In the **project list** the project's description is shown under the category number.
+- In the **project list** the project's description is shown under the category number. For a **604** the **battery delivery** is shown: *To be delivered* with the expected delivery date while the batteries are not delivered, then *Delivered*. The column **Planned execution** shows the first and last day of the project in our planning.
+- Clicking a project shows an **overview**: COW code, address, status, the GPW requests and the **project leaders with their e-mail address**. No files are shown there.
+- **Battery deliveries** only shows the deliveries of their own projects, unless they may see *All projects*.
 - On the **dashboard** they see per **area** which share of their projects is open and which is closed (in percent, compared to all projects of that area).
 - Under **Battery dossiers** (permission *Battery dossiers (604)*) every 604 project shows up from **To be invoiced**, with the COW code and description. Per project: the **photos** of the battery dossier, the **measurement report**, **delivery note**, **visual inspection** and **invoice request** (PDF, made from the dossier) and the **waste report** you upload on the project. Client users with the *Projects* permission got this permission automatically.
 

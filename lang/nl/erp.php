@@ -3028,6 +3028,14 @@ return [
         ],
     ],
     'client_portal' => [
+        'battery_delivery' => 'Batterijlevering',
+        'planned_execution' => 'Gepland in uitvoering',
+        'address' => 'Adres',
+        'to_be_delivered' => 'Te leveren',
+        'delivered_state' => 'Geleverd',
+        'project_leaders' => 'Projectleiders',
+        'no_gpw' => 'Nog geen GPW-aanvragen.',
+        'no_leaders' => 'Nog geen projectleider toegewezen.',
         'deliveries_to_come' => 'Batterijen nog te leveren',
         'battery_reports' => [
             'title' => 'Batterijdossiers',

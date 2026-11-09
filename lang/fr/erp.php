@@ -3027,6 +3027,14 @@ return [
         ],
     ],
     'client_portal' => [
+        'battery_delivery' => 'Livraison des batteries',
+        'planned_execution' => 'Exécution planifiée',
+        'address' => 'Adresse',
+        'to_be_delivered' => 'À livrer',
+        'delivered_state' => 'Livré',
+        'project_leaders' => 'Chefs de projet',
+        'no_gpw' => 'Pas encore de demandes GPW.',
+        'no_leaders' => 'Pas encore de chef de projet attribué.',
         'deliveries_to_come' => 'Batteries encore à livrer',
         'battery_reports' => [
             'title' => 'Dossiers batteries',

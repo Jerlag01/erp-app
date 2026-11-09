@@ -64,7 +64,7 @@ class Dashboard extends BaseDashboard
             return [];
         }
 
-        $rows = ClientProjectResource::getEloquentQuery()
+        $rows = ClientProjectResource::visibleProjects()
             ->toBase()
             ->leftJoin('work_sites as area_sites', 'area_sites.id', '=', 'projects.work_site_id')
             ->leftJoin('work_site_areas as site_areas', 'site_areas.id', '=', 'area_sites.work_site_area_id')
@@ -97,7 +97,7 @@ class Dashboard extends BaseDashboard
             return [];
         }
 
-        $counts = ClientProjectResource::getEloquentQuery()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $counts = ClientProjectResource::visibleProjects()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
         return collect(ProjectStatus::cases())
             ->filter(fn (ProjectStatus $status): bool => ($counts[$status->value] ?? 0) > 0)

@@ -3027,6 +3027,14 @@ return [
         ],
     ],
     'client_portal' => [
+        'battery_delivery' => 'Battery delivery',
+        'planned_execution' => 'Planned execution',
+        'address' => 'Address',
+        'to_be_delivered' => 'To be delivered',
+        'delivered_state' => 'Delivered',
+        'project_leaders' => 'Project leaders',
+        'no_gpw' => 'No GPW requests yet.',
+        'no_leaders' => 'No project leader assigned yet.',
         'deliveries_to_come' => 'Batteries still to be delivered',
         'battery_reports' => [
             'title' => 'Battery dossiers',

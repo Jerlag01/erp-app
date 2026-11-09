@@ -1247,7 +1247,9 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 - Mots de passe, codes de récupération, identifiants de routeur et fichiers VPN uniquement avec les droits 🔒.
 - Les bornes et routeurs sans code COW (p. ex. chez un client tiers) n'apparaissent jamais dans le portail.
 - Dans **Demandes de GPW**, il approuve ou refuse les demandes.
-- Dans la **liste des projets**, la description du projet figure sous le numéro de catégorie.
+- Dans la **liste des projets**, la description du projet figure sous le numéro de catégorie. Pour un **604**, la **livraison des batteries** est affichée : *À livrer* avec la date de livraison prévue tant que les batteries ne sont pas livrées, puis *Livré*. La colonne **Exécution planifiée** montre le premier et le dernier jour du projet dans notre planning.
+- En cliquant sur un projet, il voit un **aperçu** : code COW, adresse, statut, les demandes GPW et les **chefs de projet avec leur adresse e-mail**. Il n'y voit pas de fichiers.
+- **Livraisons de batteries** ne montre que les livraisons de ses propres projets, sauf s'il peut voir *Tous les projets*.
 - Sur le **tableau de bord**, il voit par **area** quelle part de ses projets est ouverte et quelle part est clôturée (en pourcentage, par rapport à tous les projets de cette area).
 - Dans **Dossiers batteries** (droit *Dossiers batteries (604)*) figure chaque projet 604 à partir de **À facturer**, avec le code COW et la description. Par projet : les **photos** du dossier batteries, le **rapport de mesure**, le **bon de livraison**, l'**inspection visuelle** et la **demande de facture** (PDF, générés à partir du dossier) et le **rapport de déchets** que vous téléchargez sur le projet. Les utilisateurs clients avec le droit *Projets* ont reçu ce droit automatiquement.
 

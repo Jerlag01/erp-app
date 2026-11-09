@@ -1248,7 +1248,9 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 - Wachtwoorden, herstelcodes, routerlogins en VPN-bestanden enkel met de 🔒-rechten.
 - Laadpalen en routers zonder COW-code (bv. bij een derde klant) verschijnen nooit in het portaal.
 - Bij **GPW-aanvragen** keurt hij aanvragen goed of weigert hij ze.
-- In de **projectenlijst** staat onder het categorienummer de omschrijving van het project.
+- In de **projectenlijst** staat onder het categorienummer de omschrijving van het project. Bij een **604** staat de **batterijlevering**: *Te leveren* met de verwachte leverdatum zolang de batterijen niet geleverd zijn, daarna *Geleverd*. De kolom **Gepland in uitvoering** toont de eerste en laatste dag van het project in onze planning.
+- Klikt hij op een project, dan ziet hij een **overzicht**: COW-code, adres, status, de GPW-aanvragen en de **projectleiders met hun e-mailadres**. Bestanden ziet hij daar niet.
+- **Batterijleveringen** toont enkel de leveringen van zijn eigen projecten, tenzij hij *Alle projecten* mag zien.
 - Op het **dashboard** ziet hij per **area** welk deel van zijn projecten open is en welk deel afgesloten (in procent, tegenover alle projecten van die area).
 - Bij **Batterijdossiers** (recht *Batterijdossiers (604)*) staat elk 604-project vanaf **Te factureren**, met de COW-code en omschrijving. Per project: de **foto's** van het batterijdossier, het **meetrapport**, de **leveringsnota**, de **visuele keuring** en de **factuuraanvraag** (PDF, gemaakt uit het dossier) en het **afvalrapport** dat je op het project uploadt. Klantgebruikers met het recht *Projecten* kregen dit recht automatisch.
 
