@@ -313,4 +313,39 @@ class NasSyncTest extends TestCase
         $this->assertSame(NasSyncItem::FAILED, $failed->status);
         $this->assertStringContainsString('NT_STATUS_ACCESS_DENIED', (string) $failed->last_error);
     }
+
+    #[Test]
+    public function the_export_command_copies_everything_already_in_the_platform_once(): void
+    {
+        // Files from before the NAS was linked.
+        $this->nas->update(['is_active' => false]);
+        $project = Project::factory()->inCategory('604')->for(WorkSite::factory()->create(['cow_code' => '02GAM']))->create();
+        foreach (['a', 'b', 'c'] as $name) {
+            ProjectFile::store($project, ProjectFileSection::Documents, UploadedFile::fake()->createWithContent("{$name}.pdf", $name), "{$name}.pdf");
+        }
+        Vehicle::factory()->create(['plate_number' => '1ABC123']);
+        $this->assertSame([], $this->uploads);
+
+        $this->nas->update(['is_active' => true]);
+        $backup = NasTarget::query()->create(['name' => 'NAS backup', 'driver' => NasTransports::SYNOLOGY, 'url' => 'https://backup.test:5001', 'username' => 'erp', 'password' => 'geheim', 'root' => '/ERP']);
+        $this->uploads = [];
+
+        // Both NAS systems get every file, each exactly once (also nothing again when the command ends).
+        $this->artisan('nas:export', ['--batch' => 2])->expectsOutputToContain('Everything is on the NAS.')->assertSuccessful();
+        foreach (['nas.test', 'backup.test'] as $host) {
+            $this->assertSame('b', $this->uploaded("/ERP/604/{$project->reference}/".ProjectFileSection::Documents->getLabel().'/b.pdf', $host)['contents']);
+            $this->assertStringStartsWith('%PDF', $this->uploaded('/ERP/Wagenpark/1ABC123/1ABC123 - fiche.pdf', $host)['contents']);
+        }
+        $this->assertCount(NasSyncItem::query()->count(), $this->uploads);
+        $this->assertSame(0, NasSyncItem::query()->where('status', '!=', NasSyncItem::DONE)->count());
+
+        // Only one NAS, and one that is down: what failed is listed and left for nas:sync.
+        $this->uploads = [];
+        $this->offline = ['backup.test'];
+        $this->artisan('nas:export', ['--target' => $backup->id])->expectsOutputToContain('could not be copied')->assertFailed();
+        $this->assertSame([], collect($this->uploads)->where('host', 'nas.test')->all(), 'The other NAS is left alone.');
+        $this->assertTrue($backup->items()->where('status', NasSyncItem::FAILED)->exists());
+
+        $this->artisan('nas:export', ['--target' => 999])->assertFailed();
+    }
 }

@@ -60,6 +60,9 @@ class NasSync
     /** Only this NAS (while copying everything to one new NAS). */
     protected ?NasTarget $only = null;
 
+    /** While queueing everything: only the queue, the command (or the schedule) sends it. */
+    protected bool $bulk = false;
+
     /**
      * Whether at least one NAS is active.
      */
@@ -211,11 +214,13 @@ class NasSync
     public function queueAll(?NasTarget $only = null): int
     {
         $this->only = $only;
+        $this->bulk = true;
 
         try {
             $this->queueEverything();
         } finally {
             $this->only = null;
+            $this->bulk = false;
         }
 
         return NasSyncItem::query()->where('status', NasSyncItem::PENDING)->when($only, fn ($query) => $query->where('nas_target_id', $only->id))->count();
@@ -253,10 +258,19 @@ class NasSync
 
         // One copy per NAS, each with its own state.
         foreach ($targets as $nas) {
-            $this->queued[] = NasSyncItem::query()->updateOrCreate(
+            $id = NasSyncItem::query()->updateOrCreate(
                 ['target_hash' => hash('sha256', $nas->id.'|'.$path)],
                 ['nas_target_id' => $nas->id, 'target' => $path, 'source' => $source, 'status' => NasSyncItem::PENDING, 'attempts' => 0, 'last_error' => null],
             )->id;
+
+            if (! $this->bulk) {
+                $this->queued[] = $id;
+            }
+        }
+
+        // Everything at once (nas:export, "copy everything"): sent in batches, not all after the response.
+        if ($this->bulk) {
+            return;
         }
 
         if (! $this->deferred) {
