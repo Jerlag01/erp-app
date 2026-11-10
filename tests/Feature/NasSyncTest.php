@@ -8,14 +8,19 @@ use App\Enums\ProjectFileSection;
 use App\Filament\Admin\Resources\NasTargets\NasTargetResource;
 use App\Filament\Admin\Resources\NasTargets\Pages\ManageNasTargets;
 use App\Models\Absence;
+use App\Models\Asset;
+use App\Models\BatteryDossier;
 use App\Models\Employee;
 use App\Models\EmployeeCertificate;
+use App\Models\Expense;
 use App\Models\FuelPass;
 use App\Models\Incident;
+use App\Models\KbArticle;
 use App\Models\NasSyncItem;
 use App\Models\NasTarget;
 use App\Models\Project;
 use App\Models\ProjectFile;
+use App\Models\Router;
 use App\Models\TimesheetWeek;
 use App\Models\ToolboxMeeting;
 use App\Models\User;
@@ -111,12 +116,20 @@ class NasSyncTest extends TestCase
 
         $this->assertSame('jpeg', $this->uploaded("/ERP/604/{$project->reference}/".ProjectFileSection::Images->getLabel().'/kast.jpg')['contents']);
         $this->assertSame('%PDF-afval', $this->uploaded("/ERP/604/{$project->reference}/".ProjectFileSection::WasteReports->getLabel().'/afval.pdf')['contents']);
-        $this->assertSame(2, NasSyncItem::query()->where('status', NasSyncItem::DONE)->count());
+        // The two files, the project overview and the BAE order the 604 starts with: all on the NAS.
+        $this->assertSame(0, NasSyncItem::query()->where('status', '!=', NasSyncItem::DONE)->count());
+        $this->assertEqualsCanonicalizing([
+            "604/{$project->reference}/".ProjectFileSection::Images->getLabel().'/kast.jpg',
+            "604/{$project->reference}/".ProjectFileSection::WasteReports->getLabel().'/afval.pdf',
+            "604/{$project->reference}/{$project->reference} - projectoverzicht.pdf",
+            "604/{$project->reference}/BAE-bestelling.pdf",
+        ], NasSyncItem::query()->pluck('target')->all());
 
         // Switched off: nothing is copied.
+        $uploads = count($this->uploads);
         $this->nas->update(['is_active' => false]);
         ProjectFile::store($project, ProjectFileSection::Images, UploadedFile::fake()->create('later.jpg', 1), 'later.jpg');
-        $this->assertCount(2, $this->uploads);
+        $this->assertCount($uploads, $this->uploads);
     }
 
     #[Test]
@@ -126,7 +139,7 @@ class NasSyncTest extends TestCase
         Storage::disk('local')->put('employees/id-cards/id.jpg', 'id');
         $user = User::factory()->create();
         $employee = Employee::factory()->for($user)->create([
-            'first_name' => 'Eva', 'last_name' => 'Peeters', 'national_number' => '90.01.01-123.45',
+            'first_name' => 'Eva', 'last_name' => 'Peeters', 'national_number' => '90.01.01-123.45', 'driver_license_categories' => ['B', 'C'],
             'driver_license_files' => ['employees/driver-licenses/r.pdf'], 'driver_license_file_names' => ['employees/driver-licenses/r.pdf' => 'rijbewijs.pdf'],
             'id_card_files' => ['employees/id-cards/id.jpg'], 'id_card_file_names' => ['employees/id-cards/id.jpg' => 'identiteitskaart.jpg'],
         ]);
@@ -151,6 +164,8 @@ class NasSyncTest extends TestCase
         // The personal details PDF holds them.
         $html = view('nas.employee-pdf', ['employee' => $employee->fresh(['certificates', 'medicalChecks', 'user', 'country'])])->render();
         $this->assertStringContainsString('90010112345', $html);
+        // The licence categories (enums) as text; this failed for every employee with a licence.
+        $this->assertStringContainsString('B, C', $html);
     }
 
     #[Test]
@@ -177,11 +192,11 @@ class NasSyncTest extends TestCase
     #[Test]
     public function what_fails_while_the_nas_is_offline_is_sent_again_and_everything_can_be_copied_once(): void
     {
-        $project = Project::factory()->inCategory('610')->create();
         $this->offline = ['nas.test'];
+        $project = Project::factory()->inCategory('610')->create();
         ProjectFile::store($project, ProjectFileSection::Documents, UploadedFile::fake()->createWithContent('offerte.pdf', 'x'), 'offerte.pdf');
 
-        $item = NasSyncItem::query()->sole();
+        $item = NasSyncItem::query()->where('target', 'like', '%offerte.pdf')->sole();
         $this->assertSame([NasSyncItem::FAILED, 1], [$item->status, $item->attempts]);
         $this->assertCount(0, $this->uploads);
 
@@ -189,7 +204,7 @@ class NasSyncTest extends TestCase
         $this->offline = [];
         $this->artisan('nas:sync')->assertSuccessful();
         $this->assertSame(NasSyncItem::DONE, $item->fresh()->status);
-        $this->assertCount(1, $this->uploads);
+        $this->assertSame('x', $this->uploaded("/ERP/610/{$project->reference}/".ProjectFileSection::Documents->getLabel().'/offerte.pdf')['contents']);
 
         // "Everything" puts every file in the outbox again (each place once) and sends it.
         $this->uploads = [];
@@ -268,7 +283,7 @@ class NasSyncTest extends TestCase
         ProjectFile::store($project, ProjectFileSection::Plans, UploadedFile::fake()->createWithContent('grondplan.dwg', 'dwg'), 'grondplan.dwg');
 
         $this->assertSame('dwg', file_get_contents("{$server}/volume1/ERP/604/{$project->reference}/".ProjectFileSection::Plans->getLabel().'/grondplan.dwg'));
-        $this->assertSame(NasSyncItem::DONE, NasSyncItem::query()->sole()->status);
+        $this->assertSame(NasSyncItem::DONE, NasSyncItem::query()->where('target', 'like', '%grondplan.dwg')->sole()->status);
         File::deleteDirectory($server);
 
         // The real transports are built from the NAS record (they connect only when used).
@@ -347,5 +362,63 @@ class NasSyncTest extends TestCase
         $this->assertTrue($backup->items()->where('status', NasSyncItem::FAILED)->exists());
 
         $this->artisan('nas:export', ['--target' => 999])->assertFailed();
+    }
+
+    #[Test]
+    public function every_file_of_a_project_and_the_other_modules_reaches_the_nas(): void
+    {
+        $site = WorkSite::factory()->create(['cow_code' => '02GAM']);
+        $project = Project::factory()->inCategory('604')->for($site)->create(['short_description' => 'Batterijen kelder']);
+        $folder = "/ERP/604/{$project->reference}";
+
+        // The overview of the project, in Dutch (also when a French-speaking user caused it).
+        app()->setLocale('fr');
+        $this->assertStringStartsWith('%PDF', $this->uploaded("{$folder}/{$project->reference} - projectoverzicht.pdf")['contents']);
+        $html = view('nas.project-pdf', ['project' => $project->fresh(['category', 'workSite', 'poNumbers', 'leaders', 'teams', 'gpwRequests', 'batteryDeliveries', 'files.latestVersion', 'asbuilt'])])->render();
+        $this->assertStringContainsString('Batterijen kelder', $html);
+
+        // The battery dossier: its documents (PDF) and photos.
+        Storage::disk('local')->put('batteries/9/photos/a.jpg', 'foto-a');
+        BatteryDossier::factory()->create(['project_id' => $project->id, 'photos' => ['batteries/9/photos/a.jpg']]);
+        $this->assertSame('foto-a', $this->uploaded("{$folder}/Batterijdossier/Foto's/01.jpg")['contents']);
+        $this->assertStringStartsWith('%PDF', $this->uploaded("{$folder}/Batterijdossier/Meetrapport.pdf")['contents']);
+        $this->assertStringStartsWith('%PDF', $this->uploaded("{$folder}/Batterijdossier/Leveringsnota.pdf")['contents']);
+        app()->setLocale('nl');
+
+        // Photos of the work site, the vehicle and an incident.
+        Storage::disk('public')->put('work-sites/gevel.jpg', 'gevel');
+        $site->update(['images' => ['work-sites/gevel.jpg']]);
+        $this->assertSame('gevel', $this->uploaded('/ERP/Werflocaties/02GAM/Foto\'s/gevel.jpg')['contents']);
+
+        Storage::disk('public')->put('vehicles/bus.jpg', 'bus');
+        Vehicle::factory()->create(['plate_number' => '1ABC123', 'photo' => 'vehicles/bus.jpg']);
+        $this->assertSame('bus', $this->uploaded('/ERP/Wagenpark/1ABC123/Foto.jpg')['contents']);
+
+        Storage::disk('local')->put('incidents/1/ladder.jpg', 'ladder');
+        $incident = Incident::factory()->create(['reported_at' => '2026-11-05 10:00', 'photos' => ['incidents/1/ladder.jpg']]);
+        $this->assertSame('ladder', $this->uploaded("/ERP/Incidenten/Foto's/2026-11-05 - incident {$incident->id}/01.jpg")['contents']);
+
+        // Finance, knowledge base, equipment and routers.
+        Storage::disk('local')->put('expenses/factuur.pdf', '%PDF-aankoop');
+        Expense::factory()->create(['supplier_name' => 'Rexel', 'supplier_invoice_number' => 'F-77', 'invoice_date' => '2026-11-03', 'document' => 'expenses/factuur.pdf', 'document_name' => 'factuur.pdf']);
+        $this->assertSame('%PDF-aankoop', $this->uploaded('/ERP/Financieel/Aankoopfacturen/2026/2026-11-03 Rexel F-77 - factuur.pdf')['contents']);
+
+        Storage::disk('local')->put('kb/files/handleiding.pdf', '%PDF-kb');
+        $article = KbArticle::factory()->create(['title' => 'Batterijen meten', 'attachments' => ['kb/files/handleiding.pdf'], 'attachment_names' => ['kb/files/handleiding.pdf' => 'handleiding.pdf']]);
+        $this->assertSame('%PDF-kb', $this->uploaded('/ERP/Kennisbank/'.$article->category->translate('name', 'nl').'/'.$article->translate('title', 'nl').'/handleiding.pdf')['contents']);
+
+        Storage::disk('public')->put('assets/boor.jpg', 'boor');
+        Asset::factory()->create(['asset_tag' => 'MAT-001', 'name' => 'Boormachine', 'photo' => 'assets/boor.jpg']);
+        $this->assertSame('boor', $this->uploaded('/ERP/Materieel/MAT-001 Boormachine/Foto.jpg')['contents']);
+
+        Storage::disk('local')->put('routers/r.ovpn', 'vpn');
+        Router::factory()->create(['work_site_id' => $site->id, 'serial_number' => 'SN1', 'vpn_file' => 'routers/r.ovpn', 'vpn_file_name' => 'router.ovpn']);
+        $this->assertSame('vpn', $this->uploaded('/ERP/4G-routers/02GAM SN1/router.ovpn')['contents']);
+
+        // "Everything" also finds these: nothing new is made for what is already there.
+        $count = NasSyncItem::query()->count();
+        app(NasSync::class)->queueAll();
+        $this->assertSame(0, NasSyncItem::query()->where('created_at', '>', now())->count());
+        $this->assertGreaterThanOrEqual($count, NasSyncItem::query()->count());
     }
 }

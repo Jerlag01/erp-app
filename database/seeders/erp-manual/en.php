@@ -127,11 +127,16 @@ The settings are spread over tabs:
 
 Uploading still happens through the platform; every file then also goes to the NAS. Layout below the main folder (e.g. `/ERP`):
 
-- **{category}/{project}/{upload zone}**: the project's files per tab (Photos, Plans, Waste report, …) and **As-built/{category}**.
-- **Personeel/{first last}**: driving licence, identity card, certificates, medical, a PDF of the personal details, **Prestaties** (the weekly PDFs) and **Medische attesten**.
-- **Wagenpark/{plate}**: a PDF of the vehicle and its fuel passes (never the PIN code).
-- **Incidenten**: one PDF per incident.
+- **{category}/{project}**: a **project overview** (PDF with the details, PO numbers, project leaders, teams, planning, GPW, deliveries and the list of files), the files per tab (Photos, Plans, Waste report, …), **As-built/{category}** (and the ZIP), **Batterijdossier** (every document as PDF and the photos), **Batterijlokaal** (delivery note, checklist, photos, BTV, ventilation), **Batterijleveringen** (order, confirmation, delivery note), the **BAE order**, the **intervention report** and the **archive** of a closed project.
+- **Personeel/{first last}**: driving licence, identity card, certificates (and requests), medical, parental leave, signed documents, a PDF of the personal details, **Prestaties** (the weekly PDFs) and **Medische attesten**.
+- **Wagenpark/{plate}**: a PDF of the vehicle and its fuel passes (never the PIN code) and the photo.
+- **Werflocaties/{COW code}**: the photos of the site.
+- **Incidenten**: one PDF per incident, with the photos in **Foto's**.
 - **Toolboxen/{month title}**: the attendance list with signatures, the content (PDF) and the attachments.
+- **Financieel**: sales invoices (PDF), purchase invoices (with UBL) and Peppol messages, per year.
+- **Kennisbank**, **IT**, **Materieel** (photo and log attachments), **Magazijn**, **4G-routers** (VPN files), **Afval**, **Onboarding** and **Suggesties**.
+
+Folders and PDFs are always in Dutch, whatever the language of who uploads the file.
 
 Under **Admin → System → NAS systems** you add one or more NAS systems; every active NAS gets a copy of every file, for extra redundancy. Each NAS has its own queue: when one is offline, the others carry on. Per NAS you choose the **connection**: **Synology** (File Station over HTTPS: the DSM address, e.g. `https://nas.company.be:5001`), **SMB** (Windows share or Samba: server, share and optionally domain), **FTP/FTPS** (preferably encrypted) or **SFTP** (SSH, with password or private key), the main folder and an own account with write access. The list shows per NAS how many files wait, failed or are already on the NAS, with the buttons **Test connection**, **Copy everything to the NAS** (e.g. for a new NAS: only that NAS is filled) and **Retry failed ones**. What fails is retried every 10 minutes. Everything already on the platform can also be copied in one go on the server with `php artisan nas:export` (or `--target=<id>` for one NAS); it shows the progress and what failed. Nothing is ever deleted from a NAS. For an employee you can also upload a copy of the **identity card**.
 

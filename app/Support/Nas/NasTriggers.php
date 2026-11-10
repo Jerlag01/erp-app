@@ -3,18 +3,48 @@
 namespace App\Support\Nas;
 
 use App\Models\Absence;
+use App\Models\Asbuilt;
 use App\Models\AsbuiltFile;
 use App\Models\AsbuiltLibraryFile;
+use App\Models\Asset;
+use App\Models\AssetLog;
+use App\Models\BaeOrder;
+use App\Models\BatteryDelivery;
+use App\Models\BatteryDossier;
+use App\Models\BatteryDossierSignature;
+use App\Models\BatteryRoomDossier;
 use App\Models\Employee;
 use App\Models\EmployeeCertificate;
+use App\Models\EmployeeCertificateRequest;
 use App\Models\EmployeeMedicalCheck;
+use App\Models\EnersysDossier;
+use App\Models\Expense;
 use App\Models\FuelPass;
+use App\Models\GpwRequest;
 use App\Models\Incident;
+use App\Models\InterventionReport;
+use App\Models\Invoice;
+use App\Models\ItAsset;
+use App\Models\ItItem;
+use App\Models\ItModel;
+use App\Models\KbArticle;
+use App\Models\MoveDossier;
+use App\Models\OnboardingDocument;
+use App\Models\ParentalLeave;
+use App\Models\PeppolDocument;
+use App\Models\Project;
 use App\Models\ProjectFileVersion;
+use App\Models\Router;
+use App\Models\SignedDocument;
+use App\Models\StockItem;
+use App\Models\Suggestion;
+use App\Models\SuggestionResponse;
 use App\Models\TimesheetWeek;
 use App\Models\ToolboxMeeting;
 use App\Models\ToolboxMeetingParticipant;
 use App\Models\Vehicle;
+use App\Models\WasteEntryLine;
+use App\Models\WorkSite;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -79,6 +109,79 @@ class NasTriggers
                 $nas->toolbox($participant->meeting, withContent: false);
             }
         });
+
+        self::catalog();
+    }
+
+    /**
+     * Everything else (see NasCatalog): the project overview and the documents made for a project, photos,
+     * and the files of HR, finance, the knowledge base, IT, equipment, stock, routers and waste.
+     */
+    protected static function catalog(): void
+    {
+        $catalog = fn (): NasCatalog => app(NasCatalog::class);
+
+        // The overview shows the project, its files, GPW requests and deliveries.
+        self::on(Project::class, 'saved', function (NasSync $nas, Project $project) use ($catalog): void {
+            $catalog()->projectOverview($project);
+
+            if ($project->wasChanged('archive_path')) {
+                $catalog()->projectArchive($project);
+            }
+        });
+        self::on(ProjectFileVersion::class, 'created', fn (NasSync $nas, ProjectFileVersion $version) => $version->file?->project && $catalog()->projectOverview($version->file->project));
+        self::on(GpwRequest::class, 'saved', fn (NasSync $nas, GpwRequest $gpw) => $gpw->project && $catalog()->projectOverview($gpw->project));
+        self::on(BatteryDelivery::class, 'saved', function (NasSync $nas, BatteryDelivery $delivery) use ($catalog): void {
+            $catalog()->batteryDelivery($delivery);
+
+            if ($delivery->project) {
+                $catalog()->projectOverview($delivery->project);
+            }
+        });
+
+        foreach ([BatteryDossier::class, EnersysDossier::class, MoveDossier::class] as $class) {
+            self::on($class, 'saved', fn (NasSync $nas, BatteryDossier $dossier) => $catalog()->batteryDossier($dossier));
+        }
+        // A signature changes the documents of the dossier.
+        self::on(BatteryDossierSignature::class, 'saved', function (NasSync $nas, BatteryDossierSignature $signature) use ($catalog): void {
+            $dossier = BatteryDossier::query()->withoutGlobalScope('kind')->find($signature->battery_dossier_id);
+            $class = match ($dossier?->kind) {
+                EnersysDossier::KIND => EnersysDossier::class, MoveDossier::KIND => MoveDossier::class, default => BatteryDossier::class
+            };
+
+            if ($dossier && ($typed = $class::query()->find($dossier->id))) {
+                $catalog()->batteryDossier($typed);
+            }
+        });
+        self::on(BatteryRoomDossier::class, 'saved', fn (NasSync $nas, BatteryRoomDossier $room) => $catalog()->batteryRoom($room));
+        self::on(BaeOrder::class, 'saved', fn (NasSync $nas, BaeOrder $order) => $catalog()->baeOrder($order));
+        self::on(InterventionReport::class, 'saved', fn (NasSync $nas, InterventionReport $report) => $report->wasChanged('pdf_path') && $catalog()->interventionReport($report));
+        self::on(Asbuilt::class, 'saved', fn (NasSync $nas, Asbuilt $asbuilt) => $asbuilt->wasChanged('zip_path') && $catalog()->asbuiltZip($asbuilt));
+
+        self::on(WorkSite::class, 'saved', fn (NasSync $nas, WorkSite $site) => ($site->wasChanged('images') || $site->wasRecentlyCreated) && $catalog()->workSite($site));
+        self::on(Vehicle::class, 'saved', fn (NasSync $nas, Vehicle $vehicle) => $catalog()->vehiclePhoto($vehicle));
+        self::on(Incident::class, 'saved', fn (NasSync $nas, Incident $incident) => $catalog()->incidentPhotos($incident));
+        self::on(Suggestion::class, 'saved', fn (NasSync $nas, Suggestion $suggestion) => $catalog()->suggestion($suggestion));
+        self::on(SuggestionResponse::class, 'saved', fn (NasSync $nas, SuggestionResponse $response) => $response->suggestion && $catalog()->suggestion($response->suggestion));
+
+        self::on(EmployeeCertificateRequest::class, 'saved', fn (NasSync $nas, EmployeeCertificateRequest $request) => $catalog()->certificateRequest($request));
+        self::on(ParentalLeave::class, 'saved', fn (NasSync $nas, ParentalLeave $leave) => $catalog()->parentalLeave($leave));
+        self::on(SignedDocument::class, 'saved', fn (NasSync $nas, SignedDocument $document) => $catalog()->signedDocument($document));
+        self::on(OnboardingDocument::class, 'saved', fn (NasSync $nas, OnboardingDocument $document) => $catalog()->onboardingDocument($document));
+
+        self::on(Invoice::class, 'saved', fn (NasSync $nas, Invoice $invoice) => $catalog()->invoice($invoice));
+        self::on(Expense::class, 'saved', fn (NasSync $nas, Expense $expense) => $catalog()->expense($expense));
+        self::on(PeppolDocument::class, 'saved', fn (NasSync $nas, PeppolDocument $document) => $catalog()->peppolDocument($document));
+
+        self::on(KbArticle::class, 'saved', fn (NasSync $nas, KbArticle $article) => $catalog()->kbArticle($article));
+        self::on(ItAsset::class, 'saved', fn (NasSync $nas, ItAsset $asset) => $catalog()->itAsset($asset));
+        self::on(ItModel::class, 'saved', fn (NasSync $nas, ItModel $model) => $catalog()->itModel($model));
+        self::on(ItItem::class, 'saved', fn (NasSync $nas, ItItem $item) => $catalog()->itItem($item));
+        self::on(Asset::class, 'saved', fn (NasSync $nas, Asset $asset) => $catalog()->asset($asset));
+        self::on(AssetLog::class, 'saved', fn (NasSync $nas, AssetLog $log) => $catalog()->assetLog($log));
+        self::on(StockItem::class, 'saved', fn (NasSync $nas, StockItem $item) => $catalog()->stockItem($item));
+        self::on(Router::class, 'saved', fn (NasSync $nas, Router $router) => $catalog()->router($router));
+        self::on(WasteEntryLine::class, 'saved', fn (NasSync $nas, WasteEntryLine $line) => $catalog()->wasteLine($line));
     }
 
     /**
@@ -92,7 +195,7 @@ class NasTriggers
             $nas = app(NasSync::class);
 
             if ($nas->enabled()) {
-                $handler($nas, $record);
+                NasSync::inDutch(fn () => $handler($nas, $record));
             }
         });
     }

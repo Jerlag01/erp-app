@@ -128,11 +128,16 @@ De instellingen zijn verdeeld over tabbladen:
 
 Het uploaden blijft via het platform gebeuren; elk bestand gaat daarna ook naar de NAS. Indeling onder de hoofdmap (bv. `/ERP`):
 
-- **{categorie}/{project}/{uploadzone}**: de bestanden van het project per tabblad (Foto's, Plannen, Afvalrapport, …) en **As-built/{categorie}**.
-- **Personeel/{voornaam naam}**: rijbewijs, identiteitskaart, certificaten, medisch, een PDF met de persoonsgegevens, **Prestaties** (de wekelijkse PDF's) en **Medische attesten**.
-- **Wagenpark/{nummerplaat}**: een PDF met het voertuig en zijn tankkaarten (nooit de PIN-code).
-- **Incidenten**: één PDF per incident.
+- **{categorie}/{project}**: een **projectoverzicht** (PDF met gegevens, PO-nummers, projectleiders, ploegen, planning, GPW, leveringen en de lijst van bestanden), de bestanden per tabblad (Foto's, Plannen, Afvalrapport, …), **As-built/{categorie}** (en de ZIP), **Batterijdossier** (alle documenten als PDF en de foto's), **Batterijlokaal** (leveringsnota, checklist, foto's, BTV, ventilatie), **Batterijleveringen** (bestelling, orderbevestiging, leveringsbon), de **BAE-bestelling**, het **interventierapport** en het **archief** van een afgesloten project.
+- **Personeel/{voornaam naam}**: rijbewijs, identiteitskaart, certificaten (en aanvragen), medisch, ouderschapsverlof, getekende documenten, een PDF met de persoonsgegevens, **Prestaties** (de wekelijkse PDF's) en **Medische attesten**.
+- **Wagenpark/{nummerplaat}**: een PDF met het voertuig en zijn tankkaarten (nooit de PIN-code) en de foto.
+- **Werflocaties/{COW-code}**: de foto's van de site.
+- **Incidenten**: één PDF per incident, met de foto's in **Foto's**.
 - **Toolboxen/{maand titel}**: de aanwezigheidslijst met handtekeningen, de inhoud (PDF) en de bijlagen.
+- **Financieel**: verkoopfacturen (PDF), aankoopfacturen (met UBL) en Peppol-berichten, per jaar.
+- **Kennisbank**, **IT**, **Materieel** (foto en logboekbijlagen), **Magazijn**, **4G-routers** (VPN-bestanden), **Afval**, **Onboarding** en **Suggesties**.
+
+Mappen en PDF's zijn altijd in het Nederlands, ongeacht de taal van wie het bestand uploadt.
 
 Bij **Beheer → Systeem → NAS-systemen** voeg je één of meer NAS-systemen toe; elk actief NAS-systeem krijgt een kopie van elk bestand, voor extra redundantie. Elke NAS heeft zijn eigen wachtrij: is er één offline, dan gaan de andere gewoon door. Per NAS kies je de **verbinding**: **Synology** (File Station over HTTPS: het adres van DSM, bv. `https://nas.bedrijf.be:5001`), **SMB** (Windows-share of Samba: server, share en eventueel domein), **FTP/FTPS** (best versleuteld) of **SFTP** (SSH, met wachtwoord of private sleutel), de hoofdmap en een eigen account met schrijfrechten. In de lijst zie je per NAS hoeveel bestanden wachten, mislukt zijn of al op de NAS staan, met de knoppen **Verbinding testen**, **Alles naar de NAS kopiëren** (bv. voor een nieuwe NAS: enkel die NAS wordt gevuld) en **Mislukte opnieuw proberen**. Wat mislukt, wordt elke 10 minuten opnieuw geprobeerd. Alles wat al op het platform staat in één keer kopiëren kan ook op de server met `php artisan nas:export` (of `--target=<id>` voor één NAS); dat toont de voortgang en wat mislukte. Op een NAS wordt nooit iets verwijderd. Bij een werknemer kan je ook een kopie van de **identiteitskaart** uploaden.
 

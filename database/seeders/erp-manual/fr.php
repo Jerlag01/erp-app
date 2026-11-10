@@ -127,11 +127,16 @@ Les paramètres sont répartis en onglets :
 
 Le téléchargement se fait toujours via la plateforme ; chaque fichier part ensuite aussi vers le NAS. Organisation sous le dossier principal (p. ex. `/ERP`) :
 
-- **{catégorie}/{projet}/{zone}** : les fichiers du projet par onglet (Photos, Plans, Rapport de déchets, …) et **As-built/{catégorie}**.
-- **Personeel/{prénom nom}** : permis de conduire, carte d'identité, certificats, médical, un PDF des données personnelles, **Prestaties** (les PDF hebdomadaires) et **Medische attesten**.
-- **Wagenpark/{plaque}** : un PDF du véhicule et de ses cartes carburant (jamais le code PIN).
-- **Incidenten** : un PDF par incident.
+- **{catégorie}/{projet}** : un **aperçu du projet** (PDF avec données, numéros PO, chefs de projet, équipes, planning, GPW, livraisons et la liste des fichiers), les fichiers par onglet (Photos, Plans, Rapport de déchets, …), **As-built/{catégorie}** (et le ZIP), **Batterijdossier** (tous les documents en PDF et les photos), **Batterijlokaal** (bon de livraison, checklist, photos, BTV, ventilation), **Batterijleveringen** (commande, confirmation, bon de livraison), la **commande BAE**, le **rapport d'intervention** et l'**archive** d'un projet clôturé.
+- **Personeel/{prénom nom}** : permis de conduire, carte d'identité, certificats (et demandes), médical, congé parental, documents signés, un PDF des données personnelles, **Prestaties** (les PDF hebdomadaires) et **Medische attesten**.
+- **Wagenpark/{plaque}** : un PDF du véhicule et de ses cartes carburant (jamais le code PIN) et la photo.
+- **Werflocaties/{code COW}** : les photos du site.
+- **Incidenten** : un PDF par incident, avec les photos dans **Foto's**.
 - **Toolboxen/{mois titre}** : la liste de présence avec signatures, le contenu (PDF) et les annexes.
+- **Financieel** : factures de vente (PDF), factures d'achat (avec UBL) et messages Peppol, par année.
+- **Kennisbank**, **IT**, **Materieel** (photo et annexes du journal), **Magazijn**, **4G-routers** (fichiers VPN), **Afval**, **Onboarding** et **Suggesties**.
+
+Les dossiers et les PDF sont toujours en néerlandais, quelle que soit la langue de la personne qui télécharge le fichier.
 
 Dans **Administration → Système → Systèmes NAS**, vous ajoutez un ou plusieurs NAS ; chaque NAS actif reçoit une copie de chaque fichier, pour plus de redondance. Chaque NAS a sa propre file d'attente : si l'un est hors ligne, les autres continuent. Par NAS, vous choisissez la **connexion** : **Synology** (File Station en HTTPS : l'adresse de DSM, p. ex. `https://nas.societe.be:5001`), **SMB** (partage Windows ou Samba : serveur, partage et éventuellement domaine), **FTP/FTPS** (de préférence chiffré) ou **SFTP** (SSH, avec mot de passe ou clé privée), le dossier principal et un compte propre avec droits d'écriture. La liste montre par NAS combien de fichiers attendent, ont échoué ou sont déjà sur le NAS, avec les boutons **Tester la connexion**, **Tout copier sur le NAS** (p. ex. pour un nouveau NAS : seul ce NAS est rempli) et **Réessayer les échecs**. Ce qui échoue est réessayé toutes les 10 minutes. Tout ce qui se trouve déjà sur la plateforme peut aussi être copié d'un coup sur le serveur avec `php artisan nas:export` (ou `--target=<id>` pour un seul NAS) ; la commande montre la progression et ce qui a échoué. Rien n'est jamais supprimé d'un NAS. Pour un collaborateur, vous pouvez aussi télécharger une copie de la **carte d'identité**.
 

@@ -2,17 +2,28 @@
 
 namespace App\Support\Nas;
 
+use App\Actions\Batteries\BaeOrderDocument;
+use App\Actions\Batteries\BatteryDocument;
+use App\Actions\Batteries\BatteryRoomDocument;
+use App\Actions\Finance\InvoicePdf;
 use App\Enums\AbsenceType;
 use App\Enums\ProjectFileSection;
 use App\Http\Controllers\ToolboxPdfController;
 use App\Models\Absence;
 use App\Models\AsbuiltFile;
+use App\Models\BaeOrder;
+use App\Models\BatteryDossier;
+use App\Models\BatteryRoomDossier;
 use App\Models\Employee;
 use App\Models\EmployeeCertificate;
 use App\Models\EmployeeMedicalCheck;
+use App\Models\EnersysDossier;
 use App\Models\Incident;
+use App\Models\Invoice;
+use App\Models\MoveDossier;
 use App\Models\NasSyncItem;
 use App\Models\NasTarget;
+use App\Models\Project;
 use App\Models\ProjectFileVersion;
 use App\Models\TimesheetWeek;
 use App\Models\ToolboxMeeting;
@@ -217,7 +228,7 @@ class NasSync
         $this->bulk = true;
 
         try {
-            $this->queueEverything();
+            self::inDutch(fn () => $this->queueEverything());
         } finally {
             $this->only = null;
             $this->bulk = false;
@@ -228,6 +239,8 @@ class NasSync
 
     protected function queueEverything(): void
     {
+        // The same instance: "only this NAS" and the bulk mode apply to the catalogue too.
+        (new NasCatalog($this))->queueEverything();
         ProjectFileVersion::query()->with('file.project.category')->whereIn('id', ProjectFileVersion::query()->selectRaw('max(id)')->groupBy('project_file_id'))->lazyById()->each(fn (ProjectFileVersion $version) => $this->projectFile($version));
         AsbuiltFile::query()->with(['asbuilt.project.category', 'libraryFile'])->lazyById()->each(fn (AsbuiltFile $file) => $this->asbuiltFile($file));
         Employee::query()->with(['certificates', 'medicalChecks'])->lazyById()->each(fn (Employee $employee) => $this->employee($employee));
@@ -306,6 +319,15 @@ class NasSync
      */
     public function send(Collection $items): array
     {
+        return self::inDutch(fn (): array => $this->sendAll($items));
+    }
+
+    /**
+     * @param  Collection<int, NasSyncItem>  $items
+     * @return array{sent: int, failed: int}
+     */
+    protected function sendAll(Collection $items): array
+    {
         $result = ['sent' => 0, 'failed' => 0];
         $contents = [];
 
@@ -382,8 +404,47 @@ class NasSync
             'toolbox_attendance' => ($meeting = ToolboxMeeting::query()->find($id)) ? ToolboxPdfController::render($meeting) : null,
             'toolbox_content' => ($meeting = ToolboxMeeting::query()->find($id))
                 ? Pdf::loadView('nas.toolbox-content-pdf', ['meeting' => $meeting])->setPaper('a4')->output() : null,
+            'project' => ($project = Project::query()->with(['category', 'workSite', 'poNumbers', 'leaders', 'teams', 'gpwRequests', 'batteryDeliveries', 'files.latestVersion', 'asbuilt'])->find($id))
+                ? Pdf::loadView('nas.project-pdf', ['project' => $project])->setPaper('a4')->output() : null,
+            'battery_document' => ($dossier = self::dossier((string) ($source['kind'] ?? 'bae'), $id)) && in_array($source['document'] ?? null, $dossier->availableDocuments(), true)
+                ? app(BatteryDocument::class)->render($dossier, (string) $source['document']) : null,
+            'battery_room' => ($room = BatteryRoomDossier::query()->find($id)) && array_key_exists($source['document'] ?? '', BatteryRoomDocument::DOCUMENTS)
+                ? app(BatteryRoomDocument::class)->render($room, (string) $source['document']) : null,
+            'bae_order' => ($order = BaeOrder::query()->find($id)) ? app(BaeOrderDocument::class)->render($order) : null,
+            'invoice' => ($invoice = Invoice::query()->find($id)) ? app(InvoicePdf::class)->render($invoice) : null,
             default => null,
         };
+    }
+
+    protected static function dossier(string $kind, int $id): ?BatteryDossier
+    {
+        $class = match ($kind) {
+            EnersysDossier::KIND => EnersysDossier::class,
+            MoveDossier::KIND => MoveDossier::class,
+            default => BatteryDossier::class,
+        };
+
+        return $class::query()->find($id);
+    }
+
+    /**
+     * The NAS layout and the PDFs are in Dutch, whatever the language of who caused the copy.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public static function inDutch(callable $callback): mixed
+    {
+        $previous = app()->getLocale();
+        app()->setLocale('nl');
+
+        try {
+            return $callback();
+        } finally {
+            app()->setLocale($previous);
+        }
     }
 
     /**

@@ -51,7 +51,7 @@
     <h2>{{ __('erp.employees.tabs.driver_license') }}</h2>
     <table>
         <tr><td class="label">{{ __('erp.employees.driver_license_number') }}</td><td>{{ $e->driver_license_number ?: '—' }}</td></tr>
-        <tr><td class="label">{{ __('erp.employees.driver_license_categories') }}</td><td>{{ implode(', ', $e->driverLicenseCategories()) ?: '—' }}</td></tr>
+        <tr><td class="label">{{ __('erp.employees.driver_license_categories') }}</td><td>{{ implode(', ', array_map(fn (\App\Enums\DriverLicenseCategory $category): string => $category->value, $e->driverLicenseCategories())) ?: '—' }}</td></tr>
         <tr><td class="label">{{ __('erp.employees.driver_license_expires_on') }}</td><td>{{ $date($e->driver_license_expires_on) ?? '—' }}</td></tr>
     </table>
 
