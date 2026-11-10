@@ -177,6 +177,14 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function baeMeasurementReports(): HasMany
+    {
+        return $this->filesIn(ProjectFileSection::BaeMeasurementReports);
+    }
+
+    /**
      * @return HasMany<ProjectPart, $this>
      */
     public function parts(): HasMany

@@ -977,6 +977,7 @@ return [
             'plans' => 'Plans',
             'schematics' => 'Schémas électriques',
             'extra' => 'Fichiers supplémentaires',
+            'bae_measurements' => 'Rapport de mesure BAE',
             'waste_reports' => 'Rapport de déchets',
         ],
         'kb_format' => ['rich' => 'Texte enrichi', 'markdown' => 'Markdown'],

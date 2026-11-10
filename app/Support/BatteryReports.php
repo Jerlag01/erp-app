@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Storage;
  * The documents of a finished battery replacement (604) in the client portal: once the project is "to
  * be invoiced" (or later), the client sees per project the COW-code and description, the photos of the
  * battery dossier, its measurement report, delivery note, visual inspection and invoice request (PDF,
- * made from the dossier as it is) and the waste report uploaded on the project afterwards.
+ * made from the dossier as it is), and the measurement report of BAE and the waste report uploaded on
+ * the project afterwards.
  */
 class BatteryReports
 {
@@ -65,6 +66,9 @@ class BatteryReports
         return array_filter((array) ($dossier?->photos ?? []), fn (mixed $path): bool => is_string($path) && $disk->exists($path));
     }
 
+    /** The upload zones of the project the client sees, in this order. */
+    public const UPLOADED = [ProjectFileSection::BaeMeasurementReports, ProjectFileSection::WasteReports];
+
     /**
      * The waste reports uploaded on the project.
      *
@@ -72,6 +76,18 @@ class BatteryReports
      */
     public static function wasteReports(Project $project): Collection
     {
-        return $project->filesIn(ProjectFileSection::WasteReports)->whereHas('latestVersion')->with('latestVersion')->orderBy('name')->get();
+        return self::uploaded($project, ProjectFileSection::WasteReports);
+    }
+
+    /**
+     * The files uploaded in one of the UPLOADED zones (all of them without a zone).
+     *
+     * @return Collection<int, ProjectFile>
+     */
+    public static function uploaded(Project $project, ?ProjectFileSection $section = null): Collection
+    {
+        $sections = array_map(fn (ProjectFileSection $one): string => $one->value, $section ? [$section] : self::UPLOADED);
+
+        return $project->files()->whereIn('section', $sections)->whereHas('latestVersion')->with('latestVersion')->orderBy('name')->get();
     }
 }

@@ -692,7 +692,7 @@ Offerte → Wacht op PO → Te plannen → Ingepland → Uit te voeren → In ui
 - **PO-nummers** van de klant (10 cijfers, meerdere mogelijk).
 - Elk nieuw project krijgt een **korte omschrijving** (verplicht): de klant ziet ze in zijn portaal onder het categorienummer.
 - Tabbladen voor **documenten, foto's, plannen, schema's, extra bestanden, onderdelen, offertes en facturen**. Bestanden hebben versies.
-- Een **604** heeft ook het tabblad **Afvalrapport**: upload daar het afvalrapport (PDF) zodra je het hebt. De klant ziet het bij de documenten van het project in zijn portaal.
+- Een **604** heeft ook de tabbladen **Meetrapport BAE** en **Afvalrapport**: upload daar het meetrapport van BAE en het afvalrapport (PDF) zodra je ze hebt. De klant ziet het bij de documenten van het project in zijn portaal.
 - **Projectleiders** en **toegewezen ploegen** bepalen wie het project ziet.
 - Voor 610–650 toont een **voortgangsbalk** de stappen (aanvraag, werfbezoek, offerte, PO, … tot overgedragen); vink stappen aan of ze worden automatisch aangevinkt. Is **PO ontvangen** aangevinkt, dan voeg je met **"PO-nummer toevoegen"** op elk moment een PO-nummer toe (bij het aanvinken zonder PO-nummer opent dat venster meteen).
 - **Kopiëren** start een nieuw project vanuit dit project.
@@ -1254,7 +1254,7 @@ Een apart portaal voor de klant (bv. de managers van Proximus) met een **alleen-
 - **Batterijleveringen** toont enkel de leveringen van zijn eigen projecten, tenzij hij *Alle projecten* mag zien.
 - Met het recht **As-built standaardbestanden per COW-code** kiest hij bij **As-built standaardbestanden** een COW-code (ook zonder project in zijn lijst) en levert hij per categorie die bij een COW-code hoort (evacuatiewegen, plannen, ventilatieberekening en evacuatielijst van batterijlokalen) de bestanden aan of vervangt hij ze. Ze komen meteen in het register en in de lopende as-builts van die COW-code. Hij verwijdert enkel wat een klant uploadde. De algemene bestanden (externe invloeden) staan daar niet.
 - Op het **dashboard** ziet hij per **area** welk deel van zijn projecten open is en welk deel afgesloten (in procent, tegenover alle projecten van die area).
-- Bij **Batterijdossiers** (recht *Batterijdossiers (604)*) staat elk 604-project vanaf **Te factureren**, met de COW-code en omschrijving. Per project: de **foto's** van het batterijdossier, het **meetrapport**, de **leveringsnota**, de **visuele keuring** en de **factuuraanvraag** (PDF, gemaakt uit het dossier) en het **afvalrapport** dat je op het project uploadt. Klantgebruikers met het recht *Projecten* kregen dit recht automatisch.
+- Bij **Batterijdossiers** (recht *Batterijdossiers (604)*) staat elk 604-project vanaf **Te factureren**, met de COW-code en omschrijving. Per project: de **foto's** van het batterijdossier, het **meetrapport**, de **leveringsnota**, de **visuele keuring** en de **factuuraanvraag** (PDF, gemaakt uit het dossier) en het **meetrapport van BAE** en het **afvalrapport** die je op het project uploadt. Klantgebruikers met het recht *Projecten* kregen dit recht automatisch.
 
 De mails (welkom, nieuw wachtwoord) pas je aan bij **E-mailsjablonen**.
 

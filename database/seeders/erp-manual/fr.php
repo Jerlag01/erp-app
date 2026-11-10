@@ -691,7 +691,7 @@ Offre → En attente du PO → À planifier → Planifié → À exécuter → E
 - **Numéros PO** du client (10 chiffres, plusieurs possibles).
 - Chaque nouveau projet reçoit une **description courte** (obligatoire) : le client la voit dans son portail sous le numéro de catégorie.
 - Onglets **documents, photos, plans, schémas, fichiers supplémentaires, pièces, offres et factures**. Les fichiers ont des versions.
-- Un **604** a aussi l'onglet **Rapport de déchets** : téléchargez-y le rapport de déchets (PDF) dès que vous l'avez. Le client le voit avec les documents du projet dans son portail.
+- Un **604** a aussi les onglets **Rapport de mesure BAE** et **Rapport de déchets** : téléchargez-y le rapport de mesure de BAE et le rapport de déchets (PDF) dès que vous les avez. Le client le voit avec les documents du projet dans son portail.
 - Les **chefs de projet** et les **équipes affectées** déterminent qui voit le projet.
 - Pour 610–650, une **barre d'avancement** montre les étapes (demande, visite, offre, PO, … jusqu'à la remise) ; cochez les étapes ou elles se cochent automatiquement. Quand **PO reçu** est coché, **« Ajouter un numéro PO »** ajoute un numéro PO à tout moment (en cochant l'étape sans numéro PO, cette fenêtre s'ouvre directement).
 - **Copier** démarre un nouveau projet à partir de celui-ci.
@@ -1253,7 +1253,7 @@ Un portail séparé pour le client (p. ex. les managers de Proximus) avec un **a
 - **Livraisons de batteries** ne montre que les livraisons de ses propres projets, sauf s'il peut voir *Tous les projets*.
 - Avec le droit **Fichiers standard as-built par code COW**, il choisit dans **Fichiers standard as-built** un code COW (même sans projet dans sa liste) et fournit ou remplace les fichiers de chaque catégorie liée à un code COW (voies d'évacuation, plans, calcul de ventilation et liste d'évacuation des locaux batteries). Ils entrent directement dans le registre et dans les as-builts en cours de ce code COW. Il ne supprime que ce qu'un client a téléchargé. Les fichiers généraux (influences externes) n'y figurent pas.
 - Sur le **tableau de bord**, il voit par **area** quelle part de ses projets est ouverte et quelle part est clôturée (en pourcentage, par rapport à tous les projets de cette area).
-- Dans **Dossiers batteries** (droit *Dossiers batteries (604)*) figure chaque projet 604 à partir de **À facturer**, avec le code COW et la description. Par projet : les **photos** du dossier batteries, le **rapport de mesure**, le **bon de livraison**, l'**inspection visuelle** et la **demande de facture** (PDF, générés à partir du dossier) et le **rapport de déchets** que vous téléchargez sur le projet. Les utilisateurs clients avec le droit *Projets* ont reçu ce droit automatiquement.
+- Dans **Dossiers batteries** (droit *Dossiers batteries (604)*) figure chaque projet 604 à partir de **À facturer**, avec le code COW et la description. Par projet : les **photos** du dossier batteries, le **rapport de mesure**, le **bon de livraison**, l'**inspection visuelle** et la **demande de facture** (PDF, générés à partir du dossier) et le **rapport de mesure de BAE** et le **rapport de déchets** que vous téléchargez sur le projet. Les utilisateurs clients avec le droit *Projets* ont reçu ce droit automatiquement.
 
 Les mails (bienvenue, nouveau mot de passe) se modifient dans **Modèles d'e-mail**.
 

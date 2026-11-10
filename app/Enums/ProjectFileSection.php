@@ -29,6 +29,9 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
     /** Battery replacements (604): the waste report (PDF), added after the works; the client sees it. */
     case WasteReports = 'waste_reports';
 
+    /** Battery replacements (604): the measurement report (PDF) made by BAE, added afterwards; the client sees it. */
+    case BaeMeasurementReports = 'bae_measurements';
+
     /**
      * Office documents, PDF and text.
      */
@@ -76,6 +79,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
             self::Schematics => Heroicon::OutlinedBolt,
             self::Extra => Heroicon::OutlinedFolderPlus,
             self::WasteReports => Heroicon::OutlinedTrash,
+            self::BaeMeasurementReports => Heroicon::OutlinedChartBar,
         };
     }
 
@@ -96,7 +100,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
             self::Images => self::IMAGE_EXTENSIONS,
             self::Plans => self::PLAN_EXTENSIONS,
             self::Schematics, self::Extra => null,
-            self::WasteReports => ['pdf'],
+            self::WasteReports, self::BaeMeasurementReports => ['pdf'],
         };
     }
 

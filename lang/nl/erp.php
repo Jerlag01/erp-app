@@ -977,6 +977,7 @@ return [
             'plans' => 'Plannen',
             'schematics' => 'Elektrische schema\'s',
             'extra' => 'Extra bestanden',
+            'bae_measurements' => 'Meetrapport BAE',
             'waste_reports' => 'Afvalrapport',
         ],
         'kb_format' => ['rich' => 'Opgemaakte tekst', 'markdown' => 'Markdown'],

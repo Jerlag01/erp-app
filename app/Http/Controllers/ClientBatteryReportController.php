@@ -50,7 +50,7 @@ class ClientBatteryReportController
     public function wasteReport(Project $project, ProjectFile $file): StreamedResponse
     {
         $this->authorize($project);
-        abort_unless(BatteryReports::wasteReports($project)->contains($file), 404);
+        abort_unless(BatteryReports::uploaded($project)->contains($file), 404);
 
         $stored = $file->latestVersion;
         abort_if($stored === null || ! Storage::disk(ProjectFile::DISK)->exists($stored->path), 404);

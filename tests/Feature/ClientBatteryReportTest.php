@@ -13,6 +13,7 @@ use App\Filament\Client\Resources\BatteryReports\Pages\ViewClientBatteryReport;
 use App\Filament\Client\Resources\Projects\ClientProjectResource;
 use App\Filament\Client\Resources\Projects\Pages\ListClientProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\RelationManagers\BaeMeasurementReportsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\WasteReportsRelationManager;
 use App\Models\BatteryDelivery;
 use App\Models\BatteryDossier;
@@ -84,6 +85,11 @@ class ClientBatteryReportTest extends TestCase
         $this->assertTrue(ProjectFileSection::WasteReports->accepts('afval.pdf'));
         $this->assertFalse(ProjectFileSection::WasteReports->accepts('afval.xlsx'));
         $waste = ProjectFile::store($done, ProjectFileSection::WasteReports, UploadedFile::fake()->create('afvalrapport.pdf', 20, 'application/pdf'), 'afvalrapport.pdf', $employee);
+        // The measurement report of BAE: its own tab on the 604 too.
+        $this->assertTrue(BaeMeasurementReportsRelationManager::canViewForRecord($done, ViewProject::class));
+        $this->assertFalse(BaeMeasurementReportsRelationManager::canViewForRecord(Project::factory()->inCategory('610')->create(), ViewProject::class));
+        $this->assertFalse(ProjectFileSection::BaeMeasurementReports->accepts('meting.xlsx'));
+        $bae = ProjectFile::store($done, ProjectFileSection::BaeMeasurementReports, UploadedFile::fake()->create('meetrapport-bae.pdf', 20, 'application/pdf'), 'meetrapport-bae.pdf', $employee);
 
         $this->client();
         Livewire::test(ListClientBatteryReports::class)
@@ -93,7 +99,9 @@ class ClientBatteryReportTest extends TestCase
         Livewire::test(ViewClientBatteryReport::class, ['record' => $done->getRouteKey()])
             ->assertSee(__('erp.batteries.documents.measurement'))
             ->assertSee(__('erp.batteries.documents.invoice_request'))
-            ->assertSee('afvalrapport.pdf');
+            ->assertSee('afvalrapport.pdf')
+            ->assertSee(__('erp.enums.project_file_section.bae_measurements'))
+            ->assertSee('meetrapport-bae.pdf');
 
         foreach (['measurement', 'delivery', 'inspection', 'invoice_request'] as $document) {
             $response = $this->get(route('client.battery-report.document', [$done, $document]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
@@ -103,6 +111,10 @@ class ClientBatteryReportTest extends TestCase
         $this->assertSame('jpeg-a', $this->get(route('client.battery-report.photo', [$done, 0]))->assertOk()->streamedContent());
         $this->get(route('client.battery-report.photo', [$done, 1]))->assertNotFound();
         $this->get(route('client.battery-report.waste', [$done, $waste]))->assertOk();
+        $this->get(route('client.battery-report.waste', [$done, $bae]))->assertOk();
+        // Other upload zones of the project stay closed to the client.
+        $internal = ProjectFile::store($done, ProjectFileSection::Documents, UploadedFile::fake()->create('intern.pdf', 5), 'intern.pdf', $employee);
+        $this->get(route('client.battery-report.waste', [$done, $internal]))->assertNotFound();
 
         // Not before "to be invoiced", and not without the permission.
         $this->get(route('client.battery-report.document', [$busy, 'measurement']))->assertNotFound();

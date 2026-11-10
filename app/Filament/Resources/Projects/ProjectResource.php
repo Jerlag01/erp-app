@@ -8,6 +8,7 @@ use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\RelationManagers\BaeMeasurementReportsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\BatteryDeliveriesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DeliveryFollowUpsRelationManager;
@@ -105,6 +106,7 @@ class ProjectResource extends Resource
             PlansRelationManager::class,
             SchematicsRelationManager::class,
             ExtraFilesRelationManager::class,
+            BaeMeasurementReportsRelationManager::class,
             WasteReportsRelationManager::class,
             OffersRelationManager::class,
             InvoicesRelationManager::class,

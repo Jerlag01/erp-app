@@ -977,6 +977,7 @@ return [
             'plans' => 'Plans',
             'schematics' => 'Electrical schematics',
             'extra' => 'Extra files',
+            'bae_measurements' => 'BAE measurement report',
             'waste_reports' => 'Waste report',
         ],
         'kb_format' => ['rich' => 'Rich text', 'markdown' => 'Markdown'],

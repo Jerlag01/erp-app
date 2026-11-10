@@ -691,7 +691,7 @@ Offer → Waiting for PO → To be planned → Planned → To be executed → In
 - The client's **PO numbers** (10 digits, several possible).
 - Every new project gets a **short description** (required): the client sees it in their portal under the category number.
 - Tabs for **documents, photos, plans, schematics, extra files, parts, offers and invoices**. Files have versions.
-- A **604** also has the tab **Waste report**: upload the waste report (PDF) there once you have it. The client sees it with the project's documents in their portal.
+- A **604** also has the tabs **BAE measurement report** and **Waste report**: upload BAE's measurement report and the waste report (PDF) there once you have them. The client sees it with the project's documents in their portal.
 - **Project leaders** and **assigned teams** decide who sees the project.
 - For 610–650 a **progress bar** shows the steps (request, site visit, offer, PO, … up to handed over); tick steps yourself or they are ticked automatically. Once **PO received** is ticked, **"Add PO number"** adds a PO number at any moment (ticking the step without a PO number opens that window straight away).
 - **Copy** starts a new project from this one.
@@ -1253,7 +1253,7 @@ A separate portal for the client (e.g. Proximus managers) with a **read-only ove
 - **Battery deliveries** only shows the deliveries of their own projects, unless they may see *All projects*.
 - With the permission **As-built standard files per COW code** they pick a COW code under **As-built standard files** (also without a project in their list) and hand in or replace the files of each category that belongs to a COW code (evacuation routes, plans, ventilation calculation and evacuation list of battery rooms). They go straight into the register and into the open as-builts of that COW code. They only remove what a client uploaded. The general files (external influences) are not there.
 - On the **dashboard** they see per **area** which share of their projects is open and which is closed (in percent, compared to all projects of that area).
-- Under **Battery dossiers** (permission *Battery dossiers (604)*) every 604 project shows up from **To be invoiced**, with the COW code and description. Per project: the **photos** of the battery dossier, the **measurement report**, **delivery note**, **visual inspection** and **invoice request** (PDF, made from the dossier) and the **waste report** you upload on the project. Client users with the *Projects* permission got this permission automatically.
+- Under **Battery dossiers** (permission *Battery dossiers (604)*) every 604 project shows up from **To be invoiced**, with the COW code and description. Per project: the **photos** of the battery dossier, the **measurement report**, **delivery note**, **visual inspection** and **invoice request** (PDF, made from the dossier) and the **BAE measurement report** and **waste report** you upload on the project. Client users with the *Projects* permission got this permission automatically.
 
 The mails (welcome, new password) are edited under **E-mail templates**.
 

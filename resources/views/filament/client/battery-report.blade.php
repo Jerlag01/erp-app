@@ -4,6 +4,7 @@
     $dossier = \App\Support\BatteryReports::dossier($project);
     $photos = \App\Support\BatteryReports::photos($dossier);
     $wasteReports = \App\Support\BatteryReports::wasteReports($project);
+    $baeReports = \App\Support\BatteryReports::uploaded($project, \App\Enums\ProjectFileSection::BaeMeasurementReports);
     $size = fn (?int $bytes) => \Illuminate\Support\Number::fileSize((int) $bytes, precision: 1);
     $row = 'display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .85rem; border-radius: .6rem; border: 1px solid rgb(148 163 184 / .35); text-decoration: none;';
 @endphp
@@ -18,6 +19,12 @@
                     </a>
                 @endforeach
             @endif
+            @foreach ($baeReports as $file)
+                <a href="{{ route('client.battery-report.waste', [$project, $file]) }}" target="_blank" rel="noopener" style="{{ $row }}">
+                    <span><x-filament::icon icon="heroicon-o-chart-bar" style="width: 1.1rem; height: 1.1rem; display: inline-block; vertical-align: -3px;" /> {{ __('erp.enums.project_file_section.bae_measurements') }} · {{ $file->name }}</span>
+                    <span style="font-size: .75rem; opacity: .6;">{{ $size($file->latestVersion?->size) }}</span>
+                </a>
+            @endforeach
             @foreach ($wasteReports as $file)
                 <a href="{{ route('client.battery-report.waste', [$project, $file]) }}" target="_blank" rel="noopener" style="{{ $row }}">
                     <span><x-filament::icon icon="heroicon-o-trash" style="width: 1.1rem; height: 1.1rem; display: inline-block; vertical-align: -3px;" /> {{ __('erp.enums.project_file_section.waste_reports') }} · {{ $file->name }}</span>
