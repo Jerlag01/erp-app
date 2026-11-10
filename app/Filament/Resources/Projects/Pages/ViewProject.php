@@ -302,18 +302,17 @@ class ViewProject extends ViewRecord
                 ->modalHeading(__('erp.gpw.request_heading'))
                 ->modalDescription(__('erp.gpw.request_help_choose'))
                 ->modalSubmitActionLabel(__('erp.gpw.send'))
-                // The site's own contacts are ticked (or else those of the area); any of both can be chosen.
-                ->fillForm(fn (Project $record): array => ['contact_ids' => RequestGpw::contactsFor($record)->modelKeys()])
                 ->schema(fn (Project $record): array => [
-                    // Anyone with an e-mail address (also without a portal login); the site's and area's contacts
-                    // are offered first, a new person can be added here.
+                    // Nothing is chosen beforehand: the requester picks who it goes to. Suggested first: for an
+                    // intervention the area's intervention contacts, else the site's and area's contacts; anyone
+                    // with an e-mail address can be searched (also without a portal login) or added here.
                     Select::make('contact_ids')
                         ->label(__('erp.gpw.recipients'))
                         ->helperText(__('erp.gpw.recipients_help'))
                         ->multiple()
                         ->searchable()
                         ->options(RequestGpw::candidateOptions($record))
-                        ->getSearchResultsUsing(fn (string $search): array => RequestGpw::candidateOptions($record) + RequestGpw::searchRecipients($search))
+                        ->getSearchResultsUsing(fn (string $search): array => RequestGpw::searchRecipients($search, $record))
                         ->getOptionLabelsUsing(fn (array $values): array => WorkSiteContact::query()->whereKey($values)->get()->mapWithKeys(fn (WorkSiteContact $contact): array => [$contact->id => RequestGpw::optionLabel($contact)])->all())
                         ->createOptionForm(fn (): array => array_map(fn ($field) => $field->getName() === 'email' ? $field->required() : $field, WorkSiteContactFields::make()))
                         ->createOptionUsing(fn (array $data): int => WorkSiteContact::query()->create($data)->getKey())

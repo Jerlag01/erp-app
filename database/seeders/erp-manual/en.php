@@ -656,6 +656,7 @@ The client's work sites, each with a **COW code** (e.g. `02GAM`), address, build
 ## Areas and contact persons
 
 - An **area** groups work sites and has **one or more contact persons**.
+- An area also has a separate list **Intervention contact persons**: they are only suggested for GPW requests of interventions (600 and 608.1), never for other projects.
 - A work site (COW code) can have **one or more contact persons of its own**, besides those of its area. If it has none, the contact persons of its area apply.
 - A contact person has a **language** (NL, FR or EN): mails such as a GPW request go in that language.
 
@@ -719,7 +720,7 @@ Asking the client for permission to work on a site during a given **period**, an
 ## Requesting a GPW
 
 1. Open a project with the status **To be executed**.
-2. Click **"Request GPW"** and choose **who** the request goes to: the contact persons of the COW code (or else of the area) are already chosen. You can search **any other contact person** with an e-mail address (by name, company or e-mail) or add a **new person** straight away with name, e-mail and language. They don't need a client portal login: they decide with the buttons in the mail.
+2. Click **"Request GPW"** and choose **who** the request goes to: nobody is chosen beforehand. Suggested at the top: for an **intervention (600, 608.1)** the area's **intervention contact persons**, for other projects the contact persons of the COW code and of the area. You can search **any other contact person** with an e-mail address (by name, company or e-mail) or add a **new person** straight away with name, e-mail and language. They don't need a client portal login: they decide with the buttons in the mail.
 3. Choose the **period** (from – until) and optionally add **remarks** (access, keys, outages).
 4. Click **Send request**.
 

@@ -657,6 +657,7 @@ De werflocaties van de klant, elk met een **COW-code** (bv. `02GAM`), adres, geb
 ## Areas en contactpersonen
 
 - Een **area** groepeert werflocaties en heeft **een of meer contactpersonen**.
+- Een area heeft ook een aparte lijst **Contactpersonen interventies**: die worden enkel voorgesteld bij GPW-aanvragen van interventies (600 en 608.1), nooit bij andere projecten.
 - Een werflocatie (COW-code) kan **een of meer eigen contactpersonen** hebben, naast de contactpersonen van haar area. Heeft ze er geen, dan gelden de contactpersonen van haar area.
 - Een contactpersoon heeft een **taal** (NL, FR of EN): mails zoals een GPW-aanvraag gaan in die taal.
 
@@ -720,7 +721,7 @@ De klant toestemming vragen om in een bepaalde **periode** op een site te werken
 ## Een GPW aanvragen
 
 1. Open een project met de status **Uit te voeren**.
-2. Klik op **"GPW aanvragen"** en kies **naar wie** de aanvraag gaat: de contactpersonen van de COW-code (of anders van de area) staan al gekozen. Je kan **elke andere contactpersoon** met een e-mailadres zoeken (op naam, bedrijf of e-mail) of meteen een **nieuwe persoon** toevoegen met naam, e-mail en taal. Die personen hebben geen login voor het klantenportaal nodig: ze beslissen met de knoppen in de mail.
+2. Klik op **"GPW aanvragen"** en kies **naar wie** de aanvraag gaat: er is niemand vooraf gekozen. Bovenaan staan als voorstel bij een **interventie (600, 608.1)** de **interventiecontactpersonen** van de area, bij andere projecten de contactpersonen van de COW-code en van de area. Je kan **elke andere contactpersoon** met een e-mailadres zoeken (op naam, bedrijf of e-mail) of meteen een **nieuwe persoon** toevoegen met naam, e-mail en taal. Die personen hebben geen login voor het klantenportaal nodig: ze beslissen met de knoppen in de mail.
 3. Kies de **periode** (van – tot en met) en vul eventueel **opmerkingen** in (toegang, sleutels, onderbrekingen).
 4. Klik op **Aanvraag versturen**.
 

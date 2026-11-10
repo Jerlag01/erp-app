@@ -66,6 +66,7 @@ class GpwRequestTest extends TestCase
             'ends_on' => today()->addWeek()->addDays(2)->toDateString(),
             'remarks' => 'Toegang via achterpoort',
             ...$data,
+            'contact_ids' => array_key_exists('contact_ids', $data) ? $data['contact_ids'] : [$this->contact->id],
         ]);
     }
 
@@ -78,12 +79,17 @@ class GpwRequestTest extends TestCase
         $this->actingAs($requester);
         Filament::setCurrentPanel('app');
 
+        // The window asks who it goes to: nobody is chosen beforehand.
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
             ->assertActionVisible('requestGpw')
+            ->mountAction('requestGpw')
+            ->assertSchemaStateSet(['contact_ids' => []]);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
             ->callAction('requestGpw', [
                 'starts_on' => today()->addWeek()->toDateString(),
                 'ends_on' => today()->addWeek()->addDays(2)->toDateString(),
                 'remarks' => 'Toegang via achterpoort',
+                'contact_ids' => [$this->contact->id],
             ])
             ->assertHasNoActionErrors();
 
@@ -118,9 +124,9 @@ class GpwRequestTest extends TestCase
         $gpw = $this->gpw($project, $requester);
         Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->rendered['subject'] === 'GPW 02GAM '.$gpw->period());
 
-        $project->workSite->contacts()->detach();
+        // Nobody chosen: nothing goes out automatically.
         $this->expectException(ValidationException::class);
-        $this->gpw($project->fresh(), $requester);
+        $this->gpw($project->fresh(), $requester, ['contact_ids' => []]);
     }
 
     #[Test]
@@ -250,7 +256,7 @@ class GpwRequestTest extends TestCase
         $project = Project::factory()->inCategory('610')->for($site)->create(['status' => ProjectStatus::ToBeExecuted]);
         $requester = $this->requester($project, email: 'jan@power.example');
 
-        $gpw = $this->gpw($project, $requester);
+        $gpw = $this->gpw($project, $requester, ['contact_ids' => [$dutch->id, $french->id, $noMail->id]]);
 
         $this->assertSame('marc@proximus.example, sophie@proximus.example', $gpw->contact_email);
         Mail::assertSent(SystemMail::class, 2);
@@ -286,12 +292,11 @@ class GpwRequestTest extends TestCase
         $this->actingAs($requester);
         Filament::setCurrentPanel('app');
 
-        // Both own contacts are ticked; the area's contact can be added; people without e-mail are not offered.
-        $this->assertEqualsCanonicalizing([$own->id, $second->id], RequestGpw::contactsFor($project)->modelKeys());
+        // The site's and the area's contacts are suggested (people without e-mail are not), none chosen beforehand.
         $this->assertEqualsCanonicalizing([$own->id, $second->id, $areaContact->id], array_keys(RequestGpw::candidateOptions($project)));
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
             ->mountAction('requestGpw')
-            ->assertSchemaStateSet(['contact_ids' => [$own->id, $second->id]]);
+            ->assertSchemaStateSet(['contact_ids' => []]);
 
         $dates = ['starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeek()->addDay()->toDateString()];
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
@@ -370,7 +375,7 @@ class GpwRequestTest extends TestCase
         $project = $this->project();
         $other = WorkSiteContact::factory()->create(['first_name' => 'Marc', 'last_name' => 'Peeters', 'email' => 'marc@proximus.example', 'locale' => 'nl']);
         $project->workSite->contacts()->attach($other);
-        $gpw = $this->gpw($project, $this->requester($project));
+        $gpw = $this->gpw($project, $this->requester($project), ['contact_ids' => [$this->contact->id, $other->id]]);
         $links = $this->directLinks();
 
         // Each recipient has their own links; the keys themselves are not stored.
@@ -446,5 +451,33 @@ class GpwRequestTest extends TestCase
         $token = substr(parse_url($link, PHP_URL_PATH), strlen('/gpw/key/'), 48);
         $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk();
         $this->assertSame([GpwStatus::Approved, 'Sophie Dubois, Marc Peeters'], [$gpw->fresh()->status, $gpw->fresh()->decided_by_name]);
+    }
+
+    #[Test]
+    public function interventions_suggest_the_intervention_contacts_of_the_area_and_others_never_do(): void
+    {
+        Mail::fake();
+        $area = WorkSiteArea::factory()->create(['name' => '2-VLA']);
+        $areaContact = WorkSiteContact::factory()->create(['first_name' => 'Ann', 'last_name' => 'Area', 'email' => 'ann@proximus.example']);
+        $interventionContact = WorkSiteContact::factory()->create(['first_name' => 'Ivo', 'last_name' => 'Interventie', 'email' => 'ivo@proximus.example']);
+        $area->contacts()->attach($areaContact);
+        $area->interventionContacts()->attach($interventionContact);
+        $site = WorkSite::factory()->for($area, 'area')->create(['cow_code' => '06INT']);
+        $intervention = Project::factory()->inCategory('600')->for($site)->create(['status' => ProjectStatus::ToBeExecuted, 'work_order_number' => 'WO 777001']);
+        $project = Project::factory()->inCategory('610')->for($site)->create(['status' => ProjectStatus::ToBeExecuted]);
+        $dates = ['starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeek()->addDay()->toDateString()];
+
+        // An intervention: the area's intervention contacts are suggested.
+        $this->assertSame([$interventionContact->id], array_keys(RequestGpw::candidateOptions($intervention)));
+        $this->assertArrayHasKey($interventionContact->id, RequestGpw::searchRecipients('ivo', $intervention));
+        $gpw = app(RequestGpw::class)->handle($intervention, $this->requester($intervention), [...$dates, 'contact_ids' => [$interventionContact->id]]);
+        $this->assertSame([$interventionContact->id], $gpw->contact_ids);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('ivo@proximus.example'));
+
+        // Another project: the ordinary contacts; the intervention contact is not offered and not accepted.
+        $this->assertSame([$areaContact->id], array_keys(RequestGpw::candidateOptions($project)));
+        $this->assertArrayNotHasKey($interventionContact->id, RequestGpw::searchRecipients('ivo', $project));
+        $this->expectException(ValidationException::class);
+        app(RequestGpw::class)->handle($project, $this->requester($project), [...$dates, 'contact_ids' => [$interventionContact->id]]);
     }
 }

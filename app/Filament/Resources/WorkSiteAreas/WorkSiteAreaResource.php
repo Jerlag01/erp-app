@@ -68,6 +68,16 @@ class WorkSiteAreaResource extends Resource
                 ->searchable(['first_name', 'last_name', 'company'])
                 ->preload()
                 ->createOptionForm(WorkSiteContactFields::make()),
+            // A separate list for interventions (600, 608.1): only offered for their GPW requests.
+            Select::make('interventionContacts')
+                ->label(__('erp.work_sites.intervention_contacts'))
+                ->helperText(__('erp.work_sites.intervention_contacts_help'))
+                ->relationship('interventionContacts', 'last_name')
+                ->multiple()
+                ->getOptionLabelFromRecordUsing(fn (WorkSiteContact $record): string => $record->label())
+                ->searchable(['first_name', 'last_name', 'company'])
+                ->preload()
+                ->createOptionForm(WorkSiteContactFields::make()),
             Textarea::make('description')
                 ->label(__('erp.fields.description'))
                 ->rows(2)
@@ -78,7 +88,7 @@ class WorkSiteAreaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('contacts')->withCount('workSites'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['contacts', 'interventionContacts'])->withCount('workSites'))
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')
@@ -92,6 +102,12 @@ class WorkSiteAreaResource extends Resource
                     ->state(fn (WorkSiteArea $record): array => $record->contacts->map(fn (WorkSiteContact $contact): string => trim($contact->label().' · '.($contact->phone ?? $contact->email ?? ''), ' ·'))->all())
                     ->listWithLineBreaks()
                     ->placeholder('—'),
+                TextColumn::make('interventionContacts')
+                    ->label(__('erp.work_sites.intervention_contacts'))
+                    ->state(fn (WorkSiteArea $record): array => $record->interventionContacts->map(fn (WorkSiteContact $contact): string => trim($contact->label().' · '.($contact->email ?? $contact->phone ?? ''), ' ·'))->all())
+                    ->listWithLineBreaks()
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('work_sites_count')
                     ->label(__('erp.resources.work_site.plural'))
                     ->badge()

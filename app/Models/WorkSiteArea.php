@@ -29,6 +29,16 @@ class WorkSiteArea extends Model
     }
 
     /**
+     * The contact persons for interventions (600, 608.1): offered for their GPW requests only.
+     *
+     * @return BelongsToMany<WorkSiteContact, $this>
+     */
+    public function interventionContacts(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkSiteContact::class, 'work_site_area_intervention_contact')->withTimestamps()->orderBy('first_name')->orderBy('last_name');
+    }
+
+    /**
      * @return HasMany<WorkSite, $this>
      */
     public function workSites(): HasMany

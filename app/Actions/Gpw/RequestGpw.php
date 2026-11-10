@@ -13,6 +13,7 @@ use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -33,27 +34,34 @@ class RequestGpw
     public bool $mailFailed = false;
 
     /**
-     * The contact persons ticked by default: the COW site's own contacts, or else the contacts of its
-     * area — those with an e-mail address.
-     *
-     * @return Collection<int, WorkSiteContact>
-     */
-    public static function contactsFor(Project $project): Collection
-    {
-        return ($project->workSite?->effectiveContacts() ?? new Collection)->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->values();
-    }
-
-    /**
-     * Everyone a GPW request for this project can be sent to: the site's own contacts and those of its
-     * area, with an e-mail address.
+     * The suggestions of the request window, with an e-mail address: for an intervention (600, 608.1) the
+     * intervention contacts of the area, for other projects the site's own contacts and those of its area.
      *
      * @return Collection<int, WorkSiteContact>
      */
     public static function candidatesFor(Project $project): Collection
     {
-        $project->loadMissing('workSite.contacts', 'workSite.area.contacts');
+        $project->loadMissing('category', 'workSite.contacts', 'workSite.area.contacts', 'workSite.area.interventionContacts');
 
-        return ($project->workSite?->allContacts() ?? new Collection)->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->values();
+        $contacts = $project->isIntervention()
+            ? ($project->workSite?->area?->interventionContacts ?? new Collection)
+            : ($project->workSite?->allContacts() ?? new Collection);
+
+        return $contacts->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->values();
+    }
+
+    /**
+     * Contact persons who are only on an intervention list (of any area): never offered for other projects.
+     *
+     * @return list<int>
+     */
+    public static function interventionOnlyIds(): array
+    {
+        $intervention = DB::table('work_site_area_intervention_contact')->pluck('work_site_contact_id');
+        $elsewhere = DB::table('work_site_area_contact')->pluck('work_site_contact_id')
+            ->merge(DB::table('work_site_work_site_contact')->pluck('work_site_contact_id'));
+
+        return $intervention->diff($elsewhere)->map(fn (mixed $id): int => (int) $id)->unique()->values()->all();
     }
 
     /**
@@ -72,16 +80,18 @@ class RequestGpw
     }
 
     /**
-     * Any contact person with an e-mail address, by name, company or e-mail.
+     * Any contact person with an e-mail address, by name, company or e-mail; for a project that is not an
+     * intervention, without the people who are only on an intervention list.
      *
      * @return array<int, string>
      */
-    public static function searchRecipients(string $search): array
+    public static function searchRecipients(string $search, ?Project $project = null): array
     {
         $term = '%'.addcslashes($search, '%_\\').'%';
 
         return WorkSiteContact::query()
             ->whereNotNull('email')->where('email', '!=', '')
+            ->when($project !== null && ! $project->isIntervention(), fn ($query) => $query->whereKeyNot(self::interventionOnlyIds()))
             ->where(fn ($query) => $query->where('first_name', 'like', $term)->orWhere('last_name', 'like', $term)->orWhere('company', 'like', $term)->orWhere('email', 'like', $term))
             ->orderBy('last_name')->orderBy('first_name')
             ->limit(50)
@@ -91,30 +101,23 @@ class RequestGpw
     }
 
     /**
-     * "Sophie Dubois (sophie@…, FR), Marc Peeters (marc@…, NL)", for the request window.
-     */
-    public static function recipientsText(Project $project): ?string
-    {
-        return self::contactsFor($project)->map(fn (WorkSiteContact $contact): string => $contact->fullName().' ('.$contact->email.', '.strtoupper($contact->preferredLocale()).')')->implode(', ') ?: null;
-    }
-
-    /**
-     * @param  array{starts_on: string, ends_on: string, remarks?: string|null, contact_ids?: list<int|string>|null}  $data  without contact_ids: the default ones
+     * @param  array{starts_on: string, ends_on: string, remarks?: string|null, contact_ids: list<int|string>}  $data  contact_ids: the people chosen in the request window
      */
     public function handle(Project $project, User $actor, array $data): GpwRequest
     {
         abort_unless(Gate::forUser($actor)->allows('requestGpw', $project), 403);
 
-        // The chosen people (any contact person with an e-mail address), or else the site's (or area's) contacts.
-        $contacts = array_key_exists('contact_ids', $data)
-            ? WorkSiteContact::query()->whereKey(array_map('intval', (array) $data['contact_ids']))->whereNotNull('email')->where('email', '!=', '')->get()
-            : self::contactsFor($project);
+        // Always chosen by the requester (nothing goes out automatically): people with an e-mail address; for
+        // a project that is not an intervention, not those who are only on an intervention list.
+        $contacts = WorkSiteContact::query()
+            ->whereKey(array_map('intval', (array) ($data['contact_ids'] ?? [])))
+            ->whereNotNull('email')->where('email', '!=', '')
+            ->when(! $project->isIntervention(), fn ($query) => $query->whereKeyNot(self::interventionOnlyIds()))
+            ->get();
         $contact = $contacts->first();
 
         if ($contact === null) {
-            throw ValidationException::withMessages(array_key_exists('contact_ids', $data)
-                ? ['contact_ids' => __('erp.gpw.errors.no_recipient')]
-                : ['starts_on' => __('erp.gpw.errors.no_contact')]);
+            throw ValidationException::withMessages(['contact_ids' => __('erp.gpw.errors.no_recipient')]);
         }
 
         $from = CarbonImmutable::parse($data['starts_on'])->startOfDay();

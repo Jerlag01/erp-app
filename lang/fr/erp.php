@@ -1504,6 +1504,8 @@ return [
         'open_google_maps' => 'Ouvrir dans Google Maps',
         'no_address' => 'Pas encore d\'adresse',
         'contacts' => 'Personnes de contact propres',
+        'intervention_contacts' => 'Personnes de contact interventions',
+        'intervention_contacts_help' => 'Une liste séparée pour les interventions (600 et 608.1) : ces personnes ne sont proposées que pour les demandes GPW des interventions, pas pour les autres projets.',
         'contact_from_area' => 'Personne de contact de la zone',
         'change_type' => 'Changer le type de bâtiment',
         'change_type_submit' => 'Changer',
@@ -2670,7 +2672,7 @@ return [
         'download_menu' => 'Télécharger l\'application mobile',
     ],
     'gpw' => [
-        'recipients_help' => 'Les personnes de contact du code COW (ou sinon de la zone) sont déjà choisies. Cherchez toute autre personne de contact par nom, société ou e-mail, ou ajoutez une nouvelle personne. Un login pour le portail client n\'est pas nécessaire.',
+        'recipients_help' => 'Personne n\'est choisi d\'avance : choisissez vous-même à qui la demande est envoyée. En haut figurent, pour une intervention (600, 608.1), les personnes de contact interventions de la zone, pour les autres projets les personnes de contact du code COW et de la zone. Cherchez toute autre personne de contact par nom, société ou e-mail, ou ajoutez une nouvelle personne. Un login pour le portail client n\'est pas nécessaire.',
         'request_help_choose' => 'Choisissez à qui la demande est envoyée. Chacun reçoit un e-mail dans sa langue avec les boutons Approuver et Refuser (sans se connecter), avec vous en copie.',
         'recipients' => 'Envoyer à',
         'contact_of_site' => 'Personne de contact du code COW :cow',

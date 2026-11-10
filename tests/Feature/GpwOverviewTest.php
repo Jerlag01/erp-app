@@ -58,7 +58,8 @@ class GpwOverviewTest extends TestCase
     {
         $user = $this->user();
         $this->actingAs($user);
-        $waiting = app(RequestGpw::class)->handle($this->project(), $user, ['starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeek()->addDays(2)->toDateString()]);
+        $project = $this->project();
+        $waiting = app(RequestGpw::class)->handle($project, $user, ['starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeek()->addDays(2)->toDateString(), 'contact_ids' => $project->workSite->contacts->modelKeys()]);
         $approved = GpwRequest::factory()->for($this->project())->create(['status' => GpwStatus::Approved]);
         $rejected = GpwRequest::factory()->for($this->project())->create(['status' => GpwStatus::Rejected]);
         // Of a project the user does not see.

@@ -656,6 +656,7 @@ Les sites du client, chacun avec un **code COW** (p. ex. `02GAM`), une adresse, 
 ## Zones et personnes de contact
 
 - Une **zone** regroupe des sites et a **une ou plusieurs personnes de contact**.
+- Une zone a aussi une liste séparée **Personnes de contact interventions** : elles ne sont proposées que pour les demandes GPW des interventions (600 et 608.1), jamais pour les autres projets.
 - Un site (code COW) peut avoir **une ou plusieurs personnes de contact propres**, en plus de celles de sa zone. S'il n'en a pas, ce sont les personnes de contact de sa zone qui s'appliquent.
 - Une personne de contact a une **langue** (NL, FR ou EN) : les mails comme une demande de GPW sont envoyés dans cette langue.
 
@@ -719,7 +720,7 @@ Demander au client l'autorisation de travailler sur un site pendant une **pério
 ## Demander un GPW
 
 1. Ouvrez un projet avec le statut **À exécuter**.
-2. Cliquez sur **« Demander un GPW »** et choisissez **à qui** la demande est envoyée : les personnes de contact du code COW (ou sinon de la zone) sont déjà choisies. Vous pouvez chercher **toute autre personne de contact** avec une adresse e-mail (par nom, société ou e-mail) ou ajouter tout de suite une **nouvelle personne** avec nom, e-mail et langue. Ces personnes n'ont pas besoin d'un login pour le portail client : elles décident avec les boutons du mail.
+2. Cliquez sur **« Demander un GPW »** et choisissez **à qui** la demande est envoyée : personne n'est choisi d'avance. En haut sont proposées, pour une **intervention (600, 608.1)**, les **personnes de contact interventions** de la zone, pour les autres projets les personnes de contact du code COW et de la zone. Vous pouvez chercher **toute autre personne de contact** avec une adresse e-mail (par nom, société ou e-mail) ou ajouter tout de suite une **nouvelle personne** avec nom, e-mail et langue. Ces personnes n'ont pas besoin d'un login pour le portail client : elles décident avec les boutons du mail.
 3. Choisissez la **période** (du – jusqu'au) et ajoutez éventuellement des **remarques** (accès, clés, coupures).
 4. Cliquez sur **Envoyer la demande**.
 

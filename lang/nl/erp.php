@@ -1504,6 +1504,8 @@ return [
         'open_google_maps' => 'Openen in Google Maps',
         'no_address' => 'Nog geen adres',
         'contacts' => 'Eigen contactpersonen',
+        'intervention_contacts' => 'Contactpersonen interventies',
+        'intervention_contacts_help' => 'Een aparte lijst voor interventies (600 en 608.1): deze personen worden enkel voorgesteld bij de GPW-aanvragen van interventies, niet bij andere projecten.',
         'contact_from_area' => 'Contactpersoon van de area',
         'change_type' => 'Gebouwtype wijzigen',
         'change_type_submit' => 'Wijzigen',
@@ -2670,7 +2672,7 @@ return [
         'download_menu' => 'Mobiele app downloaden',
     ],
     'gpw' => [
-        'recipients_help' => 'De contactpersonen van de COW-code (of anders van de area) staan al gekozen. Zoek elke andere contactpersoon op naam, bedrijf of e-mail, of voeg een nieuwe persoon toe. Een login voor het klantenportaal is niet nodig.',
+        'recipients_help' => 'Niemand is vooraf gekozen: kies zelf naar wie de aanvraag gaat. Bovenaan staan bij een interventie (600, 608.1) de interventiecontactpersonen van de area, bij andere projecten de contactpersonen van de COW-code en van de area. Zoek elke andere contactpersoon op naam, bedrijf of e-mail, of voeg een nieuwe persoon toe. Een login voor het klantenportaal is niet nodig.',
         'request_help_choose' => 'Kies naar wie de aanvraag gaat. Elk krijgt een e-mail in zijn eigen taal met de knoppen Goedkeuren en Weigeren (zonder aanmelden), met jou in kopie.',
         'recipients' => 'Versturen naar',
         'contact_of_site' => 'Contactpersoon van COW-code :cow',
