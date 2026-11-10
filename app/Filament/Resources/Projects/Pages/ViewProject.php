@@ -4,9 +4,11 @@ namespace App\Filament\Resources\Projects\Pages;
 
 use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Batteries\CreateBatteryRoomDossier;
+use App\Actions\Batteries\CreateBatteryRoomProject;
 use App\Actions\Gpw\RequestGpw;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CopyProject;
+use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Filament\Resources\BaeOrders\BaeOrderResource;
@@ -224,6 +226,37 @@ class ViewProject extends ViewRecord
                     $dossier = $record->batteryRoom ?? app(CreateBatteryRoomDossier::class)->handle($record, auth()->user());
                     $this->redirect(BatteryRoomResource::getUrl('edit', ['record' => $dossier]));
                 }),
+            // A 604: its battery room project (609) can be made at any moment, also before the works are
+            // done (then it is made automatically). Once there is one, the button opens it.
+            Action::make('followUpBatteryRoom')
+                ->label(fn (Project $record): string => self::followUp($record) ? __('battery_rooms.follow_up_open', ['reference' => self::followUp($record)->reference]) : __('battery_rooms.follow_up_create'))
+                ->icon(Heroicon::OutlinedHomeModern)
+                ->color('gray')
+                ->visible(fn (Project $record): bool => self::mayFollowUp($record))
+                ->authorize(fn (Project $record): bool => self::mayFollowUp($record))
+                ->modalHeading(__('battery_rooms.follow_up_create'))
+                ->modalDescription(fn (Project $record): string => __('battery_rooms.follow_up_help', ['reference' => $record->reference]))
+                ->modalHidden(fn (Project $record): bool => self::followUp($record) !== null)
+                ->fillForm(fn (Project $record): array => ['short_description' => CreateBatteryRoomProject::description($record)])
+                ->schema([
+                    TextInput::make('short_description')->label(__('erp.projects.short_description'))->required()->maxLength(255),
+                    TextInput::make('room_number')->label(__('battery_rooms.fields.room_number'))->helperText(__('battery_rooms.fields.room_number_help'))->maxLength(50),
+                ])
+                ->action(function (Project $record, array $data): void {
+                    $existing = self::followUp($record);
+                    $dossier = $existing?->batteryRoom()->first() ?? app(CreateBatteryRoomProject::class)->handle([
+                        'source_project_id' => $record->id,
+                        'work_site_id' => $record->work_site_id,
+                        'short_description' => $data['short_description'] ?? null,
+                        'room_number' => $data['room_number'] ?? null,
+                    ], auth()->user());
+
+                    if ($existing === null) {
+                        Notification::make()->title(__('battery_rooms.follow_up_created', ['reference' => $dossier->project->reference]))->success()->send();
+                    }
+
+                    $this->redirect($dossier && Gate::allows('view', $dossier) ? BatteryRoomResource::getUrl('edit', ['record' => $dossier]) : ProjectResource::getUrl('view', ['record' => $existing ?? $dossier->project]));
+                }),
             Action::make('enersysDossier')
                 ->label(__('erp.enersys.dossier_button'))
                 ->icon(Heroicon::OutlinedBattery50)
@@ -354,5 +387,24 @@ class ViewProject extends ViewRecord
             EditAction::make(),
             DeleteAction::make(),
         ];
+    }
+
+    /**
+     * The battery room project (609) that follows this 604, if there is one.
+     */
+    protected static function followUp(Project $project): ?Project
+    {
+        return Project::query()->where('source_project_id', $project->id)->whereHas('category', fn ($query) => $query->where('code', CreateFollowUpProject::FOLLOW_UP_CATEGORY))->oldest('id')->first();
+    }
+
+    /**
+     * A 604 with a COW site, not archived, for someone who may make battery rooms (or open the existing one).
+     */
+    protected static function mayFollowUp(Project $project): bool
+    {
+        return (string) $project->category?->code === CreateFollowUpProject::SOURCE_CATEGORY
+            && $project->work_site_id !== null
+            && Gate::allows('view', $project)
+            && (self::followUp($project) !== null || (! $project->isArchived() && Gate::allows('create', BatteryRoomDossier::class)));
     }
 }

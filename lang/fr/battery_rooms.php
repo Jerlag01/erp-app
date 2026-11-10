@@ -47,6 +47,10 @@ return [
     'files_help' => 'Photos du local, le calcul de ventilation et le rapport de contrôle de BTV.',
     'default_description' => 'Local batteries',
     'default_description_after' => 'Local batteries après :reference',
+    'follow_up_create' => 'Créer le local batteries (609)',
+    'follow_up_open' => 'Ouvrir le local batteries :reference',
+    'follow_up_help' => 'Crée dès maintenant le projet 609 du local batteries après :reference, avec le même numéro et le même code COW, même si le 604 n\'est pas encore terminé. Dès que le 604 passe à « À facturer », ce 609 reçoit les photos et le schéma unifilaire (aucun deuxième n\'est créé).',
+    'follow_up_created' => 'Local batteries :reference créé',
     'follow_up_note' => 'Local batteries après le remplacement des batteries dans :reference.',
     'units' => ['m' => 'm', 'st' => 'pc', 'u' => 'h'],
     'doc' => [

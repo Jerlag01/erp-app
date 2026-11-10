@@ -314,4 +314,41 @@ class BatteryRoomTest extends TestCase
         $this->assertSame(1, Project::query()->where('source_project_id', $battery->id)->count());
         $this->assertSame(1, $room->filesIn(ProjectFileSection::Schematics)->count());
     }
+
+    #[Test]
+    public function the_609_is_made_from_the_604_at_any_moment_and_gets_its_pictures_once_the_604_is_done(): void
+    {
+        $this->actingAs($user = $this->user(['view', 'create', 'update'], ['view', 'update']));
+        Filament::setCurrentPanel('app');
+        $battery = Project::factory()->inCategory('604')->for($this->site('5-WAL', '15LIE'))->create(['status' => ProjectStatus::InProgress, 'number' => 21, 'short_description' => 'Batterijen centrale']);
+        $battery->teams()->attach($this->team);
+        Storage::disk('local')->put('batteries/2/photos/a.jpg', 'a');
+        $dossier = BatteryDossier::factory()->create(['project_id' => $battery->id, 'photos' => ['batteries/2/photos/a.jpg']]);
+
+        // Still in progress (and in an area without automatic 609): the button makes it now.
+        Livewire::test(ViewProject::class, ['record' => $battery->getRouteKey()])
+            ->assertActionVisible('followUpBatteryRoom')
+            ->callAction('followUpBatteryRoom', ['short_description' => 'Batterijen centrale', 'room_number' => 'K-01'])
+            ->assertHasNoActionErrors();
+
+        $room = Project::query()->where('source_project_id', $battery->id)->sole();
+        $this->assertSame(['609-0021-15LIE', 'Batterijen centrale', 'K-01', ProjectStatus::InProgress], [$room->reference, $room->short_description, $room->batteryRoom->room_number, $battery->fresh()->status]);
+
+        // Made once: the button now opens it.
+        Livewire::test(ViewProject::class, ['record' => $battery->getRouteKey()])
+            ->assertActionHasLabel('followUpBatteryRoom', __('battery_rooms.follow_up_open', ['reference' => '609-0021-15LIE']))
+            ->callAction('followUpBatteryRoom');
+        $this->assertSame(1, Project::query()->where('source_project_id', $battery->id)->count());
+
+        // The 604 is done later: the same 609 gets the photos, no second one is made.
+        $dossier->finish($user);
+        $this->assertSame(1, Project::query()->where('source_project_id', $battery->id)->count());
+        $this->assertSame(['604-0021-15lie-01.jpg'], $room->filesIn(ProjectFileSection::Images)->pluck('name')->all());
+
+        // Not for other categories, nor without permission to make battery rooms.
+        $this->actingAs($this->user(['view'], ['view']));
+        $other = Project::factory()->inCategory('604')->for($this->site('1-VLA', '16OTH'))->create(['status' => ProjectStatus::InProgress]);
+        $other->teams()->attach($this->team);
+        Livewire::test(ViewProject::class, ['record' => $other->getRouteKey()])->assertActionHidden('followUpBatteryRoom');
+    }
 }

@@ -47,6 +47,10 @@ return [
     'files_help' => 'Foto\'s van het lokaal, de ventilatieberekening en het keuringsverslag van BTV.',
     'default_description' => 'Batterijlokaal',
     'default_description_after' => 'Batterijlokaal na :reference',
+    'follow_up_create' => 'Batterijlokaal (609) aanmaken',
+    'follow_up_open' => 'Batterijlokaal :reference openen',
+    'follow_up_help' => 'Maakt nu al het 609-project voor het batterijlokaal na :reference, met hetzelfde nummer en dezelfde COW-code, ook al is het 604 nog niet afgerond. Zodra het 604 op "Te factureren" komt, krijgt dit 609 de foto\'s en het eendraadschema (er wordt geen tweede gemaakt).',
+    'follow_up_created' => 'Batterijlokaal :reference aangemaakt',
     'follow_up_note' => 'Batterijlokaal na de vervanging van de batterijen in :reference.',
     'units' => ['m' => 'm', 'st' => 'st', 'u' => 'u'],
     'doc' => [

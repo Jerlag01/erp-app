@@ -48,6 +48,10 @@ return [
     'files_help' => 'Photos of the room, the ventilation calculation and the BTV inspection report.',
     'default_description' => 'Battery room',
     'default_description_after' => 'Battery room after :reference',
+    'follow_up_create' => 'Create battery room (609)',
+    'follow_up_open' => 'Open battery room :reference',
+    'follow_up_help' => 'Makes the 609 project of the battery room after :reference now, with the same number and COW code, even though the 604 is not finished yet. As soon as the 604 becomes "To be invoiced", this 609 gets the photos and the single-line diagram (no second one is made).',
+    'follow_up_created' => 'Battery room :reference created',
     'follow_up_note' => 'Battery room after the battery replacement in :reference.',
     'units' => ['m' => 'm', 'st' => 'pcs', 'u' => 'h'],
     'doc' => [
