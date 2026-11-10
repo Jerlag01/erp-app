@@ -19,15 +19,22 @@ use App\Models\ToolboxMeeting;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkSite;
+use App\Support\Nas\FlysystemTransport;
 use App\Support\Nas\NasSync;
+use App\Support\Nas\NasTransport;
+use App\Support\Nas\NasTransports;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -216,5 +223,63 @@ class NasSyncTest extends TestCase
             ->test(Settings::class)
             ->callAction(TestAction::make('testNas')->schemaComponent('nasActions', schema: 'form'))
             ->assertNotified(__('erp.nas.test_ok'));
+    }
+
+    #[Test]
+    public function ftp_and_sftp_write_below_the_main_folder_through_flysystem(): void
+    {
+        // The FTP and SFTP transports are Flysystem; a local folder stands in for the server here.
+        $server = sys_get_temp_dir().'/nas-test-'.uniqid();
+        $this->app->instance(NasTransport::class, new FlysystemTransport(new Filesystem(new LocalFilesystemAdapter($server)), 'test'));
+        settings()->save('nas', [...settings('nas'), 'driver' => NasTransports::SFTP, 'host' => 'nas.test', 'root' => '/volume1/ERP']);
+
+        $project = Project::factory()->inCategory('604')->for(WorkSite::factory()->create(['cow_code' => '02GAM']))->create();
+        ProjectFile::store($project, ProjectFileSection::Plans, UploadedFile::fake()->createWithContent('grondplan.dwg', 'dwg'), 'grondplan.dwg');
+
+        $this->assertSame('dwg', file_get_contents("{$server}/volume1/ERP/604/{$project->reference}/".ProjectFileSection::Plans->getLabel().'/grondplan.dwg'));
+        $this->assertSame(NasSyncItem::DONE, NasSyncItem::query()->sole()->status);
+        File::deleteDirectory($server);
+
+        // The real transports are built from the settings (they connect only when used).
+        $this->assertInstanceOf(FlysystemTransport::class, NasTransports::fromSettings());
+        settings()->save('nas', [...settings('nas'), 'driver' => NasTransports::FTP]);
+        $this->assertInstanceOf(FlysystemTransport::class, NasTransports::fromSettings());
+    }
+
+    #[Test]
+    public function smb_uses_smbclient_with_a_credentials_file_and_reports_errors(): void
+    {
+        settings()->save('nas', [...settings('nas'), 'driver' => NasTransports::SMB, 'host' => 'nas.test', 'share' => 'Data', 'domain' => 'PI', 'root' => '/ERP']);
+        $credentials = null;
+        Process::fake(function ($process) use (&$credentials) {
+            $command = $process->command;
+            $file = substr((string) collect($command)->first(fn ($part) => str_starts_with((string) $part, '--authentication-file=')), strlen('--authentication-file='));
+            $credentials = is_file($file) ? file_get_contents($file) : null;
+
+            return Process::result(output: "putting file\n");
+        });
+
+        Vehicle::factory()->create(['plate_number' => '1ABC123']);
+
+        Process::assertRan(function ($process): bool {
+            $command = $process->command;
+            $script = (string) $command[array_search('-c', $command, true) + 1];
+
+            return $command[0] === 'smbclient' && $command[1] === '//nas.test/Data'
+                && ! str_contains(implode(' ', $command), 'geheim')
+                && str_contains($script, 'mkdir "ERP"; mkdir "ERP\\Wagenpark"; mkdir "ERP\\Wagenpark\\1ABC123"')
+                && str_contains($script, 'cd "\\ERP\\Wagenpark\\1ABC123"')
+                && str_contains($script, '"1ABC123 - fiche.pdf"');
+        });
+        $this->assertStringContainsString('password = geheim', (string) $credentials);
+        $this->assertStringContainsString('domain = PI', (string) $credentials);
+        $this->assertSame(NasSyncItem::DONE, NasSyncItem::query()->sole()->status);
+
+        // "Already exists" is fine; any other error fails the file.
+        Process::fake(fn () => Process::result(output: "NT_STATUS_ACCESS_DENIED making remote directory \\ERP\n", exitCode: 1));
+        Vehicle::factory()->create(['plate_number' => '2DEF456']);
+        $failed = NasSyncItem::query()->where('target', 'like', '%2DEF456%')->sole();
+        $this->assertSame(NasSyncItem::FAILED, $failed->status);
+        $this->assertStringContainsString('NT_STATUS_ACCESS_DENIED', (string) $failed->last_error);
     }
 }

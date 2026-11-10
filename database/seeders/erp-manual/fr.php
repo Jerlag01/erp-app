@@ -133,7 +133,7 @@ Le téléchargement se fait toujours via la plateforme ; chaque fichier part ens
 - **Incidenten** : un PDF par incident.
 - **Toolboxen/{mois titre}** : la liste de présence avec signatures, le contenu (PDF) et les annexes.
 
-Configuration : indiquez l'adresse du NAS (p. ex. `https://nas.societe.be:5001`), le dossier principal et un compte NAS propre (avec droits d'écriture sur le dossier partagé et File Station, sans vérification en deux étapes), puis testez avec **Tester la connexion**. **Tout copier sur le NAS** envoie aussi tout ce qui se trouve déjà sur la plateforme. Ce qui échoue (p. ex. NAS hors ligne) est réessayé toutes les 10 minutes ; l'onglet montre combien de fichiers attendent ou ont échoué. Rien n'est jamais supprimé du NAS. Pour un collaborateur, vous pouvez maintenant aussi télécharger une copie de la **carte d'identité**.
+Configuration : choisissez la **connexion** : **Synology** (File Station en HTTPS : l'adresse de DSM, p. ex. `https://nas.societe.be:5001`), **SMB** (partage Windows ou Samba : serveur, partage et éventuellement domaine), **FTP/FTPS** (de préférence chiffré) ou **SFTP** (SSH, avec mot de passe ou clé privée). Indiquez le dossier principal et un compte NAS propre avec droits d'écriture, enregistrez et testez avec **Tester la connexion**. **Tout copier sur le NAS** envoie aussi tout ce qui se trouve déjà sur la plateforme. Ce qui échoue (p. ex. NAS hors ligne) est réessayé toutes les 10 minutes ; l'onglet montre combien de fichiers attendent ou ont échoué. Rien n'est jamais supprimé du NAS. Pour un collaborateur, vous pouvez maintenant aussi télécharger une copie de la **carte d'identité**.
 
 ## Modèles d'e-mail
 

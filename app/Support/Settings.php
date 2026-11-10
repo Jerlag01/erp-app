@@ -171,8 +171,20 @@ class Settings
             // The copy of the files on the NAS (Synology, File Station API), for redundancy (see NasSync).
             'nas' => [
                 'enabled' => false,
-                // e.g. https://nas.example.be:5001
+                // How: synology (File Station API), smb, ftp or sftp (see NasTransports).
+                'driver' => 'synology',
+                // Synology: e.g. https://nas.example.be:5001
                 'url' => null,
+                // SMB, FTP and SFTP: the server, its port (empty = the usual one) and for SMB the share and domain.
+                'host' => null,
+                'port' => null,
+                'share' => null,
+                'domain' => null,
+                // FTP: over TLS (FTPS) and passive mode.
+                'ftps' => true,
+                'passive' => true,
+                // SFTP: a private key instead of (or with) the password. Encrypted.
+                'private_key' => null,
                 'username' => null,
                 // Encrypted.
                 'password' => null,

@@ -12,7 +12,7 @@ use App\Models\ProjectCategory;
 use App\Support\MobileApp;
 use App\Support\Modules;
 use App\Support\Nas\NasSync;
-use App\Support\Nas\SynologyClient;
+use App\Support\Nas\NasTransports;
 use App\Support\OutlookCalendar;
 use App\Support\Settings as SiteSettings;
 use BackedEnum;
@@ -89,6 +89,7 @@ class Settings extends Page
         $values['finance']['peppol_api_key'] = null;
         $values['planning']['outlook_client_secret'] = null;
         $values['nas']['password'] = null;
+        $values['nas']['private_key'] = null;
 
         $this->form->fill($values);
     }
@@ -229,6 +230,12 @@ class Settings extends Page
             $data['nas']['password'] = filled($data['nas']['password'] ?? null)
                 ? Crypt::encryptString($data['nas']['password'])
                 : $settings->get('nas.password');
+            $data['nas']['private_key'] = filled($data['nas']['private_key'] ?? null)
+                ? Crypt::encryptString(trim((string) $data['nas']['private_key'])."\n")
+                : $settings->get('nas.private_key');
+            $data['nas']['ftps'] = (bool) ($data['nas']['ftps'] ?? true);
+            $data['nas']['passive'] = (bool) ($data['nas']['passive'] ?? true);
+            $data['nas']['port'] = filled($data['nas']['port'] ?? null) ? (int) $data['nas']['port'] : null;
         }
 
         $data['modules'] = collect(Modules::ALL)
@@ -245,6 +252,7 @@ class Settings extends Page
         $this->data['finance']['peppol_api_key'] = null;
         $this->data['planning']['outlook_client_secret'] = null;
         $this->data['nas']['password'] = null;
+        $this->data['nas']['private_key'] = null;
 
         Notification::make()
             ->title(__('erp.settings.saved'))
@@ -950,16 +958,52 @@ class Settings extends Page
                         ->helperText(__('erp.nas.enabled_help'))
                         ->live()
                         ->columnSpanFull(),
+                    Select::make('nas.driver')
+                        ->label(__('erp.nas.driver'))
+                        ->options(collect(NasTransports::ALL)->mapWithKeys(fn (string $driver): array => [$driver => __("erp.nas.drivers.{$driver}")])->all())
+                        ->default(NasTransports::SYNOLOGY)
+                        ->selectablePlaceholder(false)
+                        ->live()
+                        ->columnSpanFull(),
                     TextInput::make('nas.url')
                         ->label(__('erp.nas.url'))
                         ->helperText(__('erp.nas.url_help'))
                         ->placeholder('https://nas.example.be:5001')
                         ->url()
-                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled'))
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::SYNOLOGY)
+                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled') && $get('nas.driver') === NasTransports::SYNOLOGY)
                         ->maxLength(255),
+                    TextInput::make('nas.host')
+                        ->label(__('erp.nas.host'))
+                        ->helperText(__('erp.nas.host_help'))
+                        ->placeholder('nas.example.be')
+                        ->visible(fn (Get $get): bool => $get('nas.driver') !== NasTransports::SYNOLOGY)
+                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled') && $get('nas.driver') !== NasTransports::SYNOLOGY)
+                        ->maxLength(255),
+                    TextInput::make('nas.port')
+                        ->label(__('erp.nas.port'))
+                        ->helperText(fn (Get $get): string => __('erp.nas.port_help', ['port' => match ($get('nas.driver')) {
+                            NasTransports::SMB => 445, NasTransports::FTP => 21, default => 22
+                        }]))
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(65535)
+                        ->visible(fn (Get $get): bool => $get('nas.driver') !== NasTransports::SYNOLOGY),
+                    TextInput::make('nas.share')
+                        ->label(__('erp.nas.share'))
+                        ->helperText(__('erp.nas.share_help'))
+                        ->placeholder('ERP')
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::SMB)
+                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled') && $get('nas.driver') === NasTransports::SMB)
+                        ->maxLength(100),
+                    TextInput::make('nas.domain')
+                        ->label(__('erp.nas.domain'))
+                        ->helperText(__('erp.nas.domain_help'))
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::SMB)
+                        ->maxLength(100),
                     TextInput::make('nas.root')
                         ->label(__('erp.nas.root'))
-                        ->helperText(__('erp.nas.root_help'))
+                        ->helperText(fn (Get $get): string => __($get('nas.driver') === NasTransports::SMB ? 'erp.nas.root_help_smb' : ($get('nas.driver') === NasTransports::SYNOLOGY ? 'erp.nas.root_help' : 'erp.nas.root_help_server')))
                         ->placeholder('/ERP')
                         ->required(fn (Get $get): bool => (bool) $get('nas.enabled'))
                         ->maxLength(255),
@@ -974,9 +1018,23 @@ class Settings extends Page
                         ->password()
                         ->revealable()
                         ->maxLength(255),
+                    Textarea::make('nas.private_key')
+                        ->label(__('erp.nas.private_key'))
+                        ->helperText(fn (): string => filled(settings()->get('nas.private_key')) ? __('erp.nas.private_key_saved') : __('erp.nas.private_key_help'))
+                        ->rows(3)
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::SFTP)
+                        ->columnSpanFull(),
+                    Toggle::make('nas.ftps')
+                        ->label(__('erp.nas.ftps'))
+                        ->helperText(__('erp.nas.ftps_help'))
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::FTP),
+                    Toggle::make('nas.passive')
+                        ->label(__('erp.nas.passive'))
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::FTP),
                     Toggle::make('nas.verify_ssl')
                         ->label(__('erp.nas.verify_ssl'))
                         ->helperText(__('erp.nas.verify_ssl_help'))
+                        ->visible(fn (Get $get): bool => $get('nas.driver') === NasTransports::SYNOLOGY)
                         ->columnSpanFull(),
                     Text::make(fn (): string => __('erp.nas.status', [
                         'pending' => NasSyncItem::query()->where('status', NasSyncItem::PENDING)->count(),
@@ -991,8 +1049,10 @@ class Settings extends Page
                             ->color('gray')
                             ->action(function (): void {
                                 try {
-                                    $shares = SynologyClient::fromSettings()->shares();
-                                    Notification::make()->title(__('erp.nas.test_ok'))->body(__('erp.nas.test_shares', ['shares' => implode(', ', $shares) ?: '—']))->success()->send();
+                                    $transport = NasTransports::fromSettings();
+                                    $found = $transport->test();
+                                    $transport->close();
+                                    Notification::make()->title(__('erp.nas.test_ok'))->body($found)->success()->send();
                                 } catch (Throwable $exception) {
                                     Notification::make()->title(__('erp.nas.test_failed'))->body($exception->getMessage())->danger()->persistent()->send();
                                 }

@@ -134,7 +134,7 @@ Het uploaden blijft via het platform gebeuren; elk bestand gaat daarna ook naar 
 - **Incidenten**: één PDF per incident.
 - **Toolboxen/{maand titel}**: de aanwezigheidslijst met handtekeningen, de inhoud (PDF) en de bijlagen.
 
-Instellen: vul het adres van de NAS (bv. `https://nas.bedrijf.be:5001`), de hoofdmap en een eigen NAS-account in (met schrijfrechten op de gedeelde map en File Station, zonder tweestapsverificatie) en test met **Verbinding testen**. Met **Alles naar de NAS kopiëren** gaat ook alles wat al op het platform staat mee. Wat mislukt (bv. NAS offline) wordt elke 10 minuten opnieuw geprobeerd; het tabblad toont hoeveel er wacht of mislukt is. Op de NAS wordt nooit iets verwijderd. Bij een werknemer kan je nu ook een kopie van de **identiteitskaart** uploaden.
+Instellen: kies de **verbinding**: **Synology** (File Station over HTTPS: het adres van DSM, bv. `https://nas.bedrijf.be:5001`), **SMB** (Windows-share of Samba: server, share en eventueel domein), **FTP/FTPS** (best versleuteld) of **SFTP** (SSH, met wachtwoord of private sleutel). Vul de hoofdmap en een eigen NAS-account met schrijfrechten in, sla op en test met **Verbinding testen**. Met **Alles naar de NAS kopiëren** gaat ook alles wat al op het platform staat mee. Wat mislukt (bv. NAS offline) wordt elke 10 minuten opnieuw geprobeerd; het tabblad toont hoeveel er wacht of mislukt is. Op de NAS wordt nooit iets verwijderd. Bij een werknemer kan je nu ook een kopie van de **identiteitskaart** uploaden.
 
 ## E-mailsjablonen
 

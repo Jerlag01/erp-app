@@ -133,7 +133,7 @@ Uploading still happens through the platform; every file then also goes to the N
 - **Incidenten**: one PDF per incident.
 - **Toolboxen/{month title}**: the attendance list with signatures, the content (PDF) and the attachments.
 
-Setting it up: fill in the NAS address (e.g. `https://nas.company.be:5001`), the main folder and an own NAS account (with write access to the shared folder and File Station, without two-step verification) and test with **Test connection**. **Copy everything to the NAS** also sends everything already on the platform. What fails (e.g. NAS offline) is retried every 10 minutes; the tab shows how many files wait or failed. Nothing is ever deleted from the NAS. For an employee you can now also upload a copy of the **identity card**.
+Setting it up: choose the **connection**: **Synology** (File Station over HTTPS: the DSM address, e.g. `https://nas.company.be:5001`), **SMB** (Windows share or Samba: server, share and optionally domain), **FTP/FTPS** (preferably encrypted) or **SFTP** (SSH, with password or private key). Fill in the main folder and an own NAS account with write access, save and test with **Test connection**. **Copy everything to the NAS** also sends everything already on the platform. What fails (e.g. NAS offline) is retried every 10 minutes; the tab shows how many files wait or failed. Nothing is ever deleted from the NAS. For an employee you can now also upload a copy of the **identity card**.
 
 ## E-mail templates
 

@@ -4,17 +4,15 @@ namespace App\Support\Nas;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
-use Throwable;
 
 /**
  * A Synology NAS through its File Station web API (DSM 7, over HTTPS): logs in with a NAS account,
  * uploads files (creating the folders on the way) and lists the shared folders to test the connection.
  * Settings > NAS holds the address, the account and the root folder.
  */
-class SynologyClient
+class SynologyClient implements NasTransport
 {
     protected ?string $sid = null;
 
@@ -27,20 +25,22 @@ class SynologyClient
 
     public static function fromSettings(): self
     {
-        $password = (string) settings()->get('nas.password');
-
-        try {
-            $password = $password !== '' ? Crypt::decryptString($password) : '';
-        } catch (Throwable) {
-            $password = '';
-        }
-
         return new self(
             rtrim((string) settings()->get('nas.url'), '/'),
             (string) settings()->get('nas.username'),
-            $password,
+            NasTransports::secret('nas.password'),
             (bool) settings()->get('nas.verify_ssl', true),
         );
+    }
+
+    public function test(): string
+    {
+        return __('erp.nas.test_shares', ['shares' => implode(', ', $this->shares()) ?: '—']);
+    }
+
+    public function close(): void
+    {
+        $this->logout();
     }
 
     /**

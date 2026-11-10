@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * The copy of the platform's files on the NAS, for redundancy. Uploads keep going through the platform;
+ * The copy of the platform's files on the NAS, for redundancy (Synology File Station API, SMB, FTP(S) or
+ * SFTP: see NasTransports). Uploads keep going through the platform;
  * every file (and a few PDFs made from the data) is also written on the NAS, below the root folder
  * (Settings > NAS, e.g. "/ERP"):
  *
@@ -56,7 +57,7 @@ class NasSync
 
     public function enabled(): bool
     {
-        return (bool) settings()->get('nas.enabled') && filled(settings()->get('nas.url'));
+        return (bool) settings()->get('nas.enabled') && NasTransports::configured();
     }
 
     /* What goes where */
@@ -260,7 +261,14 @@ class NasSync
             return $result;
         }
 
-        $client = app()->bound(SynologyClient::class) ? app(SynologyClient::class) : SynologyClient::fromSettings();
+        try {
+            $client = app()->bound(NasTransport::class) ? app(NasTransport::class) : NasTransports::fromSettings();
+        } catch (Throwable $exception) {
+            // Not set up well (e.g. no host): every item waits with the reason.
+            $items->each(fn (NasSyncItem $item) => $item->update(['status' => NasSyncItem::FAILED, 'attempts' => $item->attempts + 1, 'last_error' => mb_substr($exception->getMessage(), 0, 1000)]));
+
+            return ['sent' => 0, 'failed' => $items->count()];
+        }
         $root = '/'.trim((string) settings()->get('nas.root', '/ERP'), '/');
 
         foreach ($items as $item) {
@@ -281,7 +289,7 @@ class NasSync
             }
         }
 
-        $client->logout();
+        $client->close();
 
         return $result;
     }
