@@ -15,3 +15,6 @@ Schedule::command('timesheets:send-weekly')
 
 // Planning notifications (push and e-mail) held while an employee was on leave: sent on the last day of the leave (see LeavePushDelay).
 Schedule::command('planning:send-held')->everyFiveMinutes()->withoutOverlapping();
+
+// The copy of the files on the NAS: what waits or failed (e.g. while the NAS was offline) goes out again.
+Schedule::command('nas:sync')->everyTenMinutes()->withoutOverlapping();

@@ -9,6 +9,7 @@ use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
 use App\Filament\Client\Resources\GpwRequests\Pages\ListClientGpwRequests;
 use App\Filament\Client\Resources\Projects\Pages\ListClientProjects;
+use App\Filament\Resources\GpwRequests\GpwRequestResource;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Mail\SystemMail;
 use App\Models\ClientUser;
@@ -106,7 +107,23 @@ class GpwRequestTest extends TestCase
             && str_contains($mail->rendered['html'], '/gpw/'.$gpw->id.'?expires=')
             && str_contains($mail->rendered['html'], 'Toegang via achterpoort'));
 
-        // Not for other statuses, and not without the permission.
+        // At any moment, except for an offer and once the project is being invoiced or closed.
+        foreach ([ProjectStatus::WaitingForPo, ProjectStatus::Ordered, ProjectStatus::ToBePlanned, ProjectStatus::Planned, ProjectStatus::InProgress, ProjectStatus::Executed] as $status) {
+            Project::query()->whereKey($project->id)->update(['status' => $status->value]);
+            Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionVisible('requestGpw')->assertActionVisible('addManualGpw');
+        }
+        foreach ([ProjectStatus::Offer, ProjectStatus::InvoicingToDo, ProjectStatus::Invoiced] as $status) {
+            Project::query()->whereKey($project->id)->update(['status' => $status->value]);
+            Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('requestGpw')->assertActionHidden('addManualGpw');
+        }
+        try {
+            GpwRequestResource::addManual(['project_id' => $project->id, 'status' => GpwStatus::Approved->value, 'starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeeks(2)->toDateString(), 'contact_name' => 'Sophie']);
+            $this->fail('A GPW was added for a project being invoiced.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('project_id', $exception->errors());
+        }
+
+        // Not without the permission.
         $project->update(['status' => ProjectStatus::Offer]);
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('requestGpw');
         $project->update(['status' => ProjectStatus::ToBeExecuted]);

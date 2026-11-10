@@ -68,6 +68,15 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     }
 
     /**
+     * A GPW can be requested (by mail or added by hand) at any moment, except for an offer and once the
+     * works are being invoiced or closed.
+     */
+    public function allowsGpwRequest(): bool
+    {
+        return ! in_array($this, [self::Offer, self::InvoicingToDo, self::Invoiced, self::Closed], true);
+    }
+
+    /**
      * The work is done: executed, and the invoicing after it.
      *
      * @return list<self>

@@ -25,6 +25,9 @@ class EmployeeDocumentController
         } elseif ($kind === 'license') {
             $path = array_values((array) $employee->driver_license_files)[$file] ?? null;
             $name = $path ? $employee->driverLicenseFileName($path) : null;
+        } elseif ($kind === 'id_card') {
+            $path = array_values((array) $employee->id_card_files)[$file] ?? null;
+            $name = $path ? $employee->idCardFileName($path) : null;
         } else {
             $record = $employee->medicalChecks()->find($id);
             $path = $record?->documents[$file] ?? null;

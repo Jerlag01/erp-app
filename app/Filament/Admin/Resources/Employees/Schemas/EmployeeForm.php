@@ -119,6 +119,22 @@ class EmployeeForm
                 ->downloadable()
                 ->openable()
                 ->columnSpanFull(),
+            // A copy of the identity card (front and back), kept with the employee and on the NAS.
+            FileUpload::make('id_card_files')
+                ->label(__('erp.employees.id_card_files'))
+                ->helperText(__('erp.employees.id_card_files_help'))
+                ->multiple()
+                ->maxFiles(4)
+                ->appendFiles()
+                ->disk(Employee::DISK)
+                ->directory('employees/id-cards')
+                ->visibility('private')
+                ->acceptedFileTypes(Employee::DRIVER_LICENSE_FILE_TYPES)
+                ->maxSize(12288)
+                ->storeFileNamesIn('id_card_file_names')
+                ->downloadable()
+                ->openable()
+                ->columnSpanFull(),
         ];
     }
 

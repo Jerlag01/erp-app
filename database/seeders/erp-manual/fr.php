@@ -121,7 +121,19 @@ Les paramètres sont répartis en onglets :
 - **E-mail** : le serveur de messagerie de la plateforme. **« Envoyer un e-mail de test »** vérifie la configuration.
 - **Apparence** : logo, favicon et couleur.
 - **Application mobile** : l'APK, la suggestion sur les téléphones et la déclaration de confidentialité.
-- Et par module si nécessaire : **Finances**, **Prestations**, **Batteries**, **Planning**, …
+- **NAS** : une copie de tous les fichiers sur un NAS Synology, pour la redondance (voir ci-dessous).
+
+## NAS (Synology)
+
+Le téléchargement se fait toujours via la plateforme ; chaque fichier part ensuite aussi vers le NAS. Organisation sous le dossier principal (p. ex. `/ERP`) :
+
+- **{catégorie}/{projet}/{zone}** : les fichiers du projet par onglet (Photos, Plans, Rapport de déchets, …) et **As-built/{catégorie}**.
+- **Personeel/{prénom nom}** : permis de conduire, carte d'identité, certificats, médical, un PDF des données personnelles, **Prestaties** (les PDF hebdomadaires) et **Medische attesten**.
+- **Wagenpark/{plaque}** : un PDF du véhicule et de ses cartes carburant (jamais le code PIN).
+- **Incidenten** : un PDF par incident.
+- **Toolboxen/{mois titre}** : la liste de présence avec signatures, le contenu (PDF) et les annexes.
+
+Configuration : indiquez l'adresse du NAS (p. ex. `https://nas.societe.be:5001`), le dossier principal et un compte NAS propre (avec droits d'écriture sur le dossier partagé et File Station, sans vérification en deux étapes), puis testez avec **Tester la connexion**. **Tout copier sur le NAS** envoie aussi tout ce qui se trouve déjà sur la plateforme. Ce qui échoue (p. ex. NAS hors ligne) est réessayé toutes les 10 minutes ; l'onglet montre combien de fichiers attendent ou ont échoué. Rien n'est jamais supprimé du NAS. Pour un collaborateur, vous pouvez maintenant aussi télécharger une copie de la **carte d'identité**.
 
 ## Modèles d'e-mail
 
@@ -719,7 +731,7 @@ Demander au client l'autorisation de travailler sur un site pendant une **pério
 
 ## Demander un GPW
 
-1. Ouvrez un projet avec le statut **À exécuter**.
+1. Ouvrez le projet. Un GPW peut être demandé **à tout moment**, sauf aux statuts **Offre**, **À facturer**, **Facturé** ou **Clôturé** (c'est aussi le cas pour *Ajouter un GPW manuellement*).
 2. Cliquez sur **« Demander un GPW »** et choisissez **à qui** la demande est envoyée : personne n'est choisi d'avance. En haut sont proposées, pour une **intervention (600, 608.1)**, les **personnes de contact interventions** de la zone, pour les autres projets les personnes de contact du code COW et de la zone. Vous pouvez chercher **toute autre personne de contact** avec une adresse e-mail (par nom, société ou e-mail) ou ajouter tout de suite une **nouvelle personne** avec nom, e-mail et langue. Ces personnes n'ont pas besoin d'un login pour le portail client : elles décident avec les boutons du mail.
 3. Choisissez la **période** (du – jusqu'au) et ajoutez éventuellement des **remarques** (accès, clés, coupures).
 4. Cliquez sur **Envoyer la demande**.

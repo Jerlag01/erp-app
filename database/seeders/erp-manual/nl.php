@@ -122,7 +122,19 @@ De instellingen zijn verdeeld over tabbladen:
 - **E-mail**: de mailserver waarmee het platform mails verstuurt. Met **"Testmail versturen"** controleer je de instellingen.
 - **Uiterlijk**: logo, favicon en kleur.
 - **Mobiele app**: de APK uploaden, de melding op telefoons en de privacyverklaring.
-- En per module waar nodig: **Financieel**, **Prestaties**, **Batterijen**, **Planning**, …
+- **NAS**: een kopie van alle bestanden op een Synology-NAS, voor redundantie (zie hieronder).
+
+## NAS (Synology)
+
+Het uploaden blijft via het platform gebeuren; elk bestand gaat daarna ook naar de NAS. Indeling onder de hoofdmap (bv. `/ERP`):
+
+- **{categorie}/{project}/{uploadzone}**: de bestanden van het project per tabblad (Foto's, Plannen, Afvalrapport, …) en **As-built/{categorie}**.
+- **Personeel/{voornaam naam}**: rijbewijs, identiteitskaart, certificaten, medisch, een PDF met de persoonsgegevens, **Prestaties** (de wekelijkse PDF's) en **Medische attesten**.
+- **Wagenpark/{nummerplaat}**: een PDF met het voertuig en zijn tankkaarten (nooit de PIN-code).
+- **Incidenten**: één PDF per incident.
+- **Toolboxen/{maand titel}**: de aanwezigheidslijst met handtekeningen, de inhoud (PDF) en de bijlagen.
+
+Instellen: vul het adres van de NAS (bv. `https://nas.bedrijf.be:5001`), de hoofdmap en een eigen NAS-account in (met schrijfrechten op de gedeelde map en File Station, zonder tweestapsverificatie) en test met **Verbinding testen**. Met **Alles naar de NAS kopiëren** gaat ook alles wat al op het platform staat mee. Wat mislukt (bv. NAS offline) wordt elke 10 minuten opnieuw geprobeerd; het tabblad toont hoeveel er wacht of mislukt is. Op de NAS wordt nooit iets verwijderd. Bij een werknemer kan je nu ook een kopie van de **identiteitskaart** uploaden.
 
 ## E-mailsjablonen
 
@@ -720,7 +732,7 @@ De klant toestemming vragen om in een bepaalde **periode** op een site te werken
 
 ## Een GPW aanvragen
 
-1. Open een project met de status **Uit te voeren**.
+1. Open het project. Een GPW aanvragen kan **op elk moment**, behalve bij de status **Offerte**, **Te factureren**, **Gefactureerd** of **Afgesloten** (dat geldt ook voor *GPW manueel toevoegen*).
 2. Klik op **"GPW aanvragen"** en kies **naar wie** de aanvraag gaat: er is niemand vooraf gekozen. Bovenaan staan als voorstel bij een **interventie (600, 608.1)** de **interventiecontactpersonen** van de area, bij andere projecten de contactpersonen van de COW-code en van de area. Je kan **elke andere contactpersoon** met een e-mailadres zoeken (op naam, bedrijf of e-mail) of meteen een **nieuwe persoon** toevoegen met naam, e-mail en taal. Die personen hebben geen login voor het klantenportaal nodig: ze beslissen met de knoppen in de mail.
 3. Kies de **periode** (van – tot en met) en vul eventueel **opmerkingen** in (toegang, sleutels, onderbrekingen).
 4. Klik op **Aanvraag versturen**.

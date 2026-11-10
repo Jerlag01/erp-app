@@ -183,6 +183,20 @@ class EmployeeInfolist
                             ->html()
                             ->listWithLineBreaks()
                             ->placeholder('—'),
+                        TextEntry::make('id_card_files')
+                            ->label(__('erp.employees.id_card_files'))
+                            ->state(fn (Employee $record): array => array_map(
+                                fn (int $index, string $path): string => sprintf(
+                                    '<a href="%s" target="_blank" rel="noopener" style="text-decoration: underline;">%s</a>',
+                                    e(route('employees.document', ['employee' => $record->id, 'kind' => 'id_card', 'id' => 0, 'file' => $index])),
+                                    e($record->idCardFileName($path)),
+                                ),
+                                array_keys($files = array_values((array) $record->id_card_files)),
+                                $files,
+                            ))
+                            ->html()
+                            ->listWithLineBreaks()
+                            ->placeholder('—'),
                     ]),
                 Section::make(__('erp.fields.notes'))
                     ->columnSpanFull()

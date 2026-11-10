@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\ClientUser;
 use App\Support\Modules;
+use App\Support\Nas\NasTriggers;
 use App\Support\Settings;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // New uploads (and the data behind a few PDFs) are copied to the NAS too (Settings > NAS).
+        NasTriggers::register();
+
         // When a client portal user signs in, note it (shown to the administrators).
         Event::listen(Login::class, function (Login $event): void {
             if ($event->user instanceof ClientUser) {

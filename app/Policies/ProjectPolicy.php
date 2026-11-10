@@ -79,14 +79,15 @@ class ProjectPolicy extends AreaPolicy
     }
 
     /**
-     * Ask the client for a GPW: "projects.gpw", only while the project is to be executed.
+     * Ask the client for a GPW: "projects.gpw", at any moment except for an offer and once the project is
+     * being invoiced or closed (ProjectStatus::allowsGpwRequest).
      */
     public function requestGpw(User $user, Project $project): bool
     {
         return $this->view($user, $project)
             && ! $project->isArchived()
             && $this->allows($user, 'gpw')
-            && $project->status === ProjectStatus::ToBeExecuted;
+            && (bool) $project->status?->allowsGpwRequest();
     }
 
     /**

@@ -27,6 +27,10 @@ class AddManualGpw
         $project = Project::query()->visibleTo($actor)->find($data['project_id']);
         abort_unless($project !== null && Gate::forUser($actor)->allows('manageGpw', $project), 403);
 
+        if (! $project->status?->allowsGpwRequest()) {
+            throw ValidationException::withMessages(['project_id' => __('erp.gpw.errors.status', ['status' => $project->status?->getLabel()])]);
+        }
+
         $status = GpwStatus::tryFrom((string) $data['status']);
 
         if (! in_array($status, [GpwStatus::Pending, GpwStatus::Approved, GpwStatus::Rejected], true)) {

@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Storage;
     'private_email', 'private_phone', 'national_number', 'bank_account',
     'place_of_birth', 'date_of_birth', 'employment_date', 'notice_started_on', 'notice_ends_on', 'mother_tongue',
     'employment_category', 'contract_term', 'is_mentor', 'is_interim', 'interim_agency', 'interim_office_id', 'education_level',
-    'driver_license_categories', 'driver_license_number', 'driver_license_expires_on', 'driver_license_files', 'driver_license_file_names',
+    'driver_license_categories', 'driver_license_number', 'driver_license_expires_on', 'driver_license_files', 'driver_license_file_names', 'id_card_files', 'id_card_file_names',
     'size_pants', 'size_shirt', 'size_sweater', 'size_shoes',
     'emergency1_first_name', 'emergency1_last_name', 'emergency1_phone', 'emergency1_relation',
     'emergency2_first_name', 'emergency2_last_name', 'emergency2_phone', 'emergency2_relation',
@@ -361,6 +361,11 @@ class Employee extends Model
         return (string) (((array) $this->driver_license_file_names)[$path] ?? basename($path));
     }
 
+    public function idCardFileName(string $path): string
+    {
+        return (string) (((array) $this->id_card_file_names)[$path] ?? basename($path));
+    }
+
     public function hasDriverLicense(): bool
     {
         return $this->driverLicenseCategories() !== [] || filled($this->driver_license_number) || filled($this->driver_license_files);
@@ -401,13 +406,15 @@ class Employee extends Model
             $employee->medicalChecks->each->delete();
         });
 
-        static::deleted(fn (self $employee) => Storage::disk(self::DISK)->delete((array) $employee->driver_license_files));
+        static::deleted(fn (self $employee) => Storage::disk(self::DISK)->delete([...(array) $employee->driver_license_files, ...(array) $employee->id_card_files]));
 
-        // Copies of the driver license that were removed in the form are removed from the disk.
+        // Copies of the driver license or ID card that were removed in the form are removed from the disk.
         static::updated(function (self $employee): void {
-            if ($employee->wasChanged('driver_license_files')) {
-                $old = (array) json_decode((string) $employee->getRawOriginal('driver_license_files'), true);
-                Storage::disk(self::DISK)->delete(array_values(array_diff($old, (array) $employee->driver_license_files)));
+            foreach (['driver_license_files', 'id_card_files'] as $field) {
+                if ($employee->wasChanged($field)) {
+                    $old = (array) json_decode((string) $employee->getRawOriginal($field), true);
+                    Storage::disk(self::DISK)->delete(array_values(array_diff($old, (array) $employee->{$field})));
+                }
             }
         });
 
@@ -469,6 +476,8 @@ class Employee extends Model
             'driver_license_number' => 'encrypted',
             'driver_license_expires_on' => 'date',
             'driver_license_files' => 'array',
+            'id_card_files' => 'array',
+            'id_card_file_names' => 'array',
             'driver_license_file_names' => 'array',
         ];
     }

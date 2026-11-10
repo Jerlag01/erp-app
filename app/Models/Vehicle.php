@@ -54,6 +54,14 @@ class Vehicle extends Model
     }
 
     /**
+     * @return HasMany<FuelPass, $this>
+     */
+    public function fuelPasses(): HasMany
+    {
+        return $this->hasMany(FuelPass::class);
+    }
+
+    /**
      * @return HasMany<Asset, $this>
      */
     public function assets(): HasMany

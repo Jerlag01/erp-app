@@ -7,9 +7,12 @@ use App\Enums\ProjectStatus;
 use App\Http\Controllers\PeppolInboundController;
 use App\Models\Client;
 use App\Models\Employee;
+use App\Models\NasSyncItem;
 use App\Models\ProjectCategory;
 use App\Support\MobileApp;
 use App\Support\Modules;
+use App\Support\Nas\NasSync;
+use App\Support\Nas\SynologyClient;
 use App\Support\OutlookCalendar;
 use App\Support\Settings as SiteSettings;
 use BackedEnum;
@@ -85,6 +88,7 @@ class Settings extends Page
         $values['mail']['password'] = null;
         $values['finance']['peppol_api_key'] = null;
         $values['planning']['outlook_client_secret'] = null;
+        $values['nas']['password'] = null;
 
         $this->form->fill($values);
     }
@@ -132,6 +136,9 @@ class Settings extends Page
                             ->icon(Heroicon::OutlinedCalendarDays)
                             ->visible(fn (): bool => modules()->planning())
                             ->schema($this->planningFields()),
+                        Tab::make(__('erp.nas.tab'))
+                            ->icon(Heroicon::OutlinedServerStack)
+                            ->schema($this->nasFields()),
                     ]),
             ]);
     }
@@ -213,6 +220,17 @@ class Settings extends Page
                 : $settings->get('planning.outlook_client_secret');
         }
 
+        if (isset($data['nas'])) {
+            // The password is stored encrypted; empty keeps the current one.
+            $data['nas']['enabled'] = (bool) ($data['nas']['enabled'] ?? false);
+            $data['nas']['verify_ssl'] = (bool) ($data['nas']['verify_ssl'] ?? true);
+            $data['nas']['url'] = filled($data['nas']['url'] ?? null) ? rtrim((string) $data['nas']['url'], '/') : null;
+            $data['nas']['root'] = '/'.trim((string) ($data['nas']['root'] ?? '/ERP'), '/');
+            $data['nas']['password'] = filled($data['nas']['password'] ?? null)
+                ? Crypt::encryptString($data['nas']['password'])
+                : $settings->get('nas.password');
+        }
+
         $data['modules'] = collect(Modules::ALL)
             ->mapWithKeys(fn (string $module): array => [$module => (bool) ($data['modules'][$module] ?? false)])
             ->all();
@@ -226,6 +244,7 @@ class Settings extends Page
         $this->data['mail']['password'] = null;
         $this->data['finance']['peppol_api_key'] = null;
         $this->data['planning']['outlook_client_secret'] = null;
+        $this->data['nas']['password'] = null;
 
         Notification::make()
             ->title(__('erp.settings.saved'))
@@ -909,6 +928,96 @@ class Settings extends Page
                         ->directory('branding')
                         ->visibility('public')
                         ->imagePreviewHeight('64'),
+                ]),
+        ];
+    }
+
+    /**
+     * The NAS (Synology) that keeps a copy of every file, for redundancy (see NasSync).
+     *
+     * @return list<mixed>
+     */
+    protected function nasFields(): array
+    {
+        return [
+            Section::make(__('erp.nas.section'))
+                ->description(__('erp.nas.help'))
+                ->icon(Heroicon::OutlinedServerStack)
+                ->columns(2)
+                ->schema([
+                    Toggle::make('nas.enabled')
+                        ->label(__('erp.nas.enabled'))
+                        ->helperText(__('erp.nas.enabled_help'))
+                        ->live()
+                        ->columnSpanFull(),
+                    TextInput::make('nas.url')
+                        ->label(__('erp.nas.url'))
+                        ->helperText(__('erp.nas.url_help'))
+                        ->placeholder('https://nas.example.be:5001')
+                        ->url()
+                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled'))
+                        ->maxLength(255),
+                    TextInput::make('nas.root')
+                        ->label(__('erp.nas.root'))
+                        ->helperText(__('erp.nas.root_help'))
+                        ->placeholder('/ERP')
+                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled'))
+                        ->maxLength(255),
+                    TextInput::make('nas.username')
+                        ->label(__('erp.nas.username'))
+                        ->helperText(__('erp.nas.username_help'))
+                        ->required(fn (Get $get): bool => (bool) $get('nas.enabled'))
+                        ->maxLength(100),
+                    TextInput::make('nas.password')
+                        ->label(__('erp.nas.password'))
+                        ->helperText(fn (): string => filled(settings()->get('nas.password')) ? __('erp.nas.password_saved') : __('erp.nas.password_help'))
+                        ->password()
+                        ->revealable()
+                        ->maxLength(255),
+                    Toggle::make('nas.verify_ssl')
+                        ->label(__('erp.nas.verify_ssl'))
+                        ->helperText(__('erp.nas.verify_ssl_help'))
+                        ->columnSpanFull(),
+                    Text::make(fn (): string => __('erp.nas.status', [
+                        'pending' => NasSyncItem::query()->where('status', NasSyncItem::PENDING)->count(),
+                        'failed' => NasSyncItem::query()->where('status', NasSyncItem::FAILED)->count(),
+                        'done' => NasSyncItem::query()->where('status', NasSyncItem::DONE)->count(),
+                        'last' => NasSyncItem::query()->max('synced_at') ? Carbon::parse(NasSyncItem::query()->max('synced_at'))->format('d/m/Y H:i') : '—',
+                    ]))->columnSpanFull(),
+                    Actions::make([
+                        Action::make('testNas')
+                            ->label(__('erp.nas.test'))
+                            ->icon(Heroicon::OutlinedSignal)
+                            ->color('gray')
+                            ->action(function (): void {
+                                try {
+                                    $shares = SynologyClient::fromSettings()->shares();
+                                    Notification::make()->title(__('erp.nas.test_ok'))->body(__('erp.nas.test_shares', ['shares' => implode(', ', $shares) ?: '—']))->success()->send();
+                                } catch (Throwable $exception) {
+                                    Notification::make()->title(__('erp.nas.test_failed'))->body($exception->getMessage())->danger()->persistent()->send();
+                                }
+                            }),
+                        Action::make('syncAll')
+                            ->label(__('erp.nas.sync_all'))
+                            ->icon(Heroicon::OutlinedArrowPathRoundedSquare)
+                            ->color('gray')
+                            ->requiresConfirmation()
+                            ->modalDescription(__('erp.nas.sync_all_help'))
+                            ->visible(fn (): bool => app(NasSync::class)->enabled())
+                            ->action(function (NasSync $nas): void {
+                                $count = $nas->queueAll();
+                                Notification::make()->title(__('erp.nas.sync_all_queued', ['count' => $count]))->success()->send();
+                            }),
+                        Action::make('retryNas')
+                            ->label(__('erp.nas.retry'))
+                            ->icon(Heroicon::OutlinedArrowPath)
+                            ->color('gray')
+                            ->visible(fn (): bool => NasSyncItem::query()->where('status', NasSyncItem::FAILED)->exists())
+                            ->action(function (): void {
+                                NasSyncItem::query()->where('status', NasSyncItem::FAILED)->update(['attempts' => 0]);
+                                Notification::make()->title(__('erp.nas.retry_queued'))->success()->send();
+                            }),
+                    ])->key('nasActions')->columnSpanFull(),
                 ]),
         ];
     }

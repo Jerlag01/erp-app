@@ -6,6 +6,7 @@ use App\Actions\Gpw\AddManualGpw;
 use App\Actions\Gpw\DecideGpw;
 use App\Enums\GpwStatus;
 use App\Enums\NavigationGroup;
+use App\Enums\ProjectStatus;
 use App\Filament\Resources\GpwRequests\Pages\ListGpwRequests;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\GpwRequest;
@@ -228,6 +229,7 @@ class GpwRequestResource extends Resource
                 ->getSearchResultsUsing(fn (string $search): array => Project::query()
                     ->visibleTo(auth()->user())
                     ->whereNull('archived_at')
+                    ->whereNotIn('status', array_map(fn (ProjectStatus $status): string => $status->value, array_filter(ProjectStatus::cases(), fn (ProjectStatus $status): bool => ! $status->allowsGpwRequest())))
                     ->where(fn (Builder $query) => $query->where('reference', 'like', '%'.addcslashes($search, '%_\\').'%')->orWhere('cow_code', 'like', '%'.addcslashes($search, '%_\\').'%'))
                     ->orderByDesc('id')
                     ->limit(50)
@@ -274,8 +276,9 @@ class GpwRequestResource extends Resource
             ->label(__('erp.gpw.add_manual'))
             ->icon(Heroicon::OutlinedEnvelope)
             ->color('gray')
-            ->visible(fn (): bool => Gate::allows('manageGpw', $project()))
-            ->authorize(fn (): bool => Gate::allows('manageGpw', $project()))
+            // Like requesting one: not for an offer or a project being invoiced or closed.
+            ->visible(fn (): bool => Gate::allows('manageGpw', $project()) && (bool) $project()->status?->allowsGpwRequest())
+            ->authorize(fn (): bool => Gate::allows('manageGpw', $project()) && (bool) $project()->status?->allowsGpwRequest())
             ->modalHeading(__('erp.gpw.add_manual'))
             ->modalDescription(__('erp.gpw.add_manual_help'))
             ->schema(self::manualSchema(withProject: false))

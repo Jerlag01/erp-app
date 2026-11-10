@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
+    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app', 'nas'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -167,6 +167,18 @@ class Settings
                 'outlook_tenant_id' => null,
                 'outlook_client_id' => null,
                 'outlook_client_secret' => null,
+            ],
+            // The copy of the files on the NAS (Synology, File Station API), for redundancy (see NasSync).
+            'nas' => [
+                'enabled' => false,
+                // e.g. https://nas.example.be:5001
+                'url' => null,
+                'username' => null,
+                // Encrypted.
+                'password' => null,
+                // The main folder, starting with the shared folder: /ERP
+                'root' => '/ERP',
+                'verify_ssl' => true,
             ],
             // Charging stations and 4G routers belong to the projects of this category.
             'charging' => [

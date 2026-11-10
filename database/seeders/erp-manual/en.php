@@ -121,7 +121,19 @@ The settings are spread over tabs:
 - **Email**: the mail server the platform sends with. **"Send test email"** checks the settings.
 - **Appearance**: logo, favicon and colour.
 - **Mobile app**: the APK, the suggestion on phones and the privacy policy.
-- And per module where needed: **Finance**, **Prestations**, **Batteries**, **Planning**, …
+- **NAS**: a copy of all files on a Synology NAS, for redundancy (see below).
+
+## NAS (Synology)
+
+Uploading still happens through the platform; every file then also goes to the NAS. Layout below the main folder (e.g. `/ERP`):
+
+- **{category}/{project}/{upload zone}**: the project's files per tab (Photos, Plans, Waste report, …) and **As-built/{category}**.
+- **Personeel/{first last}**: driving licence, identity card, certificates, medical, a PDF of the personal details, **Prestaties** (the weekly PDFs) and **Medische attesten**.
+- **Wagenpark/{plate}**: a PDF of the vehicle and its fuel passes (never the PIN code).
+- **Incidenten**: one PDF per incident.
+- **Toolboxen/{month title}**: the attendance list with signatures, the content (PDF) and the attachments.
+
+Setting it up: fill in the NAS address (e.g. `https://nas.company.be:5001`), the main folder and an own NAS account (with write access to the shared folder and File Station, without two-step verification) and test with **Test connection**. **Copy everything to the NAS** also sends everything already on the platform. What fails (e.g. NAS offline) is retried every 10 minutes; the tab shows how many files wait or failed. Nothing is ever deleted from the NAS. For an employee you can now also upload a copy of the **identity card**.
 
 ## E-mail templates
 
@@ -719,7 +731,7 @@ Asking the client for permission to work on a site during a given **period**, an
 
 ## Requesting a GPW
 
-1. Open a project with the status **To be executed**.
+1. Open the project. A GPW can be requested **at any moment**, except with the status **Offer**, **To be invoiced**, **Invoiced** or **Closed** (the same goes for *Add GPW manually*).
 2. Click **"Request GPW"** and choose **who** the request goes to: nobody is chosen beforehand. Suggested at the top: for an **intervention (600, 608.1)** the area's **intervention contact persons**, for other projects the contact persons of the COW code and of the area. You can search **any other contact person** with an e-mail address (by name, company or e-mail) or add a **new person** straight away with name, e-mail and language. They don't need a client portal login: they decide with the buttons in the mail.
 3. Choose the **period** (from – until) and optionally add **remarks** (access, keys, outages).
 4. Click **Send request**.
