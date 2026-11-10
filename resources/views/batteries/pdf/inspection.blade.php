@@ -67,7 +67,7 @@
 
         <table class="w" style="margin-top: 10px;">
             <tr>
-                <td style="width: 50%; padding-right: 10px;">{{ __('battery_documents.inspection.for_contractor') }}<br><span class="label">{{ __('battery_documents.common.date') }}:</span> {{ $dossier->execution_date?->format('d/m/Y') }}<br><span class="label">{{ __('battery_documents.inspection.name_signature') }}</span><div class="box">@include('batteries.pdf.signature', ['document' => 'inspection'])</div></td>
+                <td style="width: 50%; padding-right: 10px;">{{ __('battery_documents.inspection.for_contractor') }}<br><span class="label">{{ __('battery_documents.common.date') }}:</span> {{ $dossier->execution_date?->format('d/m/Y') }}<br><span class="label">{{ __('battery_documents.inspection.name_signature') }}</span><div class="box" style="height: auto; min-height: 60px;">@include('batteries.pdf.signature', ['document' => 'inspection'])</div></td>
                 <td>{{ __('battery_documents.inspection.for_client', ['client' => settings()->get('batteries.client_short')]) }}<br><span class="label">{{ __('battery_documents.common.date') }}:</span><br><span class="label">{{ __('battery_documents.inspection.name_signature') }}</span><div class="box"></div></td>
             </tr>
         </table>

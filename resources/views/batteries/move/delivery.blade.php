@@ -12,6 +12,10 @@
     $pcs = __('battery_documents.common.pcs');
 @endphp
 
+@section('styles')
+    .items td { padding-top: 2px; padding-bottom: 2px; }
+@endsection
+
 @section('content')
     <table class="w plain">
         <tr>
@@ -40,7 +44,8 @@
         </tr>
     </table>
 
-    <table class="w grid" style="margin-top: 12px;">
+    {{-- Rows a little tighter than elsewhere, so the signature box still fits on the page. --}}
+    <table class="w grid items" style="margin-top: 12px;">
         <thead>
             <tr><th>{{ __('battery_documents.common.article') }}</th><th class="num" style="width: 14%;">{{ __('battery_documents.common.quantity') }}</th><th style="width: 7%;"></th></tr>
         </thead>
@@ -80,7 +85,7 @@
     <table class="w nobreak" style="margin-top: 16px;">
         <tr>
             <td style="width: 48%; padding-right: 10px;"><span class="label">{{ __('battery_documents.common.date') }}</span><div class="box">{{ $date($dossier->execution_date) }}</div></td>
-            <td style="width: 52%;"><span class="label">{{ __('battery_documents.common.signature') }}</span><div class="box">@include('batteries.pdf.signature', ['document' => 'delivery'])</div></td>
+            <td style="width: 52%;"><span class="label">{{ __('battery_documents.common.signature') }}</span><div class="box" style="height: auto; min-height: 60px;">@include('batteries.pdf.signature', ['document' => 'delivery'])</div></td>
         </tr>
     </table>
 @endsection

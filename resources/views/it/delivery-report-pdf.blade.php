@@ -27,8 +27,8 @@
         ol { margin: 0; padding-left: 6mm; }
         ol li { margin-bottom: .6mm; }
         .signatures td { border: 0; padding: 0 2mm 0 0; width: 50%; }
-        .signature { height: 18mm; }
-        .signature img { max-height: 14mm; max-width: 60mm; }
+        .signature { height: 32mm; }
+        .signature img { max-height: 28mm; max-width: 100%; }
         .hint { font-size: 7pt; font-style: italic; }
         .footer { position: fixed; bottom: -8mm; left: 0; right: 0; text-align: center; font-size: 6.5pt; color: #999; }
     </style>

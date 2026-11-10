@@ -25,7 +25,7 @@
                     <td>{{ $signature->opened_at?->format('d/m/Y H:i') }}</td>
                     <td>{{ $signature->signed_at?->format('d/m/Y H:i') ?? __('erp.onboarding.not_signed') }}</td>
                     <td>{{ $signature->signer_name }}</td>
-                    <td>@if ($image = $signature->signatureDataUri())<img src="{{ $image }}" alt="" style="height: 28px;">@endif</td>
+                    <td>@if ($image = $signature->signatureDataUri())<img src="{{ $image }}" alt="" style="height: 56px;">@endif</td>
                 </tr>
             @endforeach
         </tbody>

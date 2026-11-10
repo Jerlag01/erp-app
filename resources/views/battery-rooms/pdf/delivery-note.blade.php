@@ -80,7 +80,7 @@
                 <div class="box" style="height: auto; min-height: 40px;">
                     @if ($dossier->isSigned())
                         <div style="font-size: 7.5pt;">
-                            @if ($image = $dossier->signatureDataUri())<img src="{{ $image }}" alt="" style="height: 38px; max-width: 100%;"><br>@endif
+                            @if ($image = $dossier->signatureDataUri())<img src="{{ $image }}" alt="" style="height: 76px; max-width: 100%;"><br>@endif
                             {{ $dossier->signer_name }} · {{ $dossier->signed_at->format('d/m/Y H:i') }}
                         </div>
                     @else

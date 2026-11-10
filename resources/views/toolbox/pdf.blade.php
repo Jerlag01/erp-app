@@ -17,8 +17,8 @@
         th, td { border: 1px solid #000; padding: 1.2mm 2mm; vertical-align: middle; }
         th { font-size: 11pt; text-align: center; }
         td.name { font-family: 'DejaVu Sans', sans-serif; font-weight: bold; font-size: 9pt; width: 27%; }
-        td.sign { width: 23%; height: 12mm; text-align: center; }
-        td.sign img { max-height: 10mm; max-width: 38mm; }
+        td.sign { width: 23%; height: 22mm; text-align: center; }
+        td.sign img { max-height: 20mm; max-width: 100%; }
         .lines .line { margin: 7mm 0 0; border-bottom: 1px solid #000; padding-bottom: .5mm; }
     </style>
 </head>
