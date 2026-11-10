@@ -12,11 +12,13 @@ use App\Models\EmployeeCertificate;
 use App\Models\EmployeeMedicalCheck;
 use App\Models\Incident;
 use App\Models\NasSyncItem;
+use App\Models\NasTarget;
 use App\Models\ProjectFileVersion;
 use App\Models\TimesheetWeek;
 use App\Models\ToolboxMeeting;
 use App\Models\Vehicle;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -26,7 +28,7 @@ use Throwable;
  * The copy of the platform's files on the NAS, for redundancy (Synology File Station API, SMB, FTP(S) or
  * SFTP: see NasTransports). Uploads keep going through the platform;
  * every file (and a few PDFs made from the data) is also written on the NAS, below the root folder
- * (Settings > NAS, e.g. "/ERP"):
+ * of every active NAS (Admin > NAS systems, e.g. "/ERP"; several NAS systems each get every file):
  *
  *   {category}/{project reference}/{upload zone}/…        project files, and As-built/{category}/…
  *   Personeel/{first last}/…                               driving licence, ID card, certificates, medical,
@@ -55,9 +57,27 @@ class NasSync
 
     protected bool $deferred = false;
 
+    /** Only this NAS (while copying everything to one new NAS). */
+    protected ?NasTarget $only = null;
+
+    /**
+     * Whether at least one NAS is active.
+     */
     public function enabled(): bool
     {
-        return (bool) settings()->get('nas.enabled') && NasTransports::configured();
+        return NasTarget::query()->active()->exists();
+    }
+
+    /**
+     * The active NAS systems a new copy goes to.
+     *
+     * @return EloquentCollection<int, NasTarget>
+     */
+    public function targets(): EloquentCollection
+    {
+        return $this->only !== null
+            ? new EloquentCollection([$this->only])
+            : NasTarget::query()->active()->orderBy('id')->get();
     }
 
     /* What goes where */
@@ -188,7 +208,20 @@ class NasSync
     /**
      * Everything once (the first copy, or after the NAS was replaced); returns how many items wait.
      */
-    public function queueAll(): int
+    public function queueAll(?NasTarget $only = null): int
+    {
+        $this->only = $only;
+
+        try {
+            $this->queueEverything();
+        } finally {
+            $this->only = null;
+        }
+
+        return NasSyncItem::query()->where('status', NasSyncItem::PENDING)->when($only, fn ($query) => $query->where('nas_target_id', $only->id))->count();
+    }
+
+    protected function queueEverything(): void
     {
         ProjectFileVersion::query()->with('file.project.category')->whereIn('id', ProjectFileVersion::query()->selectRaw('max(id)')->groupBy('project_file_id'))->lazyById()->each(fn (ProjectFileVersion $version) => $this->projectFile($version));
         AsbuiltFile::query()->with(['asbuilt.project.category', 'libraryFile'])->lazyById()->each(fn (AsbuiltFile $file) => $this->asbuiltFile($file));
@@ -198,8 +231,6 @@ class NasSync
         Vehicle::query()->lazyById()->each(fn (Vehicle $vehicle) => $this->vehicle($vehicle));
         Incident::query()->lazyById()->each(fn (Incident $incident) => $this->incident($incident));
         ToolboxMeeting::query()->lazyById()->each(fn (ToolboxMeeting $meeting) => $this->toolbox($meeting));
-
-        return NasSyncItem::query()->where('status', NasSyncItem::PENDING)->count();
     }
 
     /* The outbox */
@@ -212,16 +243,21 @@ class NasSync
      */
     public function put(array $segments, array $source): void
     {
-        if (! $this->enabled()) {
+        $targets = $this->targets();
+
+        if ($targets->isEmpty()) {
             return;
         }
 
-        $target = implode('/', array_map(fn (string $segment): string => self::clean($segment), $segments));
-        $item = NasSyncItem::query()->updateOrCreate(
-            ['target_hash' => hash('sha256', $target)],
-            ['target' => $target, 'source' => $source, 'status' => NasSyncItem::PENDING, 'attempts' => 0, 'last_error' => null],
-        );
-        $this->queued[] = $item->id;
+        $path = implode('/', array_map(fn (string $segment): string => self::clean($segment), $segments));
+
+        // One copy per NAS, each with its own state.
+        foreach ($targets as $nas) {
+            $this->queued[] = NasSyncItem::query()->updateOrCreate(
+                ['target_hash' => hash('sha256', $nas->id.'|'.$path)],
+                ['nas_target_id' => $nas->id, 'target' => $path, 'source' => $source, 'status' => NasSyncItem::PENDING, 'attempts' => 0, 'last_error' => null],
+            )->id;
+        }
 
         if (! $this->deferred) {
             $this->deferred = true;
@@ -239,9 +275,10 @@ class NasSync
      *
      * @return array{sent: int, failed: int}
      */
-    public function process(int $limit = 500): array
+    public function process(int $limit = 500, ?NasTarget $only = null): array
     {
         return $this->send(NasSyncItem::query()
+            ->when($only, fn ($query) => $query->where('nas_target_id', $only->id))
             ->whereIn('status', [NasSyncItem::PENDING, NasSyncItem::FAILED])
             ->where('attempts', '<', NasSyncItem::MAX_ATTEMPTS)
             ->orderBy('id')
@@ -256,42 +293,54 @@ class NasSync
     public function send(Collection $items): array
     {
         $result = ['sent' => 0, 'failed' => 0];
+        $contents = [];
 
-        if (! $this->enabled() || $items->isEmpty()) {
-            return $result;
-        }
+        // Per NAS: its own connection and main folder; the PDFs are made once for all of them.
+        foreach ($items->groupBy('nas_target_id') as $targetId => $group) {
+            $nas = NasTarget::query()->find($targetId);
 
-        try {
-            $client = app()->bound(NasTransport::class) ? app(NasTransport::class) : NasTransports::fromSettings();
-        } catch (Throwable $exception) {
-            // Not set up well (e.g. no host): every item waits with the reason.
-            $items->each(fn (NasSyncItem $item) => $item->update(['status' => NasSyncItem::FAILED, 'attempts' => $item->attempts + 1, 'last_error' => mb_substr($exception->getMessage(), 0, 1000)]));
-
-            return ['sent' => 0, 'failed' => $items->count()];
-        }
-        $root = '/'.trim((string) settings()->get('nas.root', '/ERP'), '/');
-
-        foreach ($items as $item) {
-            try {
-                $contents = $this->contents($item->source);
-
-                if ($contents !== null) {
-                    $folder = trim(dirname($item->target), '.');
-                    $client->upload(rtrim($root.'/'.$folder, '/'), basename($item->target), $contents);
-                }
-
-                $item->update(['status' => NasSyncItem::DONE, 'synced_at' => now(), 'last_error' => $contents === null ? __('erp.nas.source_missing') : null]);
-                $result['sent']++;
-            } catch (Throwable $exception) {
-                $item->update(['status' => NasSyncItem::FAILED, 'attempts' => $item->attempts + 1, 'last_error' => mb_substr($exception->getMessage(), 0, 1000)]);
-                $result['failed']++;
-                Log::warning('NAS copy failed', ['target' => $item->target, 'error' => $exception->getMessage()]);
+            if ($nas === null || ! $nas->is_active) {
+                continue;
             }
-        }
 
-        $client->close();
+            try {
+                $client = app()->bound(NasTransport::class) ? app(NasTransport::class) : NasTransports::for($nas);
+            } catch (Throwable $exception) {
+                // Not set up well (e.g. no host): every item waits with the reason.
+                $group->each(fn (NasSyncItem $item) => $this->failed($item, $exception));
+                $result['failed'] += $group->count();
+
+                continue;
+            }
+
+            foreach ($group as $item) {
+                try {
+                    $key = json_encode($item->source);
+                    $data = array_key_exists($key, $contents) ? $contents[$key] : ($contents[$key] = $this->contents($item->source));
+
+                    if ($data !== null) {
+                        $folder = trim(dirname($item->target), '.');
+                        $client->upload(rtrim($nas->rootFolder().'/'.$folder, '/'), basename($item->target), $data);
+                    }
+
+                    $item->update(['status' => NasSyncItem::DONE, 'synced_at' => now(), 'last_error' => $data === null ? __('erp.nas.source_missing') : null]);
+                    $result['sent']++;
+                } catch (Throwable $exception) {
+                    $this->failed($item, $exception);
+                    $result['failed']++;
+                    Log::warning('NAS copy failed', ['nas' => $nas->name, 'target' => $item->target, 'error' => $exception->getMessage()]);
+                }
+            }
+
+            $client->close();
+        }
 
         return $result;
+    }
+
+    protected function failed(NasSyncItem $item, Throwable $exception): void
+    {
+        $item->update(['status' => NasSyncItem::FAILED, 'attempts' => $item->attempts + 1, 'last_error' => mb_substr($exception->getMessage(), 0, 1000)]);
     }
 
     /**

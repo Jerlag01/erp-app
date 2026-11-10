@@ -5,13 +5,15 @@ namespace Tests\Feature;
 use App\Enums\AbsenceType;
 use App\Enums\CertificateType;
 use App\Enums\ProjectFileSection;
-use App\Filament\Admin\Pages\Settings;
+use App\Filament\Admin\Resources\NasTargets\NasTargetResource;
+use App\Filament\Admin\Resources\NasTargets\Pages\ManageNasTargets;
 use App\Models\Absence;
 use App\Models\Employee;
 use App\Models\EmployeeCertificate;
 use App\Models\FuelPass;
 use App\Models\Incident;
 use App\Models\NasSyncItem;
+use App\Models\NasTarget;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\TimesheetWeek;
@@ -23,12 +25,11 @@ use App\Support\Nas\FlysystemTransport;
 use App\Support\Nas\NasSync;
 use App\Support\Nas\NasTransport;
 use App\Support\Nas\NasTransports;
-use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
@@ -46,12 +47,15 @@ class NasSyncTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @var list<array{path: string, name: string, contents: string}> what reached the "NAS" */
+    /** @var list<array{host: string, path: string, name: string, contents: string}> what reached the "NAS" systems */
     protected array $uploads = [];
 
-    protected bool $offline = false;
+    /** @var list<string> hosts that are down */
+    protected array $offline = [];
 
     protected int $logins = 0;
+
+    protected NasTarget $nas;
 
     protected function setUp(): void
     {
@@ -60,10 +64,12 @@ class NasSyncTest extends TestCase
         Storage::fake('local');
         Storage::fake('public');
         $this->withoutDefer();
-        settings()->save('nas', ['enabled' => true, 'url' => 'https://nas.test:5001', 'username' => 'erp', 'password' => Crypt::encryptString('geheim'), 'root' => '/ERP', 'verify_ssl' => true]);
+        $this->nas = NasTarget::query()->create(['name' => 'NAS kantoor', 'driver' => NasTransports::SYNOLOGY, 'url' => 'https://nas.test:5001', 'username' => 'erp', 'password' => 'geheim', 'root' => '/ERP']);
 
-        Http::fake(['nas.test:5001/*' => function (Request $request) {
-            if ($this->offline) {
+        Http::fake(['*.test:5001/*' => function (Request $request) {
+            $host = (string) parse_url($request->url(), PHP_URL_HOST);
+
+            if (in_array($host, $this->offline, true)) {
                 return Http::response('', 503);
             }
 
@@ -78,7 +84,7 @@ class NasSyncTest extends TestCase
 
             if ($api === 'SYNO.FileStation.Upload') {
                 $fields = collect($request->data())->keyBy('name');
-                $this->uploads[] = ['path' => (string) $fields['path']['contents'], 'name' => (string) $fields['file']['filename'], 'contents' => (string) $fields['file']['contents']];
+                $this->uploads[] = ['host' => $host, 'path' => (string) $fields['path']['contents'], 'name' => (string) $fields['file']['filename'], 'contents' => (string) $fields['file']['contents']];
 
                 return Http::response(['success' => true]);
             }
@@ -91,9 +97,9 @@ class NasSyncTest extends TestCase
         }]);
     }
 
-    protected function uploaded(string $path): array
+    protected function uploaded(string $path, string $host = 'nas.test'): array
     {
-        return collect($this->uploads)->first(fn (array $upload): bool => $path === $upload['path'].'/'.$upload['name']) ?? $this->fail("Not on the NAS: {$path}\nOn the NAS: ".collect($this->uploads)->map(fn ($u) => $u['path'].'/'.$u['name'])->implode("\n"));
+        return collect($this->uploads)->first(fn (array $upload): bool => $upload['host'] === $host && $path === $upload['path'].'/'.$upload['name']) ?? $this->fail("Not on the NAS: {$path}\nOn the NAS: ".collect($this->uploads)->map(fn ($u) => $u['path'].'/'.$u['name'])->implode("\n"));
     }
 
     #[Test]
@@ -108,7 +114,7 @@ class NasSyncTest extends TestCase
         $this->assertSame(2, NasSyncItem::query()->where('status', NasSyncItem::DONE)->count());
 
         // Switched off: nothing is copied.
-        settings()->save('nas', [...settings('nas'), 'enabled' => false]);
+        $this->nas->update(['is_active' => false]);
         ProjectFile::store($project, ProjectFileSection::Images, UploadedFile::fake()->create('later.jpg', 1), 'later.jpg');
         $this->assertCount(2, $this->uploads);
     }
@@ -172,7 +178,7 @@ class NasSyncTest extends TestCase
     public function what_fails_while_the_nas_is_offline_is_sent_again_and_everything_can_be_copied_once(): void
     {
         $project = Project::factory()->inCategory('610')->create();
-        $this->offline = true;
+        $this->offline = ['nas.test'];
         ProjectFile::store($project, ProjectFileSection::Documents, UploadedFile::fake()->createWithContent('offerte.pdf', 'x'), 'offerte.pdf');
 
         $item = NasSyncItem::query()->sole();
@@ -180,7 +186,7 @@ class NasSyncTest extends TestCase
         $this->assertCount(0, $this->uploads);
 
         // Back online: the scheduled command sends it.
-        $this->offline = false;
+        $this->offline = [];
         $this->artisan('nas:sync')->assertSuccessful();
         $this->assertSame(NasSyncItem::DONE, $item->fresh()->status);
         $this->assertCount(1, $this->uploads);
@@ -198,7 +204,7 @@ class NasSyncTest extends TestCase
         $this->assertSame('Fiche - A-B', NasSync::clean('Fiche / A:B'));
         $this->assertSame('-', NasSync::clean('..'));
 
-        settings()->save('nas', [...settings('nas'), 'password' => Crypt::encryptString('fout')]);
+        $this->nas->update(['password' => 'fout']);
         Vehicle::factory()->create();
         $item = NasSyncItem::query()->sole();
         $this->assertSame(NasSyncItem::FAILED, $item->status);
@@ -206,23 +212,48 @@ class NasSyncTest extends TestCase
     }
 
     #[Test]
-    public function the_administrator_sets_up_and_tests_the_nas_in_the_settings(): void
+    public function the_administrator_manages_several_nas_systems_and_each_gets_every_file(): void
     {
-        settings()->save('nas', [...settings('nas'), 'password' => null]);
         Filament::setCurrentPanel('admin');
-        Livewire::actingAs(User::factory()->admin()->create())
-            ->test(Settings::class)
-            ->set('data.nas.password', 'geheim')
-            ->call('save')
-            ->assertHasNoFormErrors();
+        $admin = User::factory()->admin()->create();
 
-        $this->assertSame('geheim', Crypt::decryptString(settings()->get('nas.password')));
-        $this->assertSame('/ERP', settings()->get('nas.root'));
+        Livewire::actingAs($admin)
+            ->test(ManageNasTargets::class)
+            ->callAction('create', ['name' => 'NAS backup', 'driver' => NasTransports::SYNOLOGY, 'url' => 'https://backup.test:5001/', 'username' => 'erp', 'password' => 'geheim', 'root' => 'ERP-backup', 'is_active' => true, 'verify_ssl' => true])
+            ->assertHasNoActionErrors();
+        $backup = NasTarget::query()->where('name', 'NAS backup')->sole();
+        $this->assertSame(['https://backup.test:5001', '/ERP-backup', 'geheim'], [$backup->url, $backup->root, $backup->password]);
+        $this->assertNotSame('geheim', DB::table('nas_targets')->where('id', $backup->id)->value('password'), 'Stored encrypted.');
 
-        Livewire::actingAs(User::factory()->admin()->create())
-            ->test(Settings::class)
-            ->callAction(TestAction::make('testNas')->schemaComponent('nasActions', schema: 'form'))
-            ->assertNotified(__('erp.nas.test_ok'));
+        // Editing without a password keeps the one there is.
+        Livewire::actingAs($admin)->test(ManageNasTargets::class)->callTableAction('edit', $backup, ['name' => 'NAS backup 2', 'password' => '']);
+        $this->assertSame(['NAS backup 2', 'geheim'], [$backup->fresh()->name, $backup->fresh()->password]);
+
+        Livewire::actingAs($admin)->test(ManageNasTargets::class)->callTableAction('test', $backup)->assertNotified(__('erp.nas.test_ok'));
+
+        // A new file goes to both, each below its own main folder; one NAS being down does not stop the other.
+        $this->offline = ['backup.test'];
+        Vehicle::factory()->create(['plate_number' => '1ABC123']);
+        $this->assertStringStartsWith('%PDF', $this->uploaded('/ERP/Wagenpark/1ABC123/1ABC123 - fiche.pdf')['contents']);
+        $this->assertSame([NasSyncItem::DONE, NasSyncItem::FAILED], [
+            $this->nas->items()->sole()->status,
+            $backup->items()->sole()->status,
+        ]);
+
+        // Back up: the command sends what this NAS still misses.
+        $this->offline = [];
+        $this->artisan('nas:sync', ['--target' => $backup->id])->assertSuccessful();
+        $this->assertStringStartsWith('%PDF', $this->uploaded('/ERP-backup/Wagenpark/1ABC123/1ABC123 - fiche.pdf', 'backup.test')['contents']);
+
+        // "Copy everything" for one (new) NAS only fills its queue.
+        $third = NasTarget::query()->create(['name' => 'NAS 3', 'driver' => NasTransports::SYNOLOGY, 'url' => 'https://third.test:5001', 'username' => 'erp', 'password' => 'geheim']);
+        $before = $this->nas->items()->count();
+        Livewire::actingAs($admin)->test(ManageNasTargets::class)->callTableAction('syncAll', $third);
+        $this->assertSame(1, $third->items()->count());
+        $this->assertSame($before, $this->nas->items()->count());
+
+        // Only administrators see the list.
+        $this->actingAs(User::factory()->create())->get(NasTargetResource::getUrl())->assertForbidden();
     }
 
     #[Test]
@@ -231,7 +262,7 @@ class NasSyncTest extends TestCase
         // The FTP and SFTP transports are Flysystem; a local folder stands in for the server here.
         $server = sys_get_temp_dir().'/nas-test-'.uniqid();
         $this->app->instance(NasTransport::class, new FlysystemTransport(new Filesystem(new LocalFilesystemAdapter($server)), 'test'));
-        settings()->save('nas', [...settings('nas'), 'driver' => NasTransports::SFTP, 'host' => 'nas.test', 'root' => '/volume1/ERP']);
+        $this->nas->update(['driver' => NasTransports::SFTP, 'host' => 'nas.test', 'root' => '/volume1/ERP']);
 
         $project = Project::factory()->inCategory('604')->for(WorkSite::factory()->create(['cow_code' => '02GAM']))->create();
         ProjectFile::store($project, ProjectFileSection::Plans, UploadedFile::fake()->createWithContent('grondplan.dwg', 'dwg'), 'grondplan.dwg');
@@ -240,16 +271,16 @@ class NasSyncTest extends TestCase
         $this->assertSame(NasSyncItem::DONE, NasSyncItem::query()->sole()->status);
         File::deleteDirectory($server);
 
-        // The real transports are built from the settings (they connect only when used).
-        $this->assertInstanceOf(FlysystemTransport::class, NasTransports::fromSettings());
-        settings()->save('nas', [...settings('nas'), 'driver' => NasTransports::FTP]);
-        $this->assertInstanceOf(FlysystemTransport::class, NasTransports::fromSettings());
+        // The real transports are built from the NAS record (they connect only when used).
+        $this->assertInstanceOf(FlysystemTransport::class, NasTransports::for($this->nas->fresh()));
+        $this->nas->update(['driver' => NasTransports::FTP]);
+        $this->assertInstanceOf(FlysystemTransport::class, NasTransports::for($this->nas->fresh()));
     }
 
     #[Test]
     public function smb_uses_smbclient_with_a_credentials_file_and_reports_errors(): void
     {
-        settings()->save('nas', [...settings('nas'), 'driver' => NasTransports::SMB, 'host' => 'nas.test', 'share' => 'Data', 'domain' => 'PI', 'root' => '/ERP']);
+        $this->nas->update(['driver' => NasTransports::SMB, 'host' => 'nas.test', 'share' => 'Data', 'domain' => 'PI', 'root' => '/ERP']);
         $credentials = null;
         Process::fake(function ($process) use (&$credentials) {
             $command = $process->command;

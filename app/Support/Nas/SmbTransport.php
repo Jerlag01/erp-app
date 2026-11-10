@@ -2,13 +2,14 @@
 
 namespace App\Support\Nas;
 
+use App\Models\NasTarget;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
 
 /**
  * SMB (Windows / Samba share) through the "smbclient" program of Samba: the account goes in a
  * temporary credentials file (never on the command line); folders are made one by one, an existing file
- * is replaced. Paths are below the share (Settings > NAS > share and main folder).
+ * is replaced. Paths are below the share (the NAS record's share and main folder).
  */
 class SmbTransport implements NasTransport
 {
@@ -21,19 +22,19 @@ class SmbTransport implements NasTransport
         protected ?int $port = null,
     ) {}
 
-    public static function fromSettings(): self
+    public static function fromTarget(NasTarget $target): self
     {
-        if (blank(settings()->get('nas.host')) || blank(settings()->get('nas.share'))) {
+        if (blank($target->host) || blank($target->share)) {
             throw new RuntimeException(__('erp.nas.errors.not_configured'));
         }
 
         return new self(
-            (string) settings()->get('nas.host'),
-            trim((string) settings()->get('nas.share'), '/\\'),
-            (string) settings()->get('nas.username'),
-            NasTransports::secret('nas.password'),
-            filled(settings()->get('nas.domain')) ? (string) settings()->get('nas.domain') : null,
-            filled(settings()->get('nas.port')) ? (int) settings()->get('nas.port') : null,
+            (string) $target->host,
+            trim((string) $target->share, '/\\'),
+            (string) $target->username,
+            (string) $target->password,
+            filled($target->domain) ? (string) $target->domain : null,
+            $target->port ?: null,
         );
     }
 

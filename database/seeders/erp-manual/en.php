@@ -121,9 +121,9 @@ The settings are spread over tabs:
 - **Email**: the mail server the platform sends with. **"Send test email"** checks the settings.
 - **Appearance**: logo, favicon and colour.
 - **Mobile app**: the APK, the suggestion on phones and the privacy policy.
-- **NAS**: a copy of all files on a Synology NAS, for redundancy (see below).
+- **NAS**: see **Admin → System → NAS systems** below.
 
-## NAS (Synology)
+## NAS systems
 
 Uploading still happens through the platform; every file then also goes to the NAS. Layout below the main folder (e.g. `/ERP`):
 
@@ -133,7 +133,7 @@ Uploading still happens through the platform; every file then also goes to the N
 - **Incidenten**: one PDF per incident.
 - **Toolboxen/{month title}**: the attendance list with signatures, the content (PDF) and the attachments.
 
-Setting it up: choose the **connection**: **Synology** (File Station over HTTPS: the DSM address, e.g. `https://nas.company.be:5001`), **SMB** (Windows share or Samba: server, share and optionally domain), **FTP/FTPS** (preferably encrypted) or **SFTP** (SSH, with password or private key). Fill in the main folder and an own NAS account with write access, save and test with **Test connection**. **Copy everything to the NAS** also sends everything already on the platform. What fails (e.g. NAS offline) is retried every 10 minutes; the tab shows how many files wait or failed. Nothing is ever deleted from the NAS. For an employee you can now also upload a copy of the **identity card**.
+Under **Admin → System → NAS systems** you add one or more NAS systems; every active NAS gets a copy of every file, for extra redundancy. Each NAS has its own queue: when one is offline, the others carry on. Per NAS you choose the **connection**: **Synology** (File Station over HTTPS: the DSM address, e.g. `https://nas.company.be:5001`), **SMB** (Windows share or Samba: server, share and optionally domain), **FTP/FTPS** (preferably encrypted) or **SFTP** (SSH, with password or private key), the main folder and an own account with write access. The list shows per NAS how many files wait, failed or are already on the NAS, with the buttons **Test connection**, **Copy everything to the NAS** (e.g. for a new NAS: only that NAS is filled) and **Retry failed ones**. What fails is retried every 10 minutes. Nothing is ever deleted from a NAS. For an employee you can also upload a copy of the **identity card**.
 
 ## E-mail templates
 

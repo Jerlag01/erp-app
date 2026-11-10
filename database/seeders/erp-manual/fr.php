@@ -121,9 +121,9 @@ Les paramètres sont répartis en onglets :
 - **E-mail** : le serveur de messagerie de la plateforme. **« Envoyer un e-mail de test »** vérifie la configuration.
 - **Apparence** : logo, favicon et couleur.
 - **Application mobile** : l'APK, la suggestion sur les téléphones et la déclaration de confidentialité.
-- **NAS** : une copie de tous les fichiers sur un NAS Synology, pour la redondance (voir ci-dessous).
+- **NAS** : voir **Administration → Système → Systèmes NAS** ci-dessous.
 
-## NAS (Synology)
+## Systèmes NAS
 
 Le téléchargement se fait toujours via la plateforme ; chaque fichier part ensuite aussi vers le NAS. Organisation sous le dossier principal (p. ex. `/ERP`) :
 
@@ -133,7 +133,7 @@ Le téléchargement se fait toujours via la plateforme ; chaque fichier part ens
 - **Incidenten** : un PDF par incident.
 - **Toolboxen/{mois titre}** : la liste de présence avec signatures, le contenu (PDF) et les annexes.
 
-Configuration : choisissez la **connexion** : **Synology** (File Station en HTTPS : l'adresse de DSM, p. ex. `https://nas.societe.be:5001`), **SMB** (partage Windows ou Samba : serveur, partage et éventuellement domaine), **FTP/FTPS** (de préférence chiffré) ou **SFTP** (SSH, avec mot de passe ou clé privée). Indiquez le dossier principal et un compte NAS propre avec droits d'écriture, enregistrez et testez avec **Tester la connexion**. **Tout copier sur le NAS** envoie aussi tout ce qui se trouve déjà sur la plateforme. Ce qui échoue (p. ex. NAS hors ligne) est réessayé toutes les 10 minutes ; l'onglet montre combien de fichiers attendent ou ont échoué. Rien n'est jamais supprimé du NAS. Pour un collaborateur, vous pouvez maintenant aussi télécharger une copie de la **carte d'identité**.
+Dans **Administration → Système → Systèmes NAS**, vous ajoutez un ou plusieurs NAS ; chaque NAS actif reçoit une copie de chaque fichier, pour plus de redondance. Chaque NAS a sa propre file d'attente : si l'un est hors ligne, les autres continuent. Par NAS, vous choisissez la **connexion** : **Synology** (File Station en HTTPS : l'adresse de DSM, p. ex. `https://nas.societe.be:5001`), **SMB** (partage Windows ou Samba : serveur, partage et éventuellement domaine), **FTP/FTPS** (de préférence chiffré) ou **SFTP** (SSH, avec mot de passe ou clé privée), le dossier principal et un compte propre avec droits d'écriture. La liste montre par NAS combien de fichiers attendent, ont échoué ou sont déjà sur le NAS, avec les boutons **Tester la connexion**, **Tout copier sur le NAS** (p. ex. pour un nouveau NAS : seul ce NAS est rempli) et **Réessayer les échecs**. Ce qui échoue est réessayé toutes les 10 minutes. Rien n'est jamais supprimé d'un NAS. Pour un collaborateur, vous pouvez aussi télécharger une copie de la **carte d'identité**.
 
 ## Modèles d'e-mail
 

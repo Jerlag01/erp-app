@@ -122,9 +122,9 @@ De instellingen zijn verdeeld over tabbladen:
 - **E-mail**: de mailserver waarmee het platform mails verstuurt. Met **"Testmail versturen"** controleer je de instellingen.
 - **Uiterlijk**: logo, favicon en kleur.
 - **Mobiele app**: de APK uploaden, de melding op telefoons en de privacyverklaring.
-- **NAS**: een kopie van alle bestanden op een Synology-NAS, voor redundantie (zie hieronder).
+- **NAS**: zie **Beheer → Systeem → NAS-systemen** hieronder.
 
-## NAS (Synology)
+## NAS-systemen
 
 Het uploaden blijft via het platform gebeuren; elk bestand gaat daarna ook naar de NAS. Indeling onder de hoofdmap (bv. `/ERP`):
 
@@ -134,7 +134,7 @@ Het uploaden blijft via het platform gebeuren; elk bestand gaat daarna ook naar 
 - **Incidenten**: één PDF per incident.
 - **Toolboxen/{maand titel}**: de aanwezigheidslijst met handtekeningen, de inhoud (PDF) en de bijlagen.
 
-Instellen: kies de **verbinding**: **Synology** (File Station over HTTPS: het adres van DSM, bv. `https://nas.bedrijf.be:5001`), **SMB** (Windows-share of Samba: server, share en eventueel domein), **FTP/FTPS** (best versleuteld) of **SFTP** (SSH, met wachtwoord of private sleutel). Vul de hoofdmap en een eigen NAS-account met schrijfrechten in, sla op en test met **Verbinding testen**. Met **Alles naar de NAS kopiëren** gaat ook alles wat al op het platform staat mee. Wat mislukt (bv. NAS offline) wordt elke 10 minuten opnieuw geprobeerd; het tabblad toont hoeveel er wacht of mislukt is. Op de NAS wordt nooit iets verwijderd. Bij een werknemer kan je nu ook een kopie van de **identiteitskaart** uploaden.
+Bij **Beheer → Systeem → NAS-systemen** voeg je één of meer NAS-systemen toe; elk actief NAS-systeem krijgt een kopie van elk bestand, voor extra redundantie. Elke NAS heeft zijn eigen wachtrij: is er één offline, dan gaan de andere gewoon door. Per NAS kies je de **verbinding**: **Synology** (File Station over HTTPS: het adres van DSM, bv. `https://nas.bedrijf.be:5001`), **SMB** (Windows-share of Samba: server, share en eventueel domein), **FTP/FTPS** (best versleuteld) of **SFTP** (SSH, met wachtwoord of private sleutel), de hoofdmap en een eigen account met schrijfrechten. In de lijst zie je per NAS hoeveel bestanden wachten, mislukt zijn of al op de NAS staan, met de knoppen **Verbinding testen**, **Alles naar de NAS kopiëren** (bv. voor een nieuwe NAS: enkel die NAS wordt gevuld) en **Mislukte opnieuw proberen**. Wat mislukt, wordt elke 10 minuten opnieuw geprobeerd. Op een NAS wordt nooit iets verwijderd. Bij een werknemer kan je ook een kopie van de **identiteitskaart** uploaden.
 
 ## E-mailsjablonen
 

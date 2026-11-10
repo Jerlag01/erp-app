@@ -2,11 +2,10 @@
 
 namespace App\Support\Nas;
 
-use Illuminate\Support\Facades\Crypt;
-use Throwable;
+use App\Models\NasTarget;
 
 /**
- * The transport chosen in Settings > NAS.
+ * The ways to reach a NAS (see NasTarget::driver).
  */
 class NasTransports
 {
@@ -20,37 +19,13 @@ class NasTransports
 
     public const ALL = [self::SYNOLOGY, self::SMB, self::FTP, self::SFTP];
 
-    public static function fromSettings(): NasTransport
+    public static function for(NasTarget $target): NasTransport
     {
-        return match ((string) settings()->get('nas.driver', self::SYNOLOGY)) {
-            self::SMB => SmbTransport::fromSettings(),
-            self::FTP => FlysystemTransport::ftpFromSettings(),
-            self::SFTP => FlysystemTransport::sftpFromSettings(),
-            default => SynologyClient::fromSettings(),
+        return match ($target->driver) {
+            self::SMB => SmbTransport::fromTarget($target),
+            self::FTP => FlysystemTransport::ftp($target),
+            self::SFTP => FlysystemTransport::sftp($target),
+            default => SynologyClient::fromTarget($target),
         };
-    }
-
-    /**
-     * Whether the settings name a server to write to.
-     */
-    public static function configured(): bool
-    {
-        return (string) settings()->get('nas.driver', self::SYNOLOGY) === self::SYNOLOGY
-            ? filled(settings()->get('nas.url'))
-            : filled(settings()->get('nas.host'));
-    }
-
-    /**
-     * A stored secret (password, private key), decrypted; empty when there is none.
-     */
-    public static function secret(string $key): string
-    {
-        $value = (string) settings()->get($key);
-
-        try {
-            return $value !== '' ? Crypt::decryptString($value) : '';
-        } catch (Throwable) {
-            return '';
-        }
     }
 }
