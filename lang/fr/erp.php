@@ -2905,6 +2905,10 @@ return [
         ],
     ],
     'asbuilt' => [
+        'btv_requested_on' => 'Contrôle BTV demandé le',
+        'request_btv' => 'Contrôle BTV demandé',
+        'change_btv_request' => 'Modifier la demande de contrôle BTV',
+        'request_btv_help' => 'Le jour où le contrôle a été demandé à Normec BTV. Possible à tout moment, aussi avant sa planification ou après la clôture. Le client voit cette date par projet. Vider l\'efface.',
         'wiring_diagram_file' => 'Schéma unifilaire :reference',
         'project_details' => 'Données du projet',
         'project_status' => 'Statut du projet',
@@ -2965,6 +2969,7 @@ return [
         'your_files' => 'Fichiers de l\'as-built',
         'closed_no_upload' => 'Cet as-built est terminé ; il n\'est plus possible de fournir des fichiers.',
         'steps' => [
+            'btv_requested' => 'Contrôle BTV demandé',
             'created' => 'Créé',
             'btv_planned' => 'Contrôle Normec BTV planifié',
             'finished' => 'Terminé et disponible',
@@ -3031,6 +3036,7 @@ return [
         ],
     ],
     'client_portal' => [
+        'btv_planned' => 'Planifié le :date',
         'asbuilt_library' => [
             'title' => 'Fichiers standard as-built',
             'singular' => 'Fichiers standard :cow',

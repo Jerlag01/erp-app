@@ -2906,6 +2906,10 @@ return [
         ],
     ],
     'asbuilt' => [
+        'btv_requested_on' => 'Keuring BTV aangevraagd op',
+        'request_btv' => 'BTV-keuring aangevraagd',
+        'change_btv_request' => 'Aanvraag BTV-keuring wijzigen',
+        'request_btv_help' => 'De dag waarop de keuring bij Normec BTV aangevraagd werd. Kan op elk moment, ook voor ze gepland is of na het afsluiten. De klant ziet deze datum per project. Leeg maken wist ze.',
         'wiring_diagram_file' => 'Eendraadschema :reference',
         'project_details' => 'Projectgegevens',
         'project_status' => 'Status project',
@@ -2966,6 +2970,7 @@ return [
         'your_files' => 'Bestanden van de as-built',
         'closed_no_upload' => 'Deze as-built is afgerond; aanleveren is niet meer mogelijk.',
         'steps' => [
+            'btv_requested' => 'BTV-keuring aangevraagd',
             'created' => 'Aangemaakt',
             'btv_planned' => 'Keuring Normec BTV gepland',
             'finished' => 'Afgerond en beschikbaar',
@@ -3032,6 +3037,7 @@ return [
         ],
     ],
     'client_portal' => [
+        'btv_planned' => 'Gepland op :date',
         'asbuilt_library' => [
             'title' => 'As-built standaardbestanden',
             'singular' => 'Standaardbestanden :cow',

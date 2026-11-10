@@ -80,6 +80,7 @@ class ClientAsbuiltResource extends ClientResource
                     TextEntry::make('project.reference')->label(__('erp.client_portal.project_number'))->fontFamily(FontFamily::Mono)->weight(FontWeight::Bold),
                     TextEntry::make('status')->label(__('erp.client_portal.status'))->badge(),
                     TextEntry::make('created_at')->label(__('erp.asbuilt.created'))->date('d/m/Y'),
+                    TextEntry::make('btv_requested_on')->label(__('erp.asbuilt.btv_requested_on'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('btv_date')->label(__('erp.asbuilt.btv_planned_on'))->date('d/m/Y')->placeholder(__('erp.asbuilt.not_planned')),
                     TextEntry::make('closed_at')->label(__('erp.asbuilt.finished'))->date('d/m/Y')->placeholder('—'),
                 ]),
@@ -101,6 +102,7 @@ class ClientAsbuiltResource extends ClientResource
                 TextColumn::make('project.cow_code')->label(__('erp.client_portal.cow_code'))->fontFamily(FontFamily::Mono)->searchable()->placeholder('—'),
                 TextColumn::make('status')->label(__('erp.client_portal.status'))->badge(),
                 TextColumn::make('created_at')->label(__('erp.asbuilt.created'))->date('d/m/Y')->sortable(),
+                TextColumn::make('btv_requested_on')->label(__('erp.asbuilt.btv_requested_on'))->date('d/m/Y')->sortable()->placeholder('—'),
                 TextColumn::make('btv_date')->label(__('erp.asbuilt.btv_planned_on'))->date('d/m/Y')->sortable()->placeholder('—'),
                 TextColumn::make('closed_at')->label(__('erp.asbuilt.finished'))->date('d/m/Y')->sortable()->placeholder('—'),
             ])

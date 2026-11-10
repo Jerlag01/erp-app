@@ -74,7 +74,7 @@ class ClientProjectResource extends ClientResource
     public static function getEloquentQuery(): Builder
     {
         return static::visibleProjects()
-            ->with(['category', 'workSite', 'poNumbers', 'batteryDeliveries', 'gpwRequests' => fn ($query) => $query->where('status', '!=', GpwStatus::Cancelled)])
+            ->with(['category', 'workSite', 'poNumbers', 'batteryDeliveries', 'asbuilt', 'gpwRequests' => fn ($query) => $query->where('status', '!=', GpwStatus::Cancelled)])
             ->withMin('planningItems', 'date')
             ->withMax('planningItems', 'date');
     }
@@ -141,6 +141,14 @@ class ClientProjectResource extends ClientResource
                     ->color(fn (Project $record): string => self::openDeliveries($record)->isNotEmpty() ? 'warning' : 'success')
                     ->placeholder('—')
                     ->visible(in_array(BatteryReports::CATEGORY, $categories, true)),
+                // The day the Normec BTV inspection was requested (on the project's as-built), and when it is planned.
+                TextColumn::make('btv_requested')
+                    ->label(__('erp.asbuilt.btv_requested_on'))
+                    ->state(fn (Project $record): ?string => $record->asbuilt?->btv_requested_on?->format('d/m/Y'))
+                    ->description(fn (Project $record): ?string => $record->asbuilt?->btv_date ? __('erp.client_portal.btv_planned', ['date' => $record->asbuilt->btv_date->format('d/m/Y')]) : null)
+                    ->placeholder('—')
+                    ->visible(modules()->asbuilt())
+                    ->toggleable(),
                 // When it is in our planning: the first and the last day.
                 TextColumn::make('planned_execution')
                     ->label(__('erp.client_portal.planned_execution'))
@@ -219,6 +227,11 @@ class ClientProjectResource extends ClientResource
                         ->state(fn (Project $record): ?string => self::deliveryState($record))->badge()
                         ->color(fn (Project $record): string => self::openDeliveries($record)->isNotEmpty() ? 'warning' : 'success')
                         ->visible(fn (Project $record): bool => (string) $record->category?->code === BatteryReports::CATEGORY),
+                    TextEntry::make('btv_requested')->label(__('erp.asbuilt.btv_requested_on'))
+                        ->state(fn (Project $record): ?string => $record->asbuilt?->btv_requested_on?->format('d/m/Y'))
+                        ->helperText(fn (Project $record): ?string => $record->asbuilt?->btv_date ? __('erp.client_portal.btv_planned', ['date' => $record->asbuilt->btv_date->format('d/m/Y')]) : null)
+                        ->placeholder('—')
+                        ->visible(fn (Project $record): bool => modules()->asbuilt() && $record->asbuilt !== null),
                     TextEntry::make('po_numbers')->label(__('erp.client_portal.po_numbers'))
                         ->state(fn (Project $record): array => $record->poNumbers->pluck('number')->all())->fontFamily(FontFamily::Mono)->listWithLineBreaks()->placeholder('—'),
                 ]),

@@ -125,6 +125,20 @@ class ViewAsbuilt extends ViewRecord
                     $added += count($service->addFiles($record, AsbuiltCategory::TechnicalDocuments->value, (array) ($data['files'] ?? []), (array) ($data['files_names'] ?? []), auth()->user()));
                     Notification::make()->title(trans_choice('erp.asbuilt.files_added', $added, ['count' => $added]))->success()->send();
                 }),
+            // When the BTV inspection was requested: at any moment, whatever the status.
+            Action::make('requestBtv')
+                ->label(fn (Asbuilt $record): string => $record->btv_requested_on ? __('erp.asbuilt.change_btv_request') : __('erp.asbuilt.request_btv'))
+                ->icon(Heroicon::OutlinedPaperAirplane)
+                ->color('gray')
+                ->visible(fn (Asbuilt $record): bool => Gate::allows('requestBtv', $record))
+                ->authorize(fn (Asbuilt $record): bool => Gate::allows('requestBtv', $record))
+                ->fillForm(fn (Asbuilt $record): array => ['btv_requested_on' => ($record->btv_requested_on ?? today())->toDateString()])
+                ->modalDescription(__('erp.asbuilt.request_btv_help'))
+                ->schema([
+                    DatePicker::make('btv_requested_on')->label(__('erp.asbuilt.btv_requested_on'))->native(false)->displayFormat('d/m/Y'),
+                ])
+                ->action(fn (Asbuilt $record, array $data) => $service->requestBtv($record, $data['btv_requested_on'] ?? null))
+                ->successNotificationTitle(__('erp.asbuilt.btv_saved')),
             Action::make('planBtv')
                 ->label(fn (Asbuilt $record): string => $record->btv_date ? __('erp.asbuilt.change_btv') : __('erp.asbuilt.plan_btv'))
                 ->icon(Heroicon::OutlinedCalendarDays)

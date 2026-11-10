@@ -369,6 +369,14 @@ class Asbuilts
         }
     }
 
+    /**
+     * The day the BTV inspection was requested: at any moment, also before it is planned or after closing.
+     */
+    public function requestBtv(Asbuilt $asbuilt, CarbonInterface|string|null $date): void
+    {
+        $asbuilt->update(['btv_requested_on' => filled($date) ? $date : null]);
+    }
+
     public function planBtv(Asbuilt $asbuilt, CarbonInterface|string|null $date): void
     {
         if ($asbuilt->isClosed()) {

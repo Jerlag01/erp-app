@@ -85,6 +85,7 @@ class AsbuiltResource extends Resource
                         ->helperText(fn (Asbuilt $record): string => $record->wasCreatedManually()
                             ? __('erp.asbuilt.origin_manual', ['name' => $record->creator?->name ?? '—'])
                             : __('erp.asbuilt.origin_automatic')),
+                    TextEntry::make('btv_requested_on')->label(__('erp.asbuilt.btv_requested_on'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('btv_date')->label(__('erp.asbuilt.btv_date'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('closed_at')->label(__('erp.asbuilt.closed'))->date('d/m/Y')->placeholder('—'),
                 ]),
@@ -167,6 +168,7 @@ class AsbuiltResource extends Resource
                 TextColumn::make('status')->label(__('erp.fields.status'))->badge()->sortable(),
                 TextColumn::make('created_at')->label(__('erp.asbuilt.created'))->date('d/m/Y')->sortable()
                     ->description(fn (Asbuilt $record): string => $record->wasCreatedManually() ? __('erp.asbuilt.origin_manual', ['name' => $record->creator?->name ?? '—']) : __('erp.asbuilt.origin_automatic')),
+                TextColumn::make('btv_requested_on')->label(__('erp.asbuilt.btv_requested_on'))->date('d/m/Y')->sortable()->placeholder('—'),
                 TextColumn::make('btv_date')->label(__('erp.asbuilt.btv_date'))->date('d/m/Y')->sortable()->placeholder('—'),
                 TextColumn::make('closed_at')->label(__('erp.asbuilt.closed'))->date('d/m/Y')->sortable()->placeholder('—'),
                 TextColumn::make('files_count')->label(__('erp.asbuilt.files'))->badge()->color('gray'),

@@ -2905,6 +2905,10 @@ return [
         ],
     ],
     'asbuilt' => [
+        'btv_requested_on' => 'BTV inspection requested on',
+        'request_btv' => 'BTV inspection requested',
+        'change_btv_request' => 'Change BTV inspection request',
+        'request_btv_help' => 'The day the inspection was requested from Normec BTV. Possible at any moment, also before it is planned or after closing. The client sees this date per project. Clearing it removes it.',
         'wiring_diagram_file' => 'Wiring diagram :reference',
         'project_details' => 'Project details',
         'project_status' => 'Project status',
@@ -2965,6 +2969,7 @@ return [
         'your_files' => 'Files of the as-built',
         'closed_no_upload' => 'This as-built is finished; handing in files is no longer possible.',
         'steps' => [
+            'btv_requested' => 'BTV inspection requested',
             'created' => 'Created',
             'btv_planned' => 'Normec BTV inspection planned',
             'finished' => 'Finished and available',
@@ -3031,6 +3036,7 @@ return [
         ],
     ],
     'client_portal' => [
+        'btv_planned' => 'Planned on :date',
         'asbuilt_library' => [
             'title' => 'As-built standard files',
             'singular' => 'Standard files :cow',

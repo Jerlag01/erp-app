@@ -990,6 +990,8 @@ Plans, electrical schematics, evacuation routes, external influences, technical 
 2. **Plan Normec BTV inspection**: choose the date. The status becomes *Planned for Normec BTV*.
 3. After the inspection: **Upload BTV report**. The as-built closes automatically into a ZIP named *"610-012-02GAM - ASBUILT"* with a folder per category (0 - BTV control, 1 - cable dimensions, … 8 - evacuation routes).
 
+With **BTV inspection requested** you fill in the day the inspection was requested from Normec BTV. That is possible at any moment (also before the inspection is planned or after closing). The client sees this date per project in their project list (with the planned inspection day), on the project and on the as-built.
+
 **Battery rooms (609)** have their own set of as-built files: **BTV control**, **plans** (per COW code), **external influence factors** (global, for all battery rooms), **ventilation calculation** (per COW code), the **wiring diagram**, the **evacuation list** (per COW code) and an upload zone for **edited floor plans**. The wiring diagram comes automatically from the battery dossier of the **604 project** the 609 follows, as soon as that 604 goes to **Invoicing to do** (you can also upload it yourself). The ZIP then has the folders 0 - BTV control, 1 - plans, 2 - external influences, 3 - ventilation calculation, 4 - wiring diagram, 5 - evacuation list and 6 - edited floor plans. In the as-built standard files these categories show as *Battery room: …*.
 4. The client gets an **e-mail** and downloads the ZIP in the Global overview for Client.
 

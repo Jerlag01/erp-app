@@ -11,6 +11,8 @@ use App\Filament\Client\Resources\Asbuilts\Pages\ViewClientAsbuilt;
 use App\Filament\Client\Resources\AsbuiltStandardFiles\ClientAsbuiltStandardFileResource;
 use App\Filament\Client\Resources\AsbuiltStandardFiles\Pages\ListClientAsbuiltStandardFiles;
 use App\Filament\Client\Resources\AsbuiltStandardFiles\Pages\ViewClientAsbuiltStandardFiles;
+use App\Filament\Client\Resources\Projects\ClientProjectResource;
+use App\Filament\Client\Resources\Projects\Pages\ListClientProjects;
 use App\Filament\Resources\AsbuiltLibraryFiles\Pages\ManageAsbuiltLibraryFiles;
 use App\Filament\Resources\Asbuilts\AsbuiltResource;
 use App\Filament\Resources\Asbuilts\Pages\ViewAsbuilt;
@@ -538,5 +540,37 @@ class AsbuiltTest extends TestCase
         $client->update(['permissions' => [ClientPortal::PROJECTS]]);
         $this->actingAs($client->fresh(), ClientPortal::GUARD);
         $this->get(ClientAsbuiltStandardFileResource::getUrl())->assertForbidden();
+    }
+
+    #[Test]
+    public function the_btv_request_date_is_set_at_any_moment_and_the_client_sees_it_per_project(): void
+    {
+        $project = $this->executedProject();
+        $asbuilt = $project->asbuilt;
+        $this->actingAs($this->manager());
+
+        // Before the inspection is planned.
+        Livewire::test(ViewAsbuilt::class, ['record' => $asbuilt->getRouteKey()])
+            ->assertActionVisible('requestBtv')
+            ->mountAction('requestBtv')
+            ->assertSchemaStateSet(['btv_requested_on' => today()->toDateString()])
+            ->fillForm(['btv_requested_on' => '2026-11-03'])
+            ->callMountedAction();
+        $this->assertSame(['2026-11-03', null], [$asbuilt->fresh()->btv_requested_on->toDateString(), $asbuilt->fresh()->btv_date]);
+
+        // Also once closed.
+        $asbuilt->update(['status' => AsbuiltStatus::Closed, 'closed_at' => now(), 'btv_date' => '2026-11-20']);
+        Livewire::test(ViewAsbuilt::class, ['record' => $asbuilt->getRouteKey()])->callAction('requestBtv', ['btv_requested_on' => '2026-11-04']);
+        $this->assertSame('2026-11-04', $asbuilt->fresh()->btv_requested_on->toDateString());
+
+        // The client sees it in the project list (with the planned day) and on the project and the as-built.
+        $contact = WorkSiteContact::factory()->create();
+        $this->site->contacts()->attach($contact);
+        $client = ClientUser::factory()->withPermissions([ClientPortal::PROJECTS, ClientPortal::ASBUILT])->create(['work_site_contact_id' => $contact->id, 'project_categories' => ClientPortal::categories()]);
+        $this->actingAs($client, ClientPortal::GUARD);
+        Filament::setCurrentPanel(ClientPortal::PANEL);
+        Livewire::test(ListClientProjects::class)->assertTableColumnStateSet('btv_requested', '04/11/2026', $project)->assertSee(__('erp.client_portal.btv_planned', ['date' => '20/11/2026']));
+        $this->get(ClientProjectResource::getUrl('view', ['record' => $project]))->assertOk()->assertSee(__('erp.asbuilt.btv_requested_on'))->assertSee('04/11/2026');
+        Livewire::test(ViewClientAsbuilt::class, ['record' => $asbuilt->getRouteKey()])->assertSee(__('erp.asbuilt.steps.btv_requested'))->assertSee('04/11/2026');
     }
 }

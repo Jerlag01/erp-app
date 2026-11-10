@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
  * The as-built of a project: made when the project is executed, filled per category, inspected by
  * Normec BTV on the planned date and closed with the BTV report into a ZIP for the client.
  */
-#[Fillable(['project_id', 'status', 'origin', 'created_by', 'btv_date', 'closed_at', 'zip_path', 'client_notified_at'])]
+#[Fillable(['project_id', 'status', 'origin', 'created_by', 'btv_date', 'btv_requested_on', 'closed_at', 'zip_path', 'client_notified_at'])]
 class Asbuilt extends Model
 {
     /** @use HasFactory<AsbuiltFactory> */
@@ -125,6 +125,7 @@ class Asbuilt extends Model
         return [
             'status' => AsbuiltStatus::class,
             'btv_date' => 'date',
+            'btv_requested_on' => 'date',
             'closed_at' => 'datetime',
             'client_notified_at' => 'datetime',
         ];

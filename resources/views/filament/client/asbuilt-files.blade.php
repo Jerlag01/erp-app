@@ -6,6 +6,7 @@
     $size = fn (int $bytes) => \Illuminate\Support\Number::fileSize($bytes, precision: 1);
     $steps = [
         ['done' => true, 'label' => __('erp.asbuilt.steps.created'), 'date' => $asbuilt->created_at?->format('d/m/Y')],
+        ['done' => $asbuilt->btv_requested_on !== null, 'label' => __('erp.asbuilt.steps.btv_requested'), 'date' => $asbuilt->btv_requested_on?->format('d/m/Y')],
         ['done' => $asbuilt->btv_date !== null, 'label' => __('erp.asbuilt.steps.btv_planned'), 'date' => $asbuilt->btv_date?->format('d/m/Y')],
         ['done' => $asbuilt->isClosed(), 'label' => __('erp.asbuilt.steps.finished'), 'date' => $asbuilt->closed_at?->format('d/m/Y')],
     ];

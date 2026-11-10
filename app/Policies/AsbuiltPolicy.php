@@ -30,6 +30,14 @@ class AsbuiltPolicy
         return $this->view($user, $asbuilt) && $user->hasPermission('asbuilt.manage') && ! $asbuilt->isClosed();
     }
 
+    /**
+     * The BTV request date: with "asbuilt.manage" at any moment, also once the as-built is closed.
+     */
+    public function requestBtv(User $user, Asbuilt $asbuilt): bool
+    {
+        return $this->view($user, $asbuilt) && $user->hasPermission('asbuilt.manage');
+    }
+
     public function reopen(User $user, Asbuilt $asbuilt): bool
     {
         return $this->view($user, $asbuilt) && $user->hasPermission('asbuilt.reopen') && $asbuilt->isClosed();
