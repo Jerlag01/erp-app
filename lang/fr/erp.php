@@ -3196,7 +3196,7 @@ return [
             'all_projects' => 'Affiche tous les projets, bornes, routeurs et livraisons, pas seulement ceux de ce client.',
             'gpw' => 'Voit les demandes de GPW de ses projets et les approuve ou refuse.',
             'asbuilt' => 'Suit les as-builts de ses projets, voit et télécharge les fichiers qu\'ils contiennent et fournit des fichiers.',
-            'asbuilt_library' => 'Télécharge et remplace les fichiers standard as-built par code COW (voies d\'évacuation, plans et ventilation des locaux batteries …) de ses codes COW, même sans projet.',
+            'asbuilt_library' => 'Télécharge et remplace les fichiers standard as-built de ses codes COW, même sans projet : par code COW chaque catégorie (plans, voies et listes d\'évacuation, ventilation, ICC, Lmax, dimensionnement des câbles, schémas, …).',
             'battery_reports' => 'Par projet 604 terminé (à partir de « À facturer ») : photos, rapport de mesure, bon de livraison, inspection visuelle, demande de facture et rapport de déchets (PDF).',
             'battery_deliveries' => 'Livraisons par projet : confirmation de commande, type, nombre et date. Sans coûts.',
             'charging_stations' => 'Bornes par site COW, sans mots de passe.',

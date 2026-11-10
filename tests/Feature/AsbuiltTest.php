@@ -501,6 +501,10 @@ class AsbuiltTest extends TestCase
         // Only the categories of a COW-code, never the global ones.
         $this->assertSame(array_map(fn (AsbuiltCategory $category): string => $category->value, Asbuilts::cowCodeCategories()), array_keys(ViewClientAsbuiltStandardFiles::zones()));
         $this->assertArrayNotHasKey(AsbuiltCategory::ExternalInfluences->value, ViewClientAsbuiltStandardFiles::zones());
+        $this->assertArrayNotHasKey(AsbuiltCategory::TechnicalDocuments->value, ViewClientAsbuiltStandardFiles::zones());
+        foreach ([AsbuiltCategory::Plans, AsbuiltCategory::IccCalculations, AsbuiltCategory::LmaxCalculations, AsbuiltCategory::CableDimensions, AsbuiltCategory::VentilationCalculations, AsbuiltCategory::RoomEvacuationLists, AsbuiltCategory::EvacuationRoutes] as $category) {
+            $this->assertArrayHasKey($category->value, ViewClientAsbuiltStandardFiles::zones());
+        }
 
         Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $withoutProject->getRouteKey()])
             ->callAction('upload', ['category' => AsbuiltCategory::VentilationCalculations->value, 'files' => [UploadedFile::fake()->create('ventilatie.pdf', 10)]])
@@ -514,6 +518,15 @@ class AsbuiltTest extends TestCase
             ->assertHasNoActionErrors()
             ->assertSee('evacuatie-personeel.pdf')
             ->assertSee('evacuatie-klant.pdf');
+        // Also an ICC calculation of that COW-code: into the open as-built, and into the next one made there.
+        Livewire::test(ViewClientAsbuiltStandardFiles::class, ['record' => $this->site->getRouteKey()])
+            ->callAction('upload', ['category' => AsbuiltCategory::IccCalculations->value, 'files' => [UploadedFile::fake()->create('icc-02.xlsx', 10)]])
+            ->assertHasNoActionErrors();
+        $icc = AsbuiltLibraryFile::query()->where('original_name', 'icc-02.xlsx')->sole();
+        $this->assertSame([AsbuiltCategory::IccCalculations, $this->site->id], [$icc->category, $icc->work_site_id]);
+        $this->assertTrue($open->asbuilt->files()->where('asbuilt_library_file_id', $icc->id)->exists());
+        $this->assertContains($icc->id, app(Asbuilts::class)->defaultFiles(Project::factory()->inCategory('620')->for($this->site)->make())->pluck('id')->all());
+
         $clientFile = AsbuiltLibraryFile::query()->where('original_name', 'evacuatie-klant.pdf')->sole();
         $this->assertTrue($open->asbuilt->files()->where('asbuilt_library_file_id', $clientFile->id)->exists());
         $this->get(route('client.asbuilt.library', $clientFile))->assertOk()->assertDownload('evacuatie-klant.pdf');

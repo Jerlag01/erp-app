@@ -301,14 +301,16 @@ class Asbuilts
     }
 
     /**
-     * The categories whose standard files belong to one COW-code (not the global or general ones): the
-     * upload zones per COW-code, also in the client portal.
+     * The categories that can have standard files of one COW-code: every as-built category (plans,
+     * evacuation lists, ventilation, ICC, Lmax, …) except the global external influences and the register of
+     * technical documents, which belong to no COW-code. The upload zones per COW-code, also in the client
+     * portal; their files go into every as-built of that COW-code.
      *
      * @return list<AsbuiltCategory>
      */
     public static function cowCodeCategories(): array
     {
-        return array_values(array_filter(AsbuiltCategory::all(), fn (AsbuiltCategory $category): bool => $category->perCowCode()));
+        return array_values(array_filter(AsbuiltCategory::all(), fn (AsbuiltCategory $category): bool => ! $category->isGlobal() && ! $category->isRegister()));
     }
 
     /**
@@ -321,7 +323,7 @@ class Asbuilts
      */
     public function addCowCodeFiles(WorkSite $site, AsbuiltCategory $category, array $paths, array $names, ?User $user = null, ?ClientUser $client = null): array
     {
-        if (! $category->perCowCode()) {
+        if (! in_array($category, self::cowCodeCategories(), true)) {
             throw ValidationException::withMessages(['category' => __('validation.in', ['attribute' => 'category'])]);
         }
 

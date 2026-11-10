@@ -80,7 +80,7 @@ class AsbuiltDownloadController
     {
         $user = Auth::guard(ClientPortal::GUARD)->user();
         abort_unless($user instanceof ClientUser && $user->is_active && modules()->asbuilt() && $user->may(ClientPortal::ASBUILT_LIBRARY)
-            && $file->work_site_id !== null && $file->category->perCowCode()
+            && $file->work_site_id !== null && in_array($file->category, Asbuilts::cowCodeCategories(), true)
             && $user->restrictWorkSites(WorkSite::query()->whereKey($file->work_site_id))->exists(), 403);
 
         return $this->send($file->path, $file->original_name);

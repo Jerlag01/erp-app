@@ -3196,7 +3196,7 @@ return [
             'all_projects' => 'Shows all projects, charging stations, routers and deliveries, not only those of this client.',
             'gpw' => 'Sees the GPW requests of their projects and approves or refuses them.',
             'asbuilt' => 'Follows the as-builts of their projects, sees and downloads the files in them and hands in files.',
-            'asbuilt_library' => 'Uploads and replaces the as-built standard files per COW code (evacuation routes, battery room plans and ventilation …) of their COW codes, also without a project.',
+            'asbuilt_library' => 'Uploads and replaces the as-built standard files of their COW codes, also without a project: per COW code every category (plans, evacuation routes and lists, ventilation, ICC, Lmax, cable dimensions, schematics, …).',
             'battery_reports' => 'Per finished 604 project (from "To be invoiced"): photos, measurement report, delivery note, visual inspection, invoice request and waste report (PDF).',
             'battery_deliveries' => 'Deliveries per project: order confirmation, type, pieces and date. No costs.',
             'charging_stations' => 'Charging stations per COW site, without passwords.',

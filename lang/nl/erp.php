@@ -3197,7 +3197,7 @@ return [
             'all_projects' => 'Toont alle projecten, laadpalen, routers en leveringen, niet alleen die van deze klant.',
             'gpw' => 'Ziet de GPW-aanvragen van zijn projecten en keurt ze goed of weigert ze.',
             'asbuilt' => 'Volgt de as-builts van zijn projecten op, ziet en downloadt de bestanden erin en levert bestanden aan.',
-            'asbuilt_library' => 'Uploadt en vervangt de as-built standaardbestanden per COW-code (evacuatiewegen, plannen en ventilatie van batterijlokalen …) van zijn COW-codes, ook zonder project.',
+            'asbuilt_library' => 'Uploadt en vervangt de as-built standaardbestanden van zijn COW-codes, ook zonder project: per COW-code elke categorie (plannen, evacuatiewegen en -lijsten, ventilatie, ICC, Lmax, kabeldimensionering, schema\'s, …).',
             'battery_reports' => 'Per afgewerkt 604-project (vanaf "Te factureren"): foto\'s, meetrapport, leveringsnota, visuele keuring, factuuraanvraag en afvalrapport (PDF).',
             'battery_deliveries' => 'Leveringen per project: orderbevestiging, type, aantal en datum. Geen kosten.',
             'charging_stations' => 'Laadpalen per COW-site, zonder wachtwoorden.',
