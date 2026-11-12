@@ -309,4 +309,22 @@ class DistributorOrderTest extends TestCase
         $this->assertSame(3.0, (float) $order->lines()->sole()->quantity_delivered);
         $page->callAction('deliveryNote', ['number' => '0012345678901'])->assertHasNoActionErrors()->assertNotified(__('erp.distributor_orders.delivery_note_unknown', ['number' => '12345678901']));
     }
+
+    #[Test]
+    public function a_cebeo_delivery_note_for_an_unknown_order_adds_the_order(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['distributor_orders' => ['view', 'create', 'update', 'delete']])->inTeam()->create());
+        $reference = $this->reference(421, 9, 2026, 'KR');
+        $cebeo = Distributor::factory()->create(['name' => 'Cebeo', 'price_provider' => 'cebeo', 'api_username' => 'u', 'api_password' => 'p', 'api_customer_number' => '123456']);
+        Http::fake(['b2b.cebeo.be/*' => Http::response('<cebeoXML version="2.0.0"><Response><Message code="0"/><DispatchAdvice><Detail><DispatchAdviceHeader><DispatchAdviceID>42887961</DispatchAdviceID><DeliveryDate><Day>12</Day><Month>11</Month><Year>2026</Year></DeliveryDate></DispatchAdviceHeader>'
+            .'<DispatchAdviceLine><SupplierOrderID>36397598</SupplierOrderID><CustomerOrderID>421/0926/KR</CustomerOrderID><SupplierOrderLineID>1</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>4063318</SupplierItemID></Material><UnitPrice><NetPrice>7,068</NetPrice></UnitPrice><DeliveryQuantity>2</DeliveryQuantity></DispatchAdviceLine></Detail></DispatchAdvice></Response></cebeoXML>')]);
+
+        Livewire::test(ListDistributorOrders::class)->set('activeTab', 'distributor-'.$cebeo->id)
+            ->callAction('deliveryNote', ['number' => '42887961'])
+            ->assertNotified(__('erp.distributor_orders.delivery_note_recorded', ['count' => 1]));
+
+        $order = DistributorOrder::query()->sole();
+        $this->assertSame([DistributorOrder::SOURCE_DELIVERY_NOTE, '36397598', DistributorOrder::DELIVERED, $reference->id], [$order->source, $order->external_number, $order->status, $order->order_reference_id]);
+        $this->assertSame(2.0, (float) $order->lines()->sole()->quantity_delivered);
+    }
 }
