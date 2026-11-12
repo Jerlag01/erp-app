@@ -12,6 +12,7 @@ use App\Filament\Resources\StockCategories\Pages\ManageStockCategories;
 use App\Http\Controllers\DistributorInboundController;
 use App\Models\Distributor;
 use App\Models\DistributorOrder;
+use App\Models\Expense;
 use App\Models\OrderReference;
 use App\Models\StockCategory;
 use App\Models\StockItem;
@@ -28,6 +29,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Sleep;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -428,5 +431,47 @@ class DistributorOrderTest extends TestCase
         $this->call('POST', str_replace(DistributorInboundController::secret($cebeo), str_repeat('x', 40), $url), [], [], [], ['CONTENT_TYPE' => 'application/xml'], $this->cebeoOrder())->assertNotFound();
         $this->call('POST', $url, [], [], [], ['CONTENT_TYPE' => 'application/xml'], '<!DOCTYPE x [<!ENTITY e SYSTEM "file:///etc/passwd">]><cebeoXML/>')->assertStatus(422);
         $this->call('POST', $url, [], [], [], ['CONTENT_TYPE' => 'application/xml'], '<cebeoXML><Response/></cebeoXML>')->assertStatus(422);
+    }
+
+    #[Test]
+    public function the_cebeo_orders_of_a_month_are_fetched_gently_from_the_known_numbers(): void
+    {
+        Sleep::fake();
+        $cebeo = Distributor::factory()->create(['name' => 'Cebeo', 'price_provider' => 'cebeo', 'vat_number' => 'BE0123456749', 'api_username' => 'u', 'api_password' => 'p', 'api_customer_number' => '123456']);
+        $septemberOrder = $this->cebeoOrder();
+        $octoberOrder = str_replace(['36397598', '<Month>09</Month><Year>2026</Year></OrderDate>'], ['36500001', '<Month>10</Month><Year>2026</Year></OrderDate>'], $septemberOrder);
+        $note = '<cebeoXML version="2.0.0"><Response><Message code="0"/><DispatchAdvice><Detail><DispatchAdviceHeader><DispatchAdviceID>42887961</DispatchAdviceID><DeliveryDate><Day>08</Day><Month>10</Month><Year>2026</Year></DeliveryDate></DispatchAdviceHeader>'
+            .'<DispatchAdviceLine><SupplierOrderID>36500001</SupplierOrderID><CustomerOrderID>421/0926/KR</CustomerOrderID><SupplierOrderLineID>1</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>6783780</SupplierItemID></Material><UnitPrice><NetPrice>26,2</NetPrice></UnitPrice><DeliveryQuantity>12</DeliveryQuantity></DispatchAdviceLine></Detail></DispatchAdvice></Response></cebeoXML>';
+        Http::fake(['b2b.cebeo.be/*' => fn (Request $request) => Http::response(match (true) {
+            str_contains($request->body(), '<DispatchAdviceID>42887961<') => $note,
+            str_contains($request->body(), '<SupplierOrderID>36397598<') => $septemberOrder,
+            str_contains($request->body(), '<SupplierOrderID>36500001<') => $octoberOrder,
+            default => self::UNKNOWN_ORDER,
+        })]);
+
+        // A Cebeo invoice from November naming order 36397598 (September) and delivery note 42887961.
+        $ubl = str_replace('<cac:AccountingSupplierParty>', '<cac:DespatchDocumentReference><cbc:ID>42887961</cbc:ID></cac:DespatchDocumentReference><cac:AccountingSupplierParty>', $this->ubl('C-9', '421/0926/KR', [['6783780', 12, 26.2]], 'BE0123456749', '36397598'));
+        Storage::disk(Expense::DISK)->put('expenses/c9.xml', $ubl);
+        Expense::factory()->create(['source' => 'peppol', 'ubl_path' => 'expenses/c9.xml', 'supplier_vat' => 'BE0123456749', 'supplier_name' => 'Cebeo', 'invoice_date' => '2026-11-10']);
+
+        $this->artisan('distributors:cebeo-orders', ['month' => 10, 'year' => 2026, '--dry-run' => true])
+            ->expectsOutputToContain('Orders: 36397598')
+            ->expectsOutputToContain('Delivery notes: 42887961')
+            ->assertSuccessful();
+        Http::assertNothingSent();
+
+        // October: the delivery note names 36500001 (October, kept); 36397598 is from September (not kept).
+        $this->artisan('distributors:cebeo-orders', ['month' => 10, 'year' => 2026, '--sleep' => 500, '--numbers' => '99999999'])->assertSuccessful();
+        $this->assertSame(['36500001'], DistributorOrder::query()->pluck('external_number')->all());
+        Http::assertSentCount(4);
+        Sleep::assertSleptTimes(3);
+
+        // At most --max calls.
+        Http::fake(['b2b.cebeo.be/*' => fn (Request $request) => Http::response(str_contains($request->body(), '<DispatchAdvice>') ? $note : $septemberOrder)]);
+        $this->artisan('distributors:cebeo-orders', ['month' => 9, 'year' => 2026, '--max' => 1])->expectsOutputToContain('--max')->assertSuccessful();
+        Http::assertSentCount(1);
+        $this->assertSame(1, DistributorOrder::query()->count());
+
+        $this->artisan('distributors:cebeo-orders', ['month' => 13, 'year' => 2026])->assertExitCode(2);
     }
 }

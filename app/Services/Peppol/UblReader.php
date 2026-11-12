@@ -13,7 +13,7 @@ use InvalidArgumentException;
 class UblReader
 {
     /**
-     * @return array{is_credit_note: bool, supplier_name: string, supplier_vat: ?string, supplier_endpoint: ?string, receiver_endpoint: ?string, supplier_invoice_number: string, invoice_date: string, due_date: ?string, subtotal: float, vat_total: float, total: float, description: ?string, pdf: ?array{name: string, data: string}, order_reference: ?string, sales_order_id: ?string, buyer_reference: ?string, despatch_references: list<string>, lines: list<array{seller_id: ?string, manufacturer_id: ?string, name: ?string, quantity: float, unit: ?string, price: ?float}>}
+     * @return array{is_credit_note: bool, supplier_name: string, supplier_vat: ?string, supplier_endpoint: ?string, receiver_endpoint: ?string, supplier_invoice_number: string, invoice_date: string, due_date: ?string, subtotal: float, vat_total: float, total: float, description: ?string, pdf: ?array{name: string, data: string}, order_reference: ?string, sales_order_id: ?string, buyer_reference: ?string, despatch_references: list<string>, sales_order_ids: list<string>, lines: list<array{seller_id: ?string, manufacturer_id: ?string, name: ?string, quantity: float, unit: ?string, price: ?float}>}
      */
     public function read(string $xml): array
     {
@@ -76,9 +76,22 @@ class UblReader
             'order_reference' => $value('/*/cac:OrderReference/cbc:ID'),
             'sales_order_id' => $value('/*/cac:OrderReference/cbc:SalesOrderID'),
             'buyer_reference' => $value('/*/cbc:BuyerReference'),
-            'despatch_references' => array_values(array_filter(array_map(fn ($node): string => trim($node->textContent), iterator_to_array($xpath->query('/*/cac:DespatchDocumentReference/cbc:ID'))))),
+            'despatch_references' => $this->distinct($xpath, '/*/cac:DespatchDocumentReference/cbc:ID | //cac:DespatchLineReference/cac:DocumentReference/cbc:ID'),
+            'sales_order_ids' => $this->distinct($xpath, '/*/cac:OrderReference/cbc:SalesOrderID | //cac:OrderLineReference/cac:OrderReference/cbc:SalesOrderID'),
             'lines' => $this->lines($xpath),
         ];
+    }
+
+    /**
+     * The different non-empty values at these paths, in document order.
+     *
+     * @return list<string>
+     */
+    protected function distinct(DOMXPath $xpath, string $paths): array
+    {
+        $values = array_map(fn ($node): string => trim($node->textContent), iterator_to_array($xpath->query($paths)));
+
+        return array_values(array_unique(array_filter($values, fn (string $value): bool => $value !== '')));
     }
 
     /**
