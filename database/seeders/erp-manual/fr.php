@@ -628,7 +628,8 @@ Chaque modification figure dans l'**historique**. Les articles sous le stock min
 ## Fournisseurs et stock par site
 
 - Un article peut avoir **plusieurs fournisseurs**, chacun avec son propre **numéro d'article** et son **prix**. Marquez-en un comme **préféré** : son prix est le prix du marché de l'article.
-- Pour un fournisseur **avec une connexion** (Rexel, Cebeo), le prix est récupéré ; pour tout autre fournisseur, **saisissez le prix vous-même**.
+- Le prix est récupéré auprès des **grossistes du fabricant** (Magasin → Fabricants) qui ont une connexion (Rexel, Cebeo) ; un tel grossiste est ajouté automatiquement comme fournisseur. Un **nouvel article** récupère son prix immédiatement, et **chaque nuit à 05:30** les prix de tous les articles actifs sont mis à jour. Un article sans fabricant (ou un fabricant sans grossistes) utilise ses propres fournisseurs avec une connexion. Pour tout autre fournisseur, **saisissez le prix vous-même**.
+- Le prix est cherché sur la **référence du fabricant**, et seulement si elle est inconnue sur le **numéro d'article du grossiste**. Ce numéro d'article n'est **pas obligatoire** : il est rempli avec le premier prix renvoyé par le grossiste (un numéro saisi vous-même est conservé).
 - La liste de stock affiche une colonne avec la quantité **par site** (les sites de vos équipes, ou tous pour les administrateurs), à côté du total. La recherche trouve aussi les numéros d'article des fournisseurs.
 - Avec le droit **Prix (prix spéciaux des grossistes) → Exporter la liste avec les prix (Excel)**, **Exporter avec les prix** télécharge la liste affichée (avec votre recherche et vos filtres) : le stock par site et au total, le prix du marché et par fournisseur le numéro d'article, le prix et la date du prix.
 
@@ -638,9 +639,9 @@ Imprimez une **étiquette QR** par article ou plusieurs à la fois. En scannant 
 
 ## Prix et images
 
-- **« Récupérer le prix chez le grossiste »** met à jour le prix chez **chaque fournisseur avec une connexion**, avec le numéro d'article de ce fournisseur (ou sinon la référence du fabricant).
-- **Rexel** est connecté : avec le numéro client, l'utilisateur et le mot de passe du grossiste Rexel, la plateforme récupère votre **prix net** (par unité, sans contributions comme Recupel) et, si l'article n'en a pas encore, la **photo**. Indiquez comme référence le **code article Rexel** ou le **numéro e** ; la liaison Rexel ne connaît pas les codes EAN. Les prix sont mis à jour chaque matin à 05:30.
-- **Cebeo** est aussi connecté (service web XML) : avec le numéro client, l'utilisateur et le mot de passe du grossiste Cebeo, la plateforme récupère votre **prix net** par unité. Indiquez comme référence le **numéro d'article Cebeo** ; sinon, la plateforme cherche sur la **référence fabricant**. Cebeo ne fournit pas de photos.
+- **« Récupérer le prix chez le grossiste »** récupère immédiatement le prix actuel auprès des grossistes du fabricant avec une connexion, sur la référence du fabricant (ou sinon le numéro d'article du grossiste).
+- **Rexel** est connecté : avec le numéro client, l'utilisateur et le mot de passe du grossiste Rexel, la plateforme récupère votre **prix net** (par unité, sans contributions comme Recupel) et, si l'article n'en a pas encore, la **photo**. Rexel cherche sur la référence du fabricant, sinon sur le **code article Rexel** ou le **numéro e** ; la liaison Rexel ne connaît pas les codes EAN.
+- **Cebeo** est aussi connecté (service web XML) : avec le numéro client, l'utilisateur et le mot de passe du grossiste Cebeo, la plateforme récupère votre **prix net** par unité. La plateforme cherche d'abord sur la **référence fabricant**, sinon sur le **numéro d'article Cebeo**. Cebeo ne fournit pas de photos.
 - Ajoutez une photo du produit avec **« Image depuis une adresse web »**.
 - Les prix spéciaux des grossistes ne sont visibles qu'avec le droit **Prix (prix spéciaux des grossistes) → Voir**.
 MD,

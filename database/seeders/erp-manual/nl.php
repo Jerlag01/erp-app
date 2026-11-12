@@ -629,7 +629,8 @@ Elke wijziging staat in de **historiek**. Artikelen onder de minimumvoorraad ver
 ## Leveranciers en stock per locatie
 
 - Een artikel kan **meerdere leveranciers** hebben, elk met een eigen **artikelnummer** en **prijs**. Duid er één aan als **voorkeur**: zijn prijs is de marktprijs van het artikel.
-- Bij een leverancier **met een koppeling** (Rexel, Cebeo) wordt de prijs opgehaald; bij elke andere leverancier **vul je de prijs zelf in**.
+- De prijs wordt opgehaald bij de **groothandels van de fabrikant** (Magazijn → Fabrikanten) die een koppeling hebben (Rexel, Cebeo); zo'n groothandel wordt vanzelf als leverancier toegevoegd. Een **nieuw artikel** haalt zijn prijs meteen op, en **elke nacht om 05:30** worden de prijzen van alle actieve artikels bijgewerkt. Een artikel zonder fabrikant (of een fabrikant zonder groothandels) gebruikt zijn eigen leveranciers met een koppeling. Bij elke andere leverancier **vul je de prijs zelf in**.
+- De prijs wordt gezocht op de **fabrikantreferentie**, en pas als die niet gekend is op het **artikelnummer van de groothandel**. Dat artikelnummer is **niet verplicht**: het wordt ingevuld met de eerste prijs die de groothandel teruggeeft (een zelf ingevuld nummer blijft staan).
 - De stocklijst toont een kolom met de hoeveelheid **per locatie** (de locaties van je ploegen, of alle voor beheerders), naast het totaal. Zoeken vindt ook de artikelnummers van de leveranciers.
 - Met het recht **Prijzen (speciale prijzen groothandels) → Lijst met prijzen exporteren (Excel)** download je met **Exporteren met prijzen** de getoonde lijst (met je zoekopdracht en filters): de stock per locatie en in totaal, de marktprijs en per leverancier het artikelnummer, de prijs en de prijsdatum.
 
@@ -639,9 +640,9 @@ Druk een **QR-etiket** af per artikel of meerdere tegelijk. Wie het etiket scant
 
 ## Prijzen en afbeeldingen
 
-- **"Prijs ophalen bij groothandel"** haalt de actuele prijs op bij **elke leverancier met een koppeling**, met het artikelnummer van die leverancier (of anders de referentie van de fabrikant).
-- **Rexel** is gekoppeld: met het klantnummer, de gebruiker en het wachtwoord bij de groothandel Rexel haalt het platform jullie **nettoprijs** (per eenheid, zonder bijdragen zoals Recupel) en, als het artikel er nog geen heeft, de **foto** op. Vul als referentie het **Rexel-artikelnummer** of het **e-nummer** in; EAN-codes kent de Rexel-koppeling niet. Elke ochtend om 05:30 worden de prijzen bijgewerkt.
-- **Cebeo** is ook gekoppeld (XML-webservice): met het klantnummer, de gebruiker en het wachtwoord bij de groothandel Cebeo haalt het platform jullie **nettoprijs** per eenheid op. Vul als referentie het **Cebeo-artikelnummer** in; zonder dat zoekt het platform op de **fabrikantreferentie**. Cebeo levert geen foto's.
+- **"Prijs ophalen bij groothandel"** haalt de actuele prijs meteen op bij de groothandels van de fabrikant met een koppeling, op de fabrikantreferentie (of anders het artikelnummer van de groothandel).
+- **Rexel** is gekoppeld: met het klantnummer, de gebruiker en het wachtwoord bij de groothandel Rexel haalt het platform jullie **nettoprijs** (per eenheid, zonder bijdragen zoals Recupel) en, als het artikel er nog geen heeft, de **foto** op. Rexel zoekt op de fabrikantreferentie, anders op het **Rexel-artikelnummer** of het **e-nummer**; EAN-codes kent de Rexel-koppeling niet.
+- **Cebeo** is ook gekoppeld (XML-webservice): met het klantnummer, de gebruiker en het wachtwoord bij de groothandel Cebeo haalt het platform jullie **nettoprijs** per eenheid op. Het platform zoekt eerst op de **fabrikantreferentie** en anders op het **Cebeo-artikelnummer**. Cebeo levert geen foto's.
 - Een productfoto voeg je toe met **"Afbeelding van webadres"**.
 - De speciale prijzen van de groothandels zijn enkel zichtbaar met het recht **Prijzen (speciale prijzen groothandels) → Bekijken**.
 MD,

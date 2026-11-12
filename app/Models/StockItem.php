@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\FetchStockItemPrice;
 use App\Models\Concerns\DeletesStoredFiles;
 use App\Support\Translation\Translator;
 use Database\Factories\StockItemFactory;
@@ -224,6 +225,11 @@ class StockItem extends Model
                         'is_preferred' => true,
                     ]);
                 }
+            }
+
+            // A new item gets its price from the distributors, once the page has answered.
+            if ($item->wasRecentlyCreated && config('services.distributors.fetch_price_on_create')) {
+                FetchStockItemPrice::dispatchAfterResponse($item->id);
             }
         });
 

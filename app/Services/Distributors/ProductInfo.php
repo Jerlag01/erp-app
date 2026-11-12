@@ -12,5 +12,7 @@ final readonly class ProductInfo
         public ?string $imageUrl = null,
         public ?string $name = null,
         public ?string $description = null,
+        /** The distributor's own article number for it (kept on the supplier when it has none yet). */
+        public ?string $reference = null,
     ) {}
 }

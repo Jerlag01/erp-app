@@ -1288,7 +1288,8 @@ return [
         'price_updated' => 'Bijgewerkt :date (:source)',
         'suppliers' => [
             'title' => 'Leveranciers',
-            'help' => 'Waar het artikel gekocht kan worden, elk met een eigen artikelnummer en prijs. Met een koppeling (Rexel, Cebeo) wordt de prijs opgehaald; voor andere leveranciers vul je die zelf in.',
+            'help' => 'Waar het artikel gekocht kan worden, elk met een eigen artikelnummer en prijs. De prijs wordt opgehaald bij de groothandels van de fabrikant met een koppeling (Rexel, Cebeo): bij een nieuw artikel meteen, daarna elke nacht. Dat gebeurt op de fabrikantreferentie, anders op het artikelnummer van de groothandel. Voor andere leveranciers vul je de prijs zelf in.',
+            'reference_help' => 'Niet verplicht: wordt ingevuld bij de eerste prijs van de groothandel.',
             'add' => 'Leverancier toevoegen',
             'none' => 'Nog geen leveranciers',
             'preferred' => 'Voorkeur',

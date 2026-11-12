@@ -63,6 +63,11 @@ return [
         ],
     ],
 
+    // A new stock item fetches its price from the distributors (App\Jobs\FetchStockItemPrice); off in the test suite.
+    'distributors' => [
+        'fetch_price_on_create' => env('DISTRIBUTOR_PRICE_ON_CREATE', true),
+    ],
+
     // Automatic translation (App\Support\Translation\Translator, MyMemory); off in the test suite.
     'translation' => [
         'enabled' => env('TRANSLATION_ENABLED', true),

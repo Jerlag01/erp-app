@@ -134,6 +134,7 @@ class StockItemForm
                                             ->live(),
                                         TextInput::make('reference')
                                             ->label(__('erp.fields.distributor_reference'))
+                                            ->helperText(__('erp.stock.suppliers.reference_help'))
                                             ->maxLength(100)
                                             ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
                                         TextInput::make('price')

@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Actions\RefreshStockItemFromDistributor;
 use App\Models\Distributor;
+use App\Models\Manufacturer;
 use App\Models\StockItem;
 use App\Services\Distributors\CebeoClient;
 use App\Services\Distributors\DistributorException;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
@@ -42,7 +44,7 @@ class CebeoClientTest extends TestCase
     public function the_net_price_comes_from_cebeos_xml_web_service(): void
     {
         Http::fake(['b2b.cebeo.be/*' => Http::response(self::answer(0, 'XML message received and validated all right', self::item('171418', '23-366', '6,8500')))]);
-        $item = StockItem::factory()->for($this->cebeo())->create(['distributor_reference' => '171418']);
+        $item = StockItem::factory()->for($this->cebeo())->create(['distributor_reference' => '171418', 'manufacturer_reference' => null]);
 
         app(RefreshStockItemFromDistributor::class)->handle($item);
 
@@ -103,5 +105,60 @@ class CebeoClientTest extends TestCase
         Http::swap(new Factory);
         Http::fake(['b2b.cebeo.be/*' => Http::response(self::answer(0, 'ok', self::item('1', 'XVB3G2,5N-CCA', '0,0000', 0).self::item('2', 'XVB3G2,5N-CCA', '1,8073', 100).self::item('3', 'XVB3G2,5N-CCA', '1,7571', 71800)))]);
         $this->assertSame(1.7571, $cebeo->client()->lookup(StockItem::factory()->for($cebeo)->make(['distributor_reference' => null, 'manufacturer_reference' => 'XVB3G2,5N-CCA']))->price);
+    }
+
+    #[Test]
+    public function prices_come_from_the_manufacturers_distributors_by_manufacturer_reference(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(['b2b.cebeo.be/*' => fn (Request $request) => Http::response(str_contains($request->body(), '<Search>')
+            ? self::answer(0, 'ok', self::item('171418', '23-366', '6,8500'))
+            : self::answer(1, 'ART0011'))]);
+        $cebeo = $this->cebeo();
+        $rexel = Distributor::factory()->create(['name' => 'Rexel', 'price_provider' => 'rexel', 'api_username' => 'X', 'api_customer_number' => '1', 'api_password' => 'p']);
+        $manufacturer = Manufacturer::factory()->create();
+        $manufacturer->distributors()->attach($cebeo);
+
+        // Rexel is a supplier of the item, but not a distributor of the manufacturer: it is not asked.
+        $item = StockItem::factory()->for($manufacturer)->for($rexel)->create(['manufacturer_reference' => '23 366', 'distributor_reference' => 'R1']);
+        $this->assertTrue(app(RefreshStockItemFromDistributor::class)->canFetch($item));
+
+        app(RefreshStockItemFromDistributor::class)->handle($item);
+
+        // Cebeo is added as supplier; its article number comes from the first answer.
+        $supplier = $item->suppliers()->where('distributor_id', $cebeo->id)->firstOrFail();
+        $this->assertSame('171418', $supplier->reference);
+        $this->assertSame('6.8500', $supplier->price);
+        $this->assertSame('cebeo', $supplier->price_source);
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $request): bool => str_contains($request->body(), '<Keyword>23 366</Keyword>'));
+
+        // An article number filled in by hand is kept.
+        $supplier->update(['reference' => '555']);
+        app(RefreshStockItemFromDistributor::class)->handle($item->fresh());
+        $this->assertSame('555', $supplier->fresh()->reference);
+    }
+
+    #[Test]
+    public function a_new_item_fetches_its_price_and_every_item_is_updated_at_night(): void
+    {
+        config(['services.distributors.fetch_price_on_create' => true]);
+        app(Dispatcher::class)->withoutDispatchingAfterResponses();
+        Http::preventStrayRequests();
+        Http::fake(['b2b.cebeo.be/*' => Http::sequence()
+            ->push(self::answer(0, 'ok', self::item('171418', '23-366', '6,8500')))
+            ->push(self::answer(0, 'ok', self::item('171418', '23-366', '7,1000')))]);
+        $manufacturer = Manufacturer::factory()->create();
+        $manufacturer->distributors()->attach($this->cebeo());
+
+        $item = StockItem::factory()->for($manufacturer)->create(['manufacturer_reference' => '23-366', 'distributor_reference' => null]);
+
+        $this->assertSame('6.8500', $item->fresh()->market_price);
+        $this->assertSame('171418', $item->fresh()->distributor_reference);
+
+        $this->artisan('stock:update-prices', ['--sleep' => 0])->assertSuccessful();
+
+        $this->assertSame('7.1000', $item->fresh()->market_price);
+        $this->assertCount(2, $item->prices);
     }
 }

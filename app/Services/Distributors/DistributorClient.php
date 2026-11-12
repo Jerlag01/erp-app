@@ -15,8 +15,8 @@ interface DistributorClient
     public function isConfigured(): bool;
 
     /**
-     * Looks the item up by distributor reference, or else by manufacturer reference.
-     * Returns null when the catalogue does not know the article.
+     * Looks the item up by manufacturer reference, or else by the distributor's reference ($reference,
+     * or the item's own when none is given). Returns null when the catalogue does not know the article.
      *
      * @throws DistributorException when the call fails or the connection is not set up
      */

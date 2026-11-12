@@ -48,15 +48,16 @@ class CebeoClient implements DistributorBasketSource, DistributorClient, Distrib
             throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Cebeo']));
         }
 
+        // The manufacturer reference first; Cebeo's own article number when that one is not found.
+        $article = filled($item->manufacturer_reference) ? $this->search((string) $item->manufacturer_reference) : null;
         $reference ??= $item->distributor_reference;
-        $article = filled($reference) ? ($this->articles([(string) $reference])[0] ?? null) : null;
 
-        if ($article === null && filled($item->manufacturer_reference)) {
-            $article = $this->search((string) $item->manufacturer_reference);
+        if ($article === null && filled($reference)) {
+            $article = $this->articles([(string) $reference])[0] ?? null;
         }
 
         // An article that is no longer sold comes back with price 0: no price rather than a price of 0.
-        return $article === null ? null : new ProductInfo(price: ($article['net_price'] ?? 0) > 0 ? $article['net_price'] : null, name: $article['description']);
+        return $article === null ? null : new ProductInfo(price: ($article['net_price'] ?? 0) > 0 ? $article['net_price'] : null, name: $article['description'], reference: $article['code']);
     }
 
     /**

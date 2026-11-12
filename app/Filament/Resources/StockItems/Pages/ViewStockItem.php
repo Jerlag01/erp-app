@@ -33,8 +33,8 @@ class ViewStockItem extends ViewRecord
                     ->label(__('erp.stock.refresh_price'))
                     ->icon(Heroicon::OutlinedArrowPath)
                     ->visible(fn (): bool => $canUpdate() && (bool) auth()->user()?->canSeePrices())
-                    ->disabled(fn (StockItem $record): bool => ! $record->suppliers->contains(fn ($supplier): bool => $supplier->distributor?->client() !== null))
-                    ->tooltip(fn (StockItem $record): ?string => ! $record->suppliers->contains(fn ($supplier): bool => $supplier->distributor?->client() !== null) ? __('erp.stock.provider.none') : null)
+                    ->disabled(fn (StockItem $record): bool => ! app(RefreshStockItemFromDistributor::class)->canFetch($record))
+                    ->tooltip(fn (StockItem $record): ?string => ! app(RefreshStockItemFromDistributor::class)->canFetch($record) ? __('erp.stock.provider.none') : null)
                     ->action(function (StockItem $record): void {
                         try {
                             $failed = app(RefreshStockItemFromDistributor::class)->handle($record);

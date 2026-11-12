@@ -51,7 +51,7 @@ class RexelClientTest extends TestCase
                 : self::soap('getArticleInformation', 0, '<ArticleDetail><IsActive>true</IsActive><ItemCode>2185540</ItemCode><ItemDescription>Kabel XVB 3G2,5</ItemDescription><LongItemDescription>Kabel XVB-F2 3G2,5 mm² per meter</LongItemDescription><BrandDescription>Nexans</BrandDescription><ImageLinkHigh>https://example.com/2185540.png</ImageLinkHigh><ImageLinkLow></ImageLinkLow></ArticleDetail>')),
             'example.com/2185540.png' => Http::response('fake-png', 200, ['Content-Type' => 'image/png']),
         ]);
-        $item = StockItem::factory()->for($this->rexel())->create(['distributor_reference' => '2185540', 'image' => null]);
+        $item = StockItem::factory()->for($this->rexel())->create(['distributor_reference' => '2185540', 'manufacturer_reference' => null, 'image' => null]);
 
         app(RefreshStockItemFromDistributor::class)->handle($item);
 

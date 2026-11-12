@@ -1288,7 +1288,8 @@ return [
         'price_updated' => 'Updated :date (:source)',
         'suppliers' => [
             'title' => 'Suppliers',
-            'help' => 'Where the article can be bought, each with its own article number and price. With a connection (Rexel, Cebeo) the price is fetched; for other suppliers enter it yourself.',
+            'help' => 'Where the item can be bought, each with its own article number and price. The price is fetched from the manufacturer\'s distributors that have a connection (Rexel, Cebeo): straight away for a new item, then every night. It is looked up by the manufacturer reference, else by the distributor\'s article number. For other suppliers, enter the price yourself.',
+            'reference_help' => 'Optional: filled in with the distributor\'s first price.',
             'add' => 'Add supplier',
             'none' => 'No suppliers yet',
             'preferred' => 'Preferred',

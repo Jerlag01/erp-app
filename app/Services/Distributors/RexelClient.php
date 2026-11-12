@@ -49,7 +49,8 @@ class RexelClient implements DistributorBasketSource, DistributorClient
             throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Rexel']));
         }
 
-        foreach (array_values(array_unique(array_filter([$reference ?? $item->distributor_reference, $item->manufacturer_reference], 'filled'))) as $code) {
+        // The manufacturer reference first; Rexel's own number when that one is not known.
+        foreach (array_values(array_unique(array_filter([$item->manufacturer_reference, $reference ?? $item->distributor_reference], 'filled'))) as $code) {
             $price = $this->prices([$code])[0] ?? null;
 
             if ($price === null) {
@@ -64,6 +65,7 @@ class RexelClient implements DistributorBasketSource, DistributorClient
                 imageUrl: $article['image'] ?? null,
                 name: $article['name'] ?? $price['name'],
                 description: $article['description'] ?? null,
+                reference: $price['code'],
             );
         }
 

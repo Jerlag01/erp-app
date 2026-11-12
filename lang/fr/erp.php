@@ -1288,7 +1288,8 @@ return [
         'price_updated' => 'Mis à jour le :date (:source)',
         'suppliers' => [
             'title' => 'Fournisseurs',
-            'help' => 'Où l\'article peut être acheté, chacun avec son propre numéro d\'article et son prix. Avec une connexion (Rexel, Cebeo), le prix est récupéré ; pour les autres fournisseurs, saisissez-le vous-même.',
+            'help' => 'Où l\'article peut être acheté, chacun avec son propre numéro d\'article et son prix. Le prix est récupéré auprès des grossistes du fabricant qui ont une connexion (Rexel, Cebeo) : immédiatement pour un nouvel article, puis chaque nuit. La recherche se fait sur la référence du fabricant, sinon sur le numéro d\'article du grossiste. Pour les autres fournisseurs, saisissez le prix vous-même.',
+            'reference_help' => 'Facultatif : rempli avec le premier prix du grossiste.',
             'add' => 'Ajouter un fournisseur',
             'none' => 'Pas encore de fournisseurs',
             'preferred' => 'Préféré',

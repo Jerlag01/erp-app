@@ -628,7 +628,8 @@ Every change is in the **history**. Items below the minimum stock appear under *
 ## Suppliers and stock per location
 
 - An item can have **several suppliers**, each with its own **article number** and **price**. Mark one as **preferred**: its price is the item's market price.
-- For a supplier **with a connection** (Rexel, Cebeo) the price is fetched; for any other supplier you **enter the price yourself**.
+- The price is fetched from the **manufacturer's distributors** (Stock → Manufacturers) that have a connection (Rexel, Cebeo); such a distributor is added as supplier automatically. A **new item** fetches its price straight away, and **every night at 05:30** the prices of all active items are updated. An item without a manufacturer (or a manufacturer without distributors) uses its own suppliers with a connection. For any other supplier you **enter the price yourself**.
+- The price is looked up by the **manufacturer reference**, and only when that is unknown by the **distributor's article number**. That article number is **not required**: it is filled in with the first price the distributor returns (a number entered by hand is kept).
 - The stock list shows a column with the quantity **per location** (the locations of your teams, or all for administrators), next to the total. Searching also finds the suppliers' article numbers.
 - With the permission **Prices (special distributor prices) → Export the list with prices (Excel)**, **Export with prices** downloads the list shown (with your search and filters): the stock per location and in total, the market price and per supplier the article number, price and price date.
 
@@ -638,9 +639,9 @@ Print a **QR label** per item or several at once. Scanning the label opens the i
 
 ## Prices and pictures
 
-- **"Update price from distributor"** fetches the current price from **each supplier with a connection**, with that supplier's article number (or else the manufacturer reference).
-- **Rexel** is connected: with the customer number, user and password on the distributor Rexel, the platform fetches your **net price** (per unit, without contributions such as Recupel) and, when the item has none yet, the **picture**. Use the **Rexel item code** or the **e-number** as reference; the Rexel link does not know EAN codes. Prices are updated every morning at 05:30.
-- **Cebeo** is connected too (XML web service): with the customer number, user and password on the distributor Cebeo, the platform fetches your **net price** per unit. Use the **Cebeo article number** as reference; without it the platform searches on the **manufacturer reference**. Cebeo provides no pictures.
+- **"Update price from distributor"** fetches the current price straight away from the manufacturer's distributors with a connection, by the manufacturer reference (or else the distributor's article number).
+- **Rexel** is connected: with the customer number, user and password on the distributor Rexel, the platform fetches your **net price** (per unit, without contributions such as Recupel) and, when the item has none yet, the **picture**. Rexel is searched by the manufacturer reference, else by the **Rexel item code** or the **e-number**; the Rexel link does not know EAN codes.
+- **Cebeo** is connected too (XML web service): with the customer number, user and password on the distributor Cebeo, the platform fetches your **net price** per unit. The platform searches by the **manufacturer reference** first, else by the **Cebeo article number**. Cebeo provides no pictures.
 - Add a product photo with **"Image from web address"**.
 - The distributors' special prices are only visible with the permission **Prices (special distributor prices) → View**.
 MD,

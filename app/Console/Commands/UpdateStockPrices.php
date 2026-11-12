@@ -10,8 +10,16 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Sleep;
 
-#[Signature('stock:update-prices')]
+/**
+ * Fetches the current price of every active item from the distributors of its manufacturer (else its
+ * own suppliers) that have a working connection; runs every night (routes/console.php). A distributor of
+ * the manufacturer that is not a supplier of the item yet is added, and its article number is filled in
+ * by the first answer. A short pause between the items keeps the load on the distributors low.
+ */
+#[Signature('stock:update-prices
+    {--sleep=250 : milliseconds to wait between two items}')]
 #[Description('Fetch current market prices from the distributors that have a working connection')]
 class UpdateStockPrices extends Command
 {
@@ -38,9 +46,20 @@ class UpdateStockPrices extends Command
 
         StockItem::query()
             ->where('is_active', true)
-            ->whereHas('suppliers', fn (Builder $query) => $query->whereIn('distributor_id', $distributorIds))
+            ->where(fn (Builder $query) => $query
+                ->whereHas('suppliers', fn (Builder $query) => $query->whereIn('distributor_id', $distributorIds))
+                ->orWhereHas('manufacturer.distributors', fn (Builder $query) => $query->whereIn('distributors.id', $distributorIds)))
+            ->with('manufacturer')
             ->chunkById(100, function ($items) use ($refresh, &$updated, &$failed): void {
                 foreach ($items as $item) {
+                    if (! $refresh->canFetch($item)) {
+                        continue;
+                    }
+
+                    if ($updated + $failed > 0) {
+                        Sleep::usleep(max(0, (int) $this->option('sleep')) * 1000);
+                    }
+
                     try {
                         foreach ($refresh->handle($item) as $name => $message) {
                             $this->components->warn("{$item->name} ({$name}): {$message}");
