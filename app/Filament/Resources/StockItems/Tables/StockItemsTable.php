@@ -23,6 +23,7 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class StockItemsTable
 {
@@ -38,9 +39,23 @@ class StockItemsTable
                 Group::make('category.name')
                     ->label(__('erp.fields.subcategory'))
                     ->getTitleFromRecordUsing(fn (StockItem $record): string => $record->category?->fullName() ?? __('erp.stock.uncategorised')),
+                // By main category: a subcategory counts under its parent. Ordered with aliases (the default
+                // join of stock_categories to itself is not allowed by MySQL).
                 Group::make('category.parent.name')
                     ->label(__('erp.fields.category'))
-                    ->getTitleFromRecordUsing(fn (StockItem $record): string => $record->category?->parent?->label() ?? $record->category?->label() ?? __('erp.stock.uncategorised')),
+                    ->getKeyFromRecordUsing(fn (StockItem $record): string => (string) ($record->category?->parent_id ?? $record->stock_category_id ?? ''))
+                    ->getTitleFromRecordUsing(fn (StockItem $record): string => $record->category?->parent?->label() ?? $record->category?->label() ?? __('erp.stock.uncategorised'))
+                    ->orderQueryUsing(fn (Builder $query, string $direction): Builder => $query->orderBy(
+                        DB::table('stock_categories as item_category')
+                            ->leftJoin('stock_categories as main_category', 'main_category.id', '=', 'item_category.parent_id')
+                            ->whereColumn('item_category.id', 'stock_items.stock_category_id')
+                            ->selectRaw('COALESCE(main_category.name, item_category.name)')
+                            ->limit(1),
+                        $direction,
+                    ))
+                    ->scopeQueryByKeyUsing(fn (Builder $query, string $key): Builder => $key === ''
+                        ? $query->whereNull('stock_category_id')
+                        : $query->whereIn('stock_category_id', StockCategory::query()->find((int) $key)?->selfAndChildIds() ?? [])),
             ])
             ->columns([
                 ImageColumn::make('image')

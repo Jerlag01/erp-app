@@ -174,6 +174,26 @@ class StockTest extends TestCase
     }
 
     #[Test]
+    public function items_can_be_grouped_by_main_category(): void
+    {
+        $cables = StockCategory::factory()->create(['name' => 'Kabels']);
+        $xvb = StockCategory::factory()->create(['name' => 'XVB', 'parent_id' => $cables->id]);
+        $fuses = StockCategory::factory()->create(['name' => 'Zekeringen']);
+        $xvbCable = StockItem::factory()->create(['stock_category_id' => $xvb->id]);
+        $fuse = StockItem::factory()->create(['stock_category_id' => $fuses->id]);
+
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('admin');
+
+        Livewire::test(ListStockItems::class)
+            ->set('tableGrouping', 'category.parent.name')
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords([$xvbCable, $fuse], inOrder: true)
+            ->set('tableGrouping', 'category.parent.name:desc')
+            ->assertCanSeeTableRecords([$fuse, $xvbCable], inOrder: true);
+    }
+
+    #[Test]
     public function filtering_on_a_category_includes_its_subcategories(): void
     {
         $cables = StockCategory::factory()->create(['name' => 'Kabels']);
