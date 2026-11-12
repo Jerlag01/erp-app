@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * and, optionally, the credentials for its price/catalogue connection.
  */
 #[Fillable([
-    'name', 'website', 'store_url', 'email', 'phone', 'street', 'postal_code', 'city', 'country', 'logo', 'notes',
+    'name', 'vat_number', 'website', 'store_url', 'email', 'phone', 'street', 'postal_code', 'city', 'country', 'logo', 'notes',
     'price_provider', 'api_username', 'api_password', 'api_customer_number', 'orders_synced_at',
 ])]
 #[Hidden(['api_password'])]

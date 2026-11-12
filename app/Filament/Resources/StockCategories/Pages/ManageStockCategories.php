@@ -18,7 +18,7 @@ class ManageStockCategories extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Categories from before (or made while DeepL was not set up): fill in the missing names.
+            // Categories from before (or made while translation was off): fill in the missing names.
             Action::make('translateMissing')
                 ->label(__('erp.stock.category_names.translate_missing'))
                 ->icon(Heroicon::OutlinedLanguage)

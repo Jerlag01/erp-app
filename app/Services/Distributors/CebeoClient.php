@@ -5,6 +5,7 @@ namespace App\Services\Distributors;
 use App\Models\Distributor;
 use App\Models\StockItem;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
@@ -16,8 +17,12 @@ use SimpleXMLElement;
  * (Article/Get on the distributor reference), else searched by the manufacturer reference
  * (Article/Search). The answer gives the customer's net price per unit (decimal comma), the
  * description and the stock; it has no pictures. Message code 0 is success; "ART0011" means not found.
+ *
+ * Orders: cebeoXML has no way to list or search placed orders (Order/Search and Order/Get by number are
+ * "not implemented" in the schema). It does give the open order (the e-shop basket, Order/Get/OpenOrder)
+ * and a delivery note by its number (DispatchAdvice/Get), with Cebeo's order number and our reference.
  */
-class CebeoClient implements DistributorClient
+class CebeoClient implements DistributorBasketSource, DistributorClient
 {
     public const ENDPOINT = 'https://b2b.cebeo.be/webservices/xml';
 
@@ -83,6 +88,106 @@ class CebeoClient implements DistributorClient
         return $matching->first() ?? (count($found) === 1 ? $found[0] : null);
     }
 
+    public function basketIsEmptied(): bool
+    {
+        return false;
+    }
+
+    /**
+     * The open order in the Cebeo e-shop (the basket) with its lines.
+     */
+    public function basket(): ?OrderInfo
+    {
+        $this->ensureConfigured();
+        $detail = $this->call('<Order><Get><OpenOrder/></Get></Order>', 'Detail')?->Order->Detail;
+
+        if ($detail === null || ! isset($detail->OrderLine)) {
+            return null;
+        }
+
+        $lines = array_map(fn (SimpleXMLElement $line): OrderLineInfo => new OrderLineInfo(
+            distributorReference: self::text($line->Material->SupplierItemID),
+            manufacturerReference: self::text($line->Material->Reference),
+            description: self::text($line->Material->Description),
+            quantity: (float) self::number($line->OrderedQuantity),
+            quantityDelivered: (float) self::number($line->DeliveryQuantity),
+            unit: self::text($line->UnitOfMeasure),
+            netPrice: self::number($line->UnitPrice->NetPrice),
+            expectedDelivery: self::date($line->BOEstimatedDeliveryDate) ?? self::date($line->RequestedDeliveryDate),
+        ), iterator_to_array($detail->OrderLine, false));
+
+        return new OrderInfo(
+            number: '',
+            customerReference: self::text($detail->OrderHeader->CustomerOrderRef) ?? self::text($detail->OrderHeader->CustomerOrderID),
+            orderedAt: self::date($detail->OrderHeader->OrderDate) ?? today(),
+            total: round(array_sum(array_map(fn (OrderLineInfo $line): float => $line->quantity * (float) $line->netPrice, $lines)), 2),
+            lines: $lines,
+        );
+    }
+
+    /**
+     * A delivery note by its number: per Cebeo order on it, the delivered lines, with Cebeo's order number
+     * and our order number (CustomerOrderID).
+     *
+     * @return list<OrderInfo>
+     */
+    public function dispatchAdvice(string $number): array
+    {
+        $this->ensureConfigured();
+        $detail = $this->call('<DispatchAdvice><Get><DispatchAdviceID>'.self::xml($number).'</DispatchAdviceID></Get></DispatchAdvice>', 'Detail', true)?->DispatchAdvice->Detail;
+
+        if ($detail === null || ! isset($detail->DispatchAdviceLine)) {
+            return [];
+        }
+
+        $date = self::date($detail->DispatchAdviceHeader->DeliveryDate) ?? today();
+        $orders = [];
+
+        foreach ($detail->DispatchAdviceLine as $line) {
+            $key = self::text($line->SupplierOrderID) ?? '';
+            $orders[$key]['customer'] ??= self::text($line->CustomerOrderID);
+            $orders[$key]['lines'][] = new OrderLineInfo(
+                distributorReference: self::text($line->Material->SupplierItemID),
+                manufacturerReference: self::text($line->Material->Reference),
+                description: self::text($line->Material->Description),
+                quantity: (float) self::number($line->DeliveryQuantity),
+                quantityDelivered: (float) self::number($line->DeliveryQuantity),
+                netPrice: self::number($line->UnitPrice->NetPrice),
+                deliveredAt: $date,
+            );
+        }
+
+        return array_map(fn (string|int $key): OrderInfo => new OrderInfo(
+            number: (string) $key,
+            customerReference: $orders[$key]['customer'],
+            status: 'delivered',
+            deliveredAt: $date,
+            lines: $orders[$key]['lines'],
+            raw: ['delivery_note' => $number],
+        ), array_keys($orders));
+    }
+
+    protected function ensureConfigured(): void
+    {
+        if (! $this->isConfigured()) {
+            throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Cebeo']));
+        }
+    }
+
+    /**
+     * cebeoXML dates: <Day/><Month/><Year/>.
+     */
+    protected static function date(?SimpleXMLElement $value): ?Carbon
+    {
+        if ($value === null || ! isset($value->Year)) {
+            return null;
+        }
+
+        return checkdate((int) $value->Month, (int) $value->Day, (int) $value->Year)
+            ? Carbon::create((int) $value->Year, (int) $value->Month, (int) $value->Day)->startOfDay()
+            : null;
+    }
+
     /**
      * @return list<array{code: string, reference: ?string, brand: ?string, description: ?string, unit: ?string, net_price: ?float, tarif_price: ?float, stock: ?int, sales_pack: ?int}>
      */
@@ -114,7 +219,7 @@ class CebeoClient implements DistributorClient
      *
      * @throws DistributorException on a failed call or an error message
      */
-    protected function call(string $operation): ?SimpleXMLElement
+    protected function call(string $operation, string $responseType = 'List', bool $unknownIsEmpty = false): ?SimpleXMLElement
     {
         $request = '<?xml version="1.0" encoding="UTF-8"?>'
             .'<cebeoXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://b2b.cebeo.be/XMLschema/'.self::VERSION.'/cebeoXML.xsd" version="'.self::VERSION.'">'
@@ -122,7 +227,7 @@ class CebeoClient implements DistributorClient
             .'<CustomerNumber>'.self::xml($this->distributor->api_customer_number).'</CustomerNumber>'
             .'<UserName>'.self::xml($this->distributor->api_username).'</UserName>'
             .'<Password>'.self::xml($this->distributor->api_password).'</Password>'
-            .'</Customer><ResponseType>List</ResponseType>'
+            .'</Customer><ResponseType>'.$responseType.'</ResponseType>'
             .$operation
             .'</Request></cebeoXML>';
 
@@ -150,7 +255,8 @@ class CebeoClient implements DistributorClient
             return $root->Response;
         }
 
-        if (in_array($text, self::NOT_FOUND, true)) {
+        // An unknown delivery note gives only "1: Error:".
+        if (in_array($text, self::NOT_FOUND, true) || ($unknownIsEmpty && $code === 1 && rtrim($text, ': ') === 'Error')) {
             return null;
         }
 

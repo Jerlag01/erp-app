@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * status, and the link to our own order reference when that reference is in the order.
  */
 #[Fillable([
-    'distributor_id', 'external_number', 'customer_reference', 'order_reference_id', 'ordered_at', 'status',
+    'distributor_id', 'external_number', 'customer_reference', 'order_reference_id', 'expense_id', 'ordered_at', 'status',
     'expected_delivery', 'delivered_at', 'total', 'source', 'notes', 'raw', 'synced_at', 'created_by',
 ])]
 class DistributorOrder extends Model
@@ -33,6 +33,17 @@ class DistributorOrder extends Model
 
     public const SOURCE_MANUAL = 'manual';
 
+    /** Built from the distributor's Peppol invoice (RecordDistributorDeliveries). */
+    public const SOURCE_INVOICE = 'invoice';
+
+    /** Imported from the webshop basket (ImportDistributorBasket). */
+    public const SOURCE_BASKET = 'basket';
+
+    /** Built from a Cebeo delivery note (RecordDistributorDeliveries). */
+    public const SOURCE_DELIVERY_NOTE = 'delivery_note';
+
+    public const SOURCES = [self::SOURCE_MANUAL, self::SOURCE_BASKET, self::SOURCE_INVOICE, self::SOURCE_DELIVERY_NOTE, self::SOURCE_API];
+
     /**
      * Our order references ("466/1026/JL", also written with spaces or small letters).
      */
@@ -52,6 +63,16 @@ class DistributorOrder extends Model
     public function orderReference(): BelongsTo
     {
         return $this->belongsTo(OrderReference::class);
+    }
+
+    /**
+     * The last Peppol invoice that delivered (part of) this order.
+     *
+     * @return BelongsTo<Expense, $this>
+     */
+    public function expense(): BelongsTo
+    {
+        return $this->belongsTo(Expense::class);
     }
 
     /**

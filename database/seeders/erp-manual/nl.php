@@ -578,11 +578,17 @@ Interne **bestelnummers** voor aankopen, zoals `466/1026/JL`, zodat elk nummer m
 
 ## Bestellingen bij groothandels
 
-Bij **Aankoop → Bestellingen** volg je de bestellingen bij de groothandels op: wat besteld werd met de referenties (groothandel en fabrikant), hoeveel al geleverd is en de status (open, bevestigd, deels geleverd, geleverd, geannuleerd). Elke groothandel met een API-koppeling (Rexel, Cebeo, Würth) heeft een **eigen tabblad**.
+Bij **Aankoop → Bestellingen** volg je de bestellingen bij de groothandels op: wat besteld werd met de referenties (groothandel en fabrikant), hoeveel al geleverd is en de status (open, bevestigd, deels geleverd, geleverd, geannuleerd). Elke groothandel met een koppeling (Rexel, Cebeo, Würth) heeft een **eigen tabblad**.
 
-- **Koppeling met onze bestelnummers**: staat ons bestelnummer (bv. `466/1026/JL`) in de referentie die de groothandel van ons kreeg (of in de opmerkingen), dan wordt de bestelling automatisch aan dat bestelnummer gekoppeld; ook als het bestelnummer pas later genomen wordt. Staat het er niet in, dan wordt er niets gekoppeld (je kan het zelf kiezen). In de lijst van de bestelnummers zie je hoeveel bestellingen eraan gekoppeld zijn.
+Rexel en Cebeo bieden geen lijst van geplaatste bestellingen aan. Bestellingen komen daarom op deze manieren binnen:
+
+- **Winkelmandje ophalen**: stel de bestelling samen in de webshop en haal het winkelmandje op in het tabblad van de groothandel. Kies daarbij ons bestelnummer. Vul ons bestelnummer ook in de webshop in als referentie. Bij Cebeo blijft het winkelmandje staan. **Rexel maakt het winkelmandje in NetStore leeg zodra het opgehaald wordt** (tenzij anders afgesproken met Rexel): haal het dus pas op nadat de bestelling geplaatst is.
+- **Peppol-facturen** (automatisch): komt een factuur van een groothandel binnen via Peppol, dan worden de geleverde artikelen bij de juiste bestelling gezet (het bestelnummer van de groothandel, of dezelfde referentie met ons bestelnummer). Is er geen bestelling, dan wordt er een toegevoegd als geleverd. De groothandel wordt herkend aan het **btw-nummer** (vul het in bij de groothandel). Elke factuur telt maar één keer.
+- **Leverbon ophalen** (Cebeo): geef het nummer van de leverbon in; de geleverde aantallen worden bij de bestelling gezet.
+- Zelf een bestelling toevoegen kan altijd.
+
+- **Koppeling met onze bestelnummers**: staat ons bestelnummer (bv. `466/1026/JL`) in de referentie van de bestelling (of in de opmerkingen), dan wordt de bestelling automatisch aan dat bestelnummer gekoppeld; ook als het bestelnummer pas later genomen wordt. Staat het er niet in, dan wordt er niets gekoppeld (je kan het zelf kiezen). In de lijst van de bestelnummers zie je hoeveel bestellingen eraan gekoppeld zijn.
 - **Artikelen** worden aan de magazijnartikelen gekoppeld via de referentie van de groothandel of de fabrikant.
-- **Via de API**: met **Bestellingen ophalen** (en elk uur automatisch) worden de bestellingen opgehaald, zodra de API van die groothandel bestellingen aanbiedt. Die bestellingen pas je niet zelf aan. Tot dan voeg je bestellingen zelf toe.
 - **Würth** is voorbereid als groothandel met API (kies "Würth" als prijsbron bij de groothandel); de koppeling zelf volgt zodra de API-documentatie van Würth er is.
 - Het automatisch bijwerken van de voorraad bij levering volgt later.
 MD,
@@ -599,7 +605,7 @@ De **artikelen** in het magazijn met hun voorraad **per locatie**, QR-etiketten,
 
 **Magazijn → Artikelen**, met de stamgegevens: **Artikelcategorieën**, **Eenheden**, **Fabrikanten**, **Groothandels** en hun **Contactpersonen**.
 
-De **artikelcategorieën** en subcategorieën hebben een Nederlandse, Franse en Engelse naam. Vul de Nederlandse in: de Franse en Engelse worden automatisch vertaald (DeepL, sleutel bij Instellingen → Algemeen → Automatisch vertalen) en kan je zelf aanpassen. Iedereen ziet de naam in zijn eigen taal. Met **Ontbrekende vertalingen aanvullen** vertaal je bestaande categorieën.
+De **artikelcategorieën** en subcategorieën hebben een Nederlandse, Franse en Engelse naam. Vul de Nederlandse in: de Franse en Engelse worden automatisch vertaald (gratis, via MyMemory; uit te zetten bij Instellingen → Algemeen → Automatisch vertalen) en kan je zelf aanpassen. Iedereen ziet de naam in zijn eigen taal. Met **Ontbrekende vertalingen aanvullen** vertaal je bestaande categorieën.
 
 ## Voorraad bijhouden
 

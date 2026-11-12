@@ -65,7 +65,7 @@ class StockCategoryResource extends Resource
                     ->required()
                     ->maxLength(100)
                     ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('parent_id', $get('parent_id'))),
-                // Filled in automatically from the Dutch name (DeepL) when left empty; can be changed by hand.
+                // Filled in automatically from the Dutch name (MyMemory) when left empty; can be changed by hand.
                 TextInput::make('name_fr')
                     ->label(__('erp.stock.category_names.fr'))
                     ->helperText(fn (): string => app(Translator::class)->enabled() ? __('erp.stock.category_names.auto') : __('erp.stock.category_names.no_key'))

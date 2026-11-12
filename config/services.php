@@ -63,4 +63,9 @@ return [
         ],
     ],
 
+    // Automatic translation (App\Support\Translation\Translator, MyMemory); off in the test suite.
+    'translation' => [
+        'enabled' => env('TRANSLATION_ENABLED', true),
+    ],
+
 ];

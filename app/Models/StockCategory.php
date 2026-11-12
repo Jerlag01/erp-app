@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A category (Cables) or a subcategory of one (Cables › XVB). Two levels deep. "name" is the Dutch name;
- * the French and English names are translated automatically (Translator, DeepL) when they are empty or
+ * the French and English names are translated automatically (Translator, MyMemory) when they are empty or
  * when the Dutch name changes, unless they were changed by hand in the same save.
  */
 #[Fillable(['parent_id', 'name', 'name_fr', 'name_en', 'sort'])]

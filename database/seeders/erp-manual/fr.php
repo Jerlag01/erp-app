@@ -577,11 +577,17 @@ Des **numéros de commande** internes pour les achats, comme `466/1026/JL`, pour
 
 ## Commandes chez les grossistes
 
-Dans **Achats → Commandes**, vous suivez les commandes passées chez les grossistes : ce qui a été commandé avec les références (grossiste et fabricant), ce qui est déjà livré et le statut (ouverte, confirmée, partiellement livrée, livrée, annulée). Chaque grossiste avec une connexion API (Rexel, Cebeo, Würth) a son **propre onglet**.
+Dans **Achats → Commandes**, vous suivez les commandes passées chez les grossistes : ce qui a été commandé avec les références (grossiste et fabricant), ce qui est déjà livré et le statut (ouverte, confirmée, partiellement livrée, livrée, annulée). Chaque grossiste avec une connexion (Rexel, Cebeo, Würth) a son **propre onglet**.
 
-- **Lien avec nos numéros de commande** : si notre numéro de commande (p. ex. `466/1026/JL`) figure dans la référence que le grossiste a reçue (ou dans les remarques), la commande y est liée automatiquement ; aussi si le numéro de commande n'est pris qu'ensuite. S'il n'y figure pas, rien n'est lié (vous pouvez le choisir vous-même). La liste des numéros de commande montre combien de commandes y sont liées.
+Rexel et Cebeo ne proposent pas de liste des commandes passées. Les commandes arrivent donc de ces façons :
+
+- **Récupérer le panier** : composez la commande dans la boutique en ligne et récupérez le panier dans l'onglet du grossiste, en choisissant notre numéro de commande. Indiquez aussi notre numéro de commande comme référence dans la boutique. Chez Cebeo, le panier est conservé. **Rexel vide le panier dans NetStore dès qu'il est récupéré** (sauf accord contraire avec Rexel) : récupérez-le donc seulement après avoir passé la commande.
+- **Factures Peppol** (automatique) : quand une facture d'un grossiste arrive via Peppol, les articles livrés sont associés à la bonne commande (numéro de commande du grossiste, ou même référence avec notre numéro de commande). S'il n'y a pas de commande, elle est ajoutée comme livrée. Le grossiste est reconnu à son **numéro de TVA** (à indiquer chez le grossiste). Chaque facture ne compte qu'une fois.
+- **Récupérer un bon de livraison** (Cebeo) : indiquez le numéro du bon de livraison ; les quantités livrées sont associées à la commande.
+- Ajouter une commande vous-même reste toujours possible.
+
+- **Lien avec nos numéros de commande** : si notre numéro de commande (p. ex. `466/1026/JL`) figure dans la référence de la commande (ou dans les remarques), la commande y est liée automatiquement ; aussi si le numéro de commande n'est pris qu'ensuite. S'il n'y figure pas, rien n'est lié (vous pouvez le choisir vous-même). La liste des numéros de commande montre combien de commandes y sont liées.
 - Les **articles** sont liés aux articles du stock via la référence du grossiste ou du fabricant.
-- **Via l'API** : avec **Récupérer les commandes** (et automatiquement chaque heure), les commandes sont récupérées dès que l'API du grossiste propose les commandes. Ces commandes ne se modifient pas à la main. En attendant, vous ajoutez les commandes vous-même.
 - **Würth** est préparé comme grossiste avec API (choisissez « Würth » comme source de prix chez le grossiste) ; la connexion suit dès que la documentation API de Würth est disponible.
 - La mise à jour automatique du stock à la livraison suivra plus tard.
 MD,
@@ -598,7 +604,7 @@ Les **articles** du magasin avec leur stock **par site**, des étiquettes QR, le
 
 **Magasin → Articles**, avec les données de base : **Catégories d'articles**, **Unités**, **Fabricants**, **Grossistes** et leurs **Personnes de contact**.
 
-Les **catégories d'articles** et sous-catégories ont un nom en néerlandais, en français et en anglais. Indiquez le nom néerlandais : le français et l'anglais sont traduits automatiquement (DeepL, clé dans Paramètres → Général → Traduction automatique) et peuvent être modifiés. Chacun voit le nom dans sa langue. **Compléter les traductions manquantes** traduit les catégories existantes.
+Les **catégories d'articles** et sous-catégories ont un nom en néerlandais, en français et en anglais. Indiquez le nom néerlandais : le français et l'anglais sont traduits automatiquement (gratuitement, via MyMemory ; désactivable dans Paramètres → Général → Traduction automatique) et peuvent être modifiés. Chacun voit le nom dans sa langue. **Compléter les traductions manquantes** traduit les catégories existantes.
 
 ## Suivre le stock
 

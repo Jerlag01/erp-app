@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\DistributorOrders;
 
 use App\Enums\NavigationGroup;
+use App\Filament\Resources\Expenses\ExpenseResource;
 use App\Models\Distributor;
 use App\Models\DistributorOrder;
 use App\Models\DistributorOrderLine;
+use App\Models\Expense;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -144,6 +146,9 @@ class DistributorOrderResource extends Resource
                     TextEntry::make('total')->label(__('erp.distributor_orders.total'))->money('EUR')->placeholder('—'),
                     TextEntry::make('source')->label(__('erp.distributor_orders.source'))->formatStateUsing(fn (string $state): string => __('erp.distributor_orders.sources.'.$state))
                         ->helperText(fn (DistributorOrder $record): ?string => $record->synced_at ? __('erp.distributor_orders.synced', ['date' => $record->synced_at->format('d/m/Y H:i')]) : null),
+                    TextEntry::make('expense.supplier_invoice_number')->label(__('erp.distributor_orders.invoice'))
+                        ->visible(fn (DistributorOrder $record): bool => $record->expense_id !== null)
+                        ->url(fn (DistributorOrder $record): ?string => auth()->user()?->can('viewAny', Expense::class) ? ExpenseResource::getUrl('index', ['search' => $record->expense?->supplier_invoice_number]) : null),
                     TextEntry::make('notes')->label(__('erp.fields.notes'))->placeholder('—')->columnSpanFull(),
                 ]),
             Section::make(__('erp.distributor_orders.lines'))

@@ -2,6 +2,7 @@
 
 namespace App\Services\Peppol;
 
+use App\Actions\Purchasing\RecordDistributorDeliveries;
 use App\Models\Client;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -9,6 +10,7 @@ use App\Models\PeppolDocument;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -117,7 +119,7 @@ class PeppolGateway
             return ['expense' => $existing, 'duplicate' => true];
         }
 
-        return DB::transaction(function () use ($xml, $data, $vat, $userId): array {
+        $result = DB::transaction(function () use ($xml, $data, $vat, $userId): array {
             $folder = 'expenses/'.now()->format('Y/m');
             $ublPath = $folder.'/'.Str::random(24).'.xml';
             Storage::disk(Expense::DISK)->put($ublPath, $xml);
@@ -159,5 +161,14 @@ class PeppolGateway
 
             return ['expense' => $expense, 'duplicate' => false];
         });
+
+        // An invoice from a distributor also tells what was delivered of which order (Purchasing > Orders).
+        try {
+            app(RecordDistributorDeliveries::class)->fromInvoice($result['expense'], $data);
+        } catch (Throwable $exception) {
+            Log::warning('Distributor order from Peppol invoice failed', ['expense' => $result['expense']->id, 'error' => $exception->getMessage()]);
+        }
+
+        return $result;
     }
 }

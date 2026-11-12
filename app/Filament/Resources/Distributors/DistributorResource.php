@@ -56,6 +56,11 @@ class DistributorResource extends Resource
 
         return $schema->components([
             ...CompanyFields::make('distributors', [
+                // Matches the distributor's Peppol invoices to its orders (Purchasing > Orders).
+                TextInput::make('vat_number')
+                    ->label(__('erp.fields.vat_number'))
+                    ->helperText(__('erp.distributor_orders.vat_help'))
+                    ->maxLength(30),
                 TextInput::make('store_url')
                     ->label(__('erp.fields.store_url'))
                     ->url()

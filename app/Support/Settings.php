@@ -77,9 +77,11 @@ class Settings
                 // Contact addresses on the public GDPR statement (/gdpr).
                 'gdpr_emails' => ['j.lagaet@power-installation.be', 'info@power-installation.be'],
             ],
-            // Automatic translation (DeepL) of short texts such as stock category names. The key is encrypted.
+            // Automatic translation (MyMemory, free) of short texts such as stock category names; the e-mail
+            // address raises MyMemory's free daily limit.
             'translation' => [
-                'deepl_key' => null,
+                'enabled' => true,
+                'email' => null,
             ],
             'modules' => [
                 Modules::FLEET => true,

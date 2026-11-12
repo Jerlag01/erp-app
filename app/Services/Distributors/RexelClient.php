@@ -16,13 +16,20 @@ use SimpleXMLElement;
  * else the manufacturer reference); EAN codes are not accepted. Every call sends the customer number,
  * user and password of the distributor (Stock > Distributors). The answer is an XML string with a
  * status (0 = success) and the content; an unknown item comes back with an empty ItemCode.
+ *
+ * Rexel has no web service for placed orders. GetBasket hands over the last NetStore basket of the
+ * web service user (and empties it in NetStore, unless agreed otherwise with Rexel); status 30 means
+ * there is no basket.
  */
-class RexelClient implements DistributorClient
+class RexelClient implements DistributorBasketSource, DistributorClient
 {
     /** Production endpoint, unless services.rexel.url says otherwise (e.g. the test one). */
     public const ENDPOINT = 'https://services.rexel.be/exchange/ws/prod/rexel';
 
     public const NAMESPACE = 'rexel.ws.service';
+
+    /** GetBasket: there is no basket. */
+    public const NO_BASKET = 30;
 
     /** Status codes about the login, customer or set-up (Rexel's documentation). */
     public const LOGIN_ERRORS = [10, 11, 12, 13, 20, 21, 99];
@@ -116,12 +123,64 @@ class RexelClient implements DistributorClient
         }, iterator_to_array($content->ArticleDetail ?? [], false));
     }
 
+    public function basketIsEmptied(): bool
+    {
+        return true;
+    }
+
     /**
-     * Calls a method and returns the content section of its answer.
+     * The lines of the last NetStore basket of the web service user, with net price and lead time.
+     */
+    public function basket(): ?OrderInfo
+    {
+        if (! $this->isConfigured()) {
+            throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Rexel']));
+        }
+
+        $content = $this->call('getBasket', '', [self::NO_BASKET]);
+
+        if ($content === null) {
+            return null;
+        }
+
+        $lines = [];
+        $total = 0.0;
+
+        foreach ($content->children() as $line) {
+            $code = self::text($line->ItemCode);
+
+            if ($code === null) {
+                continue;
+            }
+
+            $quantity = (float) str_replace(',', '.', (string) $line->OrderedQuantity);
+            $amount = self::number($line->NetAmount);
+            $total += (float) $amount;
+            $lead = self::text($line->LeadTime);
+
+            $lines[] = new OrderLineInfo(
+                distributorReference: $code,
+                manufacturerReference: self::text($line->SupplierItemCode),
+                description: self::text($line->ItemDescription),
+                quantity: $quantity,
+                unit: self::text($line->SalesUnitCode),
+                // NetPrice is for the line; per unit from the amount when there is one.
+                netPrice: $amount !== null && $quantity > 0 ? round($amount / $quantity, 4) : self::number($line->NetPrice),
+                expectedDelivery: $lead === null ? null : today()->addDays((int) $lead),
+            );
+        }
+
+        return $lines === [] ? null : new OrderInfo(number: '', orderedAt: today(), total: round($total, 2), lines: $lines);
+    }
+
+    /**
+     * Calls a method and returns the content section of its answer; null for one of the $empty statuses.
+     *
+     * @param  list<int>  $empty
      *
      * @throws DistributorException on a failed call or a status other than 0
      */
-    protected function call(string $method, string $items): SimpleXMLElement
+    protected function call(string $method, string $items, array $empty = []): ?SimpleXMLElement
     {
         $envelope = '<?xml version="1.0" encoding="UTF-8"?>'
             .'<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ser="'.self::NAMESPACE.'"><soapenv:Body>'
@@ -159,6 +218,10 @@ class RexelClient implements DistributorClient
         }
 
         $status = (int) $root->Status->StatusCode;
+
+        if (in_array($status, $empty, true)) {
+            return null;
+        }
 
         if ($status !== 0) {
             $description = trim((string) $root->Status->StatusDescription);
