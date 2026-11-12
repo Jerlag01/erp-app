@@ -15,6 +15,7 @@ class DistributorClients
     public const PROVIDERS = [
         'cebeo' => CebeoClient::class,
         'rexel' => RexelClient::class,
+        'wurth' => WurthClient::class,
     ];
 
     public function for(Distributor $distributor): ?DistributorClient
@@ -25,10 +26,20 @@ class DistributorClients
     }
 
     /**
+     * The connection's order source, when it has one (Purchasing > Orders).
+     */
+    public function ordersFor(Distributor $distributor): ?DistributorOrderSource
+    {
+        $client = $this->for($distributor);
+
+        return $client instanceof DistributorOrderSource ? $client : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function options(): array
     {
-        return ['cebeo' => 'Cebeo', 'rexel' => 'Rexel'];
+        return ['cebeo' => 'Cebeo', 'rexel' => 'Rexel', 'wurth' => 'Würth'];
     }
 }

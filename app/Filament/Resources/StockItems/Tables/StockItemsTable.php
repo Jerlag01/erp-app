@@ -40,7 +40,7 @@ class StockItemsTable
                     ->getTitleFromRecordUsing(fn (StockItem $record): string => $record->category?->fullName() ?? __('erp.stock.uncategorised')),
                 Group::make('category.parent.name')
                     ->label(__('erp.fields.category'))
-                    ->getTitleFromRecordUsing(fn (StockItem $record): string => $record->category?->parent?->name ?? $record->category?->name ?? __('erp.stock.uncategorised')),
+                    ->getTitleFromRecordUsing(fn (StockItem $record): string => $record->category?->parent?->label() ?? $record->category?->label() ?? __('erp.stock.uncategorised')),
             ])
             ->columns([
                 ImageColumn::make('image')

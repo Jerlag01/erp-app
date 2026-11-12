@@ -4,6 +4,7 @@ namespace App\Filament\Resources\OrderReferences;
 
 use App\Actions\GenerateOrderReference;
 use App\Enums\NavigationGroup;
+use App\Filament\Resources\DistributorOrders\DistributorOrderResource;
 use App\Filament\Resources\OrderReferences\Pages\ManageOrderReferences;
 use App\Filament\Resources\OrderReferences\Widgets\OrderReferenceCounter;
 use App\Models\OrderReference;
@@ -78,7 +79,7 @@ class OrderReferenceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('user'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('user')->withCount('distributorOrders'))
             ->defaultSort(fn (Builder $query) => $query->orderByDesc('year')->orderByDesc('number'))
             ->columns([
                 TextColumn::make('reference')
@@ -111,6 +112,13 @@ class OrderReferenceResource extends Resource
                     ->tooltip(fn (OrderReference $record): ?string => $record->description)
                     ->placeholder('—')
                     ->searchable(),
+                // The orders at distributors linked to this reference (Purchasing > Orders).
+                TextColumn::make('distributor_orders_count')
+                    ->label(__('erp.distributor_orders.plural'))
+                    ->badge()
+                    ->color(fn (int $state): string => $state > 0 ? 'success' : 'gray')
+                    ->formatStateUsing(fn (int $state): string => $state > 0 ? (string) $state : '—')
+                    ->url(fn (OrderReference $record): ?string => $record->distributor_orders_count > 0 ? DistributorOrderResource::getUrl('index', ['tableSearch' => $record->reference]) : null),
             ])
             ->filters([
                 SelectFilter::make('year')

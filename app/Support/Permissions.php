@@ -72,6 +72,8 @@ class Permissions
         // "manage": all leave and absences of everyone (e.g. the role Administratie), not only the own teams.
         'vacations' => ['module' => Modules::VACATIONS, 'abilities' => ['view', 'approve', 'manage', 'all_teams']],
         'order_references' => ['module' => Modules::ORDERS, 'abilities' => ['view', 'create', 'update', 'delete']],
+        // The orders placed at the distributors (Purchasing > Orders).
+        'distributor_orders' => ['module' => Modules::ORDERS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'locations' => ['module' => Modules::LOCATIONS, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
         'stock_items' => ['module' => Modules::STOCK, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
         'stock' => ['module' => Modules::STOCK, 'abilities' => ['adjust', 'all_teams']],

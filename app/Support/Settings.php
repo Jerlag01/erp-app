@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app'];
+    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app', 'translation'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -76,6 +76,10 @@ class Settings
                 'it_audit_months' => 12,
                 // Contact addresses on the public GDPR statement (/gdpr).
                 'gdpr_emails' => ['j.lagaet@power-installation.be', 'info@power-installation.be'],
+            ],
+            // Automatic translation (DeepL) of short texts such as stock category names. The key is encrypted.
+            'translation' => [
+                'deepl_key' => null,
             ],
             'modules' => [
                 Modules::FLEET => true,

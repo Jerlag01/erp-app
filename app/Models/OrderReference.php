@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * An internal order reference such as "466/1026/JL": a yearly sequence number,
@@ -37,6 +38,32 @@ class OrderReference extends Model
     public function isLatestOfYear(): bool
     {
         return ! static::query()->where('year', $this->year)->where('number', '>', $this->number)->exists();
+    }
+
+    /**
+     * A reference taken after the order was placed: the orders that mention it get linked.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (self $reference): void {
+            DistributorOrder::query()
+                ->whereNull('order_reference_id')
+                ->where(fn ($query) => $query->where('customer_reference', 'like', '%'.$reference->number.'%')->orWhere('notes', 'like', '%'.$reference->number.'%'))
+                ->get()
+                ->each(function (DistributorOrder $order): void {
+                    if ($order->linkReference()) {
+                        $order->save();
+                    }
+                });
+        });
+    }
+
+    /**
+     * @return HasMany<DistributorOrder, $this>
+     */
+    public function distributorOrders(): HasMany
+    {
+        return $this->hasMany(DistributorOrder::class);
     }
 
     /**

@@ -18,3 +18,6 @@ Schedule::command('planning:send-held')->everyFiveMinutes()->withoutOverlapping(
 
 // The copy of the files on the NAS: what waits or failed (e.g. while the NAS was offline) goes out again.
 Schedule::command('nas:sync')->everyTenMinutes()->withoutOverlapping();
+
+// The orders placed at the distributors whose API offers them (Purchasing > Orders).
+Schedule::command('distributors:sync-orders')->hourly()->withoutOverlapping();

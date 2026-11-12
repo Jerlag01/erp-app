@@ -12,6 +12,7 @@ use App\Support\MobileApp;
 use App\Support\Modules;
 use App\Support\OutlookCalendar;
 use App\Support\Settings as SiteSettings;
+use App\Support\Translation\Translator;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -85,6 +86,7 @@ class Settings extends Page
         $values['mail']['password'] = null;
         $values['finance']['peppol_api_key'] = null;
         $values['planning']['outlook_client_secret'] = null;
+        $values['translation']['deepl_key'] = null;
 
         $this->form->fill($values);
     }
@@ -213,6 +215,11 @@ class Settings extends Page
                 : $settings->get('planning.outlook_client_secret');
         }
 
+        // The DeepL key is stored encrypted; empty keeps the current one.
+        $data['translation']['deepl_key'] = filled($data['translation']['deepl_key'] ?? null)
+            ? Crypt::encryptString(trim((string) $data['translation']['deepl_key']))
+            : $settings->get('translation.deepl_key');
+
         $data['modules'] = collect(Modules::ALL)
             ->mapWithKeys(fn (string $module): array => [$module => (bool) ($data['modules'][$module] ?? false)])
             ->all();
@@ -226,6 +233,7 @@ class Settings extends Page
         $this->data['mail']['password'] = null;
         $this->data['finance']['peppol_api_key'] = null;
         $this->data['planning']['outlook_client_secret'] = null;
+        $this->data['translation']['deepl_key'] = null;
 
         Notification::make()
             ->title(__('erp.settings.saved'))
@@ -301,6 +309,33 @@ class Settings extends Page
                         ->label(__('erp.asbuilt.settings.excluded'))
                         ->options(fn (): array => ProjectCategory::query()->orderBy('code')->pluck('code', 'code')->all())
                         ->columns(['default' => 3, 'md' => 6]),
+                ]),
+            Section::make(__('erp.translation.section'))
+                ->description(__('erp.translation.help'))
+                ->icon(Heroicon::OutlinedLanguage)
+                ->schema([
+                    TextInput::make('translation.deepl_key')
+                        ->label(__('erp.translation.key'))
+                        ->helperText(fn (): string => filled(settings()->get('translation.deepl_key')) ? __('erp.translation.key_saved') : __('erp.translation.key_help'))
+                        ->password()
+                        ->revealable()
+                        ->maxLength(200),
+                    Actions::make([
+                        Action::make('testTranslation')
+                            ->label(__('erp.translation.test'))
+                            ->icon(Heroicon::OutlinedLanguage)
+                            ->color('gray')
+                            ->action(function (Translator $translator): void {
+                                try {
+                                    $result = $translator->enabled() ? $translator->fromDutch('Kabelgoten') : [];
+                                    $result === []
+                                        ? Notification::make()->title(__('erp.translation.test_failed'))->danger()->send()
+                                        : Notification::make()->title(__('erp.translation.test_ok'))->body('Kabelgoten → '.implode(' / ', $result))->success()->send();
+                                } catch (Throwable $exception) {
+                                    Notification::make()->title(__('erp.translation.test_failed'))->body($exception->getMessage())->danger()->send();
+                                }
+                            }),
+                    ])->key('translationActions'),
                 ]),
             Section::make(__('erp.settings.sections.reminders'))
                 ->schema([

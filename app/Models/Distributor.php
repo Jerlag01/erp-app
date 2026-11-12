@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[Fillable([
     'name', 'website', 'store_url', 'email', 'phone', 'street', 'postal_code', 'city', 'country', 'logo', 'notes',
-    'price_provider', 'api_username', 'api_password', 'api_customer_number',
+    'price_provider', 'api_username', 'api_password', 'api_customer_number', 'orders_synced_at',
 ])]
 #[Hidden(['api_password'])]
 class Distributor extends Model
@@ -82,6 +82,15 @@ class Distributor extends Model
     {
         return [
             'api_password' => 'encrypted',
+            'orders_synced_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return HasMany<DistributorOrder, $this>
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(DistributorOrder::class);
     }
 }

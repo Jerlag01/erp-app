@@ -5,6 +5,7 @@ namespace App\Filament\Resources\StockCategories;
 use App\Enums\NavigationGroup;
 use App\Filament\Resources\StockCategories\Pages\ManageStockCategories;
 use App\Models\StockCategory;
+use App\Support\Translation\Translator;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -60,10 +61,19 @@ class StockCategoryResource extends Resource
                     ->disabled(fn (?StockCategory $record): bool => (bool) $record?->children()->exists())
                     ->preload(),
                 TextInput::make('name')
-                    ->label(__('erp.fields.name'))
+                    ->label(__('erp.stock.category_names.nl'))
                     ->required()
                     ->maxLength(100)
                     ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('parent_id', $get('parent_id'))),
+                // Filled in automatically from the Dutch name (DeepL) when left empty; can be changed by hand.
+                TextInput::make('name_fr')
+                    ->label(__('erp.stock.category_names.fr'))
+                    ->helperText(fn (): string => app(Translator::class)->enabled() ? __('erp.stock.category_names.auto') : __('erp.stock.category_names.no_key'))
+                    ->maxLength(100),
+                TextInput::make('name_en')
+                    ->label(__('erp.stock.category_names.en'))
+                    ->helperText(fn (): string => app(Translator::class)->enabled() ? __('erp.stock.category_names.auto') : __('erp.stock.category_names.no_key'))
+                    ->maxLength(100),
             ]);
     }
 
@@ -71,7 +81,7 @@ class StockCategoryResource extends Resource
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with('parent')->withCount(['children', 'stockItems']))
-            ->defaultGroup(Group::make('parent.name')->label(__('erp.fields.category'))->getTitleFromRecordUsing(fn (StockCategory $record): string => $record->parent?->name ?? __('erp.stock.main_categories'))->collapsible())
+            ->defaultGroup(Group::make('parent.name')->label(__('erp.fields.category'))->getTitleFromRecordUsing(fn (StockCategory $record): string => $record->parent?->label() ?? __('erp.stock.main_categories'))->collapsible())
             ->reorderable('sort')
             ->defaultSort('sort')
             ->columns([
@@ -79,7 +89,9 @@ class StockCategoryResource extends Resource
                     ->label(__('erp.fields.name'))
                     ->formatStateUsing(fn (StockCategory $record): string => $record->parent ? '↳ '.$record->name : $record->name)
                     ->weight(fn (StockCategory $record): string => $record->parent ? 'normal' : 'bold')
-                    ->searchable(),
+                    ->searchable(['name', 'name_fr', 'name_en']),
+                TextColumn::make('name_fr')->label('FR')->placeholder('—')->toggleable(),
+                TextColumn::make('name_en')->label('EN')->placeholder('—')->toggleable(),
                 TextColumn::make('children_count')
                     ->label(__('erp.fields.subcategories'))
                     ->badge()

@@ -575,6 +575,16 @@ Interne **bestelnummers** voor aankopen, zoals `466/1026/JL`, zodat elk nummer m
 - Klik op **"+1 Nieuw bestelnummer"** om het volgende vrije nummer te nemen. Het nummer staat meteen op jouw naam (met je initialen).
 - Vul aan waarvoor het nummer dient: **leverancier**, **project** en omschrijving.
 - In de lijst zoek je terug welk nummer door wie en waarvoor gebruikt werd.
+
+## Bestellingen bij groothandels
+
+Bij **Aankoop → Bestellingen** volg je de bestellingen bij de groothandels op: wat besteld werd met de referenties (groothandel en fabrikant), hoeveel al geleverd is en de status (open, bevestigd, deels geleverd, geleverd, geannuleerd). Elke groothandel met een API-koppeling (Rexel, Cebeo, Würth) heeft een **eigen tabblad**.
+
+- **Koppeling met onze bestelnummers**: staat ons bestelnummer (bv. `466/1026/JL`) in de referentie die de groothandel van ons kreeg (of in de opmerkingen), dan wordt de bestelling automatisch aan dat bestelnummer gekoppeld; ook als het bestelnummer pas later genomen wordt. Staat het er niet in, dan wordt er niets gekoppeld (je kan het zelf kiezen). In de lijst van de bestelnummers zie je hoeveel bestellingen eraan gekoppeld zijn.
+- **Artikelen** worden aan de magazijnartikelen gekoppeld via de referentie van de groothandel of de fabrikant.
+- **Via de API**: met **Bestellingen ophalen** (en elk uur automatisch) worden de bestellingen opgehaald, zodra de API van die groothandel bestellingen aanbiedt. Die bestellingen pas je niet zelf aan. Tot dan voeg je bestellingen zelf toe.
+- **Würth** is voorbereid als groothandel met API (kies "Würth" als prijsbron bij de groothandel); de koppeling zelf volgt zodra de API-documentatie van Würth er is.
+- Het automatisch bijwerken van de voorraad bij levering volgt later.
 MD,
         ],
 
@@ -588,6 +598,8 @@ De **artikelen** in het magazijn met hun voorraad **per locatie**, QR-etiketten,
 ## Waar?
 
 **Magazijn → Artikelen**, met de stamgegevens: **Artikelcategorieën**, **Eenheden**, **Fabrikanten**, **Groothandels** en hun **Contactpersonen**.
+
+De **artikelcategorieën** en subcategorieën hebben een Nederlandse, Franse en Engelse naam. Vul de Nederlandse in: de Franse en Engelse worden automatisch vertaald (DeepL, sleutel bij Instellingen → Algemeen → Automatisch vertalen) en kan je zelf aanpassen. Iedereen ziet de naam in zijn eigen taal. Met **Ontbrekende vertalingen aanvullen** vertaal je bestaande categorieën.
 
 ## Voorraad bijhouden
 

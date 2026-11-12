@@ -574,6 +574,16 @@ Internal **order references** for purchases, such as `466/1026/JL`, so that each
 - Click **"+1 New order reference"** to take the next free number. It is put in your name straight away (with your initials).
 - Fill in what it is for: **supplier**, **project** and description.
 - In the list you look up which number was used by whom and for what.
+
+## Orders at distributors
+
+Under **Purchasing → Orders** you follow the orders placed at the distributors: what was ordered with its references (distributor and manufacturer), how much is delivered and the status (open, confirmed, partly delivered, delivered, cancelled). Every distributor with an API connection (Rexel, Cebeo, Würth) has its **own tab**.
+
+- **Link with our order references**: when our order reference (e.g. `466/1026/JL`) is in the reference the distributor got from us (or in the notes), the order is linked to it automatically, also when the reference is only taken later. When it is not in there, nothing is linked (you can pick it yourself). The list of order references shows how many orders are linked to each.
+- **Items** are linked to the stock items through the distributor's or manufacturer's reference.
+- **Through the API**: **Fetch orders** (and every hour automatically) fetches the orders once the distributor's API offers them. Those orders are not changed by hand. Until then you add orders yourself.
+- **Würth** is prepared as a distributor with an API (choose "Würth" as price provider on the distributor); the connection itself follows once Würth's API documentation is in.
+- Updating the stock automatically on delivery comes later.
 MD,
         ],
 
@@ -587,6 +597,8 @@ The **items** in the warehouse with their stock **per location**, QR labels, man
 ## Where?
 
 **Stock → Items**, with the master data: **Stock categories**, **Units**, **Manufacturers**, **Distributors** and their **Contact persons**.
+
+The **stock categories** and subcategories have a Dutch, French and English name. Fill in the Dutch one: French and English are translated automatically (DeepL, key under Settings → General → Automatic translation) and can be changed. Everyone sees the name in their own language. **Fill in missing translations** translates existing categories.
 
 ## Keeping stock
 
