@@ -571,7 +571,7 @@ Des **numéros de commande** internes pour les achats, comme `466/1026/JL`, pour
 
 ## Comment ça marche
 
-- Cliquez sur **« +1 Nouveau numéro de commande »** pour prendre le numéro libre suivant. Il est directement à votre nom (avec vos initiales).
+- Cliquez sur **« +1 Nouveau numéro de commande »** pour prendre le numéro libre suivant. Il est directement à votre nom (avec vos initiales). Indiquez le **fournisseur** et le **projet / chantier** (obligatoires), éventuellement avec une description.
 - Indiquez à quoi il sert : **fournisseur**, **projet** et description.
 - La liste permet de retrouver quel numéro a été utilisé par qui et pour quoi.
 

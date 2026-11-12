@@ -54,8 +54,11 @@ class ManageOrderReferences extends ManageRecords
                 ->size('lg')
                 ->visible(fn (): bool => (bool) auth()->user()?->can('create', OrderReference::class))
                 ->keyBindings(['mod+shift+n'])
-                ->action(function (): void {
-                    $reference = app(GenerateOrderReference::class)->handle(auth()->user());
+                ->modalHeading(__('erp.orders.next'))
+                ->modalSubmitActionLabel(__('erp.orders.next'))
+                ->schema(OrderReferenceResource::detailFields())
+                ->action(function (array $data): void {
+                    $reference = app(GenerateOrderReference::class)->handle(auth()->user(), $data);
 
                     Notification::make()
                         ->title($reference->reference)

@@ -572,7 +572,7 @@ Interne **bestelnummers** voor aankopen, zoals `466/1026/JL`, zodat elk nummer m
 
 ## Zo werkt het
 
-- Klik op **"+1 Nieuw bestelnummer"** om het volgende vrije nummer te nemen. Het nummer staat meteen op jouw naam (met je initialen).
+- Klik op **"+1 Nieuw bestelnummer"** om het volgende vrije nummer te nemen. Het nummer staat meteen op jouw naam (met je initialen). Vul daarbij de **leverancier** en het **project / de werf** in (verplicht), eventueel met een omschrijving.
 - Vul aan waarvoor het nummer dient: **leverancier**, **project** en omschrijving.
 - In de lijst zoek je terug welk nummer door wie en waarvoor gebruikt werd.
 

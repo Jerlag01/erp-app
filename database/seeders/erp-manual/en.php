@@ -571,7 +571,7 @@ Internal **order references** for purchases, such as `466/1026/JL`, so that each
 
 ## How it works
 
-- Click **"+1 New order reference"** to take the next free number. It is put in your name straight away (with your initials).
+- Click **"+1 New order reference"** to take the next free number. It is put in your name straight away (with your initials). Fill in the **supplier** and the **project / site** (required), optionally with a description.
 - Fill in what it is for: **supplier**, **project** and description.
 - In the list you look up which number was used by whom and for what.
 

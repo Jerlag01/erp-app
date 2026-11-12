@@ -4520,7 +4520,7 @@ return [
         'basket_imported' => 'Panier récupéré : :count article(s)',
         'delivery_note' => 'Récupérer un bon de livraison',
         'delivery_note_number' => 'Numéro du bon de livraison',
-        'delivery_note_help' => 'Le numéro figurant sur le bon de livraison Cebeo (jusqu\'à 7 chiffres). Les quantités livrées sont associées à la bonne commande.',
+        'delivery_note_help' => 'Le numéro figurant sur le bon de livraison Cebeo (chiffres uniquement). Les quantités livrées sont associées à la bonne commande.',
         'delivery_note_unknown' => 'Bon de livraison :number introuvable chez Cebeo',
         'delivery_note_done' => 'Le bon de livraison :number a déjà été traité',
         'delivery_note_recorded' => 'Bon de livraison traité : :count commande(s) mise(s) à jour',

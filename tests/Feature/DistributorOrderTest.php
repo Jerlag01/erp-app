@@ -307,6 +307,6 @@ class DistributorOrderTest extends TestCase
         // Twice: nothing changes. An unknown number is said so.
         $page->callAction('deliveryNote', ['number' => '778899'])->assertNotified(__('erp.distributor_orders.delivery_note_done', ['number' => '778899']));
         $this->assertSame(3.0, (float) $order->lines()->sole()->quantity_delivered);
-        $page->callAction('deliveryNote', ['number' => '1'])->assertNotified(__('erp.distributor_orders.delivery_note_unknown', ['number' => '1']));
+        $page->callAction('deliveryNote', ['number' => '0012345678901'])->assertHasNoActionErrors()->assertNotified(__('erp.distributor_orders.delivery_note_unknown', ['number' => '12345678901']));
     }
 }

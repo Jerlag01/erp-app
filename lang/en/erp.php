@@ -4520,7 +4520,7 @@ return [
         'basket_imported' => 'Basket fetched: :count item(s)',
         'delivery_note' => 'Fetch delivery note',
         'delivery_note_number' => 'Delivery note number',
-        'delivery_note_help' => 'The number on Cebeo\'s delivery note (up to 7 digits). The delivered quantities are added to the right order.',
+        'delivery_note_help' => 'The number on Cebeo\'s delivery note (digits only). The delivered quantities are added to the right order.',
         'delivery_note_unknown' => 'Delivery note :number was not found at Cebeo',
         'delivery_note_done' => 'Delivery note :number was already processed',
         'delivery_note_recorded' => 'Delivery note processed: :count order(s) updated',

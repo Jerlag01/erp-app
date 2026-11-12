@@ -62,18 +62,30 @@ class OrderReferenceResource extends Resource
     {
         return $schema
             ->columns(2)
-            ->components([
-                TextInput::make('supplier')
-                    ->label(__('erp.fields.supplier'))
-                    ->maxLength(150),
-                TextInput::make('project')
-                    ->label(__('erp.fields.project'))
-                    ->maxLength(150),
-                Textarea::make('description')
-                    ->label(__('erp.fields.description'))
-                    ->rows(3)
-                    ->columnSpanFull(),
-            ]);
+            ->components(self::detailFields());
+    }
+
+    /**
+     * Supplier and project / site are required, also when taking a new number.
+     *
+     * @return list<TextInput|Textarea>
+     */
+    public static function detailFields(): array
+    {
+        return [
+            TextInput::make('supplier')
+                ->label(__('erp.fields.supplier'))
+                ->required()
+                ->maxLength(150),
+            TextInput::make('project')
+                ->label(__('erp.fields.project'))
+                ->required()
+                ->maxLength(150),
+            Textarea::make('description')
+                ->label(__('erp.fields.description'))
+                ->rows(3)
+                ->columnSpanFull(),
+        ];
     }
 
     public static function table(Table $table): Table

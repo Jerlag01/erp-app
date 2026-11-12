@@ -36,9 +36,16 @@ class OrderReferenceTest extends TestCase
         $this->actingAs($user);
         Filament::setCurrentPanel('app');
 
+        // Supplier and project / site are required before a number is taken.
         Livewire::test(ManageOrderReferences::class)
-            ->callAction('next')
+            ->callAction('next', ['supplier' => '', 'project' => ''])
+            ->assertHasActionErrors(['supplier' => 'required', 'project' => 'required']);
+        $this->assertSame(0, OrderReference::query()->count());
+
+        Livewire::test(ManageOrderReferences::class)
+            ->callAction('next', ['supplier' => 'Cebeo', 'project' => 'Werf Gent', 'description' => 'Kabels'])
             ->assertNotified('466/1026/JL');
+        $this->assertSame(['Cebeo', 'Werf Gent', 'Kabels'], array_values(OrderReference::query()->sole()->only(['supplier', 'project', 'description'])));
 
         $this->assertSame('467/1026/JL', app(GenerateOrderReference::class)->handle($user)->reference);
         $this->assertTrue(OrderReference::where('reference', '466/1026/JL')->first()->user->is($user));
@@ -111,6 +118,10 @@ class OrderReferenceTest extends TestCase
         $reference = OrderReference::factory()->create();
         $this->actingAs($user);
         Filament::setCurrentPanel('app');
+
+        Livewire::test(ManageOrderReferences::class)
+            ->callTableAction('edit', $reference, ['supplier' => '', 'project' => 'Werf Luik'])
+            ->assertHasTableActionErrors(['supplier' => 'required']);
 
         Livewire::test(ManageOrderReferences::class)
             ->callTableAction('edit', $reference, ['supplier' => 'Rexel', 'project' => 'Werf Luik', 'reference' => 'HACKED'])

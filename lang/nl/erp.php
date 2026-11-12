@@ -4521,7 +4521,7 @@ return [
         'basket_imported' => 'Winkelmandje opgehaald: :count artikel(en)',
         'delivery_note' => 'Leverbon ophalen',
         'delivery_note_number' => 'Nummer van de leverbon',
-        'delivery_note_help' => 'Het nummer op de leverbon van Cebeo (tot 7 cijfers). De geleverde aantallen worden bij de juiste bestelling gezet.',
+        'delivery_note_help' => 'Het nummer op de leverbon van Cebeo (enkel cijfers). De geleverde aantallen worden bij de juiste bestelling gezet.',
         'delivery_note_unknown' => 'Leverbon :number is niet gevonden bij Cebeo',
         'delivery_note_done' => 'Leverbon :number was al verwerkt',
         'delivery_note_recorded' => 'Leverbon verwerkt: :count bestelling(en) bijgewerkt',

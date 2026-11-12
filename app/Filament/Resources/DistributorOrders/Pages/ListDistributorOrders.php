@@ -132,11 +132,12 @@ class ListDistributorOrders extends ListRecords
                     ->label(__('erp.distributor_orders.delivery_note_number'))
                     ->helperText(__('erp.distributor_orders.delivery_note_help'))
                     ->required()
-                    ->regex('/^\d{1,7}$/'),
+                    ->maxLength(30)
+                    ->regex('/^\s*\d+\s*$/'),
             ])
             ->action(function (array $data, DistributorClients $clients, RecordDistributorDeliveries $deliveries): void {
                 $distributor = $this->tabDistributor();
-                $number = (string) (int) $data['number'];
+                $number = ltrim(trim((string) $data['number']), '0') ?: '0';
 
                 try {
                     /** @var CebeoClient $client */
