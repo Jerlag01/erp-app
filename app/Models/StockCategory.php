@@ -116,10 +116,9 @@ class StockCategory extends Model
     public static function groupedOptions(): array
     {
         return static::query()->topLevel()->with('children')->orderBy('sort')->orderBy('name')->get()
-            ->mapWithKeys(fn (self $category): array => [$category->label() => [
-                $category->id => $category->label(),
-                ...$category->children->mapWithKeys(fn (self $child): array => [$child->id => $category->label().' › '.$child->label()])->all(),
-            ]])
+            // "+" keeps the ids as keys (spreading with "..." would renumber them).
+            ->mapWithKeys(fn (self $category): array => [$category->label() => [$category->id => $category->label()]
+                + $category->children->mapWithKeys(fn (self $child): array => [$child->id => $category->label().' › '.$child->label()])->all()])
             ->all();
     }
 }

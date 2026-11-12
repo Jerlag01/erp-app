@@ -160,6 +160,20 @@ class StockTest extends TestCase
     }
 
     #[Test]
+    public function category_options_keep_the_ids_of_subcategories(): void
+    {
+        $cables = StockCategory::factory()->create(['name' => 'Kabels']);
+        $fuses = StockCategory::factory()->create(['name' => 'Zekeringen']);
+        $xvb = StockCategory::factory()->create(['name' => 'XVB', 'parent_id' => $cables->id]);
+        $automats = StockCategory::factory()->create(['name' => 'Automaten', 'parent_id' => $fuses->id]);
+
+        $options = StockCategory::groupedOptions();
+
+        $this->assertSame([$cables->id => 'Kabels', $xvb->id => 'Kabels › XVB'], $options['Kabels']);
+        $this->assertSame([$fuses->id => 'Zekeringen', $automats->id => 'Zekeringen › Automaten'], $options['Zekeringen']);
+    }
+
+    #[Test]
     public function filtering_on_a_category_includes_its_subcategories(): void
     {
         $cables = StockCategory::factory()->create(['name' => 'Kabels']);
