@@ -53,8 +53,9 @@ class DistributorOrderLine extends Model
                 continue;
             }
 
+            // The manufacturer reference also when written differently ("A9F-74216" = "A9F74216").
             $item = StockItem::query()
-                ->where($field, $this->{$field})
+                ->when($field === 'manufacturer_reference', fn ($query) => $query->whereReference($field, $this->{$field}), fn ($query) => $query->where($field, $this->{$field}))
                 ->when($field === 'distributor_reference' && $distributorId, fn ($query) => $query->orderByRaw('distributor_id = ? desc', [$distributorId]))
                 ->value('id');
 
@@ -69,6 +70,18 @@ class DistributorOrderLine extends Model
     protected static function booted(): void
     {
         static::saving(fn (self $line) => $line->matchStockItem());
+
+        // The distributor's own article number for the item (e.g. Rexel's, which its web service needs).
+        static::saved(function (self $line): void {
+            $item = $line->stock_item_id !== null && filled($line->distributor_reference) ? $line->stockItem : null;
+
+            // Only when the manufacturer reference is the item's: that is what makes it the same article.
+            if ($item !== null && ($distributorId = $line->order?->distributor_id) !== null
+                && StockItem::normaliseReference($line->manufacturer_reference) !== ''
+                && StockItem::normaliseReference($line->manufacturer_reference) === StockItem::normaliseReference($item->manufacturer_reference)) {
+                $item->learnDistributorReference($distributorId, $line->distributor_reference);
+            }
+        });
     }
 
     /**

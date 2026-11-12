@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Actions\RefreshStockItemFromDistributor;
 use App\Models\Distributor;
+use App\Models\DistributorOrder;
+use App\Models\Manufacturer;
 use App\Models\StockItem;
 use App\Services\Distributors\DistributorException;
 use App\Services\Distributors\RexelClient;
@@ -110,5 +112,39 @@ class RexelClientTest extends TestCase
 
         $this->assertFalse($rexel->client()->isConfigured());
         $this->assertTrue($this->rexel()->client()->isConfigured());
+    }
+
+    #[Test]
+    public function rexels_item_code_is_learned_from_its_documents_by_manufacturer_reference(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(['services.rexel.be/*' => fn (Request $request) => Http::response(match (true) {
+            str_contains($request->body(), 'getArticleInformation') => self::soap('getArticleInformation', 0, '<ArticleDetail><IsActive>true</IsActive><ItemCode>2185540</ItemCode></ArticleDetail>'),
+            str_contains($request->body(), '<itemCode>2185540</itemCode>') => self::soap('getPrices', 0, self::price('2185540', '4.5600')),
+            default => self::soap('getPrices', 0, self::price('', '')),
+        })]);
+        $rexel = $this->rexel();
+        $manufacturer = Manufacturer::factory()->create();
+        $manufacturer->distributors()->attach($rexel);
+        $item = StockItem::factory()->for($manufacturer)->create(['manufacturer_reference' => 'A9F74216', 'distributor_reference' => null, 'image' => 'x.png']);
+
+        // A Rexel invoice line names both numbers (written differently): the item gets Rexel's code.
+        $order = DistributorOrder::query()->create(['distributor_id' => $rexel->id, 'status' => DistributorOrder::DELIVERED]);
+        $line = $order->lines()->create(['line_number' => 1, 'distributor_reference' => '2185540', 'manufacturer_reference' => 'A9F-74 216', 'quantity' => 2]);
+
+        $this->assertSame($item->id, $line->fresh()->stock_item_id);
+        $this->assertSame('2185540', $item->suppliers()->where('distributor_id', $rexel->id)->value('reference'));
+
+        // A new item with that manufacturer reference uses the known code to get its price.
+        $other = StockItem::factory()->for($manufacturer)->create(['manufacturer_reference' => 'a9f74216', 'distributor_reference' => null, 'image' => 'x.png']);
+        app(RefreshStockItemFromDistributor::class)->handle($other);
+
+        $this->assertSame('4.5600', $other->fresh()->market_price);
+        $this->assertSame('2185540', $other->fresh()->distributor_reference);
+
+        // A line with another manufacturer reference teaches nothing.
+        $unrelated = StockItem::factory()->for($manufacturer)->create(['manufacturer_reference' => 'LV429630', 'distributor_reference' => '999']);
+        $order->lines()->create(['line_number' => 2, 'distributor_reference' => '999', 'manufacturer_reference' => 'OTHER', 'quantity' => 1]);
+        $this->assertNull($unrelated->suppliers()->where('distributor_id', $rexel->id)->value('reference'));
     }
 }

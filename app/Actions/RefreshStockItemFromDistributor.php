@@ -12,7 +12,8 @@ use Illuminate\Support\Collection;
  * Fetches the item's current price from the distributors of its manufacturer that have a working
  * connection (Rexel, Cebeo). Such a distributor is added to the item's suppliers when it is not there
  * yet. The price is asked by the manufacturer reference, else by the distributor's own article number;
- * that number is not required: the first answer fills it in. An image is taken when the item has none.
+ * that number is not required: the first answer fills it in, or the number on the distributor's
+ * invoices and baskets for the same manufacturer reference (Rexel only knows its own numbers). An image is taken when the item has none.
  * Without a manufacturer (or one without distributors) the item's own suppliers with a connection are
  * asked. Suppliers without a connection keep the price entered by hand.
  */
@@ -58,6 +59,11 @@ class RefreshStockItemFromDistributor
             $name = $supplier->distributor->name;
 
             try {
+                // Rexel only knows its own numbers: the one on its invoices or baskets for this manufacturer reference.
+                if (blank($supplier->reference) && filled($known = $item->knownDistributorReference($supplier->distributor_id))) {
+                    $supplier->update(['reference' => mb_substr($known, 0, 100)]);
+                }
+
                 if (blank($supplier->reference) && blank($item->manufacturer_reference)) {
                     throw new DistributorException(__('erp.stock.provider.no_reference'));
                 }

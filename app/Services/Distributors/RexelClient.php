@@ -49,8 +49,9 @@ class RexelClient implements DistributorBasketSource, DistributorClient
             throw new DistributorException(__('erp.stock.provider.not_configured', ['name' => 'Rexel']));
         }
 
-        // The manufacturer reference first; Rexel's own number when that one is not known.
-        foreach (array_values(array_unique(array_filter([$item->manufacturer_reference, $reference ?? $item->distributor_reference], 'filled'))) as $code) {
+        // Rexel only knows its own item code or e-number (not manufacturer references or EAN): that one
+        // first; the manufacturer reference only helps when it happens to be the e-number.
+        foreach (array_values(array_unique(array_filter([$reference ?? $item->distributor_reference, $item->manufacturer_reference], 'filled'))) as $code) {
             $price = $this->prices([$code])[0] ?? null;
 
             if ($price === null) {

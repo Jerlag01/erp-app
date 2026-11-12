@@ -128,6 +128,83 @@ class StockItem extends Model
     }
 
     /**
+     * A reference as distributors and manufacturers write it differently: "A9F-74 216" = "A9F74216".
+     */
+    public static function normaliseReference(?string $reference): string
+    {
+        return strtoupper((string) preg_replace('/[\s.\-\/]/', '', (string) $reference));
+    }
+
+    /**
+     * Items with this reference in the column, written with or without spaces, dots, dashes and slashes.
+     *
+     * @param  Builder<StockItem>  $query
+     */
+    public function scopeWhereReference(Builder $query, string $column, ?string $reference): void
+    {
+        self::whereReferenceIn($query, $column, $reference);
+    }
+
+    /**
+     * The same for a query on another table (e.g. order lines).
+     */
+    public static function whereReferenceIn(Builder $query, string $column, ?string $reference): void
+    {
+        $normalised = self::normaliseReference($reference);
+
+        $normalised === ''
+            ? $query->whereRaw('1 = 0')
+            : $query->whereRaw("UPPER(REPLACE(REPLACE(REPLACE(REPLACE({$query->qualifyColumn($column)}, ' ', ''), '.', ''), '-', ''), '/', '')) = ?", [$normalised]);
+    }
+
+    /**
+     * Keeps the article number a distributor uses for this item (from its invoice, basket or order) on the
+     * item's supplier for that distributor when it has none yet. The distributor is added as supplier when
+     * it is one of the manufacturer's distributors (or the item's manufacturer has none).
+     */
+    public function learnDistributorReference(int $distributorId, ?string $reference): void
+    {
+        $reference = trim((string) $reference);
+
+        if ($reference === '') {
+            return;
+        }
+
+        $supplier = StockItemSupplier::query()->where('stock_item_id', $this->id)->where('distributor_id', $distributorId)->first();
+
+        if ($supplier !== null) {
+            if (blank($supplier->reference)) {
+                $supplier->update(['reference' => mb_substr($reference, 0, 100)]);
+            }
+
+            return;
+        }
+
+        $distributors = $this->manufacturer?->distributors()->pluck('distributors.id') ?? collect();
+
+        if ($distributors->isEmpty() || $distributors->contains($distributorId)) {
+            StockItemSupplier::query()->create(['stock_item_id' => $this->id, 'distributor_id' => $distributorId, 'reference' => mb_substr($reference, 0, 100)]);
+        }
+    }
+
+    /**
+     * The article number a distributor used for this item on its documents (Purchasing > Orders): the
+     * lines linked to the item, else the lines with the same manufacturer reference.
+     */
+    public function knownDistributorReference(int $distributorId): ?string
+    {
+        $lines = fn (): Builder => DistributorOrderLine::query()
+            ->whereNotNull('distributor_reference')->where('distributor_reference', '!=', '')
+            ->whereHas('order', fn (Builder $query) => $query->where('distributor_id', $distributorId))
+            ->latest('id');
+
+        return $lines()->where('stock_item_id', $this->id)->value('distributor_reference')
+            ?? (filled($this->manufacturer_reference)
+                ? $lines()->tap(fn (Builder $query) => self::whereReferenceIn($query, 'manufacturer_reference', $this->manufacturer_reference))->value('distributor_reference')
+                : null);
+    }
+
+    /**
      * Items with a Dutch name that still miss the French or English one.
      */
     public function scopeMissingTranslations(Builder $query): void
