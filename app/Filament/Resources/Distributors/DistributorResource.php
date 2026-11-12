@@ -8,6 +8,7 @@ use App\Filament\Resources\Distributors\Pages\EditDistributor;
 use App\Filament\Resources\Distributors\Pages\ListDistributors;
 use App\Filament\Resources\Distributors\RelationManagers\ContactsRelationManager;
 use App\Filament\Schemas\CompanyFields;
+use App\Http\Controllers\DistributorInboundController;
 use App\Models\Distributor;
 use App\Services\Distributors\DistributorClients;
 use BackedEnum;
@@ -15,6 +16,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -105,6 +107,14 @@ class DistributorResource extends Resource
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->afterStateHydrated(fn (TextInput $component) => $component->state(null))
                         ->visible($hasProvider),
+                    // Where Cebeo can POST its order confirmations and delivery notes (Purchasing > Orders).
+                    TextEntry::make('inbound_url')
+                        ->label(__('erp.distributor_orders.inbound_url'))
+                        ->helperText(__('erp.distributor_orders.inbound_url_help'))
+                        ->state(fn (?Distributor $record): ?string => $record ? DistributorInboundController::url($record) : null)
+                        ->visible(fn (?Distributor $record, Get $get): bool => $record?->exists && $get('price_provider') === 'cebeo' && $record->price_provider === 'cebeo')
+                        ->copyable()
+                        ->columnSpanFull(),
                 ]),
         ]);
     }

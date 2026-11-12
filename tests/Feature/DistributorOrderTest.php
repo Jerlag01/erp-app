@@ -3,17 +3,20 @@
 namespace Tests\Feature;
 
 use App\Actions\Purchasing\ImportDistributorBasket;
+use App\Actions\Purchasing\RecordDistributorDeliveries;
 use App\Actions\Purchasing\SyncDistributorOrders;
 use App\Filament\Resources\DistributorOrders\DistributorOrderResource;
 use App\Filament\Resources\DistributorOrders\Pages\CreateDistributorOrder;
 use App\Filament\Resources\DistributorOrders\Pages\ListDistributorOrders;
 use App\Filament\Resources\StockCategories\Pages\ManageStockCategories;
+use App\Http\Controllers\DistributorInboundController;
 use App\Models\Distributor;
 use App\Models\DistributorOrder;
 use App\Models\OrderReference;
 use App\Models\StockCategory;
 use App\Models\StockItem;
 use App\Models\User;
+use App\Services\Distributors\CebeoClient;
 use App\Services\Distributors\DistributorClients;
 use App\Services\Distributors\DistributorException;
 use App\Services\Distributors\OrderInfo;
@@ -35,6 +38,8 @@ use Tests\TestCase;
  */
 class DistributorOrderTest extends TestCase
 {
+    protected const UNKNOWN_ORDER = '<cebeoXML version="2.0.0"><Response><Message code="1">Error: In dit order zit een foutje: Unknown Order |||||</Message></Response></cebeoXML>';
+
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -297,7 +302,12 @@ class DistributorOrderTest extends TestCase
         $order->lines()->create(['line_number' => 1, 'distributor_reference' => '4063318', 'quantity' => 3]);
         $note = '<cebeoXML version="2.0.0"><Response><Message code="0"/><DispatchAdvice><Detail><DispatchAdviceHeader><DispatchAdviceID>778899</DispatchAdviceID><DeliveryDate><Day>12</Day><Month>11</Month><Year>2026</Year></DeliveryDate></DispatchAdviceHeader>'
             .'<DispatchAdviceLine><SupplierOrderID>5550001</SupplierOrderID><CustomerOrderID>466/1026/JL</CustomerOrderID><SupplierOrderLineID>1</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>4063318</SupplierItemID></Material><UnitPrice><NetPrice>7,068</NetPrice></UnitPrice><DeliveryQuantity>3</DeliveryQuantity></DispatchAdviceLine></Detail></DispatchAdvice></Response></cebeoXML>';
-        Http::fake(['b2b.cebeo.be/*' => Http::sequence()->push($note)->push($note)->push('<cebeoXML version="2.0.0"><Response><Message code="1">Error:</Message></Response></cebeoXML>')]);
+        // Cebeo does not know the order by number here: the delivered quantities are added up.
+        Http::fake(['b2b.cebeo.be/*' => fn (Request $request) => Http::response(match (true) {
+            str_contains($request->body(), '<DispatchAdviceID>778899<') => $note,
+            str_contains($request->body(), '<DispatchAdvice>') => '<cebeoXML version="2.0.0"><Response><Message code="1">Error:</Message></Response></cebeoXML>',
+            default => self::UNKNOWN_ORDER,
+        })]);
 
         $page = Livewire::test(ListDistributorOrders::class)->set('activeTab', 'distributor-'.$cebeo->id);
         $page->callAction('deliveryNote', ['number' => '778899'])->assertNotified(__('erp.distributor_orders.delivery_note_recorded', ['count' => 1]));
@@ -316,8 +326,9 @@ class DistributorOrderTest extends TestCase
         $this->actingAs(User::factory()->withPermissions(['distributor_orders' => ['view', 'create', 'update', 'delete']])->inTeam()->create());
         $reference = $this->reference(421, 9, 2026, 'KR');
         $cebeo = Distributor::factory()->create(['name' => 'Cebeo', 'price_provider' => 'cebeo', 'api_username' => 'u', 'api_password' => 'p', 'api_customer_number' => '123456']);
-        Http::fake(['b2b.cebeo.be/*' => Http::response('<cebeoXML version="2.0.0"><Response><Message code="0"/><DispatchAdvice><Detail><DispatchAdviceHeader><DispatchAdviceID>42887961</DispatchAdviceID><DeliveryDate><Day>12</Day><Month>11</Month><Year>2026</Year></DeliveryDate></DispatchAdviceHeader>'
-            .'<DispatchAdviceLine><SupplierOrderID>36397598</SupplierOrderID><CustomerOrderID>421/0926/KR</CustomerOrderID><SupplierOrderLineID>1</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>4063318</SupplierItemID></Material><UnitPrice><NetPrice>7,068</NetPrice></UnitPrice><DeliveryQuantity>2</DeliveryQuantity></DispatchAdviceLine></Detail></DispatchAdvice></Response></cebeoXML>')]);
+        $note = '<cebeoXML version="2.0.0"><Response><Message code="0"/><DispatchAdvice><Detail><DispatchAdviceHeader><DispatchAdviceID>42887961</DispatchAdviceID><DeliveryDate><Day>12</Day><Month>11</Month><Year>2026</Year></DeliveryDate></DispatchAdviceHeader>'
+            .'<DispatchAdviceLine><SupplierOrderID>36397598</SupplierOrderID><CustomerOrderID>421/0926/KR</CustomerOrderID><SupplierOrderLineID>1</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>4063318</SupplierItemID></Material><UnitPrice><NetPrice>7,068</NetPrice></UnitPrice><DeliveryQuantity>2</DeliveryQuantity></DispatchAdviceLine></Detail></DispatchAdvice></Response></cebeoXML>';
+        Http::fake(['b2b.cebeo.be/*' => fn (Request $request) => Http::response(str_contains($request->body(), '<DispatchAdvice>') ? $note : self::UNKNOWN_ORDER)]);
 
         Livewire::test(ListDistributorOrders::class)->set('activeTab', 'distributor-'.$cebeo->id)
             ->callAction('deliveryNote', ['number' => '42887961'])
@@ -326,5 +337,96 @@ class DistributorOrderTest extends TestCase
         $order = DistributorOrder::query()->sole();
         $this->assertSame([DistributorOrder::SOURCE_DELIVERY_NOTE, '36397598', DistributorOrder::DELIVERED, $reference->id], [$order->source, $order->external_number, $order->status, $order->order_reference_id]);
         $this->assertSame(2.0, (float) $order->lines()->sole()->quantity_delivered);
+    }
+
+    /**
+     * A cebeoXML Order/Detail like Cebeo returns it for 36397598: line 1 delivered, line 2 partly (the rest on back order).
+     */
+    protected function cebeoOrder(string $status = 'Lopend order', int $secondDelivered = 10): string
+    {
+        $line = fn (int $id, string $item, int $ordered, int $delivered, int $backOrder): string => "<OrderLine><SupplierOrderLineID>{$id}</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>{$item}</SupplierItemID><CustomerItemID/><BrandCode>1250</BrandCode><Reference>N{$item}</Reference><BrandName>Jean-Muller</BrandName><Description>NH-mespatroon {$item}</Description></Material><StockCode>C</StockCode><Stock>0</Stock><UnitOfMeasure>PCE</UnitOfMeasure>"
+            ."<UnitPrice><NetPrice>26,2000</NetPrice><TarifPrice>32,7500</TarifPrice></UnitPrice><OrderedQuantity>{$ordered}</OrderedQuantity><RequestedDeliveryDate><Day>23</Day><Month>09</Month><Year>2026</Year></RequestedDeliveryDate><BOQuantity>{$backOrder}</BOQuantity>"
+            .($backOrder > 0 ? '<BOEstimatedDeliveryDate><Day>07</Day><Month>12</Month><Year>2026</Year></BOEstimatedDeliveryDate>' : '')
+            ."<DeliveryQuantity>{$delivered}</DeliveryQuantity>".($delivered > 0 ? '<DeliveryDate><Day>08</Day><Month>10</Month><Year>2026</Year></DeliveryDate>' : '').'</OrderLine>';
+
+        return '<cebeoXML version="2.0.0"><Response><Message code="0">XML message received and validated all right..</Message><Order><Detail><OrderHeader><SupplierOrderID>36397598</SupplierOrderID><CustomerOrderID>421/0926/KR</CustomerOrderID><CustomerOrderRef>100/magazijn</CustomerOrderRef>'
+            .'<OrderDate><Day>22</Day><Month>09</Month><Year>2026</Year></OrderDate><OrderedBy>S000092557</OrderedBy><OrderStatus>'.$status.'</OrderStatus></OrderHeader>'
+            .$line(1, '6783780', 12, 12, 0).$line(2, '6783874', 18, $secondDelivered, 18 - $secondDelivered).'</Detail></Order></Response></cebeoXML>';
+    }
+
+    #[Test]
+    public function a_cebeo_order_is_fetched_by_its_number_and_followed_up_every_hour(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['distributor_orders' => ['view', 'create', 'update', 'delete']])->inTeam()->create());
+        $reference = $this->reference(421, 9, 2026, 'KR');
+        $cebeo = Distributor::factory()->create(['name' => 'Cebeo', 'price_provider' => 'cebeo', 'api_username' => 'u', 'api_password' => 'p', 'api_customer_number' => '123456']);
+        $answer = $this->cebeoOrder();
+        Http::fake(['b2b.cebeo.be/*' => function (Request $request) use (&$answer) {
+            return Http::response(str_contains($request->body(), '<SupplierOrderID>36397598</SupplierOrderID>') ? $answer : self::UNKNOWN_ORDER);
+        }]);
+
+        $page = Livewire::test(ListDistributorOrders::class)->set('activeTab', 'distributor-'.$cebeo->id)->assertActionVisible('fetchOrder')->assertActionVisible('sync');
+        $page->callAction('fetchOrder', ['number' => '36397598'])->assertNotified(__('erp.distributor_orders.order_fetched', ['number' => '36397598']));
+        Http::assertSent(fn (Request $request): bool => str_contains($request->body(), '<Order><Get><SupplierOrderID>36397598</SupplierOrderID></Get></Order>') && str_contains($request->body(), '<ResponseType>Detail</ResponseType>'));
+
+        $order = DistributorOrder::query()->sole();
+        $this->assertSame(['36397598', '421/0926/KR · 100/magazijn', DistributorOrder::PARTIAL, $reference->id], [$order->external_number, $order->customer_reference, $order->status, $order->order_reference_id]);
+        $this->assertSame(['2026-09-22', '2026-12-07', 'Lopend order'], [$order->ordered_at->toDateString(), $order->expected_delivery->toDateString(), $order->raw['status_text']]);
+        $this->assertSame([[12.0, 12.0], [18.0, 10.0]], $order->lines()->get()->map(fn ($line): array => [(float) $line->quantity, (float) $line->quantity_delivered])->all());
+
+        // Unknown number.
+        $page->callAction('fetchOrder', ['number' => '99999999'])->assertNotified(__('erp.distributor_orders.order_unknown', ['number' => '99999999', 'name' => 'Cebeo']));
+
+        // Every hour: the rest is delivered.
+        $answer = $this->cebeoOrder('Volledig geleverd', 18);
+        $this->artisan('distributors:sync-orders')->assertSuccessful();
+        $order->refresh();
+        $this->assertSame([DistributorOrder::DELIVERED, '2026-10-08', 2], [$order->status, $order->delivered_at->toDateString(), $order->lines()->count()]);
+
+        // Delivered orders are no longer asked for.
+        Http::fake(['b2b.cebeo.be/*' => fn () => throw new \RuntimeException('not asked')]);
+        $this->artisan('distributors:sync-orders')->assertSuccessful();
+    }
+
+    #[Test]
+    public function a_delivery_note_or_invoice_naming_a_cebeo_order_fetches_the_whole_order(): void
+    {
+        $cebeo = Distributor::factory()->create(['name' => 'Cebeo', 'price_provider' => 'cebeo', 'vat_number' => 'BE0123456749', 'api_username' => 'u', 'api_password' => 'p', 'api_customer_number' => '123456']);
+        Http::fake(['b2b.cebeo.be/*' => fn (Request $request) => Http::response(str_contains($request->body(), '<SupplierOrderID>36397598</SupplierOrderID>') ? $this->cebeoOrder() : self::UNKNOWN_ORDER)]);
+        $note = CebeoClient::parseDocument('<cebeoXML version="2.0.0"><Response><Message code="0"/><DispatchAdvice><Detail><DispatchAdviceHeader><DispatchAdviceID>42887961</DispatchAdviceID><DeliveryDate><Day>08</Day><Month>10</Month><Year>2026</Year></DeliveryDate></DispatchAdviceHeader>'
+            .'<DispatchAdviceLine><SupplierOrderID>36397598</SupplierOrderID><CustomerOrderID>421/0926/KR</CustomerOrderID><SupplierOrderLineID>1</SupplierOrderLineID><CustomerOrderLineID/><Material><SupplierItemID>6783780</SupplierItemID></Material><UnitPrice><NetPrice>26,2</NetPrice></UnitPrice><DeliveryQuantity>12</DeliveryQuantity></DispatchAdviceLine></Detail></DispatchAdvice></Response></cebeoXML>');
+        $this->assertSame('42887961', $note['delivery_note']);
+
+        $orders = app(RecordDistributorDeliveries::class)->fromDeliveryNote($cebeo, '42887961', $note['orders']);
+        $order = $orders[0]->fresh();
+        $this->assertSame([DistributorOrder::SOURCE_DELIVERY_NOTE, DistributorOrder::PARTIAL, 2, ['42887961']], [$order->source, $order->status, $order->lines()->count(), $order->raw['delivery_notes']]);
+
+        // The invoice for it (with Cebeo's order number) does not count anything twice.
+        app(PeppolGateway::class)->receive($this->ubl('C-1', '421/0926/KR', [['6783780', 12, 26.2]], 'BE0123456749', '36397598'));
+        $this->assertSame(1, DistributorOrder::query()->count());
+        $this->assertSame([[12.0, 12.0], [18.0, 10.0]], $order->lines()->get()->map(fn ($line): array => [(float) $line->quantity, (float) $line->quantity_delivered])->all());
+        $this->assertNotNull($order->fresh()->expense_id);
+    }
+
+    #[Test]
+    public function cebeo_can_post_order_confirmations_and_delivery_notes(): void
+    {
+        $cebeo = Distributor::factory()->create(['name' => 'Cebeo', 'price_provider' => 'cebeo']);
+        $url = DistributorInboundController::url($cebeo);
+        $this->assertNotNull($url);
+        $this->assertNull(DistributorInboundController::url(Distributor::factory()->create(['price_provider' => 'rexel'])));
+
+        $this->call('POST', $url, [], [], [], ['CONTENT_TYPE' => 'application/xml'], $this->cebeoOrder())->assertOk();
+        $order = DistributorOrder::query()->sole();
+        $this->assertSame(['36397598', DistributorOrder::SOURCE_API, DistributorOrder::PARTIAL], [$order->external_number, $order->source, $order->status]);
+
+        // The same order again: updated, not added.
+        $this->call('POST', $url, [], [], [], ['CONTENT_TYPE' => 'application/xml'], $this->cebeoOrder('Volledig geleverd', 18))->assertOk();
+        $this->assertSame(DistributorOrder::DELIVERED, $order->fresh()->status);
+        $this->assertSame(1, DistributorOrder::query()->count());
+
+        $this->call('POST', str_replace(DistributorInboundController::secret($cebeo), str_repeat('x', 40), $url), [], [], [], ['CONTENT_TYPE' => 'application/xml'], $this->cebeoOrder())->assertNotFound();
+        $this->call('POST', $url, [], [], [], ['CONTENT_TYPE' => 'application/xml'], '<!DOCTYPE x [<!ENTITY e SYSTEM "file:///etc/passwd">]><cebeoXML/>')->assertStatus(422);
+        $this->call('POST', $url, [], [], [], ['CONTENT_TYPE' => 'application/xml'], '<cebeoXML><Response/></cebeoXML>')->assertStatus(422);
     }
 }

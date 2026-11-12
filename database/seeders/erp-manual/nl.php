@@ -580,11 +580,14 @@ Interne **bestelnummers** voor aankopen, zoals `466/1026/JL`, zodat elk nummer m
 
 Bij **Aankoop → Bestellingen** volg je de bestellingen bij de groothandels op: wat besteld werd met de referenties (groothandel en fabrikant), hoeveel al geleverd is en de status (open, bevestigd, deels geleverd, geleverd, geannuleerd). Elke groothandel met een koppeling (Rexel, Cebeo, Würth) heeft een **eigen tabblad**.
 
-Rexel en Cebeo bieden geen lijst van geplaatste bestellingen aan. Bestellingen komen daarom op deze manieren binnen:
+Geen enkele groothandel biedt een lijst van alle geplaatste bestellingen aan. Bestellingen komen op deze manieren binnen:
 
-- **Winkelmandje ophalen**: stel de bestelling samen in de webshop en haal het winkelmandje op in het tabblad van de groothandel. Kies daarbij ons bestelnummer. Vul ons bestelnummer ook in de webshop in als referentie. Bij Cebeo blijft het winkelmandje staan. **Rexel maakt het winkelmandje in NetStore leeg zodra het opgehaald wordt** (tenzij anders afgesproken met Rexel): haal het dus pas op nadat de bestelling geplaatst is.
-- **Peppol-facturen** (automatisch): komt een factuur van een groothandel binnen via Peppol, dan worden de geleverde artikelen bij de juiste bestelling gezet (het bestelnummer van de groothandel, of dezelfde referentie met ons bestelnummer). Is er geen bestelling, dan wordt er een toegevoegd als geleverd. De groothandel wordt herkend aan het **btw-nummer** (vul het in bij de groothandel). Elke factuur telt maar één keer.
-- **Leverbon ophalen** (Cebeo): geef het nummer van de leverbon in; de geleverde aantallen worden bij de bestelling gezet.
+- **Bestelling ophalen** (Cebeo): geef het ordernummer van Cebeo in (in de e-shop onder Bestellingen). De hele bestelling komt binnen: bestelde, geleverde en in backorder staande aantallen, de status bij Cebeo en de verwachte levering.
+- **Elk uur bijgewerkt** (Cebeo): elke Cebeo-bestelling die nog niet geleverd is, wordt elk uur opnieuw opgevraagd, tot ze volledig geleverd is. Met **Bestellingen bijwerken** doe je dat meteen.
+- **Orderbevestigingen en leverbonnen van Cebeo** (automatisch): bij de groothandel Cebeo staat een adres dat je aan Cebeo (e-business) kan geven. Cebeo stuurt dan voor elke bestelling (ook uit de e-shop of via een medewerker) een orderbevestiging en leverbon, en die komen vanzelf hier.
+- **Winkelmandje ophalen**: stel de bestelling samen in de webshop en haal het winkelmandje op in het tabblad van de groothandel. Kies daarbij ons bestelnummer. Bij Cebeo heeft het winkelmandje al zijn ordernummer en wordt de bestelling daarna elk uur gevolgd. **Rexel maakt het winkelmandje in NetStore leeg zodra het opgehaald wordt** (tenzij anders afgesproken met Rexel): haal het dus pas op nadat de bestelling geplaatst is.
+- **Leverbon ophalen** (Cebeo): geef het nummer van de leverbon in; de bestelling(en) op de leverbon worden opgehaald.
+- **Peppol-facturen** (automatisch): komt een factuur van een groothandel binnen via Peppol, dan worden de geleverde artikelen bij de juiste bestelling gezet (bij Cebeo wordt de hele bestelling opgehaald). Is er geen bestelling, dan wordt er een toegevoegd als geleverd. De groothandel wordt herkend aan het **btw-nummer** (vul het in bij de groothandel). Elke factuur telt maar één keer.
 - Zelf een bestelling toevoegen kan altijd.
 
 - **Koppeling met onze bestelnummers**: staat ons bestelnummer (bv. `466/1026/JL`) in de referentie van de bestelling (of in de opmerkingen), dan wordt de bestelling automatisch aan dat bestelnummer gekoppeld; ook als het bestelnummer pas later genomen wordt. Staat het er niet in, dan wordt er niets gekoppeld (je kan het zelf kiezen). In de lijst van de bestelnummers zie je hoeveel bestellingen eraan gekoppeld zijn.

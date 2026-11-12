@@ -8,11 +8,13 @@ use App\Models\DistributorOrder;
 use App\Models\DistributorOrderLine;
 use App\Models\Expense;
 use App\Services\Distributors\DistributorClients;
+use App\Services\Distributors\DistributorException;
 use App\Services\Distributors\OrderInfo;
 use App\Services\Distributors\OrderLineInfo;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -22,10 +24,13 @@ use Illuminate\Support\Str;
  * records them in Purchasing > Orders: the order they belong to (the distributor's order number, else
  * the same customer reference) gets the delivered quantities, otherwise a delivered order is added. The
  * order is linked to our order reference when it is in the reference (DistributorOrder::linkReference).
- * Each invoice and delivery note counts only once.
+ * Each invoice and delivery note counts only once. When the distributor looks orders up by number
+ * (Cebeo) and the document names the order, the whole order is fetched instead.
  */
 class RecordDistributorDeliveries
 {
+    public function __construct(protected SyncDistributorOrders $sync) {}
+
     /**
      * The distributor that sent a Peppol invoice: by VAT number, else (for a distributor without a VAT
      * number) by the connection's or the distributor's name in the supplier name.
@@ -122,6 +127,19 @@ class RecordDistributorDeliveries
 
     protected function record(Distributor $distributor, OrderInfo $info, string $source, string $key, int|string $id, CarbonInterface $date, string $note, ?int $expenseId = null): DistributorOrder
     {
+        // A distributor that looks orders up by number (Cebeo): the whole order as it has it now.
+        if ($info->number !== '' && ($order = $this->fetched($distributor, $info->number, $source)) !== null) {
+            $raw = (array) ($order->raw ?? []);
+            $raw[$key] = [...($raw[$key] ?? []), $id];
+            $order->update([
+                'expense_id' => $expenseId ?? $order->expense_id,
+                'notes' => trim(($order->notes ? $order->notes."\n" : '').$note),
+                'raw' => $raw,
+            ]);
+
+            return $order;
+        }
+
         return DB::transaction(function () use ($distributor, $info, $source, $key, $id, $date, $note, $expenseId): DistributorOrder {
             $order = $this->existingOrder($distributor, $info) ?? new DistributorOrder([
                 'distributor_id' => $distributor->id,
@@ -159,6 +177,17 @@ class RecordDistributorDeliveries
         });
     }
 
+    protected function fetched(Distributor $distributor, string $number, string $source): ?DistributorOrder
+    {
+        try {
+            return $this->sync->fetch($distributor, $number, $source);
+        } catch (DistributorException $exception) {
+            Log::warning('Distributor order could not be fetched', ['distributor' => $distributor->id, 'number' => $number, 'error' => $exception->getMessage()]);
+
+            return null;
+        }
+    }
+
     /**
      * The order this delivery belongs to: the distributor's order number, else an order that is not
      * fully delivered with the same customer reference containing our order number.
@@ -193,6 +222,12 @@ class RecordDistributorDeliveries
 
             return $same && ! $existing->isDelivered();
         });
+
+        if ($match === null && $order->lines()->get()->contains(fn (DistributorOrderLine $existing): bool => (filled($line->distributorReference) && $existing->distributor_reference === $line->distributorReference)
+            || (filled($line->manufacturerReference) && $existing->manufacturer_reference === $line->manufacturerReference))) {
+            // Already fully delivered (e.g. as the distributor reported it): not counted twice.
+            return;
+        }
 
         if ($match !== null) {
             $quantity = (float) $match->quantity_delivered + $line->quantityDelivered;

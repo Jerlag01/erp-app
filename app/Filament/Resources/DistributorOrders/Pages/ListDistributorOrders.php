@@ -46,9 +46,10 @@ class ListDistributorOrders extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->fetchOrderAction(),
             $this->importBasketAction(),
             $this->deliveryNoteAction(),
-            // Only for a distributor whose API lists the orders (none of Rexel and Cebeo do).
+            // For a distributor whose API lists orders or looks them up by number (Cebeo): the open orders again.
             Action::make('sync')
                 ->label(__('erp.distributor_orders.sync'))
                 ->icon(Heroicon::OutlinedArrowPath)
@@ -66,6 +67,48 @@ class ListDistributorOrders extends ListRecords
                 }),
             CreateAction::make(),
         ];
+    }
+
+    /**
+     * One order by the distributor's order number (Cebeo); afterwards followed up every hour.
+     */
+    protected function fetchOrderAction(): Action
+    {
+        return Action::make('fetchOrder')
+            ->label(__('erp.distributor_orders.fetch_order'))
+            ->icon(Heroicon::OutlinedArrowDownTray)
+            ->visible(fn (DistributorClients $clients): bool => ($distributor = $this->tabDistributor()) !== null
+                && $clients->lookupFor($distributor) !== null
+                && auth()->user()?->can('create', DistributorOrder::class))
+            ->schema([
+                TextInput::make('number')
+                    ->label(__('erp.distributor_orders.external_number'))
+                    ->helperText(__('erp.distributor_orders.fetch_order_help'))
+                    ->required()
+                    ->maxLength(30)
+                    ->regex('/^\s*\d+\s*$/'),
+            ])
+            ->action(function (array $data, SyncDistributorOrders $sync): void {
+                $distributor = $this->tabDistributor();
+                $number = ltrim(trim((string) $data['number']), '0') ?: '0';
+
+                try {
+                    $order = $sync->fetch($distributor, $number);
+                } catch (Throwable $exception) {
+                    Notification::make()->title(__('erp.distributor_orders.import_failed', ['name' => $distributor->name]))->body($exception->getMessage())->warning()->send();
+
+                    return;
+                }
+
+                if ($order === null) {
+                    Notification::make()->title(__('erp.distributor_orders.order_unknown', ['number' => $number, 'name' => $distributor->name]))->warning()->send();
+
+                    return;
+                }
+
+                Notification::make()->title(__('erp.distributor_orders.order_fetched', ['number' => $number]))->success()->send();
+                $this->redirect(DistributorOrderResource::getUrl('view', ['record' => $order]));
+            });
     }
 
     /**

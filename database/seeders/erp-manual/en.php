@@ -579,11 +579,14 @@ Internal **order references** for purchases, such as `466/1026/JL`, so that each
 
 Under **Purchasing → Orders** you follow the orders placed at the distributors: what was ordered with its references (distributor and manufacturer), how much is delivered and the status (open, confirmed, partly delivered, delivered, cancelled). Every distributor with a connection (Rexel, Cebeo, Würth) has its **own tab**.
 
-Rexel and Cebeo do not offer a list of placed orders. Orders therefore come in these ways:
+No distributor offers a list of all placed orders. Orders come in these ways:
 
-- **Fetch basket**: put the order together in the webshop and fetch the basket on the distributor's tab, choosing our order reference. Also enter our order reference as reference in the webshop. At Cebeo the basket stays. **Rexel empties the NetStore basket as soon as it is fetched** (unless agreed otherwise with Rexel): so only fetch it after placing the order.
-- **Peppol invoices** (automatic): when a distributor's invoice comes in through Peppol, the delivered items are added to the right order (the distributor's order number, or the same reference with our order reference). Without an order, one is added as delivered. The distributor is recognised by its **VAT number** (fill it in on the distributor). Each invoice counts once.
-- **Fetch delivery note** (Cebeo): enter the delivery note number; the delivered quantities are added to the order.
+- **Fetch order** (Cebeo): enter Cebeo's order number (in the e-shop under Orders). The whole order comes in: ordered, delivered and back-ordered quantities, Cebeo's status and the expected delivery.
+- **Updated every hour** (Cebeo): every Cebeo order that is not delivered yet is asked for again every hour, until it is fully delivered. **Update orders** does it right away.
+- **Order confirmations and delivery notes from Cebeo** (automatic): the Cebeo distributor shows an address to give to Cebeo (e-business). Cebeo then sends an order confirmation and delivery note for every order (also from the e-shop or through an employee), and they arrive here by themselves.
+- **Fetch basket**: put the order together in the webshop and fetch the basket on the distributor's tab, choosing our order reference. At Cebeo the basket already has its order number and the order is then followed every hour. **Rexel empties the NetStore basket as soon as it is fetched** (unless agreed otherwise with Rexel): so only fetch it after placing the order.
+- **Fetch delivery note** (Cebeo): enter the delivery note number; the order(s) on it are fetched.
+- **Peppol invoices** (automatic): when a distributor's invoice comes in through Peppol, the delivered items are added to the right order (at Cebeo the whole order is fetched). Without an order, one is added as delivered. The distributor is recognised by its **VAT number** (fill it in on the distributor). Each invoice counts once.
 - Adding an order yourself is always possible.
 
 - **Link with our order references**: when our order reference (e.g. `466/1026/JL`) is in the order's reference (or in the notes), the order is linked to it automatically, also when the reference is only taken later. When it is not in there, nothing is linked (you can pick it yourself). The list of order references shows how many orders are linked to each.

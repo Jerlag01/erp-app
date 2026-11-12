@@ -14,6 +14,7 @@ use App\Http\Controllers\ClientBatteryReportController;
 use App\Http\Controllers\ClientProjectFileController;
 use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\ClientWelcomeLinkController;
+use App\Http\Controllers\DistributorInboundController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EnersysDocumentController;
 use App\Http\Controllers\FinanceDocumentController;
@@ -145,6 +146,13 @@ Route::post('/peppol/inbound/{secret}', PeppolInboundController::class)
     ->withoutMiddleware([PreventRequestForgery::class])
     ->middleware('throttle:120,1')
     ->name('peppol.inbound');
+
+// Order confirmations and delivery notes a distributor (Cebeo) POSTs to us (no session, so no CSRF token).
+Route::post('/distributors/{distributor}/inbound/{secret}', DistributorInboundController::class)
+    ->whereNumber('distributor')
+    ->withoutMiddleware([PreventRequestForgery::class])
+    ->middleware('throttle:120,1')
+    ->name('distributors.inbound');
 
 // The link in a GPW request mail: the contact person approves or refuses the request (signed, until the period ends).
 Route::get('/gpw/{gpwRequest}', [GpwDecisionController::class, 'show'])->whereNumber('gpwRequest')->middleware('signed')->name('gpw.decide');

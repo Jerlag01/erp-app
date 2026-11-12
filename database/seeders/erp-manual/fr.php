@@ -579,11 +579,14 @@ Des **numéros de commande** internes pour les achats, comme `466/1026/JL`, pour
 
 Dans **Achats → Commandes**, vous suivez les commandes passées chez les grossistes : ce qui a été commandé avec les références (grossiste et fabricant), ce qui est déjà livré et le statut (ouverte, confirmée, partiellement livrée, livrée, annulée). Chaque grossiste avec une connexion (Rexel, Cebeo, Würth) a son **propre onglet**.
 
-Rexel et Cebeo ne proposent pas de liste des commandes passées. Les commandes arrivent donc de ces façons :
+Aucun grossiste ne propose la liste de toutes les commandes passées. Les commandes arrivent de ces façons :
 
-- **Récupérer le panier** : composez la commande dans la boutique en ligne et récupérez le panier dans l'onglet du grossiste, en choisissant notre numéro de commande. Indiquez aussi notre numéro de commande comme référence dans la boutique. Chez Cebeo, le panier est conservé. **Rexel vide le panier dans NetStore dès qu'il est récupéré** (sauf accord contraire avec Rexel) : récupérez-le donc seulement après avoir passé la commande.
-- **Factures Peppol** (automatique) : quand une facture d'un grossiste arrive via Peppol, les articles livrés sont associés à la bonne commande (numéro de commande du grossiste, ou même référence avec notre numéro de commande). S'il n'y a pas de commande, elle est ajoutée comme livrée. Le grossiste est reconnu à son **numéro de TVA** (à indiquer chez le grossiste). Chaque facture ne compte qu'une fois.
-- **Récupérer un bon de livraison** (Cebeo) : indiquez le numéro du bon de livraison ; les quantités livrées sont associées à la commande.
+- **Récupérer une commande** (Cebeo) : indiquez le numéro de commande Cebeo (dans l'e-shop sous Commandes). Toute la commande arrive : quantités commandées, livrées et en backorder, statut chez Cebeo et livraison prévue.
+- **Mise à jour chaque heure** (Cebeo) : chaque commande Cebeo pas encore livrée est redemandée chaque heure, jusqu'à sa livraison complète. **Mettre à jour les commandes** le fait immédiatement.
+- **Confirmations de commande et bons de livraison de Cebeo** (automatique) : sur le grossiste Cebeo figure une adresse à communiquer à Cebeo (e-business). Cebeo envoie alors pour chaque commande (aussi de l'e-shop ou via un collaborateur) une confirmation et un bon de livraison, qui arrivent ici d'eux-mêmes.
+- **Récupérer le panier** : composez la commande dans la boutique en ligne et récupérez le panier dans l'onglet du grossiste, en choisissant notre numéro de commande. Chez Cebeo, le panier a déjà son numéro de commande et la commande est ensuite suivie chaque heure. **Rexel vide le panier dans NetStore dès qu'il est récupéré** (sauf accord contraire avec Rexel) : récupérez-le donc seulement après avoir passé la commande.
+- **Récupérer un bon de livraison** (Cebeo) : indiquez le numéro du bon de livraison ; la ou les commandes du bon sont récupérées.
+- **Factures Peppol** (automatique) : quand une facture d'un grossiste arrive via Peppol, les articles livrés sont associés à la bonne commande (chez Cebeo, toute la commande est récupérée). S'il n'y a pas de commande, elle est ajoutée comme livrée. Le grossiste est reconnu à son **numéro de TVA** (à indiquer chez le grossiste). Chaque facture ne compte qu'une fois.
 - Ajouter une commande vous-même reste toujours possible.
 
 - **Lien avec nos numéros de commande** : si notre numéro de commande (p. ex. `466/1026/JL`) figure dans la référence de la commande (ou dans les remarques), la commande y est liée automatiquement ; aussi si le numéro de commande n'est pris qu'ensuite. S'il n'y figure pas, rien n'est lié (vous pouvez le choisir vous-même). La liste des numéros de commande montre combien de commandes y sont liées.

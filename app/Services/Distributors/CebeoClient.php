@@ -18,11 +18,14 @@ use SimpleXMLElement;
  * (Article/Search). The answer gives the customer's net price per unit (decimal comma), the
  * description and the stock; it has no pictures. Message code 0 is success; "ART0011" means not found.
  *
- * Orders: cebeoXML has no way to list or search placed orders (Order/Search and Order/Get by number are
- * "not implemented" in the schema). It does give the open order (the e-shop basket, Order/Get/OpenOrder)
- * and a delivery note by its number (DispatchAdvice/Get), with Cebeo's order number and our reference.
+ * Orders: there is no call that lists or searches the orders (Order/Search is not implemented), and
+ * Order/Get by our CustomerOrderID returns the open order instead. Order/Get by Cebeo's order number
+ * (SupplierOrderID) does work, although the schema calls it "not implemented": it gives the order with
+ * per line the ordered, delivered and back-ordered quantity and the dates. Order numbers come from the
+ * basket (the open order already has its number), delivery notes (DispatchAdvice/Get), Peppol invoices
+ * and the order confirmations and delivery notes Cebeo can POST to us (parseDocument).
  */
-class CebeoClient implements DistributorBasketSource, DistributorClient
+class CebeoClient implements DistributorBasketSource, DistributorClient, DistributorOrderLookup
 {
     public const ENDPOINT = 'https://b2b.cebeo.be/webservices/xml';
 
@@ -94,35 +97,32 @@ class CebeoClient implements DistributorBasketSource, DistributorClient
     }
 
     /**
-     * The open order in the Cebeo e-shop (the basket) with its lines.
+     * The open order in the Cebeo e-shop (the basket) with its lines and Cebeo's order number.
      */
     public function basket(): ?OrderInfo
     {
         $this->ensureConfigured();
         $detail = $this->call('<Order><Get><OpenOrder/></Get></Order>', 'Detail')?->Order->Detail;
 
-        if ($detail === null || ! isset($detail->OrderLine)) {
+        return $detail === null || ! isset($detail->OrderLine) ? null : self::orderFromDetail($detail);
+    }
+
+    /**
+     * An order by Cebeo's order number; null when Cebeo does not know it.
+     */
+    public function order(string $number): ?OrderInfo
+    {
+        $this->ensureConfigured();
+        $detail = $this->call('<Order><Get><SupplierOrderID>'.self::xml($number).'</SupplierOrderID></Get></Order>', 'Detail', true)?->Order->Detail;
+
+        if ($detail === null || ! isset($detail->OrderHeader)) {
             return null;
         }
 
-        $lines = array_map(fn (SimpleXMLElement $line): OrderLineInfo => new OrderLineInfo(
-            distributorReference: self::text($line->Material->SupplierItemID),
-            manufacturerReference: self::text($line->Material->Reference),
-            description: self::text($line->Material->Description),
-            quantity: (float) self::number($line->OrderedQuantity),
-            quantityDelivered: (float) self::number($line->DeliveryQuantity),
-            unit: self::text($line->UnitOfMeasure),
-            netPrice: self::number($line->UnitPrice->NetPrice),
-            expectedDelivery: self::date($line->BOEstimatedDeliveryDate) ?? self::date($line->RequestedDeliveryDate),
-        ), iterator_to_array($detail->OrderLine, false));
+        $order = self::orderFromDetail($detail);
 
-        return new OrderInfo(
-            number: '',
-            customerReference: self::text($detail->OrderHeader->CustomerOrderRef) ?? self::text($detail->OrderHeader->CustomerOrderID),
-            orderedAt: self::date($detail->OrderHeader->OrderDate) ?? today(),
-            total: round(array_sum(array_map(fn (OrderLineInfo $line): float => $line->quantity * (float) $line->netPrice, $lines)), 2),
-            lines: $lines,
-        );
+        // An unknown number may come back as the open order.
+        return $order->number === ltrim($number, '0') ? $order : null;
     }
 
     /**
@@ -136,15 +136,100 @@ class CebeoClient implements DistributorBasketSource, DistributorClient
         $this->ensureConfigured();
         $detail = $this->call('<DispatchAdvice><Get><DispatchAdviceID>'.self::xml($number).'</DispatchAdviceID></Get></DispatchAdvice>', 'Detail', true)?->DispatchAdvice->Detail;
 
-        if ($detail === null || ! isset($detail->DispatchAdviceLine)) {
-            return [];
+        return $detail === null || ! isset($detail->DispatchAdviceLine) ? [] : self::ordersFromDispatch($detail, $number);
+    }
+
+    /**
+     * A document Cebeo POSTs to us (order confirmation or delivery note in cebeoXML).
+     *
+     * @return array{orders: list<OrderInfo>, delivery_note: ?string}
+     *
+     * @throws DistributorException when it is not one of those
+     */
+    public static function parseDocument(string $xml): array
+    {
+        if (stripos($xml, '<!DOCTYPE') !== false || stripos($xml, '<!ENTITY') !== false) {
+            throw new DistributorException('Documents may not contain a DOCTYPE.');
         }
 
+        $root = @simplexml_load_string($xml, SimpleXMLElement::class, LIBXML_NONET);
+
+        if ($root === false) {
+            throw new DistributorException('Not a valid XML document.');
+        }
+
+        if ($order = $root->xpath('//Order/Detail')[0] ?? null) {
+            return ['orders' => [self::orderFromDetail($order)], 'delivery_note' => null];
+        }
+
+        if ($dispatch = $root->xpath('//DispatchAdvice/Detail')[0] ?? null) {
+            $number = self::text($dispatch->DispatchAdviceHeader->DispatchAdviceID) ?? '';
+
+            return ['orders' => self::ordersFromDispatch($dispatch, $number), 'delivery_note' => $number];
+        }
+
+        throw new DistributorException('Not a cebeoXML order confirmation or delivery note.');
+    }
+
+    /**
+     * An Order/Detail: the status follows the lines (all delivered, partly, or not yet); an order that
+     * is not closed in the e-shop ("Niet afgesloten order") is still open.
+     */
+    public static function orderFromDetail(SimpleXMLElement $detail): OrderInfo
+    {
+        $header = $detail->OrderHeader;
+        $lines = array_map(fn (SimpleXMLElement $line): OrderLineInfo => new OrderLineInfo(
+            distributorReference: self::text($line->Material->SupplierItemID),
+            manufacturerReference: self::text($line->Material->Reference),
+            description: self::text($line->Material->Description),
+            quantity: (float) self::number($line->OrderedQuantity),
+            quantityDelivered: (float) self::number($line->DeliveryQuantity),
+            unit: self::text($line->UnitOfMeasure),
+            netPrice: self::number($line->UnitPrice->NetPrice),
+            expectedDelivery: (float) self::number($line->BOQuantity) > 0
+                ? (self::date($line->BOEstimatedDeliveryDate) ?? self::date($line->RequestedDeliveryDate))
+                : (self::date($line->RequestedDeliveryDate) ?? self::date($line->BOEstimatedDeliveryDate)),
+            deliveredAt: self::date($line->DeliveryDate),
+        ), iterator_to_array($detail->OrderLine ?? [], false));
+
+        $statusText = self::text($header->OrderStatus) ?? '';
+        $delivered = $lines !== [] && collect($lines)->every(fn (OrderLineInfo $line): bool => $line->quantity > 0 && $line->quantityDelivered >= $line->quantity);
+        $status = match (true) {
+            (bool) preg_match('/annul|vervallen|geschrapt/i', $statusText) => 'cancelled',
+            $delivered => 'delivered',
+            collect($lines)->contains(fn (OrderLineInfo $line): bool => $line->quantityDelivered > 0) => 'partial',
+            (bool) preg_match('/niet afgesloten/i', $statusText) => 'open',
+            default => 'confirmed',
+        };
+        $open = collect($lines)->filter(fn (OrderLineInfo $line): bool => $line->quantityDelivered < $line->quantity);
+        $ourNumber = self::text($header->CustomerOrderID);
+        $reference = self::text($header->CustomerOrderRef);
+
+        return new OrderInfo(
+            number: ltrim((string) self::text($header->SupplierOrderID), '0'),
+            customerReference: collect([$ourNumber, $reference])->filter()->unique()->implode(' · ') ?: null,
+            orderedAt: self::date($header->OrderDate),
+            status: $status,
+            expectedDelivery: $open->map(fn (OrderLineInfo $line) => $line->expectedDelivery)->filter()->max(),
+            deliveredAt: $delivered ? collect($lines)->map(fn (OrderLineInfo $line) => $line->deliveredAt)->filter()->max() : null,
+            total: round(array_sum(array_map(fn (OrderLineInfo $line): float => $line->quantity * (float) $line->netPrice, $lines)), 2),
+            lines: $lines,
+            raw: array_filter(['status_text' => $statusText, 'ordered_by' => self::text($header->OrderedBy)]),
+        );
+    }
+
+    /**
+     * A DispatchAdvice/Detail: per Cebeo order on it, the delivered lines.
+     *
+     * @return list<OrderInfo>
+     */
+    public static function ordersFromDispatch(SimpleXMLElement $detail, string $number): array
+    {
         $date = self::date($detail->DispatchAdviceHeader->DeliveryDate) ?? today();
         $orders = [];
 
         foreach ($detail->DispatchAdviceLine as $line) {
-            $key = self::text($line->SupplierOrderID) ?? '';
+            $key = ltrim((string) self::text($line->SupplierOrderID), '0');
             $orders[$key]['customer'] ??= self::text($line->CustomerOrderID);
             $orders[$key]['lines'][] = new OrderLineInfo(
                 distributorReference: self::text($line->Material->SupplierItemID),
@@ -255,8 +340,8 @@ class CebeoClient implements DistributorBasketSource, DistributorClient
             return $root->Response;
         }
 
-        // An unknown delivery note gives only "1: Error:".
-        if (in_array($text, self::NOT_FOUND, true) || ($unknownIsEmpty && $code === 1 && rtrim($text, ': ') === 'Error')) {
+        // An unknown delivery note gives only "1: Error:", an unknown order "1: Error: … Unknown Order".
+        if (in_array($text, self::NOT_FOUND, true) || ($unknownIsEmpty && $code === 1 && (rtrim($text, ': ') === 'Error' || stripos($text, 'Unknown Order') !== false))) {
             return null;
         }
 

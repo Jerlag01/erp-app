@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ImportDistributorBasket
 {
-    public function __construct(protected DistributorClients $clients) {}
+    public function __construct(protected DistributorClients $clients, protected SyncDistributorOrders $sync) {}
 
     public function source(Distributor $distributor): ?DistributorBasketSource
     {
@@ -39,6 +39,20 @@ class ImportDistributorBasket
 
         if ($basket === null) {
             return null;
+        }
+
+        // Cebeo's open order already has its order number: kept under it, so it is followed up every hour.
+        if ($basket->number !== '') {
+            $order = $this->sync->store($distributor, $basket, DistributorOrder::SOURCE_BASKET);
+            $order->update(array_filter([
+                'external_number' => filled($details['external_number'] ?? null) ? trim($details['external_number']) : null,
+                'customer_reference' => filled($details['customer_reference'] ?? null) ? trim($details['customer_reference']) : null,
+                'order_reference_id' => $details['order_reference_id'] ?? null,
+                'notes' => filled($details['notes'] ?? null) ? trim($details['notes']) : null,
+                'created_by' => $order->created_by ?? $userId,
+            ], fn ($value): bool => $value !== null));
+
+            return $order;
         }
 
         return DB::transaction(function () use ($distributor, $basket, $details, $userId): DistributorOrder {

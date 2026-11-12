@@ -141,6 +141,7 @@ class DistributorOrderResource extends Resource
                     TextEntry::make('ordered_at')->label(__('erp.distributor_orders.ordered_at'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('status')->label(__('erp.fields.status'))->badge()->formatStateUsing(fn (string $state): string => self::statusOptions()[$state] ?? $state)->color(fn (string $state): string => self::statusColor($state)),
                     TextEntry::make('delivery')->label(__('erp.distributor_orders.delivery'))->state(fn (DistributorOrder $record): string => $record->deliveryProgress()),
+                    TextEntry::make('raw.status_text')->label(__('erp.distributor_orders.status_text'))->visible(fn (DistributorOrder $record): bool => filled($record->raw['status_text'] ?? null)),
                     TextEntry::make('expected_delivery')->label(__('erp.distributor_orders.expected_delivery'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('delivered_at')->label(__('erp.distributor_orders.delivered_at'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('total')->label(__('erp.distributor_orders.total'))->money('EUR')->placeholder('—'),

@@ -36,6 +36,16 @@ class DistributorClients
     }
 
     /**
+     * The connection's lookup of one order by its number, when it has one and is set up (Cebeo).
+     */
+    public function lookupFor(Distributor $distributor): ?DistributorOrderLookup
+    {
+        $client = $this->for($distributor);
+
+        return $client instanceof DistributorOrderLookup && $client->isConfigured() ? $client : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function options(): array
