@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\DeletesStoredFiles;
+use App\Support\Translation\Translator;
 use Database\Factories\StockItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Str;
 
 /**
  * An article in the catalogue. Every location has its own stock level for it. The name can be given in
@@ -102,6 +104,38 @@ class StockItem extends Model
     }
 
     /**
+     * Fills the French and English names from the Dutch one, like the stock categories: when empty, or
+     * when the Dutch name changed and that language was not changed by hand in the same save
+     * (Translator, MyMemory). Without a Dutch name nothing is translated.
+     */
+    public function translateNames(): void
+    {
+        $missing = array_values(array_filter(['fr', 'en'], fn (string $locale): bool => blank($this->{'name_'.$locale})
+            || ($this->isDirty('name_nl') && ! $this->isDirty('name_'.$locale))));
+
+        if ($missing === [] || blank($this->name_nl)) {
+            return;
+        }
+
+        $translations = app(Translator::class)->fromDutch((string) $this->name_nl);
+
+        foreach ($missing as $locale) {
+            if (filled($translations[$locale] ?? null)) {
+                $this->{'name_'.$locale} = Str::limit($translations[$locale], 200, '');
+            }
+        }
+    }
+
+    /**
+     * Items with a Dutch name that still miss the French or English one.
+     */
+    public function scopeMissingTranslations(Builder $query): void
+    {
+        $query->whereNotNull('name_nl')->where('name_nl', '!=', '')
+            ->where(fn (Builder $query) => $query->whereNull('name_fr')->orWhere('name_fr', '')->orWhereNull('name_en')->orWhere('name_en', ''));
+    }
+
+    /**
      * The short link printed in the QR code; it opens the item for stock changes.
      */
     public function qrUrl(): string
@@ -171,6 +205,9 @@ class StockItem extends Model
             } elseif ($names !== []) {
                 $item->name = reset($names);
             }
+
+            // Never return false here: that would cancel the save.
+            $item->translateNames();
         });
 
         // A distributor set on the item itself (an import, older code) becomes its preferred supplier.

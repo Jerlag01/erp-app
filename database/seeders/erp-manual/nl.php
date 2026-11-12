@@ -608,7 +608,7 @@ De **artikelen** in het magazijn met hun voorraad **per locatie**, QR-etiketten,
 
 **Magazijn → Artikelen**, met de stamgegevens: **Artikelcategorieën**, **Eenheden**, **Fabrikanten**, **Groothandels** en hun **Contactpersonen**.
 
-De **artikelcategorieën** en subcategorieën hebben een Nederlandse, Franse en Engelse naam. Vul de Nederlandse in: de Franse en Engelse worden automatisch vertaald (gratis, via MyMemory; uit te zetten bij Instellingen → Algemeen → Automatisch vertalen) en kan je zelf aanpassen. Iedereen ziet de naam in zijn eigen taal. Met **Ontbrekende vertalingen aanvullen** vertaal je bestaande categorieën.
+De **artikelcategorieën** en subcategorieën hebben een Nederlandse, Franse en Engelse naam. Vul de Nederlandse in: de Franse en Engelse worden automatisch vertaald (gratis, via MyMemory; uit te zetten bij Instellingen → Algemeen → Automatisch vertalen) en kan je zelf aanpassen. Iedereen ziet de naam in zijn eigen taal. Met **Ontbrekende vertalingen aanvullen** vertaal je bestaande categorieën. Hetzelfde geldt voor de **namen van de artikelen**: vul de Nederlandse naam in, de Franse en Engelse worden vertaald. Bij Artikelen vertaalt **Ontbrekende vertalingen aanvullen** telkens 50 bestaande artikelen (de gratis vertaaldienst heeft een daglimiet).
 
 ## Voorraad bijhouden
 

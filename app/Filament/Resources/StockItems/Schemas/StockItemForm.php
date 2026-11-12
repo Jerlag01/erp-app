@@ -7,6 +7,7 @@ use App\Models\StockCategory;
 use App\Models\StockItem;
 use App\Models\StockItemSupplier;
 use App\Models\Unit;
+use App\Support\Translation\Translator;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -40,6 +41,8 @@ class StockItemForm
                                         ->placeholder(__('erp.help.stock_item_name'))
                                         ->requiredWithoutAll(implode(',', array_map(fn (string $other): string => "name_{$other}", array_values(array_diff(StockItem::LOCALES, [$locale])))))
                                         ->validationMessages(['required_without_all' => __('erp.stock.names.one_required')])
+                                        // French and English follow the Dutch name automatically (StockItem::translateNames).
+                                        ->helperText(fn (): ?string => $locale === 'nl' ? null : (app(Translator::class)->enabled() ? __('erp.stock.category_names.auto') : __('erp.stock.category_names.no_key')))
                                         ->maxLength(200), StockItem::LOCALES)),
                                 Select::make('stock_category_id')
                                     ->label(__('erp.fields.category'))

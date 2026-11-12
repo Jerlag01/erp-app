@@ -1243,6 +1243,10 @@ return [
         'nobody' => 'Personne n\'est en congé ce mois-ci.',
     ],
     'stock' => [
+        'item_names' => [
+            'translate_help' => ':count article(s) n\'ont pas encore de nom français ou anglais. :batch sont traduits à la fois (le service de traduction gratuit a une limite par jour) ; cliquez à nouveau pour les suivants.',
+            'translated' => ':count article(s) traduit(s), encore :left sans traduction',
+        ],
         'category_names' => [
             'nl' => 'Nom (néerlandais)',
             'fr' => 'Nom (français)',

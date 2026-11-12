@@ -1243,6 +1243,10 @@ return [
         'nobody' => 'Niemand heeft verlof deze maand.',
     ],
     'stock' => [
+        'item_names' => [
+            'translate_help' => ':count artikel(s) hebben nog geen Franse of Engelse naam. Er worden er :batch per keer vertaald (de gratis vertaaldienst heeft een daglimiet); klik opnieuw voor de volgende.',
+            'translated' => ':count artikel(s) vertaald, nog :left zonder vertaling',
+        ],
         'category_names' => [
             'nl' => 'Naam (Nederlands)',
             'fr' => 'Naam (Frans)',

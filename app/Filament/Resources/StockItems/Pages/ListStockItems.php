@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\StockItems\Pages;
 
 use App\Filament\Resources\StockItems\StockItemResource;
+use App\Models\StockItem;
 use App\Support\StockCount;
 use App\Support\StockExport;
+use App\Support\Translation\Translator;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
@@ -14,6 +16,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ListStockItems extends ListRecords
 {
+    /** Items translated per click (MyMemory's free limit is per day). */
+    public const TRANSLATE_BATCH = 50;
+
     protected static string $resource = StockItemResource::class;
 
     public function getSubheading(): ?string
@@ -30,6 +35,25 @@ class ListStockItems extends ListRecords
         $count = app(StockCount::class);
 
         return [
+            // Items from before (or made while translation was off): a batch at a time, because of the daily limit.
+            Action::make('translateMissing')
+                ->label(__('erp.stock.category_names.translate_missing'))
+                ->icon(Heroicon::OutlinedLanguage)
+                ->color('gray')
+                ->visible(fn (): bool => app(Translator::class)->enabled()
+                    && auth()->user()?->can('update', StockItem::query()->missingTranslations()->first() ?? new StockItem)
+                    && StockItem::query()->missingTranslations()->exists())
+                ->requiresConfirmation()
+                ->modalDescription(fn (): string => __('erp.stock.item_names.translate_help', ['count' => StockItem::query()->missingTranslations()->count(), 'batch' => self::TRANSLATE_BATCH]))
+                ->action(function (): void {
+                    $count = 0;
+                    StockItem::query()->missingTranslations()->orderBy('id')->limit(self::TRANSLATE_BATCH)->get()->each(function (StockItem $item) use (&$count): void {
+                        $item->translateNames();
+                        $count += (int) $item->isDirty();
+                        $item->save();
+                    });
+                    Notification::make()->title(__('erp.stock.item_names.translated', ['count' => $count, 'left' => StockItem::query()->missingTranslations()->count()]))->success()->send();
+                }),
             // The yearly count: while it runs, stock can only be counted (platform and app).
             Action::make('startYearlyCount')
                 ->label(__('erp.stock.yearly_count.start'))

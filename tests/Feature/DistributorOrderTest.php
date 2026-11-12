@@ -9,6 +9,7 @@ use App\Filament\Resources\DistributorOrders\DistributorOrderResource;
 use App\Filament\Resources\DistributorOrders\Pages\CreateDistributorOrder;
 use App\Filament\Resources\DistributorOrders\Pages\ListDistributorOrders;
 use App\Filament\Resources\StockCategories\Pages\ManageStockCategories;
+use App\Filament\Resources\StockItems\Pages\ListStockItems;
 use App\Http\Controllers\DistributorInboundController;
 use App\Models\Distributor;
 use App\Models\DistributorOrder;
@@ -473,5 +474,45 @@ class DistributorOrderTest extends TestCase
         $this->assertSame(1, DistributorOrder::query()->count());
 
         $this->artisan('distributors:cebeo-orders', ['month' => 13, 'year' => 2026])->assertExitCode(2);
+    }
+
+    #[Test]
+    public function stock_item_names_are_translated_from_dutch(): void
+    {
+        Sleep::fake();
+        config(['services.translation.enabled' => true]);
+        settings()->save('translation', ['enabled' => true, 'email' => null]);
+        Http::fake(['api.mymemory.translated.net/*' => function (Request $request) {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+            return Http::response(['responseData' => ['translatedText' => (str_ends_with($query['langpair'], 'fr-FR') ? 'FR ' : 'EN ').$query['q']], 'responseStatus' => 200, 'quotaFinished' => false]);
+        }]);
+
+        $item = StockItem::factory()->create(['name' => null, 'name_nl' => 'Kabelgoot 60', 'name_fr' => null, 'name_en' => null]);
+        $this->assertSame(['FR Kabelgoot 60', 'EN Kabelgoot 60', 'Kabelgoot 60'], [$item->name_fr, $item->name_en, $item->name]);
+        $this->assertSame('FR Kabelgoot 60', $item->localizedName('fr'));
+
+        // The Dutch name changes: translated again, except a language changed by hand at the same time.
+        $item->update(['name_nl' => 'Kabelgoot 100', 'name_en' => 'Cable tray 100']);
+        $this->assertSame(['FR Kabelgoot 100', 'Cable tray 100'], [$item->fresh()->name_fr, $item->fresh()->name_en]);
+
+        // Only a French name: nothing to translate from.
+        $french = StockItem::factory()->create(['name' => null, 'name_nl' => null, 'name_fr' => 'Disjoncteur', 'name_en' => null]);
+        $this->assertNull($french->name_en);
+
+        // Items from before: the button on the list (a batch per click) and the command.
+        settings()->save('translation', ['enabled' => false, 'email' => null]);
+        $old = StockItem::factory()->count(3)->create(['name' => null, 'name_nl' => 'Schakelaar', 'name_fr' => null, 'name_en' => null]);
+        $this->assertSame(3, StockItem::query()->missingTranslations()->count());
+        settings()->save('translation', ['enabled' => true, 'email' => null]);
+
+        Livewire::actingAs(User::factory()->admin()->create())->test(ListStockItems::class)
+            ->callAction('translateMissing')
+            ->assertNotified(__('erp.stock.item_names.translated', ['count' => 3, 'left' => 0]));
+        $this->assertSame('EN Schakelaar', $old->first()->fresh()->name_en);
+
+        StockItem::query()->whereKey($old->pluck('id'))->update(['name_fr' => null]);
+        $this->artisan('stock:translate-names', ['--limit' => 2])->expectsOutputToContain('2 name(s) translated, 1 still')->assertSuccessful();
+        Sleep::assertSleptTimes(1);
     }
 }

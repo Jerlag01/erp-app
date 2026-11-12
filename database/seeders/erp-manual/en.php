@@ -607,7 +607,7 @@ The **items** in the warehouse with their stock **per location**, QR labels, man
 
 **Stock → Items**, with the master data: **Stock categories**, **Units**, **Manufacturers**, **Distributors** and their **Contact persons**.
 
-The **stock categories** and subcategories have a Dutch, French and English name. Fill in the Dutch one: French and English are translated automatically (free, through MyMemory; can be switched off under Settings → General → Automatic translation) and can be changed. Everyone sees the name in their own language. **Fill in missing translations** translates existing categories.
+The **stock categories** and subcategories have a Dutch, French and English name. Fill in the Dutch one: French and English are translated automatically (free, through MyMemory; can be switched off under Settings → General → Automatic translation) and can be changed. Everyone sees the name in their own language. **Fill in missing translations** translates existing categories. The same goes for the **item names**: fill in the Dutch name, French and English are translated. Under Items, **Fill in missing translations** translates 50 existing items at a time (the free translation service has a daily limit).
 
 ## Keeping stock
 

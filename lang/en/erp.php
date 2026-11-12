@@ -1243,6 +1243,10 @@ return [
         'nobody' => 'Nobody is on vacation this month.',
     ],
     'stock' => [
+        'item_names' => [
+            'translate_help' => ':count item(s) have no French or English name yet. :batch are translated at a time (the free translation service has a daily limit); click again for the next ones.',
+            'translated' => ':count item(s) translated, :left still without a translation',
+        ],
         'category_names' => [
             'nl' => 'Name (Dutch)',
             'fr' => 'Name (French)',

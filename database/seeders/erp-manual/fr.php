@@ -607,7 +607,7 @@ Les **articles** du magasin avec leur stock **par site**, des étiquettes QR, le
 
 **Magasin → Articles**, avec les données de base : **Catégories d'articles**, **Unités**, **Fabricants**, **Grossistes** et leurs **Personnes de contact**.
 
-Les **catégories d'articles** et sous-catégories ont un nom en néerlandais, en français et en anglais. Indiquez le nom néerlandais : le français et l'anglais sont traduits automatiquement (gratuitement, via MyMemory ; désactivable dans Paramètres → Général → Traduction automatique) et peuvent être modifiés. Chacun voit le nom dans sa langue. **Compléter les traductions manquantes** traduit les catégories existantes.
+Les **catégories d'articles** et sous-catégories ont un nom en néerlandais, en français et en anglais. Indiquez le nom néerlandais : le français et l'anglais sont traduits automatiquement (gratuitement, via MyMemory ; désactivable dans Paramètres → Général → Traduction automatique) et peuvent être modifiés. Chacun voit le nom dans sa langue. **Compléter les traductions manquantes** traduit les catégories existantes. Il en va de même pour les **noms des articles** : indiquez le nom néerlandais, le français et l'anglais sont traduits. Dans Articles, **Compléter les traductions manquantes** traduit 50 articles existants à la fois (le service de traduction gratuit a une limite par jour).
 
 ## Suivre le stock
 
