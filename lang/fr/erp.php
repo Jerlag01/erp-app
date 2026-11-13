@@ -4537,4 +4537,22 @@ return [
         'inbound_url' => 'Adresse pour les confirmations de commande et bons de livraison',
         'inbound_url_help' => 'Communiquez cette adresse à Cebeo (e-business) pour recevoir les confirmations de commande et bons de livraison en cebeoXML via HTTPS POST : toutes les commandes, aussi celles de l\'e-shop ou passées via un collaborateur de Cebeo, arrivent alors d\'elles-mêmes dans Achats → Commandes.',
     ],
+    'distributors' => [
+        'digikey' => [
+            'client_id' => 'Client ID',
+            'client_secret' => 'Client Secret',
+            'account_id' => 'Account ID (numéro client DigiKey)',
+            'account_help' => 'Nécessaire pour le statut des commandes. Rempli lors de « Connecter à DigiKey » si votre login n\'a qu\'un compte.',
+            'status' => 'Login utilisateur DigiKey',
+            'status_help' => 'Nécessaire pour les codes-barres et la recherche des comptes. Dans DigiKey (developer.digikey.com → votre app), réglez l\'OAuth Callback sur : :url',
+            'connected_until' => 'Connecté, valable jusqu\'au :date (prolongé à l\'usage)',
+            'not_connected' => 'Pas connecté à un utilisateur DigiKey : choisissez « Connecter à DigiKey » sur le grossiste.',
+            'connect' => 'Connecter à DigiKey',
+            'disconnect' => 'Déconnecter DigiKey',
+            'connected' => 'Connecté à DigiKey',
+            'disconnected' => 'Connexion DigiKey supprimée',
+            'connect_failed' => 'La connexion à DigiKey a échoué',
+            'no_account' => 'Saisissez l\'Account ID (numéro client DigiKey) sur le grossiste pour récupérer les commandes.',
+        ],
+    ],
 ];

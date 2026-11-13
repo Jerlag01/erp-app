@@ -20,9 +20,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[Fillable([
     'name', 'vat_number', 'website', 'store_url', 'email', 'phone', 'street', 'postal_code', 'city', 'country', 'logo', 'notes',
-    'price_provider', 'api_username', 'api_password', 'api_customer_number', 'orders_synced_at',
+    'price_provider', 'api_username', 'api_password', 'api_customer_number', 'api_refresh_token', 'api_refresh_expires_at', 'orders_synced_at',
 ])]
-#[Hidden(['api_password'])]
+#[Hidden(['api_password', 'api_refresh_token'])]
 class Distributor extends Model
 {
     use DeletesStoredFiles, HasAddress;
@@ -82,6 +82,8 @@ class Distributor extends Model
     {
         return [
             'api_password' => 'encrypted',
+            'api_refresh_token' => 'encrypted',
+            'api_refresh_expires_at' => 'datetime',
             'orders_synced_at' => 'datetime',
         ];
     }

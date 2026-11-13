@@ -578,7 +578,7 @@ Interne **bestelnummers** voor aankopen, zoals `466/1026/JL`, zodat elk nummer m
 
 ## Bestellingen bij groothandels
 
-Bij **Aankoop → Bestellingen** volg je de bestellingen bij de groothandels op: wat besteld werd met de referenties (groothandel en fabrikant), hoeveel al geleverd is en de status (open, bevestigd, deels geleverd, geleverd, geannuleerd). Elke groothandel met een koppeling (Rexel, Cebeo, Würth) heeft een **eigen tabblad**.
+Bij **Aankoop → Bestellingen** volg je de bestellingen bij de groothandels op: wat besteld werd met de referenties (groothandel en fabrikant), hoeveel al geleverd is en de status (open, bevestigd, deels geleverd, geleverd, geannuleerd). Elke groothandel met een koppeling (Rexel, Cebeo, Würth, DigiKey) heeft een **eigen tabblad**.
 
 Geen enkele groothandel biedt een lijst van alle geplaatste bestellingen aan. Bestellingen komen op deze manieren binnen:
 
@@ -593,6 +593,11 @@ Geen enkele groothandel biedt een lijst van alle geplaatste bestellingen aan. Be
 - **Koppeling met onze bestelnummers**: staat ons bestelnummer (bv. `466/1026/JL`) in de referentie van de bestelling (of in de opmerkingen), dan wordt de bestelling automatisch aan dat bestelnummer gekoppeld; ook als het bestelnummer pas later genomen wordt. Staat het er niet in, dan wordt er niets gekoppeld (je kan het zelf kiezen). In de lijst van de bestelnummers zie je hoeveel bestellingen eraan gekoppeld zijn.
 - **Artikelen** worden aan de magazijnartikelen gekoppeld via de referentie van de groothandel of de fabrikant.
 - **Würth** is voorbereid als groothandel met API (kies "Würth" als prijsbron bij de groothandel); de koppeling zelf volgt zodra de API-documentatie van Würth er is.
+- **DigiKey** is gekoppeld via de API's van DigiKey (developer.digikey.com). Kies "DigiKey" als prijsbron en vul de **Client ID** en **Client Secret** van jullie DigiKey-app in, en het **Account ID** (DigiKey-klantnummer). Dan:
+  - komen de **prijs** (jullie eigen prijs, anders de catalogusprijs per stuk, in euro), de **foto** en de omschrijving binnen via de fabrikantreferentie; het DigiKey-artikelnummer wordt vanzelf ingevuld;
+  - worden de **bestellingen** van het account elk uur opgehaald (één bestelling per DigiKey-verkooporder, met ons bestelnummer uit het PO-nummer) en gevolgd tot ze geleverd zijn, met het trackingnummer;
+  - kan je een **DigiKey-etiket scannen** in de app: het 2D-etiket wordt meteen gelezen, een ouder etiket via de barcode-API.
+  - Voor de barcode-API is een **DigiKey-gebruikerslogin** nodig: kies **Verbinden met DigiKey** op de groothandel en meld je aan bij DigiKey. Zet eerst in de DigiKey-app de **OAuth Callback** op het adres dat bij de groothandel staat. De verbinding blijft 90 dagen geldig en wordt bij gebruik verlengd.
 - Het automatisch bijwerken van de voorraad bij levering volgt later.
 MD,
         ],

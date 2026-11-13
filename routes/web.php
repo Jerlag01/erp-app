@@ -14,6 +14,7 @@ use App\Http\Controllers\ClientBatteryReportController;
 use App\Http\Controllers\ClientProjectFileController;
 use App\Http\Controllers\ClientRouterVpnController;
 use App\Http\Controllers\ClientWelcomeLinkController;
+use App\Http\Controllers\DigiKeyConnectController;
 use App\Http\Controllers\DistributorInboundController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EnersysDocumentController;
@@ -98,6 +99,9 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::post('/locale', LocaleController::class)->name('locale.update');
     Route::get('/projects/{project}/archive', ProjectArchiveController::class)->whereNumber('project')->name('projects.archive');
     Route::get('/stock/labels', StockLabelController::class)->name('stock.labels');
+    // DigiKey user login (3-legged OAuth) for the barcode and account APIs.
+    Route::get('/distributors/{distributor}/digikey/connect', [DigiKeyConnectController::class, 'connect'])->whereNumber('distributor')->name('distributors.digikey.connect');
+    Route::get('/distributors/digikey/callback', [DigiKeyConnectController::class, 'callback'])->name('distributors.digikey.callback');
     Route::get('/it-labels', ItAssetLabelController::class)->name('it.labels');
     Route::get('/incidents/{incident}/photos/{index}', IncidentPhotoController::class)->whereNumber('index')->name('incidents.photo');
     Route::get('/incident-pdf', IncidentPdfController::class)->name('incidents.pdf');

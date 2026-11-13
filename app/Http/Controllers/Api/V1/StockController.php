@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\AdjustStock;
 use App\Http\Controllers\Controller;
+use App\Models\Distributor;
 use App\Models\Location;
 use App\Models\StockItem;
 use App\Models\StockItemSupplier;
 use App\Models\StockLevel;
 use App\Models\User;
+use App\Services\Distributors\DigiKeyClient;
+use App\Services\Distributors\DistributorException;
 use App\Support\StockCount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -48,9 +51,48 @@ class StockController extends Controller
                 ->orderByDesc('is_active')
                 ->first();
 
+        $item ??= $this->fromDistributorLabel($code);
+
         abort_if($item === null, 404, __('erp.mobile.stock.not_found'));
 
         return response()->json(['data' => ['id' => $item->id]]);
+    }
+
+    /**
+     * A distributor's own label (DigiKey): its 2D code is read here, another code through DigiKey's
+     * barcode API (when a DigiKey user login is connected). The item with that DigiKey number, else
+     * with that manufacturer reference.
+     */
+    protected function fromDistributorLabel(string $code): ?StockItem
+    {
+        $label = DigiKeyClient::parse2D($code);
+
+        if ($label === null) {
+            foreach (Distributor::query()->where('price_provider', 'digikey')->get() as $distributor) {
+                $client = $distributor->client();
+
+                if (! $client instanceof DigiKeyClient || ! $client->isConnected()) {
+                    continue;
+                }
+
+                try {
+                    $label = $client->scan($code);
+                } catch (DistributorException) {
+                    $label = null;
+                }
+
+                if ($label !== null) {
+                    break;
+                }
+            }
+        }
+
+        if ($label === null) {
+            return null;
+        }
+
+        return (filled($label['digikey']) ? StockItem::query()->whereHas('suppliers', fn (Builder $query) => $query->where('reference', $label['digikey']))->orderByDesc('is_active')->first() : null)
+            ?? (filled($label['manufacturer_reference']) ? StockItem::query()->whereReference('manufacturer_reference', $label['manufacturer_reference'])->orderByDesc('is_active')->first() : null);
     }
 
     /**

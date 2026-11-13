@@ -8,6 +8,7 @@ use App\Filament\Resources\Distributors\Pages\EditDistributor;
 use App\Filament\Resources\Distributors\Pages\ListDistributors;
 use App\Filament\Resources\Distributors\RelationManagers\ContactsRelationManager;
 use App\Filament\Schemas\CompanyFields;
+use App\Http\Controllers\DigiKeyConnectController;
 use App\Http\Controllers\DistributorInboundController;
 use App\Models\Distributor;
 use App\Services\Distributors\DistributorClients;
@@ -55,6 +56,7 @@ class DistributorResource extends Resource
     public static function form(Schema $schema): Schema
     {
         $hasProvider = fn (Get $get): bool => filled($get('price_provider'));
+        $isDigiKey = fn (Get $get): bool => $get('price_provider') === 'digikey';
 
         return $schema->components([
             ...CompanyFields::make('distributors', [
@@ -90,16 +92,17 @@ class DistributorResource extends Resource
                         ->placeholder(__('erp.stock.provider.manual'))
                         ->live(),
                     TextInput::make('api_customer_number')
-                        ->label(__('erp.fields.api_customer_number'))
+                        ->label(fn (Get $get): string => $isDigiKey($get) ? __('erp.distributors.digikey.account_id') : __('erp.fields.api_customer_number'))
+                        ->helperText(fn (Get $get): ?string => $isDigiKey($get) ? __('erp.distributors.digikey.account_help') : null)
                         ->maxLength(50)
                         ->visible($hasProvider),
                     TextInput::make('api_username')
-                        ->label(__('erp.settings.fields.username'))
+                        ->label(fn (Get $get): string => $isDigiKey($get) ? __('erp.distributors.digikey.client_id') : __('erp.settings.fields.username'))
                         ->autocomplete('off')
                         ->maxLength(255)
                         ->visible($hasProvider),
                     TextInput::make('api_password')
-                        ->label(__('erp.fields.password'))
+                        ->label(fn (Get $get): string => $isDigiKey($get) ? __('erp.distributors.digikey.client_secret') : __('erp.fields.password'))
                         ->helperText(__('erp.settings.help.mail_password'))
                         ->password()
                         ->revealable()
@@ -107,6 +110,15 @@ class DistributorResource extends Resource
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->afterStateHydrated(fn (TextInput $component) => $component->state(null))
                         ->visible($hasProvider),
+                    // DigiKey: whether a user login is connected (barcodes, accounts), and the callback to set at DigiKey.
+                    TextEntry::make('digikey_status')
+                        ->label(__('erp.distributors.digikey.status'))
+                        ->state(fn (?Distributor $record): string => $record?->api_refresh_token && ($record->api_refresh_expires_at?->isFuture() ?? true)
+                            ? __('erp.distributors.digikey.connected_until', ['date' => $record->api_refresh_expires_at?->format('d/m/Y') ?? '—'])
+                            : __('erp.distributors.digikey.not_connected'))
+                        ->helperText(fn (): string => __('erp.distributors.digikey.status_help', ['url' => DigiKeyConnectController::callbackUrl()]))
+                        ->visible(fn (?Distributor $record, Get $get): bool => $record?->exists && $isDigiKey($get))
+                        ->columnSpanFull(),
                     // Where Cebeo can POST its order confirmations and delivery notes (Purchasing > Orders).
                     TextEntry::make('inbound_url')
                         ->label(__('erp.distributor_orders.inbound_url'))

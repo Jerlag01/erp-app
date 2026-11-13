@@ -577,7 +577,7 @@ Internal **order references** for purchases, such as `466/1026/JL`, so that each
 
 ## Orders at distributors
 
-Under **Purchasing → Orders** you follow the orders placed at the distributors: what was ordered with its references (distributor and manufacturer), how much is delivered and the status (open, confirmed, partly delivered, delivered, cancelled). Every distributor with a connection (Rexel, Cebeo, Würth) has its **own tab**.
+Under **Purchasing → Orders** you follow the orders placed at the distributors: what was ordered with its references (distributor and manufacturer), how much is delivered and the status (open, confirmed, partly delivered, delivered, cancelled). Every distributor with a connection (Rexel, Cebeo, Würth, DigiKey) has its **own tab**.
 
 No distributor offers a list of all placed orders. Orders come in these ways:
 
@@ -592,6 +592,11 @@ No distributor offers a list of all placed orders. Orders come in these ways:
 - **Link with our order references**: when our order reference (e.g. `466/1026/JL`) is in the order's reference (or in the notes), the order is linked to it automatically, also when the reference is only taken later. When it is not in there, nothing is linked (you can pick it yourself). The list of order references shows how many orders are linked to each.
 - **Items** are linked to the stock items through the distributor's or manufacturer's reference.
 - **Würth** is prepared as a distributor with an API (choose "Würth" as price provider on the distributor); the connection itself follows once Würth's API documentation is in.
+- **DigiKey** is connected through DigiKey's APIs (developer.digikey.com). Choose "DigiKey" as price provider and enter the **Client ID** and **Client Secret** of your DigiKey app, and the **Account ID** (DigiKey customer number). Then:
+  - the **price** (your own price, else the catalogue price per piece, in euro), the **picture** and the description come in by the manufacturer reference; the DigiKey article number is filled in automatically;
+  - the account's **orders** are fetched every hour (one order per DigiKey sales order, with our order number from the PO number) and followed until delivered, with the tracking number;
+  - you can **scan a DigiKey label** in the app: the 2D label is read straight away, an older label through the barcode API.
+  - The barcode API needs a **DigiKey user login**: choose **Connect with DigiKey** on the distributor and log in at DigiKey. First set the **OAuth Callback** of the DigiKey app to the address shown on the distributor. The connection stays valid for 90 days and is renewed when used.
 - Updating the stock automatically on delivery comes later.
 MD,
         ],

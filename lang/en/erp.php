@@ -4537,4 +4537,22 @@ return [
         'inbound_url' => 'Address for order confirmations and delivery notes',
         'inbound_url_help' => 'Give this address to Cebeo (e-business) to send the order confirmations and delivery notes in cebeoXML by HTTPS POST: all orders, also those from the e-shop or placed through a Cebeo employee, then arrive in Purchasing → Orders by themselves.',
     ],
+    'distributors' => [
+        'digikey' => [
+            'client_id' => 'Client ID',
+            'client_secret' => 'Client Secret',
+            'account_id' => 'Account ID (DigiKey customer number)',
+            'account_help' => 'Needed for the order status. Filled in by "Connect with DigiKey" when your login has one account.',
+            'status' => 'DigiKey user login',
+            'status_help' => 'Needed for barcodes and to look up the accounts. In DigiKey (developer.digikey.com → your app), set the OAuth Callback to: :url',
+            'connected_until' => 'Connected, valid until :date (renewed when used)',
+            'not_connected' => 'Not connected to a DigiKey user: choose "Connect with DigiKey" on the distributor.',
+            'connect' => 'Connect with DigiKey',
+            'disconnect' => 'Disconnect DigiKey',
+            'connected' => 'Connected with DigiKey',
+            'disconnected' => 'DigiKey disconnected',
+            'connect_failed' => 'Connecting with DigiKey failed',
+            'no_account' => 'Enter the Account ID (DigiKey customer number) on the distributor to fetch the orders.',
+        ],
+    ],
 ];

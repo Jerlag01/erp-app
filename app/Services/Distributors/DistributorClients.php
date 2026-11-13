@@ -16,6 +16,7 @@ class DistributorClients
         'cebeo' => CebeoClient::class,
         'rexel' => RexelClient::class,
         'wurth' => WurthClient::class,
+        'digikey' => DigiKeyClient::class,
     ];
 
     public function for(Distributor $distributor): ?DistributorClient
@@ -42,7 +43,9 @@ class DistributorClients
     {
         $client = $this->for($distributor);
 
-        return $client instanceof DistributorOrderLookup && $client->isConfigured() ? $client : null;
+        // A connection that also lists orders (DigiKey) can only look one up when it can list them.
+        return $client instanceof DistributorOrderLookup && $client->isConfigured()
+            && (! $client instanceof DistributorOrderSource || $client->supportsOrders()) ? $client : null;
     }
 
     /**
@@ -50,6 +53,6 @@ class DistributorClients
      */
     public static function options(): array
     {
-        return ['cebeo' => 'Cebeo', 'rexel' => 'Rexel', 'wurth' => 'Würth'];
+        return ['cebeo' => 'Cebeo', 'rexel' => 'Rexel', 'wurth' => 'Würth', 'digikey' => 'DigiKey'];
     }
 }

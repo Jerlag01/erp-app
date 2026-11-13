@@ -4538,4 +4538,22 @@ return [
         'inbound_url' => 'Adres voor orderbevestigingen en leverbonnen',
         'inbound_url_help' => 'Geef dit adres aan Cebeo (e-business) om de orderbevestigingen en leverbonnen in cebeoXML via HTTPS POST te sturen: dan komen alle bestellingen, ook die uit de e-shop of via een medewerker van Cebeo, vanzelf bij Aankoop → Bestellingen.',
     ],
+    'distributors' => [
+        'digikey' => [
+            'client_id' => 'Client ID',
+            'client_secret' => 'Client Secret',
+            'account_id' => 'Account ID (DigiKey-klantnummer)',
+            'account_help' => 'Nodig voor de bestelstatus. Wordt ingevuld bij "Verbinden met DigiKey" als je login één account heeft.',
+            'status' => 'Gebruikerslogin DigiKey',
+            'status_help' => 'Nodig voor barcodes en om de accounts op te zoeken. Zet in DigiKey (developer.digikey.com → je app) de OAuth Callback op: :url',
+            'connected_until' => 'Verbonden, geldig tot :date (wordt bij gebruik verlengd)',
+            'not_connected' => 'Niet verbonden met een DigiKey-gebruiker: kies "Verbinden met DigiKey" bij de groothandel.',
+            'connect' => 'Verbinden met DigiKey',
+            'disconnect' => 'Verbinding met DigiKey verbreken',
+            'connected' => 'Verbonden met DigiKey',
+            'disconnected' => 'Verbinding met DigiKey verbroken',
+            'connect_failed' => 'Verbinden met DigiKey is niet gelukt',
+            'no_account' => 'Vul het Account ID (DigiKey-klantnummer) in bij de groothandel om de bestellingen op te halen.',
+        ],
+    ],
 ];

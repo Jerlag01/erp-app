@@ -577,7 +577,7 @@ Des **numéros de commande** internes pour les achats, comme `466/1026/JL`, pour
 
 ## Commandes chez les grossistes
 
-Dans **Achats → Commandes**, vous suivez les commandes passées chez les grossistes : ce qui a été commandé avec les références (grossiste et fabricant), ce qui est déjà livré et le statut (ouverte, confirmée, partiellement livrée, livrée, annulée). Chaque grossiste avec une connexion (Rexel, Cebeo, Würth) a son **propre onglet**.
+Dans **Achats → Commandes**, vous suivez les commandes passées chez les grossistes : ce qui a été commandé avec les références (grossiste et fabricant), ce qui est déjà livré et le statut (ouverte, confirmée, partiellement livrée, livrée, annulée). Chaque grossiste avec une connexion (Rexel, Cebeo, Würth, DigiKey) a son **propre onglet**.
 
 Aucun grossiste ne propose la liste de toutes les commandes passées. Les commandes arrivent de ces façons :
 
@@ -592,6 +592,11 @@ Aucun grossiste ne propose la liste de toutes les commandes passées. Les comman
 - **Lien avec nos numéros de commande** : si notre numéro de commande (p. ex. `466/1026/JL`) figure dans la référence de la commande (ou dans les remarques), la commande y est liée automatiquement ; aussi si le numéro de commande n'est pris qu'ensuite. S'il n'y figure pas, rien n'est lié (vous pouvez le choisir vous-même). La liste des numéros de commande montre combien de commandes y sont liées.
 - Les **articles** sont liés aux articles du stock via la référence du grossiste ou du fabricant.
 - **Würth** est préparé comme grossiste avec API (choisissez « Würth » comme source de prix chez le grossiste) ; la connexion suit dès que la documentation API de Würth est disponible.
+- **DigiKey** est connecté via les API de DigiKey (developer.digikey.com). Choisissez « DigiKey » comme source de prix et saisissez le **Client ID** et le **Client Secret** de votre app DigiKey, ainsi que l'**Account ID** (numéro client DigiKey). Alors :
+  - le **prix** (votre prix, sinon le prix catalogue à la pièce, en euros), la **photo** et la description arrivent via la référence fabricant ; le numéro d'article DigiKey est rempli automatiquement ;
+  - les **commandes** du compte sont récupérées chaque heure (une commande par commande client DigiKey, avec notre numéro de commande depuis le numéro PO) et suivies jusqu'à la livraison, avec le numéro de suivi ;
+  - vous pouvez **scanner une étiquette DigiKey** dans l'app : l'étiquette 2D est lue directement, une étiquette plus ancienne via l'API code-barres.
+  - L'API code-barres nécessite un **login utilisateur DigiKey** : choisissez **Connecter à DigiKey** sur le grossiste et connectez-vous chez DigiKey. Réglez d'abord, dans l'app DigiKey, l'**OAuth Callback** sur l'adresse indiquée sur le grossiste. La connexion reste valable 90 jours et est prolongée à l'usage.
 - La mise à jour automatique du stock à la livraison suivra plus tard.
 MD,
         ],
