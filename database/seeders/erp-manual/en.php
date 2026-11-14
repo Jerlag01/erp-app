@@ -1157,7 +1157,7 @@ Making and sending invoices and credit notes (also through **Peppol**), payment 
 
 ## Where?
 
-**Finance → Offers, Invoices, Credit notes, Incoming invoices, Clients, Standard invoice lines, Offer categories, Default offer lines, Finance overview, Statistics**. The company details and Peppol are set under **Settings → Finance**.
+**Finance → Invoices, Credit notes, Incoming invoices, Clients, Standard invoice lines, Finance overview, Statistics**. The company details and Peppol are set under **Settings → Finance**.
 
 ## Invoices
 
@@ -1167,18 +1167,6 @@ Making and sending invoices and credit notes (also through **Peppol**), payment 
 4. For overdue invoices you send up to **three payment reminders**; switch them on under **Settings → Finance** and they go out automatically every day.
 
 A **credit note** is made from an invoice or separately.
-
-## Offers
-
-1. Go to **Finance → Offers → New offer**, or open a project and click **Make an offer** in the **Offers** tab: the COW code and municipality (Your ref.), the site address and the description (Subject) are filled in.
-2. Choose the **client** and fill in *Our ref.*
-3. **Add default lines**: choose whole **categories** (A, C, E, G, …) or single lines. Every line has a **unit price supply** and a **unit price installation**; a labour line takes the **hourly rate** as installation price. You can also add your own lines; a line without a quantity is a text line.
-4. The offer adds up per category, gives the **price of the works** (supply and installation), adds the **general costs** separately to the total and calculates the **working hours** (installation total ÷ hourly rate) and the number of **workdays** per crew size.
-5. Adjust the **remarks** (what is not included, conditions) and save. The offer gets a number (e.g. OF2026-0001).
-6. **PDF** opens the offer; **Save to project** adds the PDF to the project's offers (a new version the next time).
-7. Once the offer is accepted, **Create invoice** makes a draft invoice with every line (supply + installation). The offer can then only be viewed.
-
-The **offer categories** and **default offer lines** are managed under **Finance**; the prefix, hourly rate, hours per workday, crew sizes and default remarks under **Settings → Finance → Offers**.
 
 ## Incoming invoices
 
@@ -1191,7 +1179,34 @@ Incoming invoices (also received through Peppol) are **validated**: approved or 
 
 ## Permissions
 
-Employees only see this with the finance permissions (per kind: offers, invoices, credit notes, incoming invoices, clients). Creating an invoice from an offer also needs the right to create invoices.
+Employees only see this with the finance permissions (per kind: invoices, credit notes, incoming invoices, clients).
+MD,
+        ],
+
+        'offers' => [
+            'title' => 'Offers',
+            'body' => <<<'MD'
+## What is it for?
+
+Making offers for projects with **categories** and **default lines** (supply and installation price), the **workdays** and a **PDF** like the Proximus offer. The **Offers** module is separate from **Finance**: it works with or without it, and is switched on or off under **Settings → Modules**.
+
+## Making an offer
+
+1. Go to **Offers → Offers → New offer**, or open a project and click **Make an offer** in the **Offers** tab: the COW code and municipality (Your ref.), the site address and the description (Subject) are filled in.
+2. Fill in the **client** and *Our ref.*
+3. **Add default lines**: choose whole **categories** (A, C, E, G, …) or single lines. Every line has a **unit price supply** and a **unit price installation**; a labour line takes the **hourly rate** as installation price. You can also add your own lines; a line without a quantity is a text line.
+4. The offer adds up per category, gives the **price of the works** (supply and installation), adds the **general costs** separately to the total and calculates the **working hours** (installation total ÷ hourly rate) and the number of **workdays** per crew size.
+5. Adjust the **remarks** (what is not included, conditions) and save. The offer gets a number (e.g. OF2026-0001).
+6. **PDF** opens the offer; **Save to project** adds the PDF to the project's offers (a new version the next time).
+7. With the Finance module you choose a **client**; once the offer is accepted, **Create invoice** makes a draft invoice with every line (supply + installation). The offer can then only be viewed.
+
+The **offer categories** and **default offer lines** are managed under **Offers**; the prefix, hourly rate, hours per workday, crew sizes and default remarks under **Settings → Offers**.
+
+Without the Finance module the client is a **name** and there is no invoice. The company name and VAT number on the offer are set under **Settings → Offers** (empty: those of Finance, else the platform name).
+
+## Permissions
+
+The **Offers** permission (view, create, update, delete, generate PDF) and **Offer categories & default offer lines** for the master data. Creating an invoice also needs the right to create invoices.
 MD,
         ],
 

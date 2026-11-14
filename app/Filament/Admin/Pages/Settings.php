@@ -118,6 +118,11 @@ class Settings extends Page
                             ->icon(Heroicon::OutlinedBanknotes)
                             ->visible(fn (): bool => modules()->finance())
                             ->schema($this->financeFields()),
+                        // Only while the offers module is on (with or without finance).
+                        Tab::make(__('erp.settings.tabs.offers'))
+                            ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
+                            ->visible(fn (): bool => modules()->offers())
+                            ->schema($this->offerFields()),
                         // Only while the prestations module is on.
                         Tab::make(__('erp.settings.tabs.timesheets'))
                             ->icon(Heroicon::OutlinedClock)
@@ -394,6 +399,7 @@ class Settings extends Page
             Modules::HR_CALCULATIONS => Heroicon::OutlinedCalculator,
             Modules::BOARD_DELIVERIES => Heroicon::OutlinedCpuChip,
             Modules::CABLE_CALCULATOR => Heroicon::OutlinedCalculator,
+            Modules::OFFERS => Heroicon::OutlinedDocumentCurrencyEuro,
             Modules::BATTERY_ROOMS => Heroicon::OutlinedHomeModern,
             Modules::ONBOARDING => Heroicon::OutlinedAcademicCap,
         ];
@@ -477,17 +483,6 @@ class Settings extends Page
                     TextInput::make('finance.credit_note_prefix')->label(__('erp.settings.fields.credit_note_prefix'))->maxLength(10),
                     TextInput::make('finance.payment_term_days')->label(__('erp.settings.fields.payment_term'))->helperText(__('erp.settings.help.payment_term'))->integer()->minValue(0)->maxValue(365)->suffix(__('erp.vacations.days')),
                 ]),
-            Section::make(__('erp.settings.sections.finance_offers'))
-                ->columns(3)
-                ->schema([
-                    TextInput::make('finance.offer_prefix')->label(__('erp.settings.fields.offer_prefix'))->helperText(__('erp.settings.help.offer_prefix'))->maxLength(10),
-                    TextInput::make('finance.offer_validity_days')->label(__('erp.settings.fields.offer_validity_days'))->integer()->minValue(0)->maxValue(365)->suffix(__('erp.vacations.days')),
-                    TextInput::make('finance.offer_site_owner')->label(__('erp.settings.fields.offer_site_owner'))->helperText(__('erp.settings.help.offer_site_owner'))->maxLength(100),
-                    TextInput::make('finance.offer_hourly_rate')->label(__('erp.settings.fields.offer_hourly_rate'))->helperText(__('erp.settings.help.offer_hourly_rate'))->numeric()->step(0.01)->minValue(0)->prefix('€'),
-                    TextInput::make('finance.offer_hours_per_day')->label(__('erp.settings.fields.offer_hours_per_day'))->numeric()->step(0.25)->minValue(1)->maxValue(24),
-                    TextInput::make('finance.offer_crew_sizes')->label(__('erp.settings.fields.offer_crew_sizes'))->helperText(__('erp.settings.help.offer_crew_sizes'))->regex('/^\s*\d+(\s*,\s*\d+)*\s*$/')->maxLength(50),
-                    Textarea::make('finance.offer_remarks')->label(__('erp.settings.fields.offer_remarks'))->helperText(__('erp.settings.help.offer_remarks'))->rows(8)->maxLength(5000)->columnSpanFull(),
-                ]),
             Section::make(__('erp.settings.sections.finance_reminders'))
                 ->description(__('erp.settings.help.finance_reminders'))
                 ->columns(3)
@@ -518,6 +513,36 @@ class Settings extends Page
                         ->revealable(),
                     Text::make(fn (): string => __('erp.settings.help.peppol_inbound', ['url' => PeppolInboundController::url() ?? __('erp.settings.help.peppol_inbound_after_save')]))
                         ->columnSpanFull(),
+                ]),
+        ];
+    }
+
+    /**
+     * Offers: the company on the offer, numbering, validity, the hourly rate and crew sizes for the
+     * workdays, and the remarks every new offer starts with.
+     *
+     * @return array<Component>
+     */
+    protected function offerFields(): array
+    {
+        return [
+            Section::make(__('erp.settings.sections.offer_company'))
+                ->description(__('erp.settings.help.offer_company'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('offers.company_name')->label(__('erp.settings.fields.offer_company_name'))->placeholder(fn (): string => (string) (settings()->get('finance.company_name') ?: settings()->siteName()))->maxLength(255),
+                    TextInput::make('offers.vat_number')->label(__('erp.settings.fields.offer_vat_number'))->placeholder(fn (): ?string => settings()->get('finance.vat_number') ?: 'BE0123.456.789')->maxLength(20),
+                ]),
+            Section::make(__('erp.settings.sections.finance_offers'))
+                ->columns(3)
+                ->schema([
+                    TextInput::make('offers.prefix')->label(__('erp.settings.fields.offer_prefix'))->helperText(__('erp.settings.help.offer_prefix'))->maxLength(10),
+                    TextInput::make('offers.validity_days')->label(__('erp.settings.fields.offer_validity_days'))->integer()->minValue(0)->maxValue(365)->suffix(__('erp.vacations.days')),
+                    TextInput::make('offers.site_owner')->label(__('erp.settings.fields.offer_site_owner'))->helperText(__('erp.settings.help.offer_site_owner'))->maxLength(100),
+                    TextInput::make('offers.hourly_rate')->label(__('erp.settings.fields.offer_hourly_rate'))->helperText(__('erp.settings.help.offer_hourly_rate'))->numeric()->step(0.01)->minValue(0)->prefix('€'),
+                    TextInput::make('offers.hours_per_day')->label(__('erp.settings.fields.offer_hours_per_day'))->numeric()->step(0.25)->minValue(1)->maxValue(24),
+                    TextInput::make('offers.crew_sizes')->label(__('erp.settings.fields.offer_crew_sizes'))->helperText(__('erp.settings.help.offer_crew_sizes'))->regex('/^\s*\d+(\s*,\s*\d+)*\s*$/')->maxLength(50),
+                    Textarea::make('offers.remarks')->label(__('erp.settings.fields.offer_remarks'))->helperText(__('erp.settings.help.offer_remarks'))->rows(8)->maxLength(5000)->columnSpanFull(),
                 ]),
         ];
     }

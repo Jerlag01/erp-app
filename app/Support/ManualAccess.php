@@ -19,6 +19,7 @@ use App\Models\FuelPass;
 use App\Models\Incident;
 use App\Models\Location;
 use App\Models\MoveDossier;
+use App\Models\Offer;
 use App\Models\OrderReference;
 use App\Models\Project;
 use App\Models\Router;
@@ -80,6 +81,7 @@ class ManualAccess
             'cable-stripping' => $can('viewAny', CableStrippingLine::class),
             'waste' => $any('waste', 'waste_master_data'),
             'finance' => $any('finance', 'clients', 'invoices', 'credit_notes', 'expenses', 'finance_master_data'),
+            'offers' => $can('viewAny', Offer::class) || $any('offer_master_data'),
             'incidents' => $can('create', Incident::class) || $can('viewAny', Incident::class),
             'suggestions' => $can('create', Suggestion::class) || $can('viewAny', Suggestion::class),
             'toolbox' => $can('viewAny', ToolboxMeeting::class),

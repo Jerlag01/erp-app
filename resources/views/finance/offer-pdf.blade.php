@@ -1,9 +1,9 @@
 @php
-    $f = fn (string $key) => settings()->get('finance.'.$key);
     $money = fn ($amount) => \App\Models\Invoice::money($amount);
     $qty = fn ($quantity) => $quantity === null ? '' : rtrim(rtrim(number_format((float) $quantity, 3, ',', '.'), '0'), ',');
     $cell = fn ($amount) => $amount === null || (float) $amount == 0.0 ? '' : $money($amount);
-    $company = $f('company_name') ?: settings()->siteName();
+    $companyDetails = \App\Models\Offer::company();
+    $company = $companyDetails['name'];
     $works = $offer->chapters();
     $general = $offer->chapters(true);
     $cow = $offer->project?->workSite?->cow_code;
@@ -69,8 +69,8 @@
                 <td></td><td></td>
             @endif
         </tr>
-        @if ($offer->client)
-            <tr><td class="label">{{ __('erp.resources.client.singular') }}:</td><td colspan="3">{{ $offer->client->company_name }}@if ($offer->client->vat_number) · {{ __('erp.finance.pdf.vat') }} {{ $offer->client->vat_number }}@endif</td></tr>
+        @if ($offer->clientLabel())
+            <tr><td class="label">{{ __('erp.resources.client.singular') }}:</td><td colspan="3">{{ $offer->clientLabel() }}@if ($offer->client?->vat_number) · {{ __('erp.finance.pdf.vat') }} {{ $offer->client->vat_number }}@endif</td></tr>
         @endif
     </table>
 
@@ -149,7 +149,7 @@
 
     <table class="head" style="width: 60%;">
         <tr><td class="label" style="text-decoration: underline;">{{ __('erp.finance.offers.company') }}:</td><td>{{ $company }}</td></tr>
-        @if ($f('vat_number'))<tr><td class="label" style="text-decoration: underline;">{{ __('erp.finance.offers.vat_number') }}:</td><td>{{ $f('vat_number') }}</td></tr>@endif
+        @if ($companyDetails['vat'])<tr><td class="label" style="text-decoration: underline;">{{ __('erp.finance.offers.vat_number') }}:</td><td>{{ $companyDetails['vat'] }}</td></tr>@endif
         @if ($cow)<tr><td class="label" style="text-decoration: underline;">{{ __('erp.finance.offers.cow_code') }}:</td><td>{{ $cow }}</td></tr>@endif
         @if ($offer->project)<tr><td class="label" style="text-decoration: underline;">{{ __('erp.resources.project.singular') }}:</td><td>{{ $offer->project->reference }}</td></tr>@endif
         <tr><td class="label" style="text-decoration: underline;">{{ __('erp.finance.offers.description') }}:</td><td>{{ $offer->subject }}</td></tr>

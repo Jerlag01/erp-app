@@ -17,7 +17,7 @@ class Settings
 {
     public const CACHE_KEY = 'erp-settings';
 
-    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app', 'translation'];
+    public const GROUPS = ['general', 'banner', 'hr', 'asbuilt', 'modules', 'mail', 'appearance', 'finance', 'offers', 'planning', 'batteries', 'timesheets', 'charging', 'mobile_app', 'translation'];
 
     /** @var array<string, array<string, mixed>>|null */
     protected ?array $values = null;
@@ -112,6 +112,7 @@ class Settings
                 Modules::HR_CALCULATIONS => true,
                 Modules::BOARD_DELIVERIES => true,
                 Modules::CABLE_CALCULATOR => true,
+                Modules::OFFERS => true,
                 Modules::BATTERY_ROOMS => true,
                 Modules::ONBOARDING => true,
                 Modules::ENERSYS => true,
@@ -158,14 +159,19 @@ class Settings
                 'peppol_provider_url' => null,
                 'peppol_api_key' => null,
                 'peppol_inbound_secret' => null,
-                // Offers (Settings > Finance > Offers).
-                'offer_prefix' => 'OF',
-                'offer_validity_days' => 30,
-                'offer_hourly_rate' => 68.64,
-                'offer_hours_per_day' => 8,
-                'offer_crew_sizes' => '2,3,4',
-                'offer_site_owner' => 'Proximus',
-                'offer_remarks' => "Is niet voorzien in onze prijzen:\nHet brandwerend afdichten van de openingen.\nKabelladders\n\nIn- en overschakelingen:\nUitvoering met volledige samenwerking van Proximus.\nProximus zal steeds een technieker ter beschikking stellen met de nodige kennis.\n\nAanbiedingen van kabels en kabelladders:\nWij bieden aan met VOBs-kabels (voor aardingen) en XVB voor stopcontacten, verlichting, …",
+            ],
+            // Offers (Settings > Offers): numbering, the hourly rate for the workdays, the default remarks, and
+            // the company on the offer (empty: the finance company details, else the site name).
+            'offers' => [
+                'company_name' => null,
+                'vat_number' => null,
+                'prefix' => 'OF',
+                'validity_days' => 30,
+                'hourly_rate' => 68.64,
+                'hours_per_day' => 8,
+                'crew_sizes' => '2,3,4',
+                'site_owner' => 'Proximus',
+                'remarks' => "Is niet voorzien in onze prijzen:\nHet brandwerend afdichten van de openingen.\nKabelladders\n\nIn- en overschakelingen:\nUitvoering met volledige samenwerking van Proximus.\nProximus zal steeds een technieker ter beschikking stellen met de nodige kennis.\n\nAanbiedingen van kabels en kabelladders:\nWij bieden aan met VOBs-kabels (voor aardingen) en XVB voor stopcontacten, verlichting, …",
             ],
             // Preset timeslots and who gets a copy of planning mails (Settings > Planning).
             'planning' => [

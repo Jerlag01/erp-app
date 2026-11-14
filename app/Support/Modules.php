@@ -70,7 +70,9 @@ class Modules
 
     public const CABLE_CALCULATOR = 'cable_calculator';
 
-    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES, self::BATTERY_ROOMS, self::ONBOARDING, self::CABLE_CALCULATOR];
+    public const OFFERS = 'offers';
+
+    public const ALL = [self::FLEET, self::TEAMS, self::ASSETS, self::VACATIONS, self::ORDERS, self::LOCATIONS, self::STOCK, self::IT, self::WORK_SITES, self::INCIDENTS, self::SUGGESTIONS, self::PROJECTS, self::KNOWLEDGE_BASE, self::EMPLOYEES, self::WASTE, self::FINANCE, self::PLANNING, self::INTERVENTIONS, self::BATTERIES, self::TIMESHEETS, self::CHARGING, self::CABLE_STRIPPING, self::ENERSYS, self::TOOLBOX, self::ANNOUNCEMENTS, self::ASBUILT, self::HR_CALCULATIONS, self::BOARD_DELIVERIES, self::BATTERY_ROOMS, self::ONBOARDING, self::CABLE_CALCULATOR, self::OFFERS];
 
     public function __construct(protected Settings $settings) {}
 
@@ -226,6 +228,14 @@ class Modules
     public function onboarding(): bool
     {
         return $this->enabled(self::ONBOARDING);
+    }
+
+    /**
+     * Offers (quotes) with categories and default lines; works with or without the finance module.
+     */
+    public function offers(): bool
+    {
+        return $this->enabled(self::OFFERS);
     }
 
     public function cableCalculator(): bool

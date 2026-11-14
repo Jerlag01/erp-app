@@ -1150,7 +1150,7 @@ MD,
         ],
 
         'finance' => [
-            'title' => 'Financieel: offertes, facturen, creditnota\'s en inkomende facturen',
+            'title' => 'Financieel: facturen, creditnota\'s en inkomende facturen',
             'body' => <<<'MD'
 ## Waarvoor?
 
@@ -1158,7 +1158,7 @@ Facturen en creditnota's opmaken en versturen (ook via **Peppol**), betalingsher
 
 ## Waar?
 
-**Financieel → Offertes, Facturen, Creditnota's, Inkomende facturen, Klanten, Standaard factuurlijnen, Offertecategorieën, Standaard offertelijnen, Financieel overzicht, Statistieken**. De bedrijfsgegevens en Peppol stel je in bij **Instellingen → Financieel**.
+**Financieel → Facturen, Creditnota's, Inkomende facturen, Klanten, Standaard factuurlijnen, Financieel overzicht, Statistieken**. De bedrijfsgegevens en Peppol stel je in bij **Instellingen → Financieel**.
 
 ## Facturen
 
@@ -1168,18 +1168,6 @@ Facturen en creditnota's opmaken en versturen (ook via **Peppol**), betalingsher
 4. Voor vervallen facturen verstuur je tot **drie betalingsherinneringen**; zet je ze aan bij **Instellingen → Financieel**, dan gaan ze elke dag automatisch.
 
 Een **creditnota** maak je vanuit een factuur of apart.
-
-## Offertes
-
-1. Ga naar **Financieel → Offertes → Nieuwe offerte**, of open een project en klik in het tabblad **Offertes** op **Offerte opmaken**: de COW-code en gemeente (Uw ref.), het adres van de werf en de omschrijving (Betreft) worden ingevuld.
-2. Kies de **klant** en vul *Onze ref.* in.
-3. **Standaardlijnen toevoegen**: kies hele **categorieën** (A, C, E, G, …) of losse lijnen. Elke lijn heeft een **eenheidsprijs leveren** en een **eenheidsprijs plaatsen**; een arbeidslijn neemt het **uurloon** als prijs plaatsen. Lijnen kan je ook zelf toevoegen; een lijn zonder hoeveelheid is een tekstlijn.
-4. De offerte telt per categorie op, geeft de **prijs voor de werken** (leveren en plaatsen), telt de **algemene onkosten** apart bij het totaal en berekent de **werkuren** (totaal plaatsen ÷ uurloon) en het aantal **werkdagen** per ploeggrootte.
-5. Pas de **opmerkingen** aan (wat niet voorzien is, voorwaarden) en bewaar. De offerte krijgt een nummer (bv. OF2026-0001).
-6. **PDF** opent de offerte; **Opslaan bij project** zet de PDF bij de offertes van het project (een nieuwe versie bij een volgende keer).
-7. Is de offerte aanvaard, dan maakt **Factuur maken** een conceptfactuur met elke lijn (leveren + plaatsen). De offerte is daarna enkel nog te bekijken.
-
-De **offertecategorieën** en **standaard offertelijnen** beheer je bij **Financieel**; het voorvoegsel, het uurloon, de uren per werkdag, de ploeggroottes en de standaard opmerkingen bij **Instellingen → Financieel → Offertes**.
 
 ## Inkomende facturen
 
@@ -1192,7 +1180,34 @@ Inkomende facturen (ook via Peppol ontvangen) worden **gevalideerd**: goedgekeur
 
 ## Rechten
 
-Werknemers zien dit enkel met de financiële rechten (per soort: offertes, facturen, creditnota's, inkomende facturen, klanten). Een factuur maken vanuit een offerte vraagt ook het recht om facturen te maken.
+Werknemers zien dit enkel met de financiële rechten (per soort: facturen, creditnota's, inkomende facturen, klanten).
+MD,
+        ],
+
+        'offers' => [
+            'title' => 'Offertes',
+            'body' => <<<'MD'
+## Waarvoor?
+
+Offertes voor projecten opmaken met **categorieën** en **standaardlijnen** (prijs leveren en plaatsen), de **werkdagen** en een **PDF** zoals de Proximus-offerte. De module **Offertes** staat los van **Financieel**: ze werkt met of zonder, en je zet ze aan of uit bij **Instellingen → Modules**.
+
+## Offerte opmaken
+
+1. Ga naar **Offertes → Offertes → Nieuwe offerte**, of open een project en klik in het tabblad **Offertes** op **Offerte opmaken**: de COW-code en gemeente (Uw ref.), het adres van de werf en de omschrijving (Betreft) worden ingevuld.
+2. Vul de **klant** en *Onze ref.* in.
+3. **Standaardlijnen toevoegen**: kies hele **categorieën** (A, C, E, G, …) of losse lijnen. Elke lijn heeft een **eenheidsprijs leveren** en een **eenheidsprijs plaatsen**; een arbeidslijn neemt het **uurloon** als prijs plaatsen. Lijnen kan je ook zelf toevoegen; een lijn zonder hoeveelheid is een tekstlijn.
+4. De offerte telt per categorie op, geeft de **prijs voor de werken** (leveren en plaatsen), telt de **algemene onkosten** apart bij het totaal en berekent de **werkuren** (totaal plaatsen ÷ uurloon) en het aantal **werkdagen** per ploeggrootte.
+5. Pas de **opmerkingen** aan (wat niet voorzien is, voorwaarden) en bewaar. De offerte krijgt een nummer (bv. OF2026-0001).
+6. **PDF** opent de offerte; **Opslaan bij project** zet de PDF bij de offertes van het project (een nieuwe versie bij een volgende keer).
+7. Met de module Financieel kies je een **klant**; is de offerte aanvaard, dan maakt **Factuur maken** een conceptfactuur met elke lijn (leveren + plaatsen). De offerte is daarna enkel nog te bekijken.
+
+De **offertecategorieën** en **standaard offertelijnen** beheer je bij **Offertes**; het voorvoegsel, het uurloon, de uren per werkdag, de ploeggroottes en de standaard opmerkingen bij **Instellingen → Offertes**.
+
+Zonder de module Financieel vul je de klant als **naam** in en is er geen factuur. De bedrijfsnaam en het btw-nummer op de offerte stel je in bij **Instellingen → Offertes** (leeg: die van Financieel, anders de naam van het platform).
+
+## Rechten
+
+Het recht **Offertes** (bekijken, aanmaken, wijzigen, verwijderen, PDF genereren) en **Offertecategorieën & standaard offertelijnen** voor de stamgegevens. Een factuur maken vraagt ook het recht om facturen te maken.
 MD,
         ],
 

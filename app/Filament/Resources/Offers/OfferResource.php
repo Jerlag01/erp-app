@@ -30,9 +30,9 @@ class OfferResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCurrencyEuro;
 
-    protected static string|UnitEnum|null $navigationGroup = NavigationGroup::Finance;
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroup::Offers;
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'number';
 

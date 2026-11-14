@@ -18,6 +18,7 @@ use App\Models\Project;
 use App\Models\StandardOfferLine;
 use App\Models\User;
 use App\Models\WorkSite;
+use App\Support\Modules;
 use App\Support\Settings;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
@@ -72,7 +73,7 @@ class OfferTest extends TestCase
         $this->actingAs($sales)->get('/offers')->assertOk();
         $this->actingAs($sales)->get('/offers/create')->assertOk();
 
-        $this->actingAs(User::factory()->withPermissions(['finance_master_data' => ['view']])->inTeam()->create())
+        $this->actingAs(User::factory()->withPermissions(['offer_master_data' => ['view']])->inTeam()->create())
             ->get('/standard-offer-lines')->assertOk()->assertSee('DC-AC power inverter TS-400-248B (400W)');
 
         $this->assertSame(['A', 'C', 'E', 'G'], OfferCategory::query()->ordered()->pluck('code')->all());
@@ -184,6 +185,42 @@ class OfferTest extends TestCase
             ->assertActionHidden('createInvoice')
             ->assertActionHidden('delete')
             ->assertFormFieldDisabled('subject');
+    }
+
+    #[Test]
+    public function offers_work_without_the_finance_module_and_can_be_switched_off(): void
+    {
+        $this->admin();
+        settings()->save('modules', [...settings('modules'), Modules::FINANCE => false]);
+        settings()->save('offers', [...Settings::defaults()['offers'], 'company_name' => 'Power Installation nv', 'hourly_rate' => 70]);
+        $project = $this->project();
+
+        // No finance clients: a client name, the hourly rate of the offer settings; no invoice.
+        $this->get('/offers')->assertOk();
+        $this->get('/invoices')->assertForbidden();
+        Livewire::withQueryParams(['project' => $project->id])->test(CreateOffer::class)
+            ->assertSchemaStateSet(['hourly_rate' => 70.0])
+            ->assertFormFieldHidden('client_id')
+            ->fillForm(['client_name' => 'Proximus NV'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $offer = Offer::query()->sole();
+        $this->assertSame(['Proximus NV', null], [$offer->clientLabel(), $offer->client_id]);
+        $offer->lines()->create(['offer_category_id' => OfferCategory::query()->value('id'), 'description' => 'Omvormer', 'quantity' => 1, 'supply_price' => 100]);
+        Livewire::test(EditOffer::class, ['record' => $offer->id])->assertActionHidden('createInvoice');
+        $html = view('finance.offer-pdf', ['offer' => $offer->fresh(['lines.category', 'project.workSite', 'client'])])->render();
+        $this->assertStringContainsString('Proximus NV', $html);
+        $this->assertStringContainsString('Power Installation nv', $html);
+
+        // The offers module off: gone everywhere, also from the project, whatever finance does.
+        settings()->save('modules', [...settings('modules'), Modules::FINANCE => true, Modules::OFFERS => false]);
+        foreach (['/offers', '/offer-categories', '/standard-offer-lines', route('finance.offer-pdf', $offer)] as $url) {
+            $this->get($url)->assertForbidden();
+        }
+        $this->get('/invoices')->assertOk();
+        Livewire::test(OffersRelationManager::class, ['ownerRecord' => $project, 'pageClass' => EditProject::class])
+            ->assertActionHidden(TestAction::make('makeOffer')->table());
     }
 
     #[Test]

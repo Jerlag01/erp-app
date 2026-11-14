@@ -32,9 +32,9 @@ class OfferCategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|UnitEnum|null $navigationGroup = NavigationGroup::Finance;
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroup::Offers;
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 2;
 
     public static function getModelLabel(): string
     {

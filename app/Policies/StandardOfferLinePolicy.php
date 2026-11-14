@@ -3,12 +3,12 @@
 namespace App\Policies;
 
 /**
- * The offer categories and default offer lines follow "finance_master_data".
+ * The offer categories and default offer lines follow "offer_master_data" (module Offers).
  */
 class StandardOfferLinePolicy extends AreaPolicy
 {
     protected function area(): string
     {
-        return 'finance_master_data';
+        return 'offer_master_data';
     }
 }

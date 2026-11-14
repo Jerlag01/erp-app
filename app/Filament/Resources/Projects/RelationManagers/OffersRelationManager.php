@@ -11,7 +11,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * The offers of a project: uploaded files and the PDFs of the offers made in the finance module,
+ * The offers of a project: uploaded files and the PDFs of the offers made in the offers module,
  * with a button to make a new one for this project and links to the existing ones.
  */
 class OffersRelationManager extends ProjectFilesRelationManager
@@ -32,13 +32,13 @@ class OffersRelationManager extends ProjectFilesRelationManager
             Action::make('makeOffer')
                 ->label(__('erp.finance.offers.make'))
                 ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
-                ->visible(fn (): bool => modules()->finance() && Gate::allows('create', Offer::class) && $this->canManage())
+                ->visible(fn (): bool => modules()->offers() && Gate::allows('create', Offer::class) && $this->canManage())
                 ->url(fn (): string => OfferResource::getUrl('create', ['project' => $project()->id])),
             Action::make('projectOffers')
                 ->label(fn (): string => __('erp.finance.offers.of_project', ['count' => Offer::query()->where('project_id', $project()->id)->count()]))
                 ->icon(Heroicon::OutlinedListBullet)
                 ->color('gray')
-                ->visible(fn (): bool => modules()->finance() && Gate::allows('viewAny', Offer::class) && Offer::query()->where('project_id', $project()->id)->exists())
+                ->visible(fn (): bool => modules()->offers() && Gate::allows('viewAny', Offer::class) && Offer::query()->where('project_id', $project()->id)->exists())
                 ->url(fn (): string => OfferResource::getUrl('index', ['tableSearch' => $project()->reference])),
             ...$table->getHeaderActions(),
         ]);

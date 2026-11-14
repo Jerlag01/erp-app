@@ -18,10 +18,11 @@ use Illuminate\Support\Facades\DB;
  * An offer (quote) for a project, laid out like the Proximus offer template: lines per category with
  * a supply (leveren) and an installation (plaatsen) price, the price of the works, the general costs
  * apart, and the number of workdays the installation price stands for (installation total ÷ hourly
- * rate, per crew size). Numbered on creation ("OF2026-0001"); an accepted offer becomes a draft invoice.
+ * rate, per crew size). Numbered on creation ("OF2026-0001"). A module of its own: without the finance
+ * module the client is a name; with it, a finance client, and an accepted offer becomes a draft invoice.
  */
 #[Fillable([
-    'status', 'client_id', 'project_id', 'offer_date', 'valid_until', 'subject', 'client_reference', 'our_reference',
+    'status', 'client_id', 'client_name', 'project_id', 'offer_date', 'valid_until', 'subject', 'client_reference', 'our_reference',
     'site_address', 'hourly_rate', 'hours_per_day', 'remarks', 'created_by',
 ])]
 class Offer extends Model
@@ -91,10 +92,10 @@ class Offer extends Model
         return [
             'status' => OfferStatus::Draft->value,
             'offer_date' => today()->toDateString(),
-            'valid_until' => ($days = (int) settings()->get('finance.offer_validity_days', 30)) > 0 ? today()->addDays($days)->toDateString() : null,
-            'hourly_rate' => (float) settings()->get('finance.offer_hourly_rate', 0),
-            'hours_per_day' => (float) settings()->get('finance.offer_hours_per_day', 8) ?: 8,
-            'remarks' => settings()->get('finance.offer_remarks'),
+            'valid_until' => ($days = (int) settings()->get('offers.validity_days', 30)) > 0 ? today()->addDays($days)->toDateString() : null,
+            'hourly_rate' => (float) settings()->get('offers.hourly_rate', 0),
+            'hours_per_day' => (float) settings()->get('offers.hours_per_day', 8) ?: 8,
+            'remarks' => settings()->get('offers.remarks'),
             'project_id' => $project?->id,
             'subject' => $project?->short_description,
             'client_reference' => $project ? (trim(($site?->cow_code ?? $project->reference).' '.mb_strtoupper((string) $city)) ?: null) : null,
@@ -108,7 +109,7 @@ class Offer extends Model
     public static function addressFor(Project $project): ?string
     {
         $site = $project->workSite;
-        $owner = $site ? trim(($project->client_company ?: (string) settings()->get('finance.offer_site_owner', 'Proximus')).' '.$site->cow_code) : ($project->client_company ?: $project->client_name);
+        $owner = $site ? trim(($project->client_company ?: (string) settings()->get('offers.site_owner', 'Proximus')).' '.$site->cow_code) : ($project->client_company ?: $project->client_name);
         $street = $site
             ? trim(implode(' ', array_filter([$site->street, $site->house_number])).(filled($site->addition) ? ' '.$site->addition : ''))
             : trim(implode(' ', array_filter([$project->street, $project->house_number, $project->addition])));
@@ -188,7 +189,7 @@ class Offer extends Model
      */
     public static function crewSizes(): array
     {
-        return collect(explode(',', (string) settings()->get('finance.offer_crew_sizes', '2,3,4')))
+        return collect(explode(',', (string) settings()->get('offers.crew_sizes', '2,3,4')))
             ->map(fn (string $size): int => (int) trim($size))
             ->filter(fn (int $size): bool => $size > 0)
             ->unique()->values()->all();
@@ -197,6 +198,27 @@ class Offer extends Model
     public function isDraft(): bool
     {
         return $this->status === OfferStatus::Draft;
+    }
+
+    /**
+     * The client on the offer: the finance client, else the name typed in (without the finance module).
+     */
+    public function clientLabel(): ?string
+    {
+        return $this->client?->company_name ?? $this->client_name;
+    }
+
+    /**
+     * The company on the offer: the offer settings, else the finance company details, else the site name.
+     *
+     * @return array{name: string, vat: ?string}
+     */
+    public static function company(): array
+    {
+        return [
+            'name' => (string) (settings()->get('offers.company_name') ?: settings()->get('finance.company_name') ?: settings()->siteName()),
+            'vat' => settings()->get('offers.vat_number') ?: settings()->get('finance.vat_number'),
+        ];
     }
 
     public function title(): string
@@ -250,7 +272,7 @@ class Offer extends Model
 
     public static function formatNumber(int $year, int $sequence): string
     {
-        return (string) settings()->get('finance.offer_prefix', 'OF').$year.'-'.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
+        return (string) settings()->get('offers.prefix', 'OF').$year.'-'.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 
     protected static function booted(): void

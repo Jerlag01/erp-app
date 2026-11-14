@@ -51,7 +51,13 @@ class OfferForm
                                 ->where(fn (Builder $query) => $query->where('is_active', true)->when($record?->client_id, fn (Builder $query) => $query->orWhere('id', $record->client_id)))
                                 ->orderBy('short_name')->get()->mapWithKeys(fn (Client $client): array => [$client->id => $client->label()])->all())
                             ->searchable()
-                            ->required(),
+                            ->required()
+                            // The finance clients only while the finance module is on; else a name.
+                            ->visible(fn (): bool => modules()->finance()),
+                        TextInput::make('client_name')
+                            ->label(__('erp.resources.client.singular'))
+                            ->maxLength(255)
+                            ->visible(fn (): bool => ! modules()->finance()),
                         Select::make('project_id')
                             ->label(__('erp.resources.project.singular'))
                             // The latest 500 projects, and the chosen one when it is older.

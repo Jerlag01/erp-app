@@ -26,12 +26,12 @@ class OffersTable
                     ->fontFamily(FontFamily::Mono)
                     ->weight('bold')
                     ->description(fn (Offer $record): ?string => $record->subject)
-                    ->searchable(['number', 'subject', 'client_reference', 'our_reference'])
+                    ->searchable(['number', 'subject', 'client_reference', 'our_reference', 'client_name'])
                     ->sortable(),
-                TextColumn::make('client.short_name')
+                TextColumn::make('client_label')
                     ->label(__('erp.resources.client.singular'))
-                    ->placeholder('—')
-                    ->searchable(['short_name', 'company_name']),
+                    ->state(fn (Offer $record): ?string => $record->client?->short_name ?? $record->client_name)
+                    ->placeholder('—'),
                 TextColumn::make('project.reference')
                     ->label(__('erp.resources.project.singular'))
                     ->fontFamily(FontFamily::Mono)

@@ -38,9 +38,9 @@ class StandardOfferLineResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQueueList;
 
-    protected static string|UnitEnum|null $navigationGroup = NavigationGroup::Finance;
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroup::Offers;
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 3;
 
     public static function getModelLabel(): string
     {

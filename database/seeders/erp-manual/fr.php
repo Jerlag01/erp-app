@@ -1157,7 +1157,7 @@ MD,
 
 ## Où ?
 
-**Finances → Offres, Factures, Notes de crédit, Factures entrantes, Clients, Lignes de facture standard, Catégories d'offre, Lignes d'offre standard, Aperçu financier, Statistiques**. Les données de l'entreprise et Peppol se règlent dans **Paramètres → Finances**.
+**Finances → Factures, Notes de crédit, Factures entrantes, Clients, Lignes de facture standard, Aperçu financier, Statistiques**. Les données de l'entreprise et Peppol se règlent dans **Paramètres → Finances**.
 
 ## Factures
 
@@ -1167,18 +1167,6 @@ MD,
 4. Pour les factures échues, envoyez jusqu'à **trois rappels de paiement** ; activés dans **Paramètres → Finances**, ils partent automatiquement chaque jour.
 
 Une **note de crédit** se crée depuis une facture ou séparément.
-
-## Offres
-
-1. Allez dans **Finances → Offres → Nouvelle offre**, ou ouvrez un projet et cliquez dans l'onglet **Offres** sur **Établir une offre** : le code COW et la commune (Votre réf.), l'adresse du chantier et la description (Objet) sont remplis.
-2. Choisissez le **client** et remplissez *Notre réf.*
-3. **Ajouter des lignes standard** : choisissez des **catégories** entières (A, C, E, G, …) ou des lignes séparées. Chaque ligne a un **prix unitaire fourniture** et un **prix unitaire pose** ; une ligne de main-d'œuvre prend le **taux horaire** comme prix de pose. Vous pouvez aussi ajouter vos propres lignes ; une ligne sans quantité est une ligne de texte.
-4. L'offre totalise par catégorie, donne le **prix des travaux** (fourniture et pose), ajoute les **frais généraux** séparément au total et calcule les **heures de travail** (total pose ÷ taux horaire) et le nombre de **jours de travail** par taille d'équipe.
-5. Adaptez les **remarques** (ce qui n'est pas prévu, conditions) et enregistrez. L'offre reçoit un numéro (p. ex. OF2026-0001).
-6. **PDF** ouvre l'offre ; **Enregistrer au projet** ajoute le PDF aux offres du projet (nouvelle version la fois suivante).
-7. Une fois l'offre acceptée, **Créer la facture** crée une facture brouillon avec chaque ligne (fourniture + pose). L'offre n'est ensuite plus que consultable.
-
-Les **catégories d'offre** et **lignes d'offre standard** se gèrent dans **Finances** ; le préfixe, le taux horaire, les heures par jour, les tailles d'équipe et les remarques par défaut dans **Paramètres → Finances → Offres**.
 
 ## Factures entrantes
 
@@ -1191,7 +1179,34 @@ Les factures entrantes (aussi reçues via Peppol) sont **validées** : approuvé
 
 ## Droits
 
-Les employés ne voient cette partie qu'avec les droits financiers (par type : offres, factures, notes de crédit, factures entrantes, clients). Créer une facture depuis une offre demande aussi le droit de créer des factures.
+Les employés ne voient cette partie qu'avec les droits financiers (par type : factures, notes de crédit, factures entrantes, clients).
+MD,
+        ],
+
+        'offers' => [
+            'title' => 'Offres',
+            'body' => <<<'MD'
+## À quoi ça sert ?
+
+Établir des offres pour les projets avec des **catégories** et des **lignes standard** (prix fourniture et pose), les **jours de travail** et un **PDF** comme l'offre Proximus. Le module **Offres** est indépendant de **Finances** : il fonctionne avec ou sans, et s'active ou se désactive dans **Paramètres → Modules**.
+
+## Établir une offre
+
+1. Allez dans **Offres → Offres → Nouvelle offre**, ou ouvrez un projet et cliquez dans l'onglet **Offres** sur **Établir une offre** : le code COW et la commune (Votre réf.), l'adresse du chantier et la description (Objet) sont remplis.
+2. Remplissez le **client** et *Notre réf.*
+3. **Ajouter des lignes standard** : choisissez des **catégories** entières (A, C, E, G, …) ou des lignes séparées. Chaque ligne a un **prix unitaire fourniture** et un **prix unitaire pose** ; une ligne de main-d'œuvre prend le **taux horaire** comme prix de pose. Vous pouvez aussi ajouter vos propres lignes ; une ligne sans quantité est une ligne de texte.
+4. L'offre totalise par catégorie, donne le **prix des travaux** (fourniture et pose), ajoute les **frais généraux** séparément au total et calcule les **heures de travail** (total pose ÷ taux horaire) et le nombre de **jours de travail** par taille d'équipe.
+5. Adaptez les **remarques** (ce qui n'est pas prévu, conditions) et enregistrez. L'offre reçoit un numéro (p. ex. OF2026-0001).
+6. **PDF** ouvre l'offre ; **Enregistrer au projet** ajoute le PDF aux offres du projet (nouvelle version la fois suivante).
+7. Avec le module Finances, vous choisissez un **client** ; une fois l'offre acceptée, **Créer la facture** crée une facture brouillon avec chaque ligne (fourniture + pose). L'offre n'est ensuite plus que consultable.
+
+Les **catégories d'offre** et **lignes d'offre standard** se gèrent dans **Offres** ; le préfixe, le taux horaire, les heures par jour, les tailles d'équipe et les remarques par défaut dans **Paramètres → Offres**.
+
+Sans le module Finances, le client est un **nom** et il n'y a pas de facture. Le nom de la société et le n° TVA sur l'offre se règlent dans **Paramètres → Offres** (vide : ceux de Finances, sinon le nom de la plateforme).
+
+## Droits
+
+Le droit **Offres** (voir, créer, modifier, supprimer, générer le PDF) et **Catégories d'offre & lignes d'offre standard** pour les données de base. Créer une facture demande aussi le droit de créer des factures.
 MD,
         ],
 
