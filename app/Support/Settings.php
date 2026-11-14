@@ -158,6 +158,14 @@ class Settings
                 'peppol_provider_url' => null,
                 'peppol_api_key' => null,
                 'peppol_inbound_secret' => null,
+                // Offers (Settings > Finance > Offers).
+                'offer_prefix' => 'OF',
+                'offer_validity_days' => 30,
+                'offer_hourly_rate' => 68.64,
+                'offer_hours_per_day' => 8,
+                'offer_crew_sizes' => '2,3,4',
+                'offer_site_owner' => 'Proximus',
+                'offer_remarks' => "Is niet voorzien in onze prijzen:\nHet brandwerend afdichten van de openingen.\nKabelladders\n\nIn- en overschakelingen:\nUitvoering met volledige samenwerking van Proximus.\nProximus zal steeds een technieker ter beschikking stellen met de nodige kennis.\n\nAanbiedingen van kabels en kabelladders:\nWij bieden aan met VOBs-kabels (voor aardingen) en XVB voor stopcontacten, verlichting, …",
             ],
             // Preset timeslots and who gets a copy of planning mails (Settings > Planning).
             'planning' => [

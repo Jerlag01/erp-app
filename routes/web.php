@@ -127,6 +127,7 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/absences/{absence}/certificate', AbsenceDocumentController::class)->whereNumber('absence')->name('absences.document');
     Route::get('/parental-leaves/{leave}/certificate', ParentalLeaveDocumentController::class)->whereNumber('leave')->name('parental-leaves.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
+    Route::get('/finance/offers/{offer}/pdf', [FinanceDocumentController::class, 'offer'])->whereNumber('offer')->name('finance.offer-pdf');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
     Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');
     Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');

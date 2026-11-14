@@ -12,7 +12,8 @@ namespace App\Support;
  * The finance areas are not granted to any role by default: employees only see finance once
  * given these rights. "credit_notes.override" allows changing what a credit note copied from
  * its invoice (after switching that on per credit note); "expenses.validate" accepts or rejects
- * incoming invoices. The client's internal memo is for administrators only.
+ * incoming invoices. "offers" makes offers (quotes) for projects; turning one into an invoice also needs
+ * "invoices.create". The client's internal memo is for administrators only.
  * "projects" only reaches the projects a user leads or one of their teams is assigned to;
  * "projects.files" and "projects.parts" allow uploading/replacing/removing files and editing the
  * part list. "project_finance" shows (view) or edits (manage) offers and invoices of those projects;
@@ -92,6 +93,7 @@ class Permissions
         'waste_master_data' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete']],
         'finance' => ['module' => Modules::FINANCE, 'abilities' => ['view']],
         'clients' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'offers' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'invoices' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send', 'generate_pdf']],
         'credit_notes' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send', 'override', 'generate_pdf']],
         'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate', 'download_pdf']],

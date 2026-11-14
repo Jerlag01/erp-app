@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Finance\InvoicePdf;
+use App\Actions\Finance\OfferPdf;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Offer;
 use App\Policies\InvoicePolicy;
 use App\Services\Peppol\PeppolGateway;
 use App\Support\PdfAccess;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Invoice PDFs and Peppol UBL files, and the documents of incoming invoices (PDF, UBL and the
+ * Invoice and offer PDFs, Peppol UBL files, and the documents of incoming invoices (PDF, UBL and the
  * validation signature), for users with the matching finance rights.
  */
 class FinanceDocumentController
@@ -36,6 +38,17 @@ class FinanceDocumentController
         return response($pdf->render($invoice), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.InvoicePdf::filename($invoice).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function offer(Offer $offer, OfferPdf $pdf): Response
+    {
+        abort_unless(Gate::allows('view', $offer) && Gate::allows('generatePdf', $offer), 403);
+
+        return response($pdf->render($offer), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.str_replace('"', '', OfferPdf::filename($offer)).'"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
