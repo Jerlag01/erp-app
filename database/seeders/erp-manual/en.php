@@ -36,6 +36,18 @@ The ERP platform brings everything of the company together: projects, planning, 
 - **Top bar**: search, the **idea box**, possibly an **announcement** from management, the **bell** with your notifications and your **user menu**.
 - **Dashboard**: tiles and lists that matter to you (controls that expire, low stock, open tasks, …).
 
+## Building your own dashboard
+
+- **Customize dashboard**: the number of columns, which blocks and counters you see and in which order.
+- **Add block**: build your own block on **any list you may view** (projects, vehicles, invoices, offers, …):
+  - **Counter**: the number of records (or the sum or average of a number, e.g. workdays or amounts) that meet your **conditions**.
+  - **Follow-up list**: those records, with up to 5 columns of your choice, sorted (e.g. oldest first) and clickable.
+  - **Status overview**: the records per status, category, person, area or month, with a bar per group.
+- **Conditions** use the list's fields: *is one of* / *is none of* (e.g. status), *is empty* / *is filled in*, dates (*past*, *today*, *within the next … days*, *older than … days*, this week/month/year), numbers and text. For a person you can choose **Me**.
+- **Display**: as a **number**, a **percentage** or **both**. A counter's percentage is relative to all records of the list, or to those matching the **Percentage of** conditions (e.g. "in progress" relative to all open projects); a status overview's relative to its total.
+- Choose the **width** (1 or 2 columns or full width) and a colour. The pencil edits a block, the bin removes it.
+- A block only ever counts what you may see in that list. Administrators can **share a block with everyone**: anyone can then add it under **Customize dashboard** and sees their own data in it.
+
 ## Language and profile
 
 - Choose **Dutch, French or English** with the language switch next to your user menu. Your choice also applies to the mails you receive and to the mobile app.

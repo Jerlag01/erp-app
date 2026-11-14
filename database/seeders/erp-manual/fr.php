@@ -36,6 +36,18 @@ La plateforme ERP rassemble tout ce qui concerne l'entreprise : projets, plannin
 - **Barre du haut** : recherche, la **boîte à idées**, éventuellement une **annonce** de la direction, la **cloche** avec vos notifications et votre **menu utilisateur**.
 - **Tableau de bord** : tuiles et listes utiles pour vous (contrôles qui expirent, stock bas, tâches ouvertes, …).
 
+## Composer votre tableau de bord
+
+- **Personnaliser le tableau de bord** : le nombre de colonnes, les blocs et compteurs affichés et leur ordre.
+- **Ajouter un bloc** : créez votre propre bloc sur **toute liste que vous pouvez consulter** (projets, véhicules, factures, offres, …) :
+  - **Compteur** : le nombre d'enregistrements (ou la somme ou la moyenne d'un nombre, p. ex. jours de travail ou montants) qui remplissent vos **conditions**.
+  - **Liste de suivi** : ces enregistrements, avec jusqu'à 5 colonnes au choix, triés (p. ex. les plus anciens d'abord) et cliquables.
+  - **Aperçu par statut** : les enregistrements par statut, catégorie, personne, zone ou mois, avec une barre par groupe.
+- Les **conditions** portent sur les champs de la liste : *est l'un de* / *n'est aucun de* (p. ex. statut), *est vide* / *est rempli*, dates (*dépassé*, *aujourd'hui*, *dans les … prochains jours*, *plus ancien que … jours*, cette semaine/ce mois/cette année), nombres et texte. Pour une personne, vous pouvez choisir **Moi**.
+- **Affichage** : en **nombre**, en **pourcentage** ou **les deux**. Le pourcentage d'un compteur se calcule par rapport à tous les enregistrements de la liste, ou à ceux des conditions de **Pourcentage de** (p. ex. « en cours » par rapport à tous les projets ouverts) ; pour un aperçu par statut, par rapport au total.
+- Choisissez la **largeur** (1 ou 2 colonnes ou pleine largeur) et une couleur. Le crayon modifie un bloc, la corbeille le supprime.
+- Un bloc ne compte toujours que ce que vous pouvez voir dans cette liste. Les administrateurs peuvent **partager un bloc avec tout le monde** : chacun peut alors l'ajouter via **Personnaliser le tableau de bord** et y voit ses propres données.
+
 ## Langue et profil
 
 - Choisissez **néerlandais, français ou anglais** avec le choix de langue à côté du menu utilisateur. Ce choix vaut aussi pour les mails que vous recevez et pour l'application mobile.

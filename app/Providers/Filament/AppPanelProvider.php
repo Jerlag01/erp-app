@@ -20,6 +20,7 @@ use App\Filament\Pages\ToolboxOverview;
 use App\Filament\Pages\VacationCalendar;
 use App\Filament\Pages\WasteTotalsOverview;
 use App\Filament\Widgets\ControlsDue;
+use App\Filament\Widgets\CustomDashboardWidget;
 use App\Filament\Widgets\DashboardCountersWidget;
 use App\Filament\Widgets\ErpStats;
 use App\Filament\Widgets\InspectionsDue;
@@ -72,6 +73,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->widgets([
                 DashboardCountersWidget::class,
+                CustomDashboardWidget::class,
                 ErpStats::class,
                 ControlsDue::class,
                 InspectionsDue::class,

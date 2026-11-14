@@ -37,6 +37,18 @@ Het ERP-platform bundelt alles van het bedrijf op één plaats: projecten, plann
 - **Bovenbalk**: zoeken, de **ideeënbus**, eventueel een **mededeling** van de directie, het **belletje** met je meldingen en je **gebruikersmenu**.
 - **Dashboard**: tegels en lijsten die voor jou van belang zijn (bv. keuringen die vervallen, lage voorraad, open taken).
 
+## Je dashboard zelf samenstellen
+
+- **Dashboard aanpassen**: het aantal kolommen, welke blokken en tellers je ziet en in welke volgorde.
+- **Blok toevoegen**: bouw je eigen blok op **elke lijst die je mag bekijken** (projecten, voertuigen, facturen, offertes, …):
+  - **Teller**: het aantal records (of de som of het gemiddelde van een getal, bv. werkdagen of bedragen) die aan je **voorwaarden** voldoen.
+  - **Opvolglijst**: die records zelf, met tot 5 kolommen naar keuze, gesorteerd (bv. de oudste eerst) en klikbaar.
+  - **Statusoverzicht**: de records per status, categorie, persoon, area of maand, met een balk per groep.
+- **Voorwaarden** maak je op de velden van de lijst: *is een van* / *is geen van* (bv. status), *is leeg* / *is ingevuld*, datums (*voorbij*, *vandaag*, *binnen de komende … dagen*, *ouder dan … dagen*, deze week/maand/jaar), getallen en tekst. Bij een persoon kan je **Ikzelf** kiezen.
+- **Weergave**: als **getal**, als **percentage** of **beide**. Het percentage van een teller is ten opzichte van alle records van de lijst, of van de records met de voorwaarden bij **Percentage van** (bv. "in uitvoering" ten opzichte van alle open projecten); bij een statusoverzicht ten opzichte van het totaal.
+- Kies de **breedte** (1 of 2 kolommen of volledige breedte) en een kleur. Met het potlood pas je een blok aan, met de vuilbak verwijder je het.
+- Een blok telt altijd enkel wat jij in die lijst mag zien. Beheerders kunnen een blok **delen met iedereen**: iedereen kan het dan bij **Dashboard aanpassen** toevoegen en ziet er zijn eigen gegevens in.
+
 ## Taal en profiel
 
 - Kies **Nederlands, Frans of Engels** met de taalkeuze naast je gebruikersmenu. Je keuze geldt ook voor de mails die je krijgt en voor de mobiele app.

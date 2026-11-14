@@ -2,7 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\CustomDashboardWidget;
 use App\Filament\Widgets\DashboardCountersWidget;
+use App\Filament\Widgets\Schemas\DashboardWidgetForm;
+use App\Models\DashboardWidget;
 use App\Models\User;
 use App\Support\DashboardCounters;
 use App\Support\DashboardLayout;
@@ -13,12 +16,14 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\WidgetConfiguration;
 
 /**
  * The dashboard, arranged by every user for themselves ("Dashboard aanpassen"): columns, blocks and
- * counters, limited to what they may see.
+ * counters, limited to what they may see, and blocks they build themselves ("Blok toevoegen": a counter,
+ * follow-up list or status overview on any list, as numbers or percentages).
  */
 class Dashboard extends BaseDashboard
 {
@@ -46,11 +51,17 @@ class Dashboard extends BaseDashboard
         $layout = DashboardLayout::forUser($this->user(), $panel);
         $hasCounters = array_intersect($layout['counters'], array_keys(DashboardCounters::available($this->user()))) !== [];
 
+        $custom = DashboardWidget::query()->availableTo($this->user(), $panel)->get()->keyBy(fn (DashboardWidget $widget): string => $widget->key());
+
         return collect($layout['widgets'])
             ->reject(fn (string $key): bool => $key === 'counters' && ! $hasCounters)
-            ->map(fn (string $key): string|WidgetConfiguration => $classes[$key] === DashboardCountersWidget::class
-                ? DashboardCountersWidget::make(['panel' => $panel])
-                : $classes[$key])
+            ->filter(fn (string $key): bool => isset($classes[$key]) || $custom->has($key))
+            ->map(fn (string $key): string|WidgetConfiguration => match (true) {
+                $custom->has($key) => CustomDashboardWidget::make(['widgetId' => $custom[$key]->id, 'span' => $custom[$key]->column_span]),
+                $classes[$key] === DashboardCountersWidget::class => DashboardCountersWidget::make(['panel' => $panel]),
+                default => $classes[$key],
+            })
+            ->values()
             ->all();
     }
 
@@ -62,6 +73,25 @@ class Dashboard extends BaseDashboard
     protected function getHeaderActions(): array
     {
         return [
+            // A block of one's own: counter, follow-up list or status overview on any list one can open.
+            Action::make('addBlock')
+                ->label(__('erp.dashboard.builder.add'))
+                ->icon(Heroicon::OutlinedPlusCircle)
+                ->color('gray')
+                ->modalHeading(__('erp.dashboard.builder.add'))
+                ->modalDescription(__('erp.dashboard.builder.add_help'))
+                ->modalWidth(Width::FourExtraLarge)
+                ->schema(fn (): array => DashboardWidgetForm::schema($this->panelId()))
+                ->action(function (array $data): void {
+                    $widget = DashboardWidget::query()->create([
+                        ...DashboardWidgetForm::attributes($data, $this->user()->isAdmin()),
+                        'user_id' => $this->user()->id,
+                        'panel' => $this->panelId(),
+                    ]);
+                    DashboardLayout::append($this->user(), $this->panelId(), $widget->key());
+                    Notification::make()->title(__('erp.dashboard.saved'))->success()->send();
+                    $this->redirect(static::getUrl(panel: $this->panelId()));
+                }),
             Action::make('customize')
                 ->label(__('erp.dashboard.customize'))
                 ->icon(Heroicon::OutlinedAdjustmentsHorizontal)
@@ -73,7 +103,7 @@ class Dashboard extends BaseDashboard
 
                     return [
                         'columns' => (string) $layout['columns'],
-                        'widgets' => array_values(array_intersect($layout['widgets'], array_keys(DashboardLayout::availableWidgets($this->panelId())))),
+                        'widgets' => array_values(array_intersect($layout['widgets'], array_keys(DashboardLayout::availableWidgets($this->panelId(), $this->user())))),
                         'counters' => array_values(array_intersect($layout['counters'], array_keys(DashboardCounters::available($this->user())))),
                     ];
                 })
@@ -86,7 +116,7 @@ class Dashboard extends BaseDashboard
                     Repeater::make('widgets')
                         ->label(__('erp.dashboard.blocks'))
                         ->helperText(__('erp.dashboard.blocks_help'))
-                        ->simple(Select::make('key')->options(fn (): array => DashboardLayout::availableWidgets($this->panelId()))->required()->distinct())
+                        ->simple(Select::make('key')->options(fn (): array => DashboardLayout::availableWidgets($this->panelId(), $this->user()))->required()->distinct())
                         ->reorderable()
                         ->addActionLabel(__('erp.dashboard.add_block')),
                     Repeater::make('counters')
