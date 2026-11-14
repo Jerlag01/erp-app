@@ -1193,9 +1193,10 @@ Offertes voor projecten opmaken met **categorieën** en **standaardlijnen** (pri
 
 ## Offerte opmaken
 
-1. Ga naar **Offertes → Offertes → Nieuwe offerte**, of open een project en klik in het tabblad **Offertes** op **Offerte opmaken**: de COW-code en gemeente (Uw ref.), het adres van de werf en de omschrijving (Betreft) worden ingevuld.
-2. Vul de **klant** en *Onze ref.* in.
+1. Ga naar **Offertes → Offertes → Nieuwe offerte**, of open een project en klik in het tabblad **Offertes** op **Offerte opmaken**: **Uw ref.** wordt de COW-code met de gemeente van die COW-code, **Onze ref.** de projectreferentie (categorie, nummer en COW-code, bv. 610-0001-02A73), **Betreft** de omschrijving van het project en het adres dat van de werf; alles blijft aan te passen.
+2. Vul de **klant** in.
 3. **Standaardlijnen toevoegen**: kies hele **categorieën** (A, C, E, G, …) of losse lijnen. Elke lijn heeft een **eenheidsprijs leveren** en een **eenheidsprijs plaatsen**; een arbeidslijn neemt het **uurloon** als prijs plaatsen. Lijnen kan je ook zelf toevoegen; een lijn zonder hoeveelheid is een tekstlijn.
+   **Magazijnartikels**: kies op een lijn een **magazijnartikel** (zoeken op naam of referentie), of voeg er meerdere tegelijk toe met **Magazijnartikels toevoegen**. De prijs van het artikel wordt de **kostprijs**; met de **winstfactor** per lijn (standaard bij Instellingen → Offertes) wordt **prijs leveren = kostprijs × factor**.
 4. De offerte telt per categorie op, geeft de **prijs voor de werken** (leveren en plaatsen), telt de **algemene onkosten** apart bij het totaal en berekent de **werkuren** (totaal plaatsen ÷ uurloon) en het aantal **werkdagen** per ploeggrootte.
 5. Pas de **opmerkingen** aan (wat niet voorzien is, voorwaarden) en bewaar. De offerte krijgt een nummer (bv. OF2026-0001).
 6. **PDF** opent de offerte; **Opslaan bij project** zet de PDF bij de offertes van het project (een nieuwe versie bij een volgende keer).

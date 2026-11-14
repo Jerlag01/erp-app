@@ -10,6 +10,7 @@ use App\Models\OfferCategory;
 use App\Models\OfferLine;
 use App\Models\Project;
 use App\Models\StandardOfferLine;
+use App\Models\StockItem;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -146,6 +147,36 @@ class OfferForm
                                 ->columns(1),
                         ])
                         ->action(fn (array $data, Get $get, Set $set) => self::addStandardLines($data, $get, $set)),
+                    // Several warehouse items at once, in one category, with one profit factor.
+                    Action::make('addStockItems')
+                        ->label(__('erp.finance.offers.add_stock'))
+                        ->icon(Heroicon::OutlinedArchiveBox)
+                        ->color('gray')
+                        ->visible(fn (): bool => modules()->stock())
+                        ->modalHeading(__('erp.finance.offers.add_stock'))
+                        ->modalSubmitActionLabel(__('erp.finance.offers.add'))
+                        ->schema([
+                            Select::make('offer_category_id')
+                                ->label(__('erp.finance.offers.category'))
+                                ->options(fn (): array => OfferCategory::options())
+                                ->required(),
+                            Select::make('stock_items')
+                                ->label(__('erp.finance.offers.stock_items'))
+                                ->multiple()
+                                ->searchable()
+                                ->getSearchResultsUsing(fn (string $search): array => self::stockSearch($search))
+                                ->getOptionLabelsUsing(fn (array $values): array => self::stockLabels($values))
+                                ->required(),
+                            TextInput::make('factor')
+                                ->label(__('erp.finance.offers.factor'))
+                                ->helperText(__('erp.finance.offers.factor_help'))
+                                ->numeric()
+                                ->step(0.01)
+                                ->minValue(0.01)
+                                ->default(fn (): float => OfferLine::defaultFactor())
+                                ->required(),
+                        ])
+                        ->action(fn (array $data, Get $get, Set $set) => self::addStockItems($data, $get, $set)),
                 ])->key('offer_actions')->columnSpanFull(),
                 Repeater::make('lines')
                     ->label(__('erp.finance.offers.lines'))
@@ -168,6 +199,38 @@ class OfferForm
                             ->required()
                             ->maxLength(255)
                             ->columnSpan(['default' => 12, 'md' => 9]),
+                        // A warehouse item: its price as cost price, × the profit factor = supply price.
+                        Select::make('stock_item_id')
+                            ->label(__('erp.finance.offers.stock_item'))
+                            ->placeholder(__('erp.finance.offers.stock_item_placeholder'))
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search): array => self::stockSearch($search))
+                            ->getOptionLabelUsing(fn (mixed $value): ?string => self::stockLabels([$value])[$value] ?? null)
+                            ->live()
+                            ->afterStateUpdated(fn (mixed $state, Get $get, Set $set) => self::fillFromStockItem($state, $get, $set))
+                            ->visible(fn (Get $get): bool => modules()->stock() || filled($get('stock_item_id')))
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+                        TextInput::make('cost_price')
+                            ->label(__('erp.finance.offers.cost_price'))
+                            ->numeric()
+                            ->step(0.01)
+                            ->prefix('€')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('supply_price', OfferLine::priceFromCost($get('cost_price'), $get('factor'))))
+                            ->visible(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->required(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->columnSpan(['default' => 6, 'md' => 3]),
+                        TextInput::make('factor')
+                            ->label(__('erp.finance.offers.factor'))
+                            ->helperText(__('erp.finance.offers.factor_help'))
+                            ->numeric()
+                            ->step(0.01)
+                            ->minValue(0.01)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('supply_price', OfferLine::priceFromCost($get('cost_price'), $get('factor'))))
+                            ->visible(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->required(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->columnSpan(['default' => 6, 'md' => 3]),
                         TextInput::make('quantity')
                             ->label(__('erp.finance.pdf.quantity'))
                             ->helperText(__('erp.finance.offers.quantity_help'))
@@ -181,9 +244,13 @@ class OfferForm
                             ->columnSpan(['default' => 4, 'md' => 1]),
                         TextInput::make('supply_price')
                             ->label(__('erp.finance.offers.supply_price'))
+                            ->helperText(fn (Get $get): ?string => filled($get('stock_item_id')) ? __('erp.finance.offers.supply_from_factor') : null)
                             ->numeric()
                             ->step(0.01)
                             ->prefix('€')
+                            // A stock line: cost price × factor (also recomputed when saved).
+                            ->disabled(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->dehydrated()
                             ->columnSpan(['default' => 6, 'md' => 2]),
                         TextInput::make('install_price')
                             ->label(__('erp.finance.offers.install_price'))
@@ -208,23 +275,103 @@ class OfferForm
     }
 
     /**
-     * The chosen project's COW code, address and description, in the fields that are still empty.
+     * Another project: its description (Betreft), COW code and city (Uw ref.), reference (Onze ref.)
+     * and site address; each can be changed afterwards.
      */
     protected static function fillFromProject(mixed $projectId, Get $get, Set $set): void
     {
-        $project = filled($projectId) ? Project::query()->with('workSite')->find($projectId) : null;
+        $project = filled($projectId) ? Project::query()->with(['workSite', 'category'])->find($projectId) : null;
 
         if ($project === null) {
             return;
         }
 
-        foreach (['subject', 'client_reference', 'site_address'] as $field) {
-            $value = Offer::defaults($project)[$field];
+        $defaults = Offer::defaults($project);
 
-            if (blank($get($field)) && filled($value)) {
-                $set($field, $value);
-            }
+        foreach (['subject', 'client_reference', 'our_reference', 'site_address'] as $field) {
+            $set($field, $defaults[$field]);
         }
+    }
+
+    /**
+     * Active warehouse items by name or reference (manufacturer, distributor, EAN), with their price.
+     *
+     * @return array<int, string>
+     */
+    public static function stockSearch(string $search): array
+    {
+        $like = '%'.addcslashes($search, '%_\\').'%';
+
+        return StockItem::query()
+            ->where('is_active', true)
+            ->where(fn (Builder $query) => $query->where('name', 'like', $like)->orWhere('name_nl', 'like', $like)->orWhere('name_fr', 'like', $like)
+                ->orWhere('manufacturer_reference', 'like', $like)->orWhere('distributor_reference', 'like', $like)->orWhere('ean', 'like', $like))
+            ->orderBy('name')
+            ->limit(50)
+            ->pluck('id')
+            ->pipe(fn ($ids): array => self::stockLabels($ids->all()));
+    }
+
+    /**
+     * "PDU 9x(2P+A)16A · 50578 — € 53,96".
+     *
+     * @param  array<int|string>  $ids
+     * @return array<int, string>
+     */
+    public static function stockLabels(array $ids): array
+    {
+        return StockItem::query()->whereKey(array_filter($ids))->orderBy('name')->get()
+            ->mapWithKeys(fn (StockItem $item): array => [$item->id => trim($item->localizedName().($item->manufacturer_reference ? ' · '.$item->manufacturer_reference : ''))
+                .' — '.($item->market_price !== null ? Invoice::money($item->market_price) : __('erp.finance.offers.no_price'))])
+            ->all();
+    }
+
+    /**
+     * A warehouse item chosen on a line: its name, unit and price (cost price), the default profit factor
+     * when the line has none yet, and the supply price from both.
+     */
+    protected static function fillFromStockItem(mixed $stockItemId, Get $get, Set $set): void
+    {
+        $item = filled($stockItemId) ? StockItem::query()->with('unit')->find($stockItemId) : null;
+
+        if ($item === null) {
+            $set('cost_price', null);
+            $set('factor', null);
+
+            return;
+        }
+
+        $factor = filled($get('factor')) ? (float) $get('factor') : OfferLine::defaultFactor();
+        $set('description', mb_substr($item->localizedName(), 0, 255));
+        $set('unit', $item->unit?->abbreviation ?: $get('unit'));
+        $set('cost_price', $item->market_price !== null ? (float) $item->market_price : null);
+        $set('factor', $factor);
+        $set('supply_price', OfferLine::priceFromCost($item->market_price, $factor));
+        $set('quantity', filled($get('quantity')) ? $get('quantity') : 1);
+    }
+
+    /**
+     * @param  array{offer_category_id: int|string, stock_items: array<int|string>, factor: float|string}  $data
+     */
+    protected static function addStockItems(array $data, Get $get, Set $set): void
+    {
+        $state = (array) $get('lines');
+
+        foreach (StockItem::query()->with('unit')->whereKey(array_map('intval', (array) $data['stock_items']))->orderBy('name')->get() as $item) {
+            $state[(string) Str::uuid()] = [
+                'offer_category_id' => (int) $data['offer_category_id'],
+                'stock_item_id' => $item->id,
+                'description' => mb_substr($item->localizedName(), 0, 255),
+                'quantity' => 1,
+                'unit' => $item->unit?->abbreviation,
+                'cost_price' => $item->market_price !== null ? (float) $item->market_price : null,
+                'factor' => (float) $data['factor'],
+                'supply_price' => OfferLine::priceFromCost($item->market_price, $data['factor']),
+                'install_price' => null,
+            ];
+        }
+
+        $set('lines', $state);
     }
 
     /**

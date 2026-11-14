@@ -9,6 +9,7 @@ use App\Enums\ProjectFileSection;
 use App\Enums\VatRate;
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
+use App\Filament\Resources\Offers\Schemas\OfferForm;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\RelationManagers\OffersRelationManager;
 use App\Models\Client;
@@ -16,6 +17,7 @@ use App\Models\Offer;
 use App\Models\OfferCategory;
 use App\Models\Project;
 use App\Models\StandardOfferLine;
+use App\Models\StockItem;
 use App\Models\User;
 use App\Models\WorkSite;
 use App\Support\Modules;
@@ -93,6 +95,7 @@ class OfferTest extends TestCase
                 'project_id' => $project->id,
                 'subject' => 'Omvormer Rodin 10 sites',
                 'client_reference' => '02NO1 ZAVENTEM',
+                'our_reference' => $project->reference,
                 'site_address' => "Proximus 02NO1\nMercuriusstraat 27\n1930 ZAVENTEM",
                 'hourly_rate' => 68.64,
             ]);
@@ -185,6 +188,42 @@ class OfferTest extends TestCase
             ->assertActionHidden('createInvoice')
             ->assertActionHidden('delete')
             ->assertFormFieldDisabled('subject');
+    }
+
+    #[Test]
+    public function warehouse_items_bring_their_price_and_a_profit_factor_per_line(): void
+    {
+        $this->admin();
+        settings()->save('offers', [...Settings::defaults()['offers'], 'default_factor' => 1.25]);
+        $project = $this->project();
+        $category = OfferCategory::query()->where('code', 'A')->value('id');
+        $inverter = StockItem::factory()->create(['name' => 'DC-AC power inverter TS-400', 'manufacturer_reference' => 'TS-400-248B', 'market_price' => 300]);
+        $pdu = StockItem::factory()->create(['name' => 'PDU 9x(2P+A)16A', 'manufacturer_reference' => '50578', 'market_price' => 40]);
+        $undo = Repeater::fake();
+
+        $page = Livewire::withQueryParams(['project' => $project->id])->test(CreateOffer::class)
+            ->callAction(TestAction::make('addStockItems')->schemaComponent('offer_actions'), [
+                'offer_category_id' => $category, 'stock_items' => [$inverter->id, $pdu->id], 'factor' => 1.25,
+            ])
+            ->assertHasNoActionErrors();
+
+        $lines = collect($page->get('data.lines'));
+        // Cost price × the default factor 1.25.
+        $this->assertEqualsCanonicalizing([375.0, 50.0], $lines->pluck('supply_price')->all());
+        $this->assertEqualsCanonicalizing([300.0, 40.0], $lines->pluck('cost_price')->all());
+
+        // One line gets another factor; the supply price follows when saved.
+        $state = $lines->map(fn (array $line): array => $line['stock_item_id'] === $inverter->id ? [...$line, 'factor' => 1.5] : $line)->all();
+        $page->fillForm(['client_id' => Client::factory()->create()->id, 'lines' => $state])->call('create')->assertHasNoFormErrors();
+        $undo();
+
+        $offer = Offer::query()->sole();
+        $saved = $offer->lines()->get()->keyBy('stock_item_id');
+        $this->assertSame(['300.00', '1.500', '450.00'], [$saved[$inverter->id]->cost_price, $saved[$inverter->id]->factor, $saved[$inverter->id]->supply_price]);
+        $this->assertSame(['40.00', '1.250', '50.00'], [$saved[$pdu->id]->cost_price, $saved[$pdu->id]->factor, $saved[$pdu->id]->supply_price]);
+        $this->assertSame('500.00', $offer->supply_total);
+        $this->assertSame('PDU 9x(2P+A)16A · 50578 — € 40,00', OfferForm::stockSearch('PDU')[$pdu->id]);
+        $this->assertArrayHasKey($inverter->id, OfferForm::stockSearch('TS-400-248B'));
     }
 
     #[Test]

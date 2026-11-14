@@ -1192,9 +1192,10 @@ Making offers for projects with **categories** and **default lines** (supply and
 
 ## Making an offer
 
-1. Go to **Offers → Offers → New offer**, or open a project and click **Make an offer** in the **Offers** tab: the COW code and municipality (Your ref.), the site address and the description (Subject) are filled in.
-2. Fill in the **client** and *Our ref.*
+1. Go to **Offers → Offers → New offer**, or open a project and click **Make an offer** in the **Offers** tab: **Your ref.** becomes the COW code with the city of that COW code, **Our ref.** the project reference (category, number and COW code, e.g. 610-0001-02A73), **Subject** the project description and the address that of the site; all can still be changed.
+2. Fill in the **client**.
 3. **Add default lines**: choose whole **categories** (A, C, E, G, …) or single lines. Every line has a **unit price supply** and a **unit price installation**; a labour line takes the **hourly rate** as installation price. You can also add your own lines; a line without a quantity is a text line.
+   **Warehouse items**: choose a **warehouse item** on a line (search by name or reference), or add several at once with **Add warehouse items**. The item's price becomes the **cost price**; with the **profit factor** per line (default under Settings → Offers), **supply price = cost price × factor**.
 4. The offer adds up per category, gives the **price of the works** (supply and installation), adds the **general costs** separately to the total and calculates the **working hours** (installation total ÷ hourly rate) and the number of **workdays** per crew size.
 5. Adjust the **remarks** (what is not included, conditions) and save. The offer gets a number (e.g. OF2026-0001).
 6. **PDF** opens the offer; **Save to project** adds the PDF to the project's offers (a new version the next time).

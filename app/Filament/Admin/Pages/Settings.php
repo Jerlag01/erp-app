@@ -540,6 +540,7 @@ class Settings extends Page
                     TextInput::make('offers.validity_days')->label(__('erp.settings.fields.offer_validity_days'))->integer()->minValue(0)->maxValue(365)->suffix(__('erp.vacations.days')),
                     TextInput::make('offers.site_owner')->label(__('erp.settings.fields.offer_site_owner'))->helperText(__('erp.settings.help.offer_site_owner'))->maxLength(100),
                     TextInput::make('offers.hourly_rate')->label(__('erp.settings.fields.offer_hourly_rate'))->helperText(__('erp.settings.help.offer_hourly_rate'))->numeric()->step(0.01)->minValue(0)->prefix('€'),
+                    TextInput::make('offers.default_factor')->label(__('erp.settings.fields.offer_default_factor'))->helperText(__('erp.settings.help.offer_default_factor'))->numeric()->step(0.01)->minValue(0.01)->maxValue(100),
                     TextInput::make('offers.hours_per_day')->label(__('erp.settings.fields.offer_hours_per_day'))->numeric()->step(0.25)->minValue(1)->maxValue(24),
                     TextInput::make('offers.crew_sizes')->label(__('erp.settings.fields.offer_crew_sizes'))->helperText(__('erp.settings.help.offer_crew_sizes'))->regex('/^\s*\d+(\s*,\s*\d+)*\s*$/')->maxLength(50),
                     Textarea::make('offers.remarks')->label(__('erp.settings.fields.offer_remarks'))->helperText(__('erp.settings.help.offer_remarks'))->rows(8)->maxLength(5000)->columnSpanFull(),

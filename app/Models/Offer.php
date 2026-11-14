@@ -87,7 +87,6 @@ class Offer extends Model
     public static function defaults(?Project $project = null): array
     {
         $site = $project?->workSite;
-        $city = $site?->city ?? $project?->city;
 
         return [
             'status' => OfferStatus::Draft->value,
@@ -97,8 +96,11 @@ class Offer extends Model
             'hours_per_day' => (float) settings()->get('offers.hours_per_day', 8) ?: 8,
             'remarks' => settings()->get('offers.remarks'),
             'project_id' => $project?->id,
+            // Betreft: the project's description; Uw ref.: the COW code and its city; Onze ref.: the
+            // project reference (category, number and COW code, e.g. "610-0001-02A73").
             'subject' => $project?->short_description,
-            'client_reference' => $project ? (trim(($site?->cow_code ?? $project->reference).' '.mb_strtoupper((string) $city)) ?: null) : null,
+            'client_reference' => $site ? (trim($site->cow_code.' '.mb_strtoupper((string) $site->city)) ?: null) : null,
+            'our_reference' => $project?->reference,
             'site_address' => $project ? self::addressFor($project) : null,
         ];
     }

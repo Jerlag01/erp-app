@@ -1192,9 +1192,10 @@ MD,
 
 ## Établir une offre
 
-1. Allez dans **Offres → Offres → Nouvelle offre**, ou ouvrez un projet et cliquez dans l'onglet **Offres** sur **Établir une offre** : le code COW et la commune (Votre réf.), l'adresse du chantier et la description (Objet) sont remplis.
-2. Remplissez le **client** et *Notre réf.*
+1. Allez dans **Offres → Offres → Nouvelle offre**, ou ouvrez un projet et cliquez dans l'onglet **Offres** sur **Établir une offre** : **Votre réf.** devient le code COW avec la commune de ce code COW, **Notre réf.** la référence du projet (catégorie, numéro et code COW, p. ex. 610-0001-02A73), **Objet** la description du projet et l'adresse celle du chantier ; tout reste modifiable.
+2. Remplissez le **client**.
 3. **Ajouter des lignes standard** : choisissez des **catégories** entières (A, C, E, G, …) ou des lignes séparées. Chaque ligne a un **prix unitaire fourniture** et un **prix unitaire pose** ; une ligne de main-d'œuvre prend le **taux horaire** comme prix de pose. Vous pouvez aussi ajouter vos propres lignes ; une ligne sans quantité est une ligne de texte.
+   **Articles du magasin** : choisissez sur une ligne un **article du magasin** (recherche par nom ou référence), ou ajoutez-en plusieurs avec **Ajouter des articles du magasin**. Le prix de l'article devient le **prix de revient** ; avec le **coefficient de marge** par ligne (par défaut dans Paramètres → Offres), **prix de fourniture = prix de revient × coefficient**.
 4. L'offre totalise par catégorie, donne le **prix des travaux** (fourniture et pose), ajoute les **frais généraux** séparément au total et calcule les **heures de travail** (total pose ÷ taux horaire) et le nombre de **jours de travail** par taille d'équipe.
 5. Adaptez les **remarques** (ce qui n'est pas prévu, conditions) et enregistrez. L'offre reçoit un numéro (p. ex. OF2026-0001).
 6. **PDF** ouvre l'offre ; **Enregistrer au projet** ajoute le PDF aux offres du projet (nouvelle version la fois suivante).

@@ -168,6 +168,8 @@ class Settings
                 'prefix' => 'OF',
                 'validity_days' => 30,
                 'hourly_rate' => 68.64,
+                // Profit factor a warehouse stock item starts with on an offer (cost price × factor = supply price).
+                'default_factor' => 1.0,
                 'hours_per_day' => 8,
                 'crew_sizes' => '2,3,4',
                 'site_owner' => 'Proximus',
