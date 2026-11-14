@@ -10,14 +10,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A cable section calculation: the circuit (system, voltage, load), the cable (metal, insulation) and
- * how it is laid (method, temperature, grouping), the limits, and the result of CableCalculator,
- * recalculated whenever it is saved.
+ * A cable section calculation, AC or DC (chosen first, each with its own fields): for AC the circuit
+ * (system, voltage, load), the cable (metal, insulation), how it is laid and the limits; for DC the
+ * breaker or fuse, length, resistivity, allowed voltage drop in volt and the provided section. The
+ * result of CableCalculator is recalculated whenever it is saved.
  */
 #[Fillable([
     'name', 'project_id', 'system', 'voltage', 'load_type', 'load_current', 'load_power', 'power_factor', 'length',
     'material', 'insulation', 'installation_method', 'ambient_temperature', 'grouped_circuits', 'parallel_conductors',
     'max_voltage_drop', 'protective_device', 'short_circuit_ka', 'short_circuit_time', 'notes', 'created_by',
+    'protection_type', 'protection_size', 'resistivity', 'max_drop_volts', 'chosen_section',
 ])]
 class CableCalculation extends Model
 {
@@ -28,6 +30,7 @@ class CableCalculation extends Model
         'system', 'voltage', 'load_type', 'load_current', 'load_power', 'power_factor', 'length', 'material', 'insulation',
         'installation_method', 'ambient_temperature', 'grouped_circuits', 'parallel_conductors', 'max_voltage_drop',
         'protective_device', 'short_circuit_ka', 'short_circuit_time',
+        'protection_type', 'protection_size', 'resistivity', 'max_drop_volts', 'chosen_section',
     ];
 
     /**
@@ -61,14 +64,28 @@ class CableCalculation extends Model
     {
         $result = (array) $this->result;
 
+        if ($this->isDc()) {
+            return isset($result['section']) ? CableCalculator::dcLabel((float) $result['section'], (int) ($result['parallel'] ?? 1)) : null;
+        }
+
         return isset($result['section'])
             ? CableCalculator::label((float) $result['section'], $this->material, $this->insulation, (int) ($result['loaded'] ?? 3), (int) ($result['parallel'] ?? 1))
             : null;
     }
 
+    public function isDc(): bool
+    {
+        return $this->system === 'dc';
+    }
+
     protected static function booted(): void
     {
         static::saving(function (self $calculation): void {
+            // A DC calculation has no AC fields: the defaults keep the required columns filled.
+            foreach (['material', 'insulation', 'installation_method', 'ambient_temperature', 'max_voltage_drop'] as $field) {
+                $calculation->{$field} ??= CableCalculator::defaults()[$field];
+            }
+
             $calculation->result = CableCalculator::calculate($calculation->inputs());
         });
     }

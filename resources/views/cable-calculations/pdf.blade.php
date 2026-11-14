@@ -41,7 +41,11 @@
     </div>
 
     <div class="result {{ ($result['ok'] ?? false) ? '' : 'none' }}">
-        @if ($result['ok'] ?? false)
+        @if ($c->isDc() && ($result['section'] ?? null) !== null)
+            <div class="muted">{{ $t('result.provided') }}</div>
+            <div class="big">{{ $c->cableLabel() }}</div>
+            <div>{{ ($result['ok'] ?? false) ? __('erp.cable_calculator.result.dc_ok', ['ratio' => number_format((float) $result['ratio'], 2, ',', '.')]) : __('erp.cable_calculator.errors.section_too_small', ['ratio' => number_format((float) $result['ratio'], 2, ',', '.')]) }}</div>
+        @elseif ($result['ok'] ?? false)
             <div class="muted">{{ $t('result.cable') }}</div>
             <div class="big">{{ $c->cableLabel() }}</div>
             <div>{{ __('erp.cable_calculator.result.governing.'.$result['governing']) }}</div>
@@ -50,6 +54,35 @@
         @endif
     </div>
 
+    @if ($c->isDc())
+    @php
+        $num = fn ($value, $decimals = 2) => $value === null ? '—' : number_format((float) $value, $decimals, ',', '.');
+        $rho = rtrim(rtrim(number_format((float) $c->resistivity, 5, ',', ''), '0'), ',');
+    @endphp
+    <h2>{{ $t('sections.dc') }}</h2>
+    <table class="grid">
+        <tr><td class="label">{{ $t('fields.kind') }}</td><td>{{ $t('kinds.dc') }} · {{ $n($c->voltage, 'V') }}</td></tr>
+        <tr><td class="label">{{ $t('protection_types.'.($c->protection_type ?: 'breaker')) }}</td><td>{{ $n($c->protective_device, 'A') }}@if ($c->protection_size) · {{ $c->protection_size }}@endif</td></tr>
+        <tr><td class="label">{{ $t('fields.length') }}</td><td>{{ $n($c->length, 'm') }}</td></tr>
+        <tr><td class="label">{{ $t('fields.resistivity') }}</td><td>{{ $rho }} Ω·mm²/m</td></tr>
+        <tr><td class="label">{{ $t('fields.max_drop_volts') }}</td><td>{{ $n($c->max_drop_volts, 'V') }}</td></tr>
+        <tr><td class="label">{{ $t('fields.cables_per_pole') }}</td><td>{{ $c->parallel_conductors }}</td></tr>
+    </table>
+
+    <h2>{{ $t('result.formula') }}</h2>
+    <p>S = Imax × (L × 2) × ρ / {{ $t('result.allowed_drop') }}</p>
+    <p><strong>S = {{ $n($c->protective_device) }} × {{ $n($c->length) }} × 2 × {{ $rho }} / {{ $n($c->max_drop_volts) }} = {{ $num($result['s_total'] ?? null) }} mm²</strong>@if (($result['parallel'] ?? 1) > 1) · {{ __('erp.cable_calculator.result.per_cable', ['count' => $result['parallel'], 'section' => $num($result['s_required'] ?? null)]) }}@endif</p>
+
+    <h2>{{ $t('sections.result') }}</h2>
+    <table class="grid">
+        <tr><td class="label">{{ $t('result.s_required') }}</td><td class="num">{{ $num($result['s_required'] ?? null) }} mm²</td></tr>
+        <tr><td class="label">{{ $t('result.suggested') }}</td><td class="num">{{ $n($result['suggested'] ?? null, 'mm²') }}</td></tr>
+        <tr><td class="label">{{ $t('result.provided') }}</td><td class="num">{{ $n($result['section'] ?? null, 'mm²') }}</td></tr>
+        <tr><td class="label">{{ $t('result.ratio') }}</td><td class="num {{ ($result['ok'] ?? false) ? '' : 'bad' }}">{{ $num($result['ratio'] ?? null) }}</td></tr>
+        <tr><td class="label">{{ $t('result.drop') }}</td><td class="num">{{ $num($result['drop_v'] ?? null).' V' }}@if (($result['drop_pct'] ?? null) !== null) · {{ $num($result['drop_pct']).' %' }}@endif</td></tr>
+    </table>
+
+    @else
     <h2>{{ $t('sections.circuit') }}</h2>
     <table class="grid">
         <tr><td class="label">{{ $t('fields.system') }}</td><td>{{ $t('systems.'.$c->system) }} · {{ $n($c->voltage, 'V') }}</td></tr>
@@ -101,11 +134,13 @@
         </table>
     @endif
 
+    @endif
+
     @if (filled($c->notes))
         <h2>{{ $t('fields.notes') }}</h2>
         <div>{!! nl2br(e($c->notes)) !!}</div>
     @endif
 
-    <p class="muted" style="margin-top: 10px; font-size: 7.5pt;">{{ $t('disclaimer') }} {{ $t('method_note') }}</p>
+    <p class="muted" style="margin-top: 10px; font-size: 7.5pt;">@if ($c->isDc()){{ $t('dc_note') }}@else{{ $t('disclaimer') }} {{ $t('method_note') }}@endif</p>
 </body>
 </html>

@@ -1,10 +1,12 @@
-{{-- The live result of the cable calculator next to the form (see CableCalculator). --}}
+{{-- The live result of the cable calculator next to the form (see CableCalculator); DC has its own. --}}
+@if (($result['mode'] ?? null) === 'dc')
+    @include('filament.cable-calculations.result-dc')
+@else
 @php
-    use App\Support\CableCalculator;
-    $n = fn ($value, $unit = '') => $value === null ? '—' : trim(CableCalculator::number((float) $value).' '.$unit);
+    $n = fn ($value, $unit = '') => $value === null ? '—' : trim(\App\Support\CableCalculator::number((float) $value).' '.$unit);
     $rows = collect($result['rows']);
     $around = $result['section'] !== null
-        ? $rows->filter(fn ($row) => abs(array_search($row['section'], CableCalculator::SECTIONS) - array_search($result['section'], CableCalculator::SECTIONS)) <= 2)
+        ? $rows->filter(fn ($row) => abs(array_search($row['section'], \App\Support\CableCalculator::SECTIONS) - array_search($result['section'], \App\Support\CableCalculator::SECTIONS)) <= 2)
         : collect();
 @endphp
 <div style="display: grid; gap: .75rem;" data-cable-result>
@@ -12,7 +14,7 @@
         <div style="padding: .9rem 1rem; border-radius: .75rem; background: rgb(22 163 74 / .1); border: 1px solid rgb(22 163 74 / .4);">
             <div style="font-size: .8rem; opacity: .75;">{{ __('erp.cable_calculator.result.cable') }}</div>
             <div style="font-size: 1.5rem; font-weight: 700; font-family: var(--erp-mono, monospace);" data-cable-section="{{ $result['section'] }}">
-                {{ CableCalculator::label($result['section'], (string) ($input['material'] ?? 'cu'), (string) ($input['insulation'] ?? 'xlpe'), $result['loaded'], $result['parallel']) }}
+                {{ \App\Support\CableCalculator::label($result['section'], (string) ($input['material'] ?? 'cu'), (string) ($input['insulation'] ?? 'xlpe'), $result['loaded'], $result['parallel']) }}
             </div>
             <div style="font-size: .85rem; margin-top: .25rem;">{{ __('erp.cable_calculator.result.governing.'.$result['governing']) }}</div>
         </div>
@@ -71,3 +73,4 @@
 
     <p style="font-size: .75rem; opacity: .7;">{{ __('erp.cable_calculator.disclaimer') }}</p>
 </div>
+@endif

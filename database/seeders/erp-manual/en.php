@@ -1065,9 +1065,25 @@ MD,
 
 Calculating an **indicative cable section**, like Schneider's cable calculator: after **IEC 60364-5-52** the platform looks for the smallest section that meets the current-carrying capacity, the voltage drop and (optionally) the short-circuit current.
 
-## Filling in
+## AC or DC
 
-- **Circuit**: 3-phase AC, 1-phase AC or **DC** (e.g. 48 V), the voltage, the load as **current** or **power** (with cos φ), the **length** and optionally the **protective device** (empty: the next standard rating above the design current).
+First choose the **type of calculation**: **AC** (alternating current, after IEC 60364-5-52 as below) or **DC** (direct current 48 V, after the calculation note). Only then do the fields of that type appear.
+
+## DC (48 V)
+
+DC follows the formula of the calculation note: **S = Imax × (L × 2) × ρ / voltage drop**.
+
+- **Protection**: breaker or fuses, the size (e.g. T00, T03) and the current **Imax** (A).
+- **Length**: the estimated one-way length; the formula counts there and back.
+- **Resistivity ρ**: 0.0184 Ω·mm²/m by default (copper).
+- **Allowed voltage drop** in **volt** (e.g. 0.7 V to the battery, 1.3 V to a wall board).
+- **Cables per pole** and **Provided for**: the section you provide (empty: the next standard section above S).
+
+The result shows S, the provided cable (e.g. *95 mm² per pole*) and the ratio **cable per pole** (S ÷ provided, e.g. 0.71), which may be at most 1, with the actual voltage drop.
+
+## Filling in AC
+
+- **Circuit**: 3-phase or 1-phase AC, the voltage, the load as **current** or **power** (with cos φ), the **length** and optionally the **protective device** (empty: the next standard rating above the design current).
 - **Cable and installation**: copper or aluminium (from 16 mm²), PVC or XLPE, the number of **parallel cables**, the **installation method** (A1 to E), the ambient or ground temperature and the number of **grouped circuits**.
 - **Limits**: the allowed **voltage drop** (3 % by default) and optionally the **short-circuit current** with the disconnection time.
 

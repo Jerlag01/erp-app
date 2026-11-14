@@ -1066,9 +1066,25 @@ MD,
 
 Een **indicatieve kabelsectie** berekenen, zoals de kabelcalculator van Schneider: volgens **IEC 60364-5-52** zoekt het platform de kleinste sectie die voldoet aan de toelaatbare stroom, de spanningsval en (optioneel) de kortsluitstroom.
 
-## Invullen
+## AC of DC
 
-- **Circuit**: 3-fasig AC, 1-fasig AC of **DC** (bv. 48 V), de spanning, de belasting als **stroom** of **vermogen** (met cos φ), de **lengte** en eventueel de **beveiliging** (leeg: de eerstvolgende standaardwaarde boven de bedrijfsstroom).
+Kies eerst de **soort berekening**: **AC** (wisselstroom, volgens IEC 60364-5-52 zoals hieronder) of **DC** (gelijkstroom 48 V, volgens de berekeningsnota). Pas daarna verschijnen de velden van die soort.
+
+## DC (48 V)
+
+DC volgt de formule van de berekeningsnota: **S = Imax × (L × 2) × ρ / spanningsval**.
+
+- **Beveiliging**: automaat of zekeringen, de grootte (bv. T00, T03) en de stroom **Imax** (A).
+- **Lengte**: de geschatte lengte in één richting; de formule rekent heen en terug.
+- **Soortelijke weerstand ρ**: standaard 0,0184 Ω·mm²/m (koper).
+- **Toegelaten spanningsval** in **volt** (bv. 0,7 V naar de batterij, 1,3 V naar een muurbord).
+- **Kabels per pool** en **Voorzien voor**: de sectie die je voorziet (leeg: de eerstvolgende standaardsectie boven S).
+
+Het resultaat toont S, de voorziene kabel (bv. *95 mm² per pool*) en de verhouding **kabel per pool** (S ÷ voorzien, bv. 0,71), die hoogstens 1 mag zijn, met de werkelijke spanningsval.
+
+## AC invullen
+
+- **Circuit**: 3-fasig of 1-fasig AC, de spanning, de belasting als **stroom** of **vermogen** (met cos φ), de **lengte** en eventueel de **beveiliging** (leeg: de eerstvolgende standaardwaarde boven de bedrijfsstroom).
 - **Kabel en installatie**: koper of aluminium (vanaf 16 mm²), PVC of XLPE, het aantal **parallelle kabels**, de **plaatsingswijze** (A1 tot E), de omgevings- of grondtemperatuur en het aantal **gebundelde circuits**.
 - **Grenzen**: de toegelaten **spanningsval** (standaard 3 %) en optioneel de **kortsluitstroom** met de uitschakeltijd.
 

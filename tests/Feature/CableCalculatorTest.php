@@ -36,10 +36,6 @@ class CableCalculatorTest extends TestCase
         $this->assertSame(2.24, $result['drop_pct']);
         $this->assertSame('3 × 6 mm² Cu XLPE', CableCalculator::label($result['section'], 'cu', 'xlpe', $result['loaded']));
 
-        // 48 V DC, 100 A over 20 m: 70 mm² for 3 %; the short circuit (10 kA, 0.1 s) needs 22.1 mm².
-        $dc = CableCalculator::calculate(['system' => 'dc', 'voltage' => 48, 'load_current' => 100, 'length' => 20, 'max_voltage_drop' => 3, 'short_circuit_ka' => 10, 'short_circuit_time' => 0.1]);
-        $this->assertSame([2, 70.0, 2.68, 22.1, 25.0], [$dc['loaded'], $dc['section'], $dc['drop_pct'], $dc['s_min_short_circuit'], $dc['by_short_circuit']]);
-
         // A short circuit that sets the section.
         $short = CableCalculator::calculate(['system' => 'ac3', 'voltage' => 400, 'load_current' => 10, 'length' => 5, 'short_circuit_ka' => 15, 'short_circuit_time' => 0.2]);
         $this->assertSame(['short_circuit', 50.0], [$short['governing'], $short['section']]);
@@ -71,27 +67,73 @@ class CableCalculatorTest extends TestCase
     }
 
     #[Test]
+    public function dc_follows_the_48_volt_calculation_note(): void
+    {
+        // The four circuits of the calculation note: S = Imax × L × 2 × 0.0184 / ΔU, and S ÷ the provided section.
+        foreach ([
+            [40, 13, 4, 10, 4.78, 6.0, 0.48],      // ALSB – Krachtbord, breaker 40 A
+            [160, 8, 0.7, 95, 67.29, 70.0, 0.71],  // Krachtbord – Batterij 1, fuses 160 A T03
+            [160, 6, 1.3, 70, 27.18, 35.0, 0.39],  // Krachtbord – Muurbord A F301
+        ] as [$imax, $length, $drop, $provided, $required, $suggested, $ratio]) {
+            $result = CableCalculator::calculate(['system' => 'dc', 'voltage' => 48, 'protective_device' => $imax, 'length' => $length, 'resistivity' => 0.0184, 'max_drop_volts' => $drop, 'chosen_section' => $provided]);
+            $this->assertTrue($result['ok']);
+            $this->assertSame(['dc', $required, $suggested, (float) $provided, $ratio], [$result['mode'], $result['s_required'], $result['suggested'], $result['section'], $result['ratio']]);
+        }
+
+        // Without a provided section: the next standard one. Two cables per pole share the section.
+        $auto = CableCalculator::calculate(['system' => 'dc', 'protective_device' => 160, 'length' => 8, 'max_drop_volts' => 0.7]);
+        $this->assertSame([70.0, 0.96, 0.67, 1.4], [$auto['section'], $auto['ratio'], $auto['drop_v'], $auto['drop_pct']]);
+        $parallel = CableCalculator::calculate(['system' => 'dc', 'protective_device' => 160, 'length' => 8, 'max_drop_volts' => 0.7, 'parallel_conductors' => 2]);
+        $this->assertSame([67.29, 33.65, 35.0], [$parallel['s_total'], $parallel['s_required'], $parallel['section']]);
+        $this->assertSame('2 × 35 mm² per pool', CableCalculator::dcLabel($parallel['section'], 2));
+
+        // A provided section that is too small, or missing input.
+        $small = CableCalculator::calculate(['system' => 'dc', 'protective_device' => 160, 'length' => 8, 'max_drop_volts' => 0.7, 'chosen_section' => 50]);
+        $this->assertSame([false, ['section_too_small'], 1.35], [$small['ok'], $small['errors'], $small['ratio']]);
+        $this->assertSame(['device', 'length'], CableCalculator::calculate(['system' => 'dc'])['errors']);
+    }
+
+    #[Test]
     public function calculations_are_saved_with_their_result_and_printed_on_the_letterhead(): void
     {
         $user = User::factory()->withPermissions(['cable_calculations' => ['view', 'create', 'update', 'generate_pdf']])->inTeam()->create();
         $this->actingAs($user);
 
+        // AC or DC first: the DC fields only appear for DC.
         Livewire::test(CreateCableCalculation::class)
-            ->fillForm(['name' => 'Voeding gelijkrichter', 'system' => 'dc', 'voltage' => 48, 'load_current' => 100, 'length' => 20])
-            ->assertSee('2 × 70 mm² Cu XLPE')
+            ->assertFormFieldHidden('max_drop_volts')
+            ->assertFormFieldHidden('load_current')
+            ->fillForm(['name' => 'Krachtbord - Batterij 1', 'kind' => 'dc'])
+            ->assertFormFieldVisible('max_drop_volts')
+            ->assertFormFieldHidden('load_current')
+            ->fillForm(['protection_type' => 'fuse', 'protection_size' => 'T03', 'protective_device' => 160, 'length' => 8, 'max_drop_volts' => 0.7, 'chosen_section' => '95'])
+            ->assertSee('95 mm² per pool')
             ->call('create')
             ->assertHasNoFormErrors();
 
         $calculation = CableCalculation::sole();
         $this->assertSame($user->id, $calculation->created_by);
-        $this->assertSame('2 × 70 mm² Cu XLPE', $calculation->cableLabel());
+        $this->assertSame(['dc', 'fuse', '0.01840'], [$calculation->system, $calculation->protection_type, $calculation->resistivity]);
+        $this->assertSame('95 mm² per pool', $calculation->cableLabel());
+        $this->assertSame(0.71, $calculation->result['ratio']);
 
         // Changing the input changes the saved result.
         Livewire::test(EditCableCalculation::class, ['record' => $calculation->getRouteKey()])
-            ->fillForm(['max_voltage_drop' => 5])
+            ->assertFormSet(['kind' => 'dc'])
+            ->fillForm(['chosen_section' => null, 'max_drop_volts' => 1.3])
             ->call('save')
             ->assertHasNoFormErrors();
         $this->assertSame(50.0, (float) $calculation->fresh()->result['section']);
+
+        // AC keeps the IEC calculation.
+        Livewire::test(CreateCableCalculation::class)
+            ->fillForm(['name' => 'Voeding TD-01', 'kind' => 'ac'])
+            ->assertFormSet(['system' => 'ac3', 'voltage' => 400])
+            ->fillForm(['load_current' => 32, 'length' => 50])
+            ->assertSee('3 × 6 mm² Cu XLPE')
+            ->call('create')
+            ->assertHasNoFormErrors();
+        $this->assertSame('3 × 6 mm² Cu XLPE', CableCalculation::query()->where('name', 'Voeding TD-01')->sole()->cableLabel());
 
         Livewire::test(ListCableCalculations::class)->assertCanSeeTableRecords([$calculation])->assertTableActionVisible('pdf', $calculation);
         $this->get(route('cable-calculations.pdf', $calculation))->assertOk()->assertHeader('Content-Type', 'application/pdf');

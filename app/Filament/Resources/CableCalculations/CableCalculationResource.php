@@ -15,6 +15,7 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ReplicateAction;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,8 +37,9 @@ use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
- * "Kabelberekening": the cable section as an indication, like Schneider's cable calculator, after
- * IEC 60364-5-52 (see CableCalculator). The result follows the input live; saved calculations can be
+ * "Kabelberekening": AC or DC is chosen first. AC gives the cable section as an indication, like
+ * Schneider's cable calculator, after IEC 60364-5-52; DC follows the Proximus 48 V calculation note
+ * (see CableCalculator). The result follows the input live; saved calculations can be
  * linked to a project and printed as PDF on the letterhead of the battery documents.
  */
 class CableCalculationResource extends Resource
@@ -126,12 +128,32 @@ class CableCalculationResource extends Resource
                                         ->all())
                                     ->getOptionLabelUsing(fn (mixed $value): ?string => Project::query()->find($value)?->reference),
                             ]),
+                        // AC or DC first: each has its own fields and formula.
+                        Section::make(__('erp.cable_calculator.sections.kind'))
+                            ->schema([
+                                ToggleButtons::make('kind')
+                                    ->label(__('erp.cable_calculator.fields.kind'))
+                                    ->hiddenLabel()
+                                    ->options(self::options('kinds', ['ac', 'dc']))
+                                    ->icons(['ac' => Heroicon::OutlinedBolt, 'dc' => Heroicon::OutlinedBattery100])
+                                    ->inline()
+                                    ->required()
+                                    ->live()
+                                    ->dehydrated(false)
+                                    ->afterStateHydrated(fn (ToggleButtons $component, ?CableCalculation $record) => $component->state($record === null ? null : ($record->isDc() ? 'dc' : 'ac')))
+                                    ->afterStateUpdated(function (?string $state, Set $set): void {
+                                        $system = $state === 'dc' ? 'dc' : 'ac3';
+                                        $set('system', $system);
+                                        $set('voltage', CableCalculator::VOLTAGES[$system]);
+                                    }),
+                            ]),
                         Section::make(__('erp.cable_calculator.sections.circuit'))
                             ->columns(3)
+                            ->visible(fn (Get $get): bool => $get('kind') === 'ac')
                             ->schema([
                                 ToggleButtons::make('system')
                                     ->label(__('erp.cable_calculator.fields.system'))
-                                    ->options(self::options('systems', CableCalculator::SYSTEMS))
+                                    ->options(self::options('systems', CableCalculator::AC_SYSTEMS))
                                     ->default('ac3')
                                     ->inline()
                                     ->required()
@@ -159,8 +181,7 @@ class CableCalculationResource extends Resource
                                 $number('power_factor')
                                     ->default(0.85)
                                     ->minValue(0.1)
-                                    ->maxValue(1)
-                                    ->visible(fn (Get $get): bool => $get('system') !== 'dc'),
+                                    ->maxValue(1),
                                 $number('length', 'm')->required()->minValue(0.1)->maxValue(10000),
                                 $number('protective_device', 'A')
                                     ->helperText(__('erp.cable_calculator.fields.protective_device_help'))
@@ -169,6 +190,7 @@ class CableCalculationResource extends Resource
                             ]),
                         Section::make(__('erp.cable_calculator.sections.cable'))
                             ->columns(3)
+                            ->visible(fn (Get $get): bool => $get('kind') === 'ac')
                             ->schema([
                                 ToggleButtons::make('material')
                                     ->label(__('erp.cable_calculator.fields.material'))
@@ -213,15 +235,77 @@ class CableCalculationResource extends Resource
                             ]),
                         Section::make(__('erp.cable_calculator.sections.limits'))
                             ->columns(3)
+                            ->visible(fn (Get $get): bool => $get('kind') === 'ac')
                             ->schema([
                                 $number('max_voltage_drop', '%')->default(3)->minValue(0)->maxValue(25)->required(),
                                 $number('short_circuit_ka', 'kA')->helperText(__('erp.cable_calculator.fields.short_circuit_help'))->minValue(0)->maxValue(200),
                                 $number('short_circuit_time', 's')->minValue(0)->maxValue(5),
-                                Textarea::make('notes')->label(__('erp.cable_calculator.fields.notes'))->rows(2)->maxLength(5000)->columnSpanFull(),
+                            ]),
+                        // DC after the Proximus 48 V calculation note: S = Imax × L × 2 × ρ / ΔU.
+                        Section::make(__('erp.cable_calculator.sections.dc'))
+                            ->description(__('erp.cable_calculator.dc_formula'))
+                            ->columns(3)
+                            ->visible(fn (Get $get): bool => $get('kind') === 'dc')
+                            ->schema([
+                                Hidden::make('system')->default('dc'),
+                                $number('voltage', 'V')->default(48)->required()->minValue(1)->maxValue(1500)
+                                    ->helperText(__('erp.cable_calculator.fields.dc_voltage_help')),
+                                ToggleButtons::make('protection_type')
+                                    ->label(__('erp.cable_calculator.fields.protection_type'))
+                                    ->options(self::options('protection_types', CableCalculator::PROTECTION_TYPES))
+                                    ->default('breaker')
+                                    ->inline()
+                                    ->required(),
+                                TextInput::make('protection_size')
+                                    ->label(__('erp.cable_calculator.fields.protection_size'))
+                                    ->placeholder('T00')
+                                    ->maxLength(10),
+                                $number('protective_device', 'A')
+                                    ->label(__('erp.cable_calculator.fields.dc_device'))
+                                    ->helperText(__('erp.cable_calculator.fields.dc_device_help'))
+                                    ->required()
+                                    ->minValue(1)
+                                    ->maxValue(6300),
+                                $number('length', 'm')
+                                    ->helperText(__('erp.cable_calculator.fields.dc_length_help'))
+                                    ->required()
+                                    ->minValue(0.1)
+                                    ->maxValue(10000),
+                                $number('resistivity', 'Ω·mm²/m')
+                                    ->helperText(__('erp.cable_calculator.fields.resistivity_help'))
+                                    ->default(CableCalculator::DC_RESISTIVITY)
+                                    ->required()
+                                    ->minValue(0.001)
+                                    ->maxValue(1),
+                                $number('max_drop_volts', 'V')
+                                    ->helperText(__('erp.cable_calculator.fields.max_drop_volts_help'))
+                                    ->default(CableCalculator::DC_MAX_DROP_VOLTS)
+                                    ->required()
+                                    ->minValue(0.01)
+                                    ->maxValue(100),
+                                $number('parallel_conductors')
+                                    ->label(__('erp.cable_calculator.fields.cables_per_pole'))
+                                    ->integer()
+                                    ->default(1)
+                                    ->minValue(1)
+                                    ->maxValue(10)
+                                    ->required(),
+                                Select::make('chosen_section')
+                                    ->label(__('erp.cable_calculator.fields.chosen_section'))
+                                    ->helperText(__('erp.cable_calculator.fields.chosen_section_help'))
+                                    ->options(collect(CableCalculator::SECTIONS)->mapWithKeys(fn (float|int $section): array => [(string) $section => CableCalculator::number((float) $section).' mm²'])->all())
+                                    ->placeholder(__('erp.cable_calculator.result.auto'))
+                                    ->live(),
+                            ]),
+                        Section::make()
+                            ->visible(fn (Get $get): bool => filled($get('kind')))
+                            ->schema([
+                                Textarea::make('notes')->label(__('erp.cable_calculator.fields.notes'))->rows(2)->maxLength(5000),
                             ]),
                     ]),
                 Section::make(__('erp.cable_calculator.sections.result'))
                     ->columnSpan(['xl' => 1])
+                    ->visible(fn (Get $get): bool => filled($get('kind')))
                     ->schema([
                         View::make('filament.cable-calculations.result')
                             ->viewData(fn (Get $get): array => ['result' => CableCalculator::calculate(self::inputsFrom($get)), 'input' => self::inputsFrom($get)]),
@@ -252,7 +336,11 @@ class CableCalculationResource extends Resource
                     ->placeholder(__('erp.cable_calculator.result.none')),
                 TextColumn::make('drop')
                     ->label(__('erp.cable_calculator.result.drop'))
-                    ->state(fn (CableCalculation $record): ?string => isset($record->result['drop_pct']) ? CableCalculator::number((float) $record->result['drop_pct']).' %' : null)
+                    ->state(fn (CableCalculation $record): ?string => match (true) {
+                        $record->isDc() && isset($record->result['drop_v']) => CableCalculator::number((float) $record->result['drop_v']).' V',
+                        isset($record->result['drop_pct']) => CableCalculator::number((float) $record->result['drop_pct']).' %',
+                        default => null,
+                    })
                     ->placeholder('—'),
                 TextColumn::make('creator.name')->label(__('erp.cable_calculator.fields.created_by'))->toggleable()->placeholder('—'),
                 TextColumn::make('updated_at')->label(__('erp.cable_calculator.fields.updated_at'))->dateTime('d/m/Y H:i')->sortable(),

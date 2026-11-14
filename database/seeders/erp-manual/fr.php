@@ -1065,9 +1065,25 @@ MD,
 
 Calculer une **section de câble indicative**, comme le calculateur de câbles de Schneider : selon l'**IEC 60364-5-52**, la plateforme cherche la plus petite section qui respecte le courant admissible, la chute de tension et (en option) le courant de court-circuit.
 
-## Saisie
+## AC ou DC
 
-- **Circuit** : AC triphasé, AC monophasé ou **DC** (p. ex. 48 V), la tension, la charge en **courant** ou en **puissance** (avec cos φ), la **longueur** et éventuellement la **protection** (vide : la valeur normalisée suivante au-dessus du courant d'emploi).
+Choisissez d'abord le **type de calcul** : **AC** (courant alternatif, selon l'IEC 60364-5-52 comme ci-dessous) ou **DC** (courant continu 48 V, selon la note de calcul). Les champs de ce type n'apparaissent qu'ensuite.
+
+## DC (48 V)
+
+Le DC suit la formule de la note de calcul : **S = Imax × (L × 2) × ρ / chute de tension**.
+
+- **Protection** : disjoncteur ou fusibles, la taille (p. ex. T00, T03) et le courant **Imax** (A).
+- **Longueur** : la longueur estimée, aller simple ; la formule compte l'aller-retour.
+- **Résistivité ρ** : 0,0184 Ω·mm²/m par défaut (cuivre).
+- **Chute de tension admise** en **volts** (p. ex. 0,7 V vers la batterie, 1,3 V vers un tableau mural).
+- **Câbles par pôle** et **Prévu pour** : la section prévue (vide : la section standard suivante au-dessus de S).
+
+Le résultat montre S, le câble prévu (p. ex. *95 mm² par pôle*) et le rapport **câble par pôle** (S ÷ prévu, p. ex. 0,71), qui ne peut pas dépasser 1, avec la chute de tension réelle.
+
+## Saisie AC
+
+- **Circuit** : AC triphasé ou monophasé, la tension, la charge en **courant** ou en **puissance** (avec cos φ), la **longueur** et éventuellement la **protection** (vide : la valeur normalisée suivante au-dessus du courant d'emploi).
 - **Câble et pose** : cuivre ou aluminium (à partir de 16 mm²), PVC ou PR, le nombre de **câbles en parallèle**, le **mode de pose** (A1 à E), la température ambiante ou du sol et le nombre de **circuits groupés**.
 - **Limites** : la **chute de tension** admise (3 % par défaut) et en option le **courant de court-circuit** avec le temps de coupure.
 

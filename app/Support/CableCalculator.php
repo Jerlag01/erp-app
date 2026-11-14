@@ -14,10 +14,25 @@ namespace App\Support;
  *
  * Aluminium uses 78 % of the copper values, from 16 mm². Parallel conductors share the current.
  * The result is an indication, not a substitute for a full study.
+ *
+ * DC (48 V) follows the Proximus calculation note instead (see calculateDc()):
+ * S = Imax × L × 2 × ρ / ΔU, with Imax the rating of the breaker or fuse, L the one-way length, ρ the
+ * resistivity (copper 0.0184 Ω·mm²/m) and ΔU the allowed voltage drop in volt; the provided section
+ * ("voorzien voor") is the next standard section unless chosen, and S ÷ provided section per pole ≤ 1.
  */
 class CableCalculator
 {
     public const SYSTEMS = ['ac3', 'ac1', 'dc'];
+
+    /** The AC systems (calculated after IEC 60364-5-52); DC has its own formula. */
+    public const AC_SYSTEMS = ['ac3', 'ac1'];
+
+    /** DC: breaker ("automaat") or fuse ("zekeringen"), and the resistivity of the calculation note (Ω·mm²/m). */
+    public const PROTECTION_TYPES = ['breaker', 'fuse'];
+
+    public const DC_RESISTIVITY = 0.0184;
+
+    public const DC_MAX_DROP_VOLTS = 1.0;
 
     /** Usual voltage per system. */
     public const VOLTAGES = ['ac3' => 400, 'ac1' => 230, 'dc' => 48];
@@ -152,6 +167,11 @@ class CableCalculator
             'protective_device' => null,
             'short_circuit_ka' => null,
             'short_circuit_time' => null,
+            'protection_type' => 'breaker',
+            'protection_size' => null,
+            'resistivity' => self::DC_RESISTIVITY,
+            'max_drop_volts' => self::DC_MAX_DROP_VOLTS,
+            'chosen_section' => null,
         ];
     }
 
@@ -168,8 +188,16 @@ class CableCalculator
      */
     public static function calculate(array $input): array
     {
-        $input = [...self::defaults(), ...array_filter($input, fn (mixed $value): bool => $value !== null && $value !== '')];
-        $system = in_array($input['system'], self::SYSTEMS, true) ? $input['system'] : 'ac3';
+        $given = array_filter($input, fn (mixed $value): bool => $value !== null && $value !== '');
+        $input = [...self::defaults(), ...$given];
+
+        if ($input['system'] === 'dc') {
+            $input['voltage'] = $given['voltage'] ?? self::VOLTAGES['dc'];
+
+            return self::calculateDc($input);
+        }
+
+        $system = in_array($input['system'], self::AC_SYSTEMS, true) ? $input['system'] : 'ac3';
         $material = in_array($input['material'], self::MATERIALS, true) ? $input['material'] : 'cu';
         $insulation = in_array($input['insulation'], self::INSULATIONS, true) ? $input['insulation'] : 'xlpe';
         $method = in_array($input['installation_method'], self::METHODS, true) ? $input['installation_method'] : 'C';
@@ -292,14 +320,83 @@ class CableCalculator
     }
 
     /**
+     * DC after the Proximus 48 V calculation note: S = Imax × L × 2 × ρ / ΔU (per cable when there are
+     * several per pole), the provided section (the next standard one unless chosen) and the ratio
+     * S ÷ provided section ("kabel per pool"), which must stay at or below 1.
+     *
+     * @param  array<string, mixed>  $input  with the defaults merged in
+     * @return array<string, mixed>
+     */
+    public static function calculateDc(array $input): array
+    {
+        $imax = (float) $input['protective_device'];
+        $length = (float) $input['length'];
+        $resistivity = (float) $input['resistivity'];
+        $maxDrop = (float) $input['max_drop_volts'];
+        $voltage = (float) $input['voltage'];
+        $parallel = max(1, (int) $input['parallel_conductors']);
+        $errors = [];
+
+        foreach (['device' => $imax, 'length' => $length, 'resistivity' => $resistivity, 'drop_volts' => $maxDrop] as $error => $value) {
+            if ($value <= 0) {
+                $errors[] = $error;
+            }
+        }
+
+        $empty = [
+            'mode' => 'dc', 'ib' => $imax ?: null, 'in' => $imax ?: null, 'loaded' => 2, 'parallel' => $parallel, 'k1' => null, 'k2' => null,
+            'section' => null, 'suggested' => null, 's_required' => null, 's_total' => null, 'ratio' => null, 'iz' => null, 'iz0' => null,
+            'drop_v' => null, 'drop_pct' => null, 'by_current' => null, 'by_drop' => null, 'by_short_circuit' => null, 's_min_short_circuit' => null,
+            'governing' => null, 'rows' => [],
+        ];
+
+        if ($errors !== []) {
+            return ['ok' => false, 'errors' => $errors, ...$empty];
+        }
+
+        $total = $imax * $length * 2 * $resistivity / $maxDrop;
+        $perCable = $total / $parallel;
+        $suggested = collect(self::SECTIONS)->first(fn (float|int $section): bool => $section >= $perCable - 1e-9);
+        $section = (float) $input['chosen_section'] > 0 ? (float) $input['chosen_section'] : ($suggested !== null ? (float) $suggested : null);
+        $empty = [...$empty, 's_total' => round($total, 2), 's_required' => round($perCable, 2), 'suggested' => $suggested !== null ? (float) $suggested : null, 'by_drop' => $suggested !== null ? (float) $suggested : null];
+
+        if ($section === null) {
+            return ['ok' => false, 'errors' => ['no_section_dc'], ...$empty];
+        }
+
+        $ratio = $perCable / $section;
+        $dropV = $imax * $length * 2 * $resistivity / ($section * $parallel);
+        $ok = $ratio <= 1 + 1e-9;
+
+        return [
+            'ok' => $ok,
+            'errors' => $ok ? [] : ['section_too_small'],
+            ...$empty,
+            'section' => $section,
+            'ratio' => round($ratio, 2),
+            'drop_v' => round($dropV, 2),
+            'drop_pct' => $voltage > 0 ? round(100 * $dropV / $voltage, 2) : null,
+            'governing' => 'voltage_drop',
+        ];
+    }
+
+    /**
      * "3 × 6 mm² Cu XLPE" or "2 × (3 × 95 mm²) …" with parallel conductors; the number of loaded
-     * conductors per system (three-phase 3, single-phase and DC 2).
+     * conductors per system (three-phase 3, single-phase 2).
      */
     public static function label(float $section, string $material, string $insulation, int $loaded, int $parallel = 1): string
     {
         $core = $loaded.' × '.self::number($section).' mm²';
 
         return ($parallel > 1 ? $parallel.' × ('.$core.')' : $core).' '.ucfirst($material).' '.strtoupper($insulation);
+    }
+
+    /**
+     * DC: "95 mm² per pool" or "2 × 95 mm² per pool".
+     */
+    public static function dcLabel(float $section, int $parallel = 1): string
+    {
+        return __('erp.cable_calculator.result.dc_label', ['cable' => ($parallel > 1 ? $parallel.' × ' : '').self::number($section).' mm²']);
     }
 
     public static function number(float $value): string
