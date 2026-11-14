@@ -66,6 +66,12 @@ class NasTriggers
                 $file->usages()->with('asbuilt.project.category')->get()->each(fn (AsbuiltFile $usage) => $nas->asbuiltFile($usage));
             }
         });
+        // The standard files per COW-code: Asbuiltfiles/{area}/{COW-code}/.
+        self::on(AsbuiltLibraryFile::class, 'saved', function (NasSync $nas, AsbuiltLibraryFile $file): void {
+            if ($file->wasRecentlyCreated || $file->wasChanged(['path', 'title', 'work_site_id'])) {
+                app(NasCatalog::class)->asbuiltLibraryFile($file);
+            }
+        });
 
         self::on(Employee::class, 'saved', fn (NasSync $nas, Employee $employee) => $nas->employee($employee->loadMissing(['certificates', 'medicalChecks'])));
         self::on(EmployeeCertificate::class, 'saved', function (NasSync $nas, EmployeeCertificate $certificate): void {
@@ -159,6 +165,13 @@ class NasTriggers
         self::on(Asbuilt::class, 'saved', fn (NasSync $nas, Asbuilt $asbuilt) => $asbuilt->wasChanged('zip_path') && $catalog()->asbuiltZip($asbuilt));
 
         self::on(WorkSite::class, 'saved', fn (NasSync $nas, WorkSite $site) => ($site->wasChanged('images') || $site->wasRecentlyCreated) && $catalog()->workSite($site));
+        // Another area or COW-code: its standard as-built files in the new folder.
+        self::on(WorkSite::class, 'updated', function (NasSync $nas, WorkSite $site) use ($catalog): void {
+            if ($site->wasChanged(['work_site_area_id', 'cow_code'])) {
+                $site->unsetRelation('area');
+                $site->asbuiltLibraryFiles()->get()->each(fn (AsbuiltLibraryFile $file) => $catalog()->asbuiltLibraryFile($file->setRelation('workSite', $site)));
+            }
+        });
         self::on(Vehicle::class, 'saved', fn (NasSync $nas, Vehicle $vehicle) => $catalog()->vehiclePhoto($vehicle));
         self::on(Incident::class, 'saved', fn (NasSync $nas, Incident $incident) => $catalog()->incidentPhotos($incident));
         self::on(Suggestion::class, 'saved', fn (NasSync $nas, Suggestion $suggestion) => $catalog()->suggestion($suggestion));

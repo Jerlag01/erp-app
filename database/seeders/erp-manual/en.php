@@ -131,6 +131,7 @@ Uploading still happens through the platform; every file then also goes to the N
 - **Personeel/{first last}**: driving licence, identity card, certificates (and requests), medical, parental leave, signed documents, a PDF of the personal details, **Prestaties** (the weekly PDFs) and **Medische attesten**.
 - **Wagenpark/{plate}**: a PDF of the vehicle and its fuel passes (never the PIN code) and the photo.
 - **Werflocaties/{COW code}**: the photos of the site.
+- **Asbuiltfiles/{area}/{COW code}**: the standard as-built files of the COW code (not the general files or the register of technical documents); a replaced file is written again, and a site moved to another area gets its files in the new folder (sites without an area: "Zonder regio").
 - **Incidenten**: one PDF per incident, with the photos in **Foto's**.
 - **Toolboxen/{month title}**: the attendance list with signatures, the content (PDF) and the attachments.
 - **Financieel**: sales invoices (PDF), purchase invoices (with UBL) and Peppol messages, per year.

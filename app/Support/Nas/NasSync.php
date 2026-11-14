@@ -42,6 +42,7 @@ use Throwable;
  * of every active NAS (Admin > NAS systems, e.g. "/ERP"; several NAS systems each get every file):
  *
  *   {category}/{project reference}/{upload zone}/…        project files, and As-built/{category}/…
+ *   Asbuiltfiles/{area}/{COW-code}/…                       the standard as-built files of a COW-code
  *   Personeel/{first last}/…                               driving licence, ID card, certificates, medical,
  *                                                          the personal details (PDF), Prestaties/ (weekly
  *                                                          PDFs), Medische attesten/ (absence certificates)
@@ -458,7 +459,10 @@ class NasSync
         return $segment === '' ? '-' : mb_substr($segment, 0, 200);
     }
 
-    protected function fileName(string $name, string $original): string
+    /**
+     * The name with the extension of the uploaded file when it has none.
+     */
+    public function fileName(string $name, string $original): string
     {
         $extension = pathinfo($original, PATHINFO_EXTENSION);
 

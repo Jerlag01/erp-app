@@ -131,6 +131,7 @@ Le téléchargement se fait toujours via la plateforme ; chaque fichier part ens
 - **Personeel/{prénom nom}** : permis de conduire, carte d'identité, certificats (et demandes), médical, congé parental, documents signés, un PDF des données personnelles, **Prestaties** (les PDF hebdomadaires) et **Medische attesten**.
 - **Wagenpark/{plaque}** : un PDF du véhicule et de ses cartes carburant (jamais le code PIN) et la photo.
 - **Werflocaties/{code COW}** : les photos du site.
+- **Asbuiltfiles/{zone}/{code COW}** : les fichiers standard du registre as-built de ce code COW (pas les fichiers généraux ni le registre des documents techniques) ; un fichier remplacé est réécrit, et un site déplacé vers une autre zone reçoit ses fichiers dans le nouveau dossier (sites sans zone : « Zonder regio »).
 - **Incidenten** : un PDF par incident, avec les photos dans **Foto's**.
 - **Toolboxen/{mois titre}** : la liste de présence avec signatures, le contenu (PDF) et les annexes.
 - **Financieel** : factures de vente (PDF), factures d'achat (avec UBL) et messages Peppol, par année.

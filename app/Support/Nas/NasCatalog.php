@@ -3,6 +3,7 @@
 namespace App\Support\Nas;
 
 use App\Models\Asbuilt;
+use App\Models\AsbuiltLibraryFile;
 use App\Models\Asset;
 use App\Models\AssetLog;
 use App\Models\BaeOrder;
@@ -35,12 +36,17 @@ use App\Models\WorkSite;
 /**
  * Every other file of the platform for the NAS copy (see NasSync for the layout): the project overview
  * and the documents made for a project (battery dossier, battery room, BAE order, intervention report,
- * as-built ZIP, project archive), the photos of work sites, vehicles, incidents and suggestions, and the
+ * as-built ZIP, project archive), the standard as-built files per COW-code, the photos of work sites, vehicles, incidents and suggestions, and the
  * files of HR, finance, the knowledge base, IT, equipment, stock, routers and waste.
  */
 class NasCatalog
 {
     public const SITES = 'Werflocaties';
+
+    /** The standard as-built files per COW-code: Asbuiltfiles/{area}/{COW-code}/{file}. */
+    public const ASBUILT_LIBRARY = 'Asbuiltfiles';
+
+    public const NO_AREA = 'Zonder regio';
 
     public const FINANCE = 'Financieel';
 
@@ -162,6 +168,25 @@ class NasCatalog
         if (filled($project->archive_path)) {
             $this->nas->put([...self::projectFolder($project), 'Archief', basename($project->archive_path)], ['disk' => 'local', 'path' => $project->archive_path]);
         }
+    }
+
+    /**
+     * A standard as-built file of a COW-code (evacuation routes, plans, …) below its area and COW-code.
+     * The general files (external influences) and the register of technical documents have no COW-code
+     * and stay out.
+     */
+    public function asbuiltLibraryFile(AsbuiltLibraryFile $file): void
+    {
+        $site = $file->workSite;
+
+        if ($site === null || blank($file->path)) {
+            return;
+        }
+
+        $this->nas->put(
+            [self::ASBUILT_LIBRARY, $site->area?->name ?: self::NO_AREA, $site->cow_code, $this->nas->fileName((string) ($file->title ?: $file->original_name), (string) $file->original_name)],
+            ['disk' => AsbuiltLibraryFile::DISK, 'path' => $file->path],
+        );
     }
 
     /* Sites, vehicles, incidents, suggestions */
@@ -347,6 +372,7 @@ class NasCatalog
         BatteryDelivery::query()->with('project.category')->lazyById()->each(fn (BatteryDelivery $delivery) => $this->batteryDelivery($delivery));
         InterventionReport::query()->whereNotNull('pdf_path')->with('project.category')->lazyById()->each(fn (InterventionReport $report) => $this->interventionReport($report));
         Asbuilt::query()->whereNotNull('zip_path')->with('project.category')->lazyById()->each(fn (Asbuilt $asbuilt) => $this->asbuiltZip($asbuilt));
+        AsbuiltLibraryFile::query()->whereNotNull('work_site_id')->with('workSite.area')->lazyById()->each(fn (AsbuiltLibraryFile $file) => $this->asbuiltLibraryFile($file));
         WorkSite::query()->whereNotNull('images')->lazyById()->each(fn (WorkSite $site) => $this->workSite($site));
         Vehicle::query()->whereNotNull('photo')->lazyById()->each(fn (Vehicle $vehicle) => $this->vehiclePhoto($vehicle));
         Incident::query()->whereNotNull('photos')->lazyById()->each(fn (Incident $incident) => $this->incidentPhotos($incident));

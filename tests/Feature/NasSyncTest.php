@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Enums\AbsenceType;
+use App\Enums\AsbuiltCategory;
 use App\Enums\CertificateType;
 use App\Enums\ProjectFileSection;
 use App\Filament\Admin\Resources\NasTargets\NasTargetResource;
 use App\Filament\Admin\Resources\NasTargets\Pages\ManageNasTargets;
 use App\Models\Absence;
+use App\Models\AsbuiltLibraryFile;
 use App\Models\Asset;
 use App\Models\BatteryDossier;
 use App\Models\Employee;
@@ -26,6 +28,7 @@ use App\Models\ToolboxMeeting;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkSite;
+use App\Models\WorkSiteArea;
 use App\Support\Nas\FlysystemTransport;
 use App\Support\Nas\NasSync;
 use App\Support\Nas\NasTransport;
@@ -327,6 +330,34 @@ class NasSyncTest extends TestCase
         $failed = NasSyncItem::query()->where('target', 'like', '%2DEF456%')->sole();
         $this->assertSame(NasSyncItem::FAILED, $failed->status);
         $this->assertStringContainsString('NT_STATUS_ACCESS_DENIED', (string) $failed->last_error);
+    }
+
+    #[Test]
+    public function the_standard_as_built_files_go_per_area_and_cow_code(): void
+    {
+        $area = WorkSiteArea::query()->create(['name' => 'Antwerpen']);
+        $site = WorkSite::factory()->create(['cow_code' => '02GAM', 'work_site_area_id' => $area->id]);
+        Storage::disk('local')->put('asbuilt-library/evac.pdf', '%PDF-evac');
+        Storage::disk('local')->put('asbuilt-library/ext.pdf', '%PDF-ext');
+
+        $file = AsbuiltLibraryFile::factory()->create(['category' => AsbuiltCategory::EvacuationRoutes, 'work_site_id' => $site->id, 'title' => 'Evacuatieplan', 'path' => 'asbuilt-library/evac.pdf', 'original_name' => 'scan001.pdf']);
+        // General files (external influences) and the register of technical documents have no COW-code.
+        AsbuiltLibraryFile::factory()->create(['category' => AsbuiltCategory::ExternalInfluences, 'work_site_id' => $site->id, 'path' => 'asbuilt-library/ext.pdf']);
+        AsbuiltLibraryFile::factory()->create(['path' => 'asbuilt-library/ext.pdf']);
+
+        $this->assertSame('%PDF-evac', $this->uploaded('/ERP/Asbuiltfiles/Antwerpen/02GAM/Evacuatieplan.pdf')['contents']);
+        $this->assertSame(['Asbuiltfiles/Antwerpen/02GAM/Evacuatieplan.pdf'], NasSyncItem::query()->where('target', 'like', 'Asbuiltfiles/%')->pluck('target')->all());
+
+        // Replaced: written again.
+        Storage::disk('local')->put('asbuilt-library/evac-2.pdf', '%PDF-evac-2');
+        $file->update(['path' => 'asbuilt-library/evac-2.pdf']);
+        $this->assertSame('%PDF-evac-2', collect($this->uploads)->last()['contents']);
+
+        // The site moved to another area: its files in the new folder; without an area in "Zonder regio".
+        $site->update(['work_site_area_id' => WorkSiteArea::query()->create(['name' => 'Gent'])->id]);
+        $this->assertSame('%PDF-evac-2', $this->uploaded('/ERP/Asbuiltfiles/Gent/02GAM/Evacuatieplan.pdf')['contents']);
+        $site->update(['work_site_area_id' => null]);
+        $this->assertSame('%PDF-evac-2', $this->uploaded('/ERP/Asbuiltfiles/Zonder regio/02GAM/Evacuatieplan.pdf')['contents']);
     }
 
     #[Test]

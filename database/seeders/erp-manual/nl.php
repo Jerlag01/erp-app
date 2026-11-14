@@ -132,6 +132,7 @@ Het uploaden blijft via het platform gebeuren; elk bestand gaat daarna ook naar 
 - **Personeel/{voornaam naam}**: rijbewijs, identiteitskaart, certificaten (en aanvragen), medisch, ouderschapsverlof, getekende documenten, een PDF met de persoonsgegevens, **Prestaties** (de wekelijkse PDF's) en **Medische attesten**.
 - **Wagenpark/{nummerplaat}**: een PDF met het voertuig en zijn tankkaarten (nooit de PIN-code) en de foto.
 - **Werflocaties/{COW-code}**: de foto's van de site.
+- **Asbuiltfiles/{area}/{COW-code}**: de standaardbestanden van het as-built register van die COW-code (niet de algemene bestanden of het register van technische documenten); een vervangen bestand wordt opnieuw geschreven, en een site die naar een andere area gaat krijgt zijn bestanden in de nieuwe map (sites zonder area: "Zonder regio").
 - **Incidenten**: één PDF per incident, met de foto's in **Foto's**.
 - **Toolboxen/{maand titel}**: de aanwezigheidslijst met handtekeningen, de inhoud (PDF) en de bijlagen.
 - **Financieel**: verkoopfacturen (PDF), aankoopfacturen (met UBL) en Peppol-berichten, per jaar.
