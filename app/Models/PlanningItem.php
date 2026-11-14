@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * One item in an employee's planning: a timeslot on a day for an open project, a warehouse job
  * (description and task list) or something else.
  */
-#[Fillable(['user_id', 'date', 'start_time', 'end_time', 'kind', 'project_id', 'title', 'description', 'tasks', 'notes', 'created_by', 'updated_by'])]
+#[Fillable(['user_id', 'date', 'start_time', 'end_time', 'kind', 'project_id', 'work_site_id', 'title', 'description', 'tasks', 'notes', 'created_by', 'updated_by'])]
 class PlanningItem extends Model
 {
     /** @use HasFactory<PlanningItemFactory> */
@@ -38,6 +38,71 @@ class PlanningItem extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * The site the item goes to when it is not the project's own (a battery move: origin or destination).
+     *
+     * @return BelongsTo<WorkSite, $this>
+     */
+    public function workSite(): BelongsTo
+    {
+        return $this->belongsTo(WorkSite::class);
+    }
+
+    /**
+     * Where the work is done (the route details): the chosen site, else the project's.
+     */
+    public function site(): ?WorkSite
+    {
+        return $this->kind === PlanningKind::Project ? ($this->workSite ?? $this->project?->workSite) : null;
+    }
+
+    /**
+     * The COW code of that site (or the project's COW code).
+     */
+    public function cowCode(): ?string
+    {
+        return $this->site()?->cow_code ?? ($this->kind === PlanningKind::Project ? $this->project?->cow_code : null);
+    }
+
+    /**
+     * The address to drive to: the chosen site's, else the project's own address or its site's.
+     */
+    public function addressLine(): ?string
+    {
+        if ($this->kind !== PlanningKind::Project) {
+            return null;
+        }
+
+        return $this->workSite?->addressLine() ?? $this->project?->addressLine() ?? $this->project?->workSite?->addressLine();
+    }
+
+    /**
+     * The sites a battery move (605) can be planned at: its origin and destination, by id with a label.
+     *
+     * @return array<int, string>
+     */
+    public static function moveSiteOptions(?int $projectId): array
+    {
+        $dossier = $projectId ? MoveDossier::query()->with(['fromSite', 'toSite', 'project.workSite'])->where('project_id', $projectId)->latest('id')->first() : null;
+
+        if ($dossier === null) {
+            return [];
+        }
+
+        $label = fn (string $key, WorkSite $site): string => __($key).': '.trim($site->cow_code.' — '.($site->addressLine() ?? ''), ' —');
+        $options = [];
+
+        if ($dossier->fromSite !== null) {
+            $options[$dossier->fromSite->id] = $label('erp.planning.move_origin', $dossier->fromSite);
+        }
+
+        if (($to = $dossier->destination()) !== null) {
+            $options[$to->id] = $label('erp.planning.move_destination', $to);
+        }
+
+        return $options;
     }
 
     /**

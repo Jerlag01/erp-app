@@ -471,6 +471,7 @@ A planning calendar per employee: who works when on which project, in the wareho
 2. Choose one or more **employees**, the date and optionally **until** (one item per day; weekends only if you tick that).
 3. Choose a **time slot** or your own hours.
 4. Choose the **kind**: a **project** (open projects only: to be planned, planned, to be executed or in progress), **warehouse work** (description and tasks) or **something else**.
+   For a **battery move (605)** you choose the **COW code**: the origin site or the destination (the destination by default). That address and COW code are used in the route details in the app and in Outlook.
 5. Optionally tick **"Also notify by e-mail"**.
 
 Days of **sickness or family leave** are skipped and reported; other absences show, but you can still plan projects on them (see below).

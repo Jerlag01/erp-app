@@ -471,6 +471,7 @@ Un calendrier de planning par employé : qui travaille quand sur quel projet, au
 2. Choisissez un ou plusieurs **employés**, la date et éventuellement **jusqu'au** (un élément par jour ; les week-ends seulement si vous les cochez).
 3. Choisissez un **créneau** ou des heures libres.
 4. Choisissez le **type** : un **projet** (uniquement les projets ouverts : à planifier, planifié, à exécuter ou en cours), du **travail au magasin** (description et tâches) ou **autre chose**.
+   Pour un **déménagement de batteries (605)**, choisissez le **code COW** : le site de départ ou la destination (par défaut la destination). Cette adresse et ce code COW figurent dans l'itinéraire dans l'app et dans Outlook.
 5. Cochez éventuellement **« Notifier aussi par e-mail »**.
 
 Les jours de **maladie ou de congé familial** sont ignorés et signalés ; les autres absences restent affichées, mais vous pouvez encore y planifier des projets (voir ci-dessous).

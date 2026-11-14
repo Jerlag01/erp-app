@@ -301,17 +301,18 @@ class OutlookCalendar
      */
     public function payload(PlanningItem $item): array
     {
-        $item->loadMissing(['project.workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder']);
+        $item->loadMissing(['workSite', 'project.workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder']);
         $batteries = $item->batteries();
         $date = $item->date->format('Y-m-d');
         $subtitle = $item->subtitle();
         $location = $item->kind === PlanningKind::Project
-            ? ($item->project?->addressLine() ?? $item->project?->workSite?->addressLine())
+            ? $item->addressLine()
             : null;
 
         $lines = array_filter([
             $subtitle ? '<p><strong>'.e($subtitle).'</strong></p>' : null,
             $batteries ? '<p><strong>'.e($batteries).'</strong></p>' : null,
+            $item->work_site_id !== null ? '<p>'.e(__('erp.planning.move_site', [], $item->user?->preferredLocale()).': '.$item->cowCode()).'</p>' : null,
             filled($item->description) ? '<p>'.nl2br(e($item->description)).'</p>' : null,
             $item->taskList() !== [] ? '<ul>'.implode('', array_map(fn (array $task): string => '<li>'.e($task['text']).'</li>', $item->taskList())).'</ul>' : null,
             filled($item->notes) ? '<p>'.nl2br(e($item->notes)).'</p>' : null,

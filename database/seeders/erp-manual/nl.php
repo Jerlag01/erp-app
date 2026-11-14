@@ -472,6 +472,7 @@ Een planningskalender per werknemer: wie werkt wanneer aan welk project, in het 
 2. Kies een of meer **werknemers**, de datum en eventueel **tot en met** (één item per dag; weekends enkel als je dat aanvinkt).
 3. Kies een **tijdslot** of eigen uren.
 4. Kies de **soort**: een **project** (enkel open projecten: te plannen, ingepland, uit te voeren of in uitvoering), **magazijnwerk** (omschrijving en taken) of **iets anders**.
+   Bij een **batterijverhuis (605)** kies je de **COW-code**: de vertreksite of de bestemming (standaard de bestemming). Dat adres en die COW-code staan in de routegegevens in de app en in Outlook.
 5. Vink eventueel **"Ook per e-mail melden"** aan.
 
 Dagen met **ziekte of familiaal verlof** worden overgeslagen en gemeld; andere afwezigheden staan erbij, maar je kunt er nog projecten op inplannen (zie hieronder).

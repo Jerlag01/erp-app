@@ -369,6 +369,7 @@ class Planning extends Page
                     'end_time' => $item->endsAt(),
                     'kind' => $item->kind->value,
                     'project_id' => $item->project_id,
+                    'work_site_id' => $item->work_site_id ?? array_key_last(PlanningItem::moveSiteOptions($item->project_id)),
                     'title' => $item->title,
                     'description' => $item->description,
                     'tasks' => array_column($item->taskList(), 'text'),
@@ -512,7 +513,16 @@ class Planning extends Page
                 ->searchable()
                 ->options(fn (): array => $this->projectOptions($item))
                 ->visible($isKind(PlanningKind::Project))
-                ->required($isKind(PlanningKind::Project)),
+                ->required($isKind(PlanningKind::Project))
+                ->live()
+                // A battery move goes to its destination unless the origin is chosen.
+                ->afterStateUpdated(fn (mixed $state, Set $set) => $set('work_site_id', array_key_last(PlanningItem::moveSiteOptions((int) $state)))),
+            Select::make('work_site_id')
+                ->label(__('erp.planning.move_site'))
+                ->helperText(__('erp.planning.move_site_help'))
+                ->options(fn (Get $get): array => PlanningItem::moveSiteOptions((int) $get('project_id')))
+                ->visible(fn (Get $get): bool => $get('kind') === PlanningKind::Project->value && PlanningItem::moveSiteOptions((int) $get('project_id')) !== [])
+                ->required(fn (Get $get): bool => $get('kind') === PlanningKind::Project->value && PlanningItem::moveSiteOptions((int) $get('project_id')) !== []),
             TextInput::make('title')
                 ->label(fn (Get $get): string => $get('kind') === PlanningKind::Warehouse->value ? __('erp.planning.short_title') : __('erp.planning.title_field'))
                 ->maxLength(255)
@@ -551,7 +561,8 @@ class Planning extends Page
             $item->date->locale(app()->getLocale())->translatedFormat('l d/m/Y').' · '.$item->timeRange(),
             $item->kind->getLabel().($item->subtitle() ? ' · '.$item->subtitle() : ''),
             $item->batteries(),
-            $item->kind === PlanningKind::Project ? $item->project?->addressLine() : null,
+            $item->work_site_id !== null ? __('erp.planning.move_site').': '.$item->cowCode() : null,
+            $item->addressLine(),
         ]);
 
         return array_values(array_filter([
@@ -586,7 +597,7 @@ class Planning extends Page
      */
     protected function itemFrom(array $arguments, string $ability): PlanningItem
     {
-        $item = PlanningItem::query()->with(['user', 'project.category', 'project.batteryDossier', 'project.baeOrder'])->findOrFail((int) ($arguments['item'] ?? 0));
+        $item = PlanningItem::query()->with(['user', 'workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder'])->findOrFail((int) ($arguments['item'] ?? 0));
         abort_unless($this->user()->can($ability, $item), 403);
 
         return $item;

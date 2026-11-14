@@ -73,7 +73,7 @@ class PlanningController extends Controller
         abort_unless($this->planning->canSeePlanningOf($viewer, $employee), 403);
 
         $items = PlanningItem::query()
-            ->with(['project.category', 'project.workSite', 'project.batteryDossier', 'project.baeOrder'])
+            ->with(['workSite', 'project.category', 'project.workSite', 'project.batteryDossier', 'project.baeOrder'])
             ->where('user_id', $employee->id)
             ->between($from, $until)
             ->orderBy('date')
@@ -113,7 +113,8 @@ class PlanningController extends Controller
      */
     protected function item(PlanningItem $item): array
     {
-        $site = $item->project?->workSite;
+        // The chosen site of a battery move (origin or destination), else the project's.
+        $site = $item->site();
 
         return [
             'id' => $item->id,
@@ -127,7 +128,7 @@ class PlanningController extends Controller
             'description' => $item->description,
             'notes' => $item->notes,
             'tasks' => $item->taskList(),
-            'cow_code' => $site?->cow_code ?? $item->project?->cow_code,
+            'cow_code' => $item->cowCode(),
             'address' => $site?->addressLine(),
             'maps_url' => $site?->googleMapsUrl(),
         ];

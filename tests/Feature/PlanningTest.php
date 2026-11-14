@@ -13,11 +13,14 @@ use App\Models\Absence;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
 use App\Models\Holiday;
+use App\Models\MoveDossier;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\VacationRequest;
+use App\Models\WorkSite;
+use App\Support\OutlookCalendar;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,6 +82,52 @@ class PlanningTest extends TestCase
             && $mail->hasTo($employee->email)
             && $mail->hasCc('office@example.com')
             && str_contains($mail->rendered['html'], $project->reference));
+    }
+
+    #[Test]
+    public function a_battery_move_is_planned_at_its_origin_or_destination_cow_code(): void
+    {
+        $planner = User::factory()->admin()->create();
+        $employee = User::factory()->inTeam()->create();
+        $origin = WorkSite::factory()->create(['cow_code' => 'COW-ORIG', 'street' => 'Oude Baan', 'house_number' => '1', 'postal_code' => '9000', 'city' => 'Gent']);
+        $destination = WorkSite::factory()->create(['cow_code' => 'COW-DEST', 'street' => 'Nieuwe Baan', 'house_number' => '2', 'postal_code' => '3000', 'city' => 'Leuven']);
+        $other = WorkSite::factory()->create(['cow_code' => 'COW-OTHER']);
+        $dossier = MoveDossier::factory()->create(['move_from_work_site_id' => $origin->id, 'move_to_work_site_id' => $destination->id]);
+        $project = $dossier->project;
+        $project->update(['status' => ProjectStatus::InProgress]);
+        $this->actingAs($planner);
+
+        // The destination is chosen by default; both COW codes are offered.
+        $this->assertSame([$origin->id, $destination->id], array_keys(PlanningItem::moveSiteOptions($project->id)));
+        Livewire::test(Planning::class)
+            ->mountAction('createItem')
+            ->fillForm(['kind' => 'project', 'project_id' => $project->id])
+            ->assertSchemaStateSet(['work_site_id' => $destination->id]);
+
+        // Planned at the origin: the route details go there.
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['work_site_id' => $origin->id, 'notify_mail' => false]))
+            ->assertHasNoActionErrors();
+        $item = PlanningItem::sole();
+        $this->assertSame([$origin->id, 'COW-ORIG'], [$item->work_site_id, $item->cowCode()]);
+        $this->assertStringContainsString('Oude Baan 1', (string) $item->addressLine());
+        $this->assertStringContainsString('Oude Baan 1', app(OutlookCalendar::class)->payload($item)['location']['displayName']);
+
+        $this->getJson('/api/v1/planning?from=2026-10-12&until=2026-10-12&user_id='.$employee->id, $this->mobileAuth($planner))
+            ->assertOk()
+            ->assertJsonPath('data.days.0.items.0.cow_code', 'COW-ORIG')
+            ->assertJsonPath('data.days.0.items.0.address', $origin->addressLine());
+
+        // Another site than the move's is refused; a project without a move has no choice.
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['work_site_id' => $other->id, 'date' => '2026-10-13']))
+            ->assertHasActionErrors(['work_site_id']);
+        $plain = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        $this->assertSame([], PlanningItem::moveSiteOptions($plain->id));
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $plain, ['date' => '2026-10-14', 'notify_mail' => false]))
+            ->assertHasNoActionErrors();
+        $this->assertNull(PlanningItem::query()->where('project_id', $plain->id)->value('work_site_id'));
     }
 
     #[Test]
