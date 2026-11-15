@@ -122,7 +122,7 @@ class TimesheetTest extends TestCase
     }
 
     #[Test]
-    public function overtime_and_kilometres_carry_over_from_week_to_week(): void
+    public function overtime_carries_over_from_week_to_week_and_kilometres_start_from_zero(): void
     {
         $user = User::factory()->create();
         // Week 1: 5 × 8,5 h without lunch = 42,5 → +2,5; 5 × 85 km.
@@ -134,8 +134,43 @@ class TimesheetTest extends TestCase
         $week = app(Timesheets::class)->week($user, self::MONDAY);
 
         $this->assertSame(4.0, $week['overtime_carried']);
-        $this->assertSame(525, $week['km_carried']);
         $this->assertSame(-36.0, $week['overtime_new']);
+        // Kilometres are not carried over: every week starts at 0, unless set on that week.
+        $this->assertSame([0, 0], [$week['km_carried'], $week['km_new']]);
+        TimesheetWeek::query()->create(['user_id' => $user->id, 'week_start' => self::MONDAY, 'km_carried' => 40]);
+        $this->assertSame(40, app(Timesheets::class)->week($user, self::MONDAY)['km_carried']);
+    }
+
+    #[Test]
+    public function the_overtime_of_a_month_is_paid_out_when_the_setting_is_on(): void
+    {
+        $user = User::factory()->create();
+        // October: two weeks of 5 × 8,5 h = +5 h. November: four days = −6 h.
+        foreach (['2026-10-19', '2026-10-26'] as $monday) {
+            foreach (range(0, 4) as $offset) {
+                $this->day($user, CarbonImmutable::parse($monday)->addDays($offset)->toDateString(), lunch: false);
+            }
+        }
+        foreach (range(0, 3) as $offset) {
+            $this->day($user, CarbonImmutable::parse('2026-11-02')->addDays($offset)->toDateString(), lunch: false);
+        }
+        $timesheets = app(Timesheets::class);
+        $week = fn (string $monday): array => array_intersect_key($timesheets->week($user, $monday), array_flip(['overtime_paid', 'overtime_carried']));
+
+        // Off: the overtime keeps adding up.
+        $this->assertSame(['overtime_carried' => 5.0, 'overtime_paid' => 0.0], $week('2026-11-02'));
+        $this->assertSame(-1.0, $week('2026-11-09')['overtime_carried']);
+
+        // On: October's +5 h is paid out when November starts; November's minus stays.
+        settings()->save('timesheets', [...settings('timesheets'), 'overtime_monthly_payout' => true]);
+        $this->assertSame(['overtime_carried' => 0.0, 'overtime_paid' => 5.0], $week('2026-11-02'));
+        $this->assertSame(['overtime_carried' => -6.0, 'overtime_paid' => 0.0], $week('2026-11-09'));
+        // A week counts for the month of its Wednesday: nothing is paid out within October.
+        $this->assertSame(0.0, $week('2026-10-26')['overtime_paid']);
+
+        // Only from November on: October is not paid out.
+        settings()->save('timesheets', [...settings('timesheets'), 'overtime_payout_from' => '2026-11-01']);
+        $this->assertSame(['overtime_carried' => 5.0, 'overtime_paid' => 0.0], $week('2026-11-02'));
     }
 
     #[Test]

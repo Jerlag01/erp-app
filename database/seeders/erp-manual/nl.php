@@ -374,6 +374,7 @@ Collega's zien in de kalender enkel "afwezig", nooit de reden van een ziekte.
 - **Mobiliteitsverlof (MV)**: 1 dag per 27 000 km die in de prestaties van het **vorige jaar** geregistreerd zijn; vrij in te plannen via een verlofaanvraag en geldig tot 31 december. Geen attest. Telt als gewerkte dag.
 - **Anciënniteitsverlof (AN)**: 1 dag per jaar vanaf **25 jaar dienst** (vanaf de datum in dienst; niet voor interims); vrij in te plannen. Telt als gewerkte dag.
 - **Sollicitatieverlof (SV)**: tijdens een **opzeggingstermijn** één **volledige dag per week**, tot de einddatum. Telt als gewerkte (betaalde) dag.
+- **Onbetaald verlof (OB)**: telt als niet gewerkt en niet betaald, maar wordt **niet van de overuren afgetrokken**: de dag gaat van de te werken uren van de week af (een halve dag 4 uur).
 - **Economisch werkloos (EW)**: enkel ingevoerd door de beheerders; telt als niet gewerkt (betaald door de RVA), maar de **overuren blijven staan**. Geen attest.
 - **Klein verlet (KV)**: enkel door de beheerders, met de **reden** uit het koninklijk besluit van 28/08/1963 (bv. huwelijk 2 dagen, overlijden van een ouder 3 dagen) en een **attest**. Telt als volledige gewerkte dag.
 - **Werkongeval (WO)**: enkel door de beheerders, gekoppeld aan de **ongevalsmelding**. Betaald als het **attest binnen 48 uur** in het platform staat; anders tellen de dagen als **onbetaald verlof**. Er kan niets op ingepland worden.
@@ -409,12 +410,14 @@ Verlof, ziekte, opleidingen en feestdagen worden **automatisch** in de fiche gez
 
 ## De week
 
-- Bij **Weekinstellingen** staan de te werken uren en de **overgedragen** kilometers en meeruren van de vorige week.
+- Bij **Weekinstellingen** staan de te werken uren en de **overgedragen** meeruren van de vorige week. De **kilometers** worden niet overgedragen: ze beginnen elke week bij 0 (een beheerder kan voor een week wel een beginstand invullen).
 - De **week-PDF** wordt elke week automatisch gemaild naar de administratie en naar de werknemer zelf. Met het recht kan je een week ook manueel versturen.
 
 ## Meeruren
 
 Wat je meer werkt dan de te werken uren, komt bij je **meeruren-saldo**. Dat saldo kan je als verlof opnemen (zie "Verlof, overuren en afwezigheden").
+
+**Maandelijkse uitbetaling.** Staat bij Instellingen → Prestaties → Meeruren **Meeruren elke maand uitbetalen** aan, dan worden de meeruren die een maand bijbrengt bij het begin van de volgende maand uitbetaald en van het saldo afgetrokken; de week toont dan de regel *Uitbetaald (vorige maand)*. Een maand met minder uren dan te werken houdt haar min. Een week telt voor de maand van haar woensdag. Met **Vanaf maand** geldt dit pas vanaf die maand. Staat het uit, dan blijven de meeruren optellen.
 
 ## Bedienden
 

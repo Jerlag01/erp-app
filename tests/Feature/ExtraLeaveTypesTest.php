@@ -176,6 +176,22 @@ class ExtraLeaveTypesTest extends TestCase
     }
 
     #[Test]
+    public function unpaid_leave_is_not_taken_from_the_overtime(): void
+    {
+        $user = $this->employee();
+        // Mon–Wed 8 hours, Thursday a full day and Friday half a day unpaid leave (4 hours worked).
+        foreach (['2026-11-09', '2026-11-10', '2026-11-11'] as $date) {
+            $this->day($user, $date);
+        }
+        Absence::factory()->for($user)->ofType(AbsenceType::Unpaid)->create(['start_date' => '2026-11-12', 'end_date' => '2026-11-12']);
+        Absence::factory()->for($user)->ofType(AbsenceType::Unpaid)->create(['start_date' => '2026-11-13', 'end_date' => '2026-11-13', 'half_day' => true]);
+
+        $week = app(Timesheets::class)->week($user, '2026-11-09');
+        $this->assertSame([24.0, 28.0, -4.0], [$week['hours'], $week['expected'], $week['overtime_now']]);
+        $this->assertSame(['unpaid', 0.0, 8.0], [$week['days'][3]['status']['type'], (float) $week['days'][3]['status']['credit'], (float) $week['days'][3]['status']['expected_off']]);
+    }
+
+    #[Test]
     public function klein_verlet_needs_a_reason_within_its_days_and_counts_as_worked(): void
     {
         // Real time: uploads in a moved clock count as expired temporary files.

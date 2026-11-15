@@ -10,7 +10,8 @@ use Filament\Support\Icons\Heroicon;
 /**
  * The absences of an employee and how the prestation sheet counts them:
  *
- *  - Z  sickness (certificate), R overtime taken as leave, FV family leave, unpaid leave, GA justified absence;
+ *  - Z  sickness (certificate), R overtime taken as leave, FV family leave, GA justified absence;
+ *  - OB unpaid leave: not worked and not paid, taken off the expected hours of the week (the overtime stays);
  *  - MV mobility leave, AN seniority leave, SV sollicitatieverlof: asked by the employee, paid (a full day);
  *  - EW economically unemployed and OV parental leave: not worked (paid by the RVA), but the day is taken
  *    off the expected hours of the week, so the overtime balance stays as it is;

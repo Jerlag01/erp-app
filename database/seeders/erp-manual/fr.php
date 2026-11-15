@@ -373,6 +373,7 @@ Les collègues ne voient dans le calendrier que « absent », jamais la raison d
 - **Congé mobilité (MV)** : 1 jour par 27 000 km enregistrés dans les prestations de **l'année précédente** ; à planifier librement via une demande de congé, valable jusqu'au 31 décembre. Pas d'attestation. Compte comme jour presté.
 - **Congé d'ancienneté (AN)** : 1 jour par an à partir de **25 ans de service** (depuis la date d'entrée ; pas pour les intérimaires) ; à planifier librement. Compte comme jour presté.
 - **Congé de sollicitation (SV)** : pendant un **préavis**, une **journée complète par semaine**, jusqu'à la date de fin. Compte comme jour presté (payé).
+- **Congé sans solde (OB)** : compte comme non travaillé et non payé, mais n'est **pas déduit des heures supplémentaires** : le jour est retiré des heures à prester de la semaine (une demi-journée 4 heures).
 - **Chômage économique (EW)** : encodé uniquement par les administrateurs ; compte comme non presté (payé par l'ONEM), mais les **heures supplémentaires restent**. Pas d'attestation.
 - **Petit chômage (KV)** : uniquement par les administrateurs, avec le **motif** de l'arrêté royal du 28/08/1963 (p. ex. mariage 2 jours, décès d'un parent 3 jours) et une **attestation**. Compte comme jour presté complet.
 - **Accident du travail (WO)** : uniquement par les administrateurs, lié à la **déclaration d'accident**. Payé si le **certificat est dans la plateforme dans les 48 heures** ; sinon, les jours comptent comme **congé sans solde**. Rien ne peut y être planifié.
@@ -408,12 +409,14 @@ Les congés, maladies, formations et jours fériés sont **automatiquement** rep
 
 ## La semaine
 
-- Dans **Paramètres de la semaine** figurent les heures à prester et les kilomètres et heures supplémentaires **reportés** de la semaine précédente.
+- Dans **Paramètres de la semaine** figurent les heures à prester et les heures supplémentaires **reportées** de la semaine précédente. Les **kilomètres** ne sont pas reportés : ils repartent de 0 chaque semaine (un administrateur peut toutefois saisir un report pour une semaine).
 - Le **PDF de la semaine** est envoyé automatiquement chaque semaine à l'administration et à l'employé lui-même. Avec le droit, vous pouvez aussi envoyer une semaine manuellement.
 
 ## Heures supplémentaires
 
 Ce que vous prestez au-delà des heures prévues s'ajoute à votre **solde d'heures supplémentaires**, que vous pouvez prendre en congé (voir « Congés, heures supplémentaires et absences »).
+
+**Paiement mensuel.** Si **Payer les heures supplémentaires chaque mois** est activé dans Paramètres → Prestations → Heures supplémentaires, les heures supplémentaires ajoutées par un mois sont payées au début du mois suivant et retirées du solde ; la semaine affiche alors la ligne *Payées (mois précédent)*. Un mois avec moins d'heures que prévu garde son moins. Une semaine compte pour le mois de son mercredi. Avec **À partir du mois**, cela ne vaut qu'à partir de ce mois. Désactivé, les heures supplémentaires continuent de s'additionner.
 
 ## Employés (statut bediende)
 

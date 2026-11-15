@@ -157,6 +157,9 @@
                 @endunless
                 <table>
                     <tr><td colspan="2"><strong>Meeruren</strong> <span style="color: var(--ts-muted);">({{ __('erp.timesheets.expected', ['hours' => $dec($week['expected'])]) }})</span></td></tr>
+                    @if (($week['overtime_paid'] ?? 0) > 0)
+                        <tr><td>{{ __('erp.timesheets.overtime_paid') }}</td><td class="n">−{{ $dec($week['overtime_paid']) }}</td></tr>
+                    @endif
                     <tr><td>Report</td><td class="n">{{ $dec($week['overtime_carried']) }}</td></tr>
                     <tr><td>Nu ({{ $dec($week['hours']) }} − {{ $dec($week['expected']) }})</td><td class="n">{{ $dec($week['overtime_now']) }}</td></tr>
                     <tr><td>Nieuw</td><td class="n">{{ $dec($week['overtime_new']) }}</td></tr>

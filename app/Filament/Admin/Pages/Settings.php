@@ -17,6 +17,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -563,6 +564,16 @@ class Settings extends Page
                     TextInput::make('timesheets.day_hours')->label(__('erp.settings.fields.timesheet_day_hours'))->helperText(__('erp.settings.help.timesheet_day_hours'))->numeric()->minValue(0)->maxValue(24)->step('any')->suffix('u')->required(),
                     TextInput::make('timesheets.lunch_hours')->label(__('erp.settings.fields.timesheet_lunch_hours'))->numeric()->minValue(0)->maxValue(4)->step('any')->suffix('u')->required(),
                     TextInput::make('timesheets.mobility_rate')->label(__('erp.settings.fields.timesheet_mobility_rate'))->helperText(__('erp.settings.help.timesheet_mobility_rate'))->numeric()->minValue(0)->maxValue(5)->step('any')->prefix('€')->suffix('/ km')->required(),
+                ]),
+            Section::make(__('erp.settings.sections.timesheet_overtime'))
+                ->description(__('erp.settings.help.timesheet_overtime'))
+                ->columns(3)
+                ->schema([
+                    Toggle::make('timesheets.overtime_monthly_payout')->label(__('erp.settings.fields.timesheet_overtime_monthly_payout'))->live()->columnSpanFull(),
+                    DatePicker::make('timesheets.overtime_payout_from')
+                        ->label(__('erp.settings.fields.timesheet_overtime_payout_from'))
+                        ->helperText(__('erp.settings.help.timesheet_overtime_payout_from'))
+                        ->visible(fn (Get $get): bool => (bool) $get('timesheets.overtime_monthly_payout')),
                 ]),
             Section::make(__('erp.settings.sections.timesheet_mail'))
                 ->description(__('erp.settings.help.timesheet_mail'))

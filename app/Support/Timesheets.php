@@ -30,9 +30,11 @@ use Illuminate\Database\Eloquent\Collection;
  *   extra sites in between are listed but not counted. With the lunch break on, 0.5 h is deducted.
  * - Vacation, medical leave, training, public holidays and company IR days (inhaalrust) count as a full day (8 h; half a day 4 h),
  *   family leave and overtime recuperation as 0 h: a short day then comes out of the overtime balance.
+ *   Unpaid leave, economic unemployment and parental leave are 0 h too, but off the expected hours: the balance stays.
  *   The lunch break is always on for vacation, medical leave, training and holidays.
- * - Per week: total versus the expected hours (40) gives the overtime of the week; the overtime and
- *   kilometres carry over from week to week ("Report" → "Nu" → "Nieuw").
+ * - Per week: total versus the expected hours (40) gives the overtime of the week; the overtime carries
+ *   over from week to week ("Report" → "Nu" → "Nieuw"). The kilometres start from 0 every week (only what
+ *   an administrator sets as "Report" on that week is added).
  * - Employees with the statute "bediende" register no times and no kilometres: every working day counts
  *   the day hours (8), less the part of the day an absence takes (see fixedDay()). The rest is the same.
  */
@@ -507,7 +509,7 @@ class Timesheets
     /**
      * The week of a date with everything the form and the PDF show.
      *
-     * @return array{monday: CarbonImmutable, friday: CarbonImmutable, number: int, plate: ?string, record: ?TimesheetWeek, days: list<array<string, mixed>>, km: int, hours: float, expected: float, km_carried: int, km_new: int, overtime_carried: float, overtime_now: float, overtime_new: float, notes: list<string>}
+     * @return array{monday: CarbonImmutable, friday: CarbonImmutable, number: int, plate: ?string, record: ?TimesheetWeek, days: list<array<string, mixed>>, km: int, hours: float, expected: float, km_carried: int, km_new: int, overtime_carried: float, overtime_paid: float, overtime_now: float, overtime_new: float, notes: list<string>}
      */
     public function week(User $user, CarbonInterface|string $date): array
     {
@@ -515,7 +517,7 @@ class Timesheets
         $friday = $monday->addDays(4);
         $record = TimesheetWeek::query()->where('user_id', $user->id)->whereDate('week_start', $monday->toDateString())->first();
         $days = array_values($this->days($user, $monday, $friday));
-        [$kmCarried, $overtimeCarried] = $this->carried($user, $monday, $record);
+        [$kmCarried, $overtimeCarried, $overtimePaid] = $this->carried($user, $monday, $record);
         $hours = round(array_sum(array_column($days, 'total')), 2);
         $km = (int) array_sum(array_column($days, 'km'));
         $expected = self::expectedFor($record?->expected_hours ?? $this->expectedHours(), $days);
@@ -550,6 +552,7 @@ class Timesheets
             'km_carried' => $kmCarried,
             'km_new' => $kmCarried + $km,
             'overtime_carried' => $overtimeCarried,
+            'overtime_paid' => $overtimePaid,
             'overtime_now' => round($hours - $expected, 2),
             'overtime_new' => round($overtimeCarried + $hours - $expected, 2),
             'notes' => $notes,
@@ -557,8 +560,8 @@ class Timesheets
     }
 
     /**
-     * The expected hours of a week, minus the days that keep the overtime (economically unemployed,
-     * parental leave): those are not worked, but not overtime either.
+     * The expected hours of a week, minus the days that keep the overtime (unpaid leave, economically
+     * unemployed, parental leave): those are not worked, but not overtime either.
      *
      * @param  iterable<array{status: ?array<string, mixed>}>  $days
      */
@@ -603,10 +606,15 @@ class Timesheets
     }
 
     /**
-     * Kilometres and overtime carried into a week: set by an administrator on that week, or the
-     * "new" values of the previous week, counted from the employee's first week.
+     * Kilometres and overtime carried into a week, and the overtime paid out at the start of it.
      *
-     * @return array{0: int, 1: float}
+     * The overtime: set by an administrator on that week, or the "new" value of the previous week, counted
+     * from the employee's first week. With the monthly payout on (Settings > Prestations), the overtime a
+     * month added (its net, when positive) is paid out when the next month starts, so it leaves the balance;
+     * a month with fewer hours keeps its minus. A week counts for the month of its Wednesday (most of its
+     * working days). The kilometres are not carried over: 0 every week, unless an administrator sets them.
+     *
+     * @return array{0: int, 1: float, 2: float}
      */
     public function carried(User $user, CarbonImmutable $monday, ?TimesheetWeek $record = null): array
     {
@@ -616,26 +624,67 @@ class Timesheets
         $starts = array_filter([$weeks->keys()->min(), $firstDay ? self::monday($firstDay)->toDateString() : null]);
 
         if ($starts === [] || min($starts) >= $monday->toDateString()) {
-            return [(int) ($record?->km_carried ?? 0), (float) ($record?->overtime_carried ?? 0)];
+            return [(int) ($record?->km_carried ?? 0), (float) ($record?->overtime_carried ?? 0), 0.0];
         }
 
         $start = CarbonImmutable::parse(min($starts));
         $days = $this->days($user, $start, $monday->subDays(3));
-        [$km, $overtime] = [0, 0.0];
+        [$overtime, $generated, $month] = [0.0, 0.0, null];
 
         for ($week = $start; $week->lessThan($monday); $week = $week->addWeek()) {
+            if (self::payoutMonth($week) !== $month) {
+                $overtime -= $this->overtimePayout($month, $generated);
+                [$generated, $month] = [0.0, self::payoutMonth($week)];
+            }
+
             $override = $weeks->get($week->toDateString());
-            $km = $override?->km_carried ?? $km;
-            $overtime = $override?->overtime_carried !== null ? (float) $override->overtime_carried : $overtime;
+            if ($override?->overtime_carried !== null) {
+                [$overtime, $generated] = [(float) $override->overtime_carried, 0.0];
+            }
+
             $weekDays = array_filter($days, fn (array $day): bool => $day['date']->betweenIncluded($week, $week->addDays(4)));
-            $km += (int) array_sum(array_column($weekDays, 'km'));
-            $overtime += array_sum(array_column($weekDays, 'total')) - self::expectedFor($override?->expected_hours ?? $this->expectedHours(), $weekDays);
+            $added = array_sum(array_column($weekDays, 'total')) - self::expectedFor($override?->expected_hours ?? $this->expectedHours(), $weekDays);
+            $overtime += $added;
+            $generated += $added;
         }
 
+        $paid = self::payoutMonth($monday) !== $month ? $this->overtimePayout($month, $generated) : 0.0;
+
         return [
-            (int) ($record?->km_carried ?? $km),
-            round($record?->overtime_carried !== null ? (float) $record->overtime_carried : $overtime, 2),
+            (int) ($record?->km_carried ?? 0),
+            round($record?->overtime_carried !== null ? (float) $record->overtime_carried : $overtime - $paid, 2),
+            $record?->overtime_carried !== null ? 0.0 : $paid,
         ];
+    }
+
+    /**
+     * Whether the overtime is paid out every month (Settings > Prestations), and from which month on.
+     */
+    public function paysOutOvertime(): bool
+    {
+        return (bool) settings()->get('timesheets.overtime_monthly_payout', false);
+    }
+
+    /**
+     * The month of a week for the payout: that of its Wednesday ("2026-11").
+     */
+    public static function payoutMonth(CarbonImmutable $monday): string
+    {
+        return $monday->addDays(2)->format('Y-m');
+    }
+
+    /**
+     * What is paid out of a month that ended: the overtime it added, when the payout is on for that month.
+     */
+    protected function overtimePayout(?string $month, float $generated): float
+    {
+        $from = settings()->get('timesheets.overtime_payout_from');
+
+        if ($month === null || ! $this->paysOutOvertime() || (filled($from) && $month < CarbonImmutable::parse($from)->format('Y-m'))) {
+            return 0.0;
+        }
+
+        return max(0.0, round($generated, 2));
     }
 
     /**
@@ -647,7 +696,7 @@ class Timesheets
     {
         $day = $this->dayHours();
         $statuses = [];
-        // "expected_off": hours taken off the week's expected hours (economically unemployed, parental leave).
+        // "expected_off": hours taken off the week's expected hours (unpaid leave, economically unemployed, parental leave).
         $set = function (CarbonInterface $start, CarbonInterface $end, string $type, string $note, float $credit, bool $lunchLocked, float $expectedOff = 0.0) use (&$statuses, $from, $until): void {
             foreach (CarbonPeriod::create(CarbonImmutable::instance($start)->max($from), CarbonImmutable::instance($end)->min($until)) as $date) {
                 $statuses[$date->toDateString()] ??= ['type' => $type, 'note' => $note, 'credit' => $credit, 'lunch_locked' => $lunchLocked, 'expected_off' => $expectedOff];
@@ -717,8 +766,9 @@ class Timesheets
         if (modules()->vacations()) {
             $absences->where('type', AbsenceType::Family)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'family', 'Familiaal verlof', 0, false));
+            // Unpaid leave: not worked and not paid, but not taken from the overtime either (off the expected hours).
             $absences->where('type', AbsenceType::Unpaid)
-                ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'unpaid', __('erp.enums.absence_type.unpaid'), 0, false));
+                ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'unpaid', $label($absence), 0, false, $hours($absence)));
             $absences->where('type', AbsenceType::Justified)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'justified', $absence->half_day ? 'Gewettigd afwezig (halve dag)' : 'Gewettigd afwezig', 0, false));
             $absences->where('type', AbsenceType::Overtime)

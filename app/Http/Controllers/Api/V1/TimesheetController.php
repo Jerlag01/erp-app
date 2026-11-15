@@ -48,6 +48,7 @@ class TimesheetController extends Controller
             'km_carried' => $week['km_carried'],
             'km_new' => $week['km_new'],
             'overtime_carried' => $week['overtime_carried'],
+            'overtime_paid' => $week['overtime_paid'],
             'overtime_now' => $week['overtime_now'],
             'overtime_new' => $week['overtime_new'],
             'days' => array_map(fn (array $day): array => [

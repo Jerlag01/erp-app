@@ -373,6 +373,7 @@ Colleagues only see "absent" in the calendar, never the reason for a sickness.
 - **Mobility leave (MV)**: 1 day per 27,000 km registered in the prestations of the **year before**; planned freely through a leave request and valid until 31 December. No certificate. Counts as a worked day.
 - **Seniority leave (AN)**: 1 day a year from **25 years of service** (from the date of employment; not for interim workers); planned freely. Counts as a worked day.
 - **Job search leave (SV)**: during a **notice period** one **full day a week**, until its end date. Counts as a worked (paid) day.
+- **Unpaid leave (OB)**: counts as not worked and not paid, but is **not taken off the overtime**: the day comes off the week's expected hours (half a day 4 hours).
 - **Economic unemployment (EW)**: entered by administrators only; counts as not worked (paid by the RVA), but the **overtime stays**. No certificate.
 - **Short leave (KV)**: by administrators only, with the **reason** of the royal decree of 28/08/1963 (e.g. marriage 2 days, death of a parent 3 days) and a **certificate**. Counts as a full worked day.
 - **Work accident (WO)**: by administrators only, linked to the **accident report**. Paid when the **certificate is in the platform within 48 hours**; otherwise the days count as **unpaid leave**. Nothing can be planned on it.
@@ -408,12 +409,14 @@ Leave, sickness, trainings and public holidays are put in the sheet **automatica
 
 ## The week
 
-- **Week settings** hold the hours to work and the kilometres and overtime **carried over** from the previous week.
+- **Week settings** hold the hours to work and the overtime **carried over** from the previous week. **Kilometres** are not carried over: they start at 0 every week (an administrator can still enter a starting value for a week).
 - The **week PDF** is mailed automatically every week to the administration and to the employee. With the permission you can also send a week manually.
 
 ## Overtime
 
 What you work beyond the expected hours goes to your **overtime balance**, which you can take as leave (see "Leave, overtime and absences").
+
+**Monthly payout.** With **Pay out overtime every month** on under Settings → Prestations → Overtime, the overtime a month adds is paid out when the next month starts and taken off the balance; the week then shows the line *Paid out (previous month)*. A month with fewer hours than expected keeps its minus. A week counts for the month of its Wednesday. With **From month** this only applies from that month on. When it is off, the overtime keeps adding up.
 
 ## Salaried employees (bediende)
 

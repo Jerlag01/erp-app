@@ -372,7 +372,7 @@ class Timesheet extends Page implements HasSchemas
                 ->schema([
                     TextInput::make('plate_number')->label(__('erp.timesheets.plate'))->maxLength(20),
                     TextInput::make('expected_hours')->label(__('erp.timesheets.expected_hours'))->numeric()->minValue(0)->maxValue(80)->step('any')->placeholder((string) app(Timesheets::class)->expectedHours()),
-                    TextInput::make('km_carried')->label(__('erp.timesheets.km_carried'))->helperText(__('erp.timesheets.carried_help'))->integer(),
+                    TextInput::make('km_carried')->label(__('erp.timesheets.km_carried'))->helperText(__('erp.timesheets.km_carried_help'))->integer(),
                     TextInput::make('overtime_carried')->label(__('erp.timesheets.overtime_carried'))->helperText(__('erp.timesheets.carried_help'))->numeric()->step('any'),
                     Textarea::make('remarks')->label(__('erp.timesheets.week_remarks'))->rows(2)->maxLength(2000),
                 ])
