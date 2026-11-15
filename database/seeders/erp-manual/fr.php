@@ -1077,9 +1077,11 @@ MD,
 
 Calculer une **section de câble indicative**, comme le calculateur de câbles de Schneider : selon l'**IEC 60364-5-52**, la plateforme cherche la plus petite section qui respecte le courant admissible, la chute de tension et (en option) le courant de court-circuit.
 
-## AC ou DC
+## Plusieurs circuits, AC ou DC
 
-Choisissez d'abord le **type de calcul** : **AC** (courant alternatif, selon l'IEC 60364-5-52 comme ci-dessous) ou **DC** (courant continu 48 V, selon la note de calcul). Les champs de ce type n'apparaissent qu'ensuite.
+Un calcul de câbles contient **plusieurs circuits** à la fois, p. ex. toute la note de calcul d'un site. **Ajouter un circuit** en ajoute un (**Copier** en duplique un). Chaque circuit a un **point de départ** et un **point d'arrivée** (p. ex. *Tableau de force → Batterie 1*) et son propre **type** : **AC** (courant alternatif, selon l'IEC 60364-5-52 comme ci-dessous) ou **DC** (courant continu 48 V, selon la note de calcul). Les champs de ce type n'apparaissent qu'après ce choix ; le résultat s'affiche à côté de chaque circuit.
+
+La liste montre par calcul les circuits avec leur câble et combien ne conviennent pas ; le **PDF** commence par un aperçu de tous les circuits, puis détaille chacun.
 
 ## DC (48 V)
 
@@ -1095,9 +1097,13 @@ Le résultat montre S, le câble prévu (p. ex. *95 mm² par pôle*) et le rappo
 
 ## Saisie AC
 
+- **Réseau** : **3F+N**, **3F**, **2F** (phase-phase, p. ex. 3×230 V) ou **1F+N**, le **schéma de liaison à la terre** (**TN-S, TN-C, TT, IT** ou non défini) et la **fréquence du réseau** (50 Hz par défaut).
+- **Charge** en courant (A), puissance (kW) ou **puissance apparente (kVA)**.
+- **Terre dans le câble** (p. ex. *5G6 mm²*) ou **séparée** (*4 × 95 mm² + PE 50 mm²*, le conducteur de protection selon l'IEC 60364-5-54). En **TN-C**, neutre et terre forment un **PEN** d'au moins 10 mm² cuivre (16 mm² aluminium).
+- **Chute de tension max.** en % (**4 %** par défaut) et la **section de câble max.** : si un câble jusqu'à cette section ne suffit pas, la plateforme calcule combien de câbles en **parallèle** il faut (jusqu'à 10).
 - **Circuit** : AC triphasé ou monophasé, la tension, la charge en **courant** ou en **puissance** (avec cos φ), la **longueur** et éventuellement la **protection** (vide : la valeur normalisée suivante au-dessus du courant d'emploi).
 - **Câble et pose** : cuivre ou aluminium (à partir de 16 mm²), PVC ou PR, le nombre de **câbles en parallèle**, le **mode de pose** (A1 à E), la température ambiante ou du sol et le nombre de **circuits groupés**.
-- **Limites** : la **chute de tension** admise (3 % par défaut) et en option le **courant de court-circuit** avec le temps de coupure.
+- **Limites** : la **chute de tension** admise (4 % par défaut) et en option le **courant de court-circuit** avec le temps de coupure.
 
 ## Résultat
 

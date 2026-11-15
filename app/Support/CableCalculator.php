@@ -12,6 +12,9 @@ namespace App\Support;
  *    or DC, ρ at operating temperature (Cu 0.0225, Al 0.036 Ω·mm²/m) and λ = 0.08 mΩ/m (AC);
  *  - optionally the short-circuit: S ≥ Ik · √t / k (k after insulation and metal).
  *
+ * The net is 3F+N, 3F, 2F (phase to phase) or 1F+N, with its earthing system (TN-S, TN-C, TT, IT) and
+ * frequency (λ scales with it); the load in A, kW or kVA. Above the maximum section cables are added in
+ * parallel; the protective conductor is in the cable or apart (IEC 60364-5-54), a PEN in TN-C (≥ 10 mm² Cu).
  * Aluminium uses 78 % of the copper values, from 16 mm². Parallel conductors share the current.
  * The result is an indication, not a substitute for a full study.
  *
@@ -22,10 +25,22 @@ namespace App\Support;
  */
 class CableCalculator
 {
-    public const SYSTEMS = ['ac3', 'ac1', 'dc'];
+    /** The nets: 3F+N, 3F, 2F (phase to phase), 1F+N, and DC. */
+    public const SYSTEMS = ['ac3n', 'ac3', 'ac2', 'ac1n', 'dc'];
 
     /** The AC systems (calculated after IEC 60364-5-52); DC has its own formula. */
-    public const AC_SYSTEMS = ['ac3', 'ac1'];
+    public const AC_SYSTEMS = ['ac3n', 'ac3', 'ac2', 'ac1n'];
+
+    /** Earthing systems (TN-S, TN-C, TT, IT) or not known. */
+    public const EARTHINGS = ['tns', 'tnc', 'tt', 'it', 'undefined'];
+
+    /** TN-C: the PEN is at least 10 mm² copper or 16 mm² aluminium (IEC 60364-5-54). */
+    public const PEN_MIN = ['cu' => 10, 'al' => 16];
+
+    /** Most cables in parallel when even the maximum section is not enough. */
+    public const MAX_PARALLEL = 10;
+
+    public const FREQUENCIES = [50, 60];
 
     /** DC: breaker ("automaat") or fuse ("zekeringen"), and the resistivity of the calculation note (Ω·mm²/m). */
     public const PROTECTION_TYPES = ['breaker', 'fuse'];
@@ -35,7 +50,7 @@ class CableCalculator
     public const DC_MAX_DROP_VOLTS = 1.0;
 
     /** Usual voltage per system. */
-    public const VOLTAGES = ['ac3' => 400, 'ac1' => 230, 'dc' => 48];
+    public const VOLTAGES = ['ac3n' => 400, 'ac3' => 400, 'ac2' => 230, 'ac1n' => 230, 'ac1' => 230, 'dc' => 48];
 
     public const MATERIALS = ['cu', 'al'];
 
@@ -150,11 +165,14 @@ class CableCalculator
     public static function defaults(): array
     {
         return [
-            'system' => 'ac3',
+            'system' => 'ac3n',
             'voltage' => 400,
+            'earthing' => 'undefined',
+            'frequency' => 50,
             'load_type' => 'current',
             'load_current' => null,
             'load_power' => null,
+            'load_kva' => null,
             'power_factor' => 0.85,
             'length' => null,
             'material' => 'cu',
@@ -163,7 +181,9 @@ class CableCalculator
             'ambient_temperature' => 30,
             'grouped_circuits' => 1,
             'parallel_conductors' => 1,
-            'max_voltage_drop' => 3,
+            'max_voltage_drop' => 4,
+            'max_section' => null,
+            'earth_in_cable' => true,
             'protective_device' => null,
             'short_circuit_ka' => null,
             'short_circuit_time' => null,
@@ -197,24 +217,41 @@ class CableCalculator
             return self::calculateDc($input);
         }
 
-        $system = in_array($input['system'], self::AC_SYSTEMS, true) ? $input['system'] : 'ac3';
+        return self::calculateAc($input);
+    }
+
+    /**
+     * AC after IEC 60364-5-52 for the chosen net (3F+N, 3F, 2F, 1F+N) and earthing system: the smallest
+     * section up to the maximum section that meets the current, the voltage drop (default 4 %), the
+     * short-circuit (optional) and, in TN-C, the minimum PEN section (10 mm² Cu / 16 mm² Al). When even
+     * the maximum section is not enough, cables are added in parallel (up to MAX_PARALLEL). The cable
+     * gets its conductors: phases, neutral, and the protective conductor in the cable ("5G6") or apart
+     * ("+ PE 6 mm²", sized after IEC 60364-5-54), or a PEN in TN-C.
+     *
+     * @param  array<string, mixed>  $input  with the defaults merged in
+     * @return array<string, mixed>
+     */
+    public static function calculateAc(array $input): array
+    {
+        $system = self::acSystem($input['system']);
         $material = in_array($input['material'], self::MATERIALS, true) ? $input['material'] : 'cu';
         $insulation = in_array($input['insulation'], self::INSULATIONS, true) ? $input['insulation'] : 'xlpe';
         $method = in_array($input['installation_method'], self::METHODS, true) ? $input['installation_method'] : 'C';
+        $earthing = in_array($input['earthing'], self::EARTHINGS, true) ? $input['earthing'] : 'undefined';
         $voltage = (float) $input['voltage'];
-        $cosPhi = $system === 'dc' ? 1.0 : min(1.0, max(0.1, (float) $input['power_factor']));
+        $cosPhi = min(1.0, max(0.1, (float) $input['power_factor']));
         $length = (float) $input['length'];
-        $parallel = max(1, (int) $input['parallel_conductors']);
-        $loaded = $system === 'ac3' ? 3 : 2;
+        $frequency = (float) $input['frequency'] > 0 ? (float) $input['frequency'] : 50.0;
+        $requested = max(1, (int) $input['parallel_conductors']);
+        $maxSection = (float) $input['max_section'] > 0 ? (float) $input['max_section'] : (float) max(self::SECTIONS);
+        $threePhase = in_array($system, ['ac3n', 'ac3'], true);
+        $loaded = $threePhase ? 3 : 2;
         $errors = [];
 
         $ib = match (true) {
-            $input['load_type'] === 'power' && (float) $input['load_power'] > 0 && $voltage > 0 => match ($system) {
-                'ac3' => (float) $input['load_power'] * 1000 / (sqrt(3) * $voltage * $cosPhi),
-                'ac1' => (float) $input['load_power'] * 1000 / ($voltage * $cosPhi),
-                default => (float) $input['load_power'] * 1000 / $voltage,
-            },
-            $input['load_type'] !== 'power' && (float) $input['load_current'] > 0 => (float) $input['load_current'],
+            $input['load_type'] === 'power' && (float) $input['load_power'] > 0 && $voltage > 0 => (float) $input['load_power'] * 1000 / (($threePhase ? sqrt(3) : 1) * $voltage * $cosPhi),
+            $input['load_type'] === 'apparent' && (float) $input['load_kva'] > 0 && $voltage > 0 => (float) $input['load_kva'] * 1000 / (($threePhase ? sqrt(3) : 1) * $voltage),
+            ! in_array($input['load_type'], ['power', 'apparent'], true) && (float) $input['load_current'] > 0 => (float) $input['load_current'],
             default => null,
         };
 
@@ -247,67 +284,92 @@ class CableCalculator
             $errors[] = 'temperature';
         }
 
-        $empty = ['ib' => $ib, 'in' => $in, 'loaded' => $loaded, 'k1' => $k1, 'k2' => $k2, 'parallel' => $parallel, 'section' => null, 'iz' => null, 'iz0' => null, 'drop_v' => null, 'drop_pct' => null, 'by_current' => null, 'by_drop' => null, 'by_short_circuit' => null, 's_min_short_circuit' => null, 'governing' => null, 'rows' => []];
+        $conductors = self::conductors($system, $earthing, (bool) $input['earth_in_cable']);
+        $empty = [
+            'mode' => 'ac', 'system' => $system, 'earthing' => $earthing, 'frequency' => $frequency, 'max_section' => $maxSection,
+            'ib' => $ib, 'in' => $in, 'loaded' => $loaded, 'k1' => $k1, 'k2' => $k2, 'parallel' => $requested, 'requested_parallel' => $requested,
+            'parallel_auto' => false, ...$conductors, 'pe_section' => null, 'pen_min' => null,
+            'section' => null, 'iz' => null, 'iz0' => null, 'drop_v' => null, 'drop_pct' => null, 'by_current' => null, 'by_drop' => null,
+            'by_short_circuit' => null, 's_min_short_circuit' => null, 'governing' => null, 'rows' => [],
+        ];
 
         if ($errors !== []) {
             return ['ok' => false, 'errors' => $errors, ...$empty];
         }
 
-        $ibPer = $ib / $parallel;
-        $inPer = $in / $parallel;
-        $sinPhi = $system === 'dc' ? 0.0 : sqrt(1 - $cosPhi ** 2);
-        $reactance = $system === 'dc' ? 0.0 : self::REACTANCE;
-        $factor = $system === 'ac3' ? sqrt(3) : 2.0;
+        $sinPhi = sqrt(1 - $cosPhi ** 2);
+        $reactance = self::REACTANCE * $frequency / 50;
+        $factor = $threePhase ? sqrt(3) : 2.0;
         $maxDrop = (float) $input['max_voltage_drop'];
         $ik = (float) $input['short_circuit_ka'] * 1000;
         $time = (float) $input['short_circuit_time'];
-        $sMinShortCircuit = $ik > 0 && $time > 0 ? ($ik / $parallel) * sqrt($time) / self::SHORT_CIRCUIT_K[$material][$insulation] : null;
-        $rows = [];
+        $penMin = $earthing === 'tnc' ? self::PEN_MIN[$material] : null;
 
-        foreach (self::SECTIONS as $index => $section) {
-            if ($material === 'al' && $section < self::ALUMINIUM_FROM) {
-                continue;
+        // More cables in parallel while even the maximum section is not enough.
+        foreach (range($requested, max($requested, self::MAX_PARALLEL)) as $parallel) {
+            $sMinShortCircuit = $ik > 0 && $time > 0 ? ($ik / $parallel) * sqrt($time) / self::SHORT_CIRCUIT_K[$material][$insulation] : null;
+            $rows = [];
+
+            foreach (self::SECTIONS as $index => $section) {
+                if (($material === 'al' && $section < self::ALUMINIUM_FROM) || $section > $maxSection + 1e-9) {
+                    continue;
+                }
+
+                $iz0 = self::CAPACITY[$insulation][$loaded][$method][$index] * ($material === 'al' ? self::ALUMINIUM_FACTOR : 1);
+                $iz = $iz0 * $k1 * $k2;
+                $dropV = $factor * ($ib / $parallel) * $length * (self::RESISTIVITY[$material] / $section * $cosPhi + $reactance * $sinPhi);
+                $dropPct = 100 * $dropV / $voltage;
+
+                $rows[] = [
+                    'section' => (float) $section,
+                    'iz0' => round($iz0, 1),
+                    'iz' => round($iz, 1),
+                    'drop_v' => round($dropV, 2),
+                    'drop_pct' => round($dropPct, 2),
+                    'current_ok' => $iz >= $in / $parallel,
+                    'drop_ok' => $maxDrop <= 0 || $dropPct <= $maxDrop,
+                    'short_circuit_ok' => $sMinShortCircuit === null || $section >= $sMinShortCircuit,
+                    'pen_ok' => $penMin === null || $section >= $penMin,
+                ];
             }
 
-            $iz0 = self::CAPACITY[$insulation][$loaded][$method][$index] * ($material === 'al' ? self::ALUMINIUM_FACTOR : 1);
-            $iz = $iz0 * $k1 * $k2;
-            $dropV = $factor * $ibPer * $length * (self::RESISTIVITY[$material] / $section * $cosPhi + $reactance * $sinPhi);
-            $dropPct = 100 * $dropV / $voltage;
+            $chosen = collect($rows)->first(fn (array $row): bool => $row['current_ok'] && $row['drop_ok'] && $row['short_circuit_ok'] && $row['pen_ok']);
 
-            $rows[] = [
-                'section' => (float) $section,
-                'iz0' => round($iz0, 1),
-                'iz' => round($iz, 1),
-                'drop_v' => round($dropV, 2),
-                'drop_pct' => round($dropPct, 2),
-                'current_ok' => $iz >= $inPer,
-                'drop_ok' => $maxDrop <= 0 || $dropPct <= $maxDrop,
-                'short_circuit_ok' => $sMinShortCircuit === null || $section >= $sMinShortCircuit,
-            ];
+            if ($chosen !== null) {
+                break;
+            }
+        }
+
+        if ($chosen === null) {
+            return ['ok' => false, 'errors' => ['no_section'], ...$empty, 'rows' => $rows, 'parallel' => $parallel];
         }
 
         $first = fn (string $check): ?float => collect($rows)->first(fn (array $row): bool => $row[$check])['section'] ?? null;
-        $chosen = collect($rows)->first(fn (array $row): bool => $row['current_ok'] && $row['drop_ok'] && $row['short_circuit_ok']);
         $byCurrent = $first('current_ok');
         $byDrop = $first('drop_ok');
         $byShortCircuit = $first('short_circuit_ok');
 
         // Which criterion sets the section: the one that needs the largest.
-        $governing = $chosen === null ? null : collect(['current' => $byCurrent, 'voltage_drop' => $byDrop, 'short_circuit' => $sMinShortCircuit === null ? null : $byShortCircuit])
-            ->filter()
-            ->sortDesc()
-            ->keys()
-            ->first();
+        $governing = collect([
+            'current' => $byCurrent,
+            'voltage_drop' => $byDrop,
+            'short_circuit' => $sMinShortCircuit === null ? null : $byShortCircuit,
+            'pen' => $penMin === null ? null : $first('pen_ok'),
+        ])->filter()->sortDesc()->keys()->first();
 
         return [
-            'ok' => $chosen !== null,
-            'errors' => $chosen === null ? ['no_section'] : [],
+            'ok' => true,
+            'errors' => [],
             ...$empty,
-            'section' => $chosen['section'] ?? null,
-            'iz' => isset($chosen) ? round($chosen['iz'] * $parallel, 1) : null,
-            'iz0' => $chosen['iz0'] ?? null,
-            'drop_v' => $chosen['drop_v'] ?? null,
-            'drop_pct' => $chosen['drop_pct'] ?? null,
+            'parallel' => $parallel,
+            'parallel_auto' => $parallel > $requested,
+            'section' => $chosen['section'],
+            'pe_section' => $conductors['pen'] ? null : self::protectiveSection($chosen['section']),
+            'pen_min' => $penMin,
+            'iz' => round($chosen['iz'] * $parallel, 1),
+            'iz0' => $chosen['iz0'],
+            'drop_v' => $chosen['drop_v'],
+            'drop_pct' => $chosen['drop_pct'],
             'by_current' => $byCurrent,
             'by_drop' => $byDrop,
             'by_short_circuit' => $sMinShortCircuit === null ? null : $byShortCircuit,
@@ -317,6 +379,74 @@ class CableCalculator
             'in' => $in,
             'rows' => $rows,
         ];
+    }
+
+    /**
+     * The net, with the old single-phase code read as 1F+N.
+     */
+    public static function acSystem(?string $system): string
+    {
+        $system = $system === 'ac1' ? 'ac1n' : $system;
+
+        return in_array($system, self::AC_SYSTEMS, true) ? $system : 'ac3n';
+    }
+
+    /**
+     * The conductors of the cable: phases, neutral, and the protective conductor in the cable, apart, or
+     * a PEN (TN-C: neutral and protective conductor in one).
+     *
+     * @return array{phases: int, neutral: bool, pen: bool, earth_in_cable: bool, cores: int}
+     */
+    public static function conductors(string $system, string $earthing, bool $earthInCable): array
+    {
+        $phases = ['ac3n' => 3, 'ac3' => 3, 'ac2' => 2, 'ac1n' => 1][$system] ?? 3;
+        $neutral = in_array($system, ['ac3n', 'ac1n'], true);
+        $pen = $earthing === 'tnc';
+
+        return [
+            'phases' => $phases,
+            'neutral' => $neutral,
+            'pen' => $pen,
+            'earth_in_cable' => $pen || $earthInCable,
+            'cores' => $phases + ($pen ? 1 : ($neutral ? 1 : 0) + ($earthInCable ? 1 : 0)),
+        ];
+    }
+
+    /**
+     * The protective conductor after IEC 60364-5-54 (table 54.2): the phase section up to 16 mm², 16 mm²
+     * up to 35 mm², half above (the next standard section).
+     */
+    public static function protectiveSection(float $section): float
+    {
+        return match (true) {
+            $section <= 16 => $section,
+            $section <= 35 => 16.0,
+            default => (float) collect(self::SECTIONS)->first(fn (float|int $standard): bool => $standard >= $section / 2),
+        };
+    }
+
+    /**
+     * The AC cable: "5G6 mm² Cu XLPE" (earth in the cable), "4 × 95 mm² + PE 50 mm² Cu XLPE" (earth apart),
+     * "4 × 16 mm² (PEN) Cu XLPE" (TN-C), with "2 × (…)" for cables in parallel.
+     *
+     * @param  array<string, mixed>  $result
+     */
+    public static function acLabel(array $result, string $material, string $insulation): ?string
+    {
+        if (! isset($result['section'])) {
+            return null;
+        }
+
+        $section = self::number((float) $result['section']);
+        $cores = (int) ($result['cores'] ?? (($result['loaded'] ?? 3) + 2));
+        $core = match (true) {
+            (bool) ($result['pen'] ?? false) => $cores.' × '.$section.' mm² (PEN)',
+            (bool) ($result['earth_in_cable'] ?? true) => $cores.'G'.$section.' mm²',
+            default => $cores.' × '.$section.' mm² + PE '.self::number((float) ($result['pe_section'] ?? $result['section'])).' mm²',
+        };
+        $parallel = (int) ($result['parallel'] ?? 1);
+
+        return ($parallel > 1 ? $parallel.' × ('.$core.')' : $core).' '.ucfirst($material).' '.strtoupper($insulation);
     }
 
     /**
@@ -378,17 +508,6 @@ class CableCalculator
             'drop_pct' => $voltage > 0 ? round(100 * $dropV / $voltage, 2) : null,
             'governing' => 'voltage_drop',
         ];
-    }
-
-    /**
-     * "3 × 6 mm² Cu XLPE" or "2 × (3 × 95 mm²) …" with parallel conductors; the number of loaded
-     * conductors per system (three-phase 3, single-phase 2).
-     */
-    public static function label(float $section, string $material, string $insulation, int $loaded, int $parallel = 1): string
-    {
-        $core = $loaded.' × '.self::number($section).' mm²';
-
-        return ($parallel > 1 ? $parallel.' × ('.$core.')' : $core).' '.ucfirst($material).' '.strtoupper($insulation);
     }
 
     /**

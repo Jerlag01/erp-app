@@ -14,9 +14,12 @@
         <div style="padding: .9rem 1rem; border-radius: .75rem; background: rgb(22 163 74 / .1); border: 1px solid rgb(22 163 74 / .4);">
             <div style="font-size: .8rem; opacity: .75;">{{ __('erp.cable_calculator.result.cable') }}</div>
             <div style="font-size: 1.5rem; font-weight: 700; font-family: var(--erp-mono, monospace);" data-cable-section="{{ $result['section'] }}">
-                {{ \App\Support\CableCalculator::label($result['section'], (string) ($input['material'] ?? 'cu'), (string) ($input['insulation'] ?? 'xlpe'), $result['loaded'], $result['parallel']) }}
+                {{ \App\Support\CableCalculator::acLabel($result, (string) ($input['material'] ?? 'cu'), (string) ($input['insulation'] ?? 'xlpe')) }}
             </div>
             <div style="font-size: .85rem; margin-top: .25rem;">{{ __('erp.cable_calculator.result.governing.'.$result['governing']) }}</div>
+            @if ($result['parallel_auto'] ?? false)
+                <div style="font-size: .85rem; margin-top: .25rem; font-weight: 600;">{{ __('erp.cable_calculator.result.parallel_auto', ['count' => $result['parallel'], 'max' => $n($result['max_section'], 'mm²')]) }}</div>
+            @endif
         </div>
     @elseif (in_array('no_section', $result['errors'], true))
         <div style="padding: .9rem 1rem; border-radius: .75rem; background: rgb(220 38 38 / .1); border: 1px solid rgb(220 38 38 / .4);">
@@ -37,6 +40,7 @@
             'k1' => $n($result['k1']),
             'k2' => $n($result['k2']),
             'iz' => $n($result['iz'], 'A'),
+            'pe' => ($result['pen'] ?? false) ? __('erp.cable_calculator.result.pen_in_cable') : (($result['pe_section'] ?? null) === null ? null : $n($result['pe_section'], 'mm²').(($result['earth_in_cable'] ?? true) ? '' : ' · '.__('erp.cable_calculator.result.pe_apart'))),
             'drop' => $result['drop_pct'] === null ? '—' : $n($result['drop_v'], 'V').' · '.$n($result['drop_pct'], '%'),
             'by_current' => $n($result['by_current'], 'mm²'),
             'by_drop' => $n($result['by_drop'], 'mm²'),

@@ -1077,9 +1077,11 @@ MD,
 
 Calculating an **indicative cable section**, like Schneider's cable calculator: after **IEC 60364-5-52** the platform looks for the smallest section that meets the current-carrying capacity, the voltage drop and (optionally) the short-circuit current.
 
-## AC or DC
+## Several circuits, AC or DC
 
-First choose the **type of calculation**: **AC** (alternating current, after IEC 60364-5-52 as below) or **DC** (direct current 48 V, after the calculation note). Only then do the fields of that type appear.
+A cable calculation holds **several circuits** at once, e.g. a site's whole calculation note. **Add circuit** adds one (**Copy** duplicates one). Each circuit has a **start point** and an **end point** (e.g. *Power board → Battery 1*) and its own **type**: **AC** (alternating current, after IEC 60364-5-52 as below) or **DC** (direct current 48 V, after the calculation note). Only after that choice do the fields of that type appear; each circuit shows its result next to it.
+
+The list shows per calculation its circuits with their cable and how many are not sufficient; the **PDF** starts with an overview of all circuits, then details each one.
 
 ## DC (48 V)
 
@@ -1095,9 +1097,13 @@ The result shows S, the provided cable (e.g. *95 mm² per pole*) and the ratio *
 
 ## Filling in AC
 
+- **Net**: **3P+N**, **3P**, **2P** (phase to phase, e.g. 3×230 V) or **1P+N**, the **earthing system** (**TN-S, TN-C, TT, IT** or not defined) and the **net frequency** (50 Hz by default).
+- **Load** as current (A), power (kW) or **apparent power (kVA)**.
+- **Earth in the cable** (e.g. *5G6 mm²*) or **separate** (*4 × 95 mm² + PE 50 mm²*, the protective conductor after IEC 60364-5-54). In **TN-C** neutral and earth form a **PEN** of at least 10 mm² copper (16 mm² aluminium).
+- **Max. voltage drop** in % (**4 %** by default) and the **max. cable section**: when one cable up to that section is not enough, the platform calculates how many cables are needed in **parallel** (up to 10).
 - **Circuit**: 3-phase or 1-phase AC, the voltage, the load as **current** or **power** (with cos φ), the **length** and optionally the **protective device** (empty: the next standard rating above the design current).
 - **Cable and installation**: copper or aluminium (from 16 mm²), PVC or XLPE, the number of **parallel cables**, the **installation method** (A1 to E), the ambient or ground temperature and the number of **grouped circuits**.
-- **Limits**: the allowed **voltage drop** (3 % by default) and optionally the **short-circuit current** with the disconnection time.
+- **Limits**: the allowed **voltage drop** (4 % by default) and optionally the **short-circuit current** with the disconnection time.
 
 ## Result
 

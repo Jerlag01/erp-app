@@ -1078,9 +1078,11 @@ MD,
 
 Een **indicatieve kabelsectie** berekenen, zoals de kabelcalculator van Schneider: volgens **IEC 60364-5-52** zoekt het platform de kleinste sectie die voldoet aan de toelaatbare stroom, de spanningsval en (optioneel) de kortsluitstroom.
 
-## AC of DC
+## Meerdere circuits, AC of DC
 
-Kies eerst de **soort berekening**: **AC** (wisselstroom, volgens IEC 60364-5-52 zoals hieronder) of **DC** (gelijkstroom 48 V, volgens de berekeningsnota). Pas daarna verschijnen de velden van die soort.
+Een kabelberekening bevat **meerdere circuits** tegelijk, bv. heel de berekeningsnota van een site. Met **Circuit toevoegen** voeg je er een toe (met **Kopiëren** dupliceer je er een). Elk circuit heeft een **startpunt** en een **eindpunt** (bv. *Krachtbord → Batterij 1*) en een eigen **soort**: **AC** (wisselstroom, volgens IEC 60364-5-52 zoals hieronder) of **DC** (gelijkstroom 48 V, volgens de berekeningsnota). Pas na die keuze verschijnen de velden van die soort; naast elk circuit zie je meteen zijn resultaat.
+
+De lijst toont per berekening de circuits met hun kabel en hoeveel er niet voldoen; de **PDF** begint met een overzicht van alle circuits en geeft daarna elk circuit in detail.
 
 ## DC (48 V)
 
@@ -1096,9 +1098,13 @@ Het resultaat toont S, de voorziene kabel (bv. *95 mm² per pool*) en de verhoud
 
 ## AC invullen
 
+- **Net**: **3F+N**, **3F**, **2F** (fase-fase, bv. 3×230 V) of **1F+N**, het **netstelsel** (**TN-S, TN-C, TT, IT** of niet bepaald) en de **netfrequentie** (standaard 50 Hz).
+- **Belasting** als stroom (A), vermogen (kW) of **schijnbaar vermogen (kVA)**.
+- **Aarding in de kabel** (bv. *5G6 mm²*) of **apart** (*4 × 95 mm² + PE 50 mm²*, de beschermingsgeleider volgens IEC 60364-5-54). In **TN-C** zitten nul en aarding samen in een **PEN** van minstens 10 mm² koper (16 mm² aluminium).
+- **Max. spanningsval** in % (standaard **4 %**) en de **max. kabelsectie**: volstaat één kabel tot die sectie niet, dan berekent het platform hoeveel kabels er **parallel** nodig zijn (tot 10).
 - **Circuit**: 3-fasig of 1-fasig AC, de spanning, de belasting als **stroom** of **vermogen** (met cos φ), de **lengte** en eventueel de **beveiliging** (leeg: de eerstvolgende standaardwaarde boven de bedrijfsstroom).
 - **Kabel en installatie**: koper of aluminium (vanaf 16 mm²), PVC of XLPE, het aantal **parallelle kabels**, de **plaatsingswijze** (A1 tot E), de omgevings- of grondtemperatuur en het aantal **gebundelde circuits**.
-- **Grenzen**: de toegelaten **spanningsval** (standaard 3 %) en optioneel de **kortsluitstroom** met de uitschakeltijd.
+- **Grenzen**: de toegelaten **spanningsval** (standaard 4 %) en optioneel de **kortsluitstroom** met de uitschakeltijd.
 
 ## Resultaat
 

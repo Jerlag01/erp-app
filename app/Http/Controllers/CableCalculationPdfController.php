@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * A cable calculation as PDF, on the letterhead of the battery documents (the 604 delivery note).
+ * A cable calculation as PDF (an overview of its circuits, then each circuit), on the letterhead of the battery documents (the 604 delivery note).
  */
 class CableCalculationPdfController
 {
@@ -20,11 +20,10 @@ class CableCalculationPdfController
     {
         abort_unless(Gate::allows('view', $calculation) && PdfAccess::canGenerate($request->user(), 'cable_calculations'), 403);
 
-        $calculation->loadMissing(['project', 'creator']);
+        $calculation->loadMissing(['project', 'creator', 'circuits']);
 
         $pdf = Pdf::loadView('cable-calculations.pdf', [
             'calculation' => $calculation,
-            'result' => (array) $calculation->result,
             'background' => BatteryTemplates::backgroundDataUri(),
         ])->setPaper('a4', 'portrait')->setOption('isFontSubsettingEnabled', true)->output();
 
