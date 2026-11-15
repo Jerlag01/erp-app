@@ -659,6 +659,8 @@ Every change is in the **history**. Items below the minimum stock appear under *
 
 Print a **QR label** per item or several at once. Scanning the label opens the item.
 
+With **Stock → QR export (Labelife)** you download the QR codes of all items as **Excel for Labelife**, label **99010** (89 × 28 mm). Filter by category, subcategory, manufacturer or location (only items with stock there) and choose the language of the names. The **QR** column holds the scan link; in Labelife bind a QR code to that column and text boxes to *Naam* and *Referentie*, then print all rows. The steps are on the page too.
+
 ## Prices and pictures
 
 - **"Update price from distributor"** fetches the current price straight away from the manufacturer's distributors with a connection, by the manufacturer reference (or else the distributor's article number).

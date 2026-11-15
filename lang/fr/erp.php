@@ -1283,6 +1283,27 @@ return [
         'nobody' => 'Personne n\'est en congé ce mois-ci.',
     ],
     'stock' => [
+        'qr_export' => [
+            'title' => 'Export QR (Labelife)',
+            'subheading' => 'Les codes QR des articles en stock en Excel pour Labelife, étiquette 99010 (89 × 28 mm).',
+            'location' => 'Emplacement',
+            'location_help' => 'Seulement les articles avec du stock à cet emplacement.',
+            'language' => 'Langue des noms',
+            'only_active' => 'Seulement les articles actifs',
+            'download' => 'Télécharger l\'Excel',
+            'count' => '{0} Aucun article|{1} 1 article|[2,*] :count articles',
+            'preview' => 'Les 10 premières lignes de l\'Excel. La colonne QR est le lien de scan contenu dans le code QR.',
+            'empty' => 'Aucun article pour ces filtres.',
+            'howto_title' => 'Imprimer dans Labelife',
+            'howto' => [
+                'Téléchargez l\'Excel avec les filtres ci-dessus.',
+                'Dans Labelife, créez une nouvelle étiquette au format 99010 (89 × 28 mm, paysage).',
+                'Choisissez Importer Excel (impression par lot) et ouvrez le fichier ; la première ligne contient les noms des colonnes.',
+                'Ajoutez un code QR et liez-le à la colonne QR.',
+                'Ajoutez des zones de texte et liez-les à Naam et Referentie (éventuellement Fabrikant ou Eenheid).',
+                'Imprimez toutes les lignes : une étiquette par article.',
+            ],
+        ],
         'item_names' => [
             'translate_help' => ':count article(s) n\'ont pas encore de nom français ou anglais. :batch sont traduits à la fois (le service de traduction gratuit a une limite par jour) ; cliquez à nouveau pour les suivants.',
             'translated' => ':count article(s) traduit(s), encore :left sans traduction',

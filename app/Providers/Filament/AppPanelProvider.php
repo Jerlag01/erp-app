@@ -14,6 +14,7 @@ use App\Filament\Pages\HrAdvances;
 use App\Filament\Pages\InterimTimesheetVerification;
 use App\Filament\Pages\Onboarding;
 use App\Filament\Pages\Planning;
+use App\Filament\Pages\StockQrExportPage;
 use App\Filament\Pages\Timesheet;
 use App\Filament\Pages\TimesheetOverview;
 use App\Filament\Pages\ToolboxOverview;
@@ -58,6 +59,7 @@ class AppPanelProvider extends PanelProvider
                 Dashboard::class,
                 VacationCalendar::class,
                 WasteTotalsOverview::class,
+                StockQrExportPage::class,
                 FinanceOverview::class,
                 FinanceStatistics::class,
                 Planning::class,

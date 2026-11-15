@@ -660,6 +660,8 @@ Elke wijziging staat in de **historiek**. Artikelen onder de minimumvoorraad ver
 
 Druk een **QR-etiket** af per artikel of meerdere tegelijk. Wie het etiket scant, komt meteen bij het artikel.
 
+Met **Stock → QR-export (Labelife)** download je de QR-codes van alle artikelen als **Excel voor Labelife**, label **99010** (89 × 28 mm). Filter op categorie, subcategorie, fabrikant of locatie (enkel artikelen met stock daar) en kies de taal van de namen. De kolom **QR** bevat de scanlink; in Labelife koppel je een QR-code aan die kolom en tekstvakken aan *Naam* en *Referentie*, en druk je alle rijen af. De stappen staan ook op de pagina.
+
 ## Prijzen en afbeeldingen
 
 - **"Prijs ophalen bij groothandel"** haalt de actuele prijs meteen op bij de groothandels van de fabrikant met een koppeling, op de fabrikantreferentie (of anders het artikelnummer van de groothandel).

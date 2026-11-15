@@ -1283,6 +1283,27 @@ return [
         'nobody' => 'Niemand heeft verlof deze maand.',
     ],
     'stock' => [
+        'qr_export' => [
+            'title' => 'QR-export (Labelife)',
+            'subheading' => 'De QR-codes van de stockartikelen als Excel voor Labelife, label 99010 (89 × 28 mm).',
+            'location' => 'Locatie',
+            'location_help' => 'Enkel artikelen met stock op deze locatie.',
+            'language' => 'Taal van de namen',
+            'only_active' => 'Enkel actieve artikelen',
+            'download' => 'Excel downloaden',
+            'count' => '{0} Geen artikelen|{1} 1 artikel|[2,*] :count artikelen',
+            'preview' => 'De eerste 10 rijen van de Excel. De kolom QR is de scanlink die in de QR-code komt.',
+            'empty' => 'Geen artikelen voor deze filters.',
+            'howto_title' => 'Afdrukken in Labelife',
+            'howto' => [
+                'Download de Excel met de filters hierboven.',
+                'Maak in Labelife een nieuw label met het formaat 99010 (89 × 28 mm, liggend).',
+                'Kies Excel importeren (batch afdrukken) en open het bestand; de eerste rij bevat de kolomnamen.',
+                'Voeg een QR-code toe en koppel ze aan de kolom QR.',
+                'Voeg tekstvakken toe en koppel ze aan Naam en Referentie (eventueel Fabrikant of Eenheid).',
+                'Druk alle rijen af: één label per artikel.',
+            ],
+        ],
         'item_names' => [
             'translate_help' => ':count artikel(s) hebben nog geen Franse of Engelse naam. Er worden er :batch per keer vertaald (de gratis vertaaldienst heeft een daglimiet); klik opnieuw voor de volgende.',
             'translated' => ':count artikel(s) vertaald, nog :left zonder vertaling',

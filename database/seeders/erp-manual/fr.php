@@ -659,6 +659,8 @@ Chaque modification figure dans l'**historique**. Les articles sous le stock min
 
 Imprimez une **étiquette QR** par article ou plusieurs à la fois. En scannant l'étiquette, on arrive directement sur l'article.
 
+Avec **Stock → Export QR (Labelife)**, vous téléchargez les codes QR de tous les articles en **Excel pour Labelife**, étiquette **99010** (89 × 28 mm). Filtrez par catégorie, sous-catégorie, fabricant ou emplacement (seulement les articles avec du stock à cet endroit) et choisissez la langue des noms. La colonne **QR** contient le lien de scan ; dans Labelife, liez un code QR à cette colonne et des zones de texte à *Naam* et *Referentie*, puis imprimez toutes les lignes. Les étapes figurent aussi sur la page.
+
 ## Prix et images
 
 - **« Récupérer le prix chez le grossiste »** récupère immédiatement le prix actuel auprès des grossistes du fabricant avec une connexion, sur la référence du fabricant (ou sinon le numéro d'article du grossiste).
