@@ -3541,6 +3541,8 @@ return [
         'pin_heading' => 'Code PIN de :card',
     ],
     'cable_calculator' => [
+        'make_for_project' => 'Faire un calcul de câbles',
+        'of_project' => 'Calculs de câbles (:count)',
         'title' => 'Calcul de câbles',
         'singular' => 'calcul de câble',
         'plural' => 'Calculs de câbles',
@@ -3594,6 +3596,7 @@ return [
             'name' => 'Nom',
             'name_placeholder' => 'p. ex. Note de calcul 02NO1',
             'project' => 'Projet',
+            'project_help' => "À chaque enregistrement, le PDF est placé dans les fichiers supplémentaires du projet et dans les dimensions de câbles de l'as-built.",
             'system' => 'Réseau',
             'voltage' => 'Tension',
             'load_type' => 'Charge en',

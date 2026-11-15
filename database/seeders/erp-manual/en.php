@@ -1109,6 +1109,10 @@ The result shows S, the provided cable (e.g. *95 mm² per pole*) and the ratio *
 
 Next to the form you see straight away the **proposed cable** (e.g. *3 × 6 mm² Cu XLPE*), what sets the section (current, voltage drop or short circuit), Ib, In, the correction factors k1 and k2, Iz and the voltage drop, and the sections around the choice. Save the calculation with a name and optionally a **project**; **Copy** makes a variant.
 
+## Project and as-built
+
+With a **project** chosen, every save puts the PDF in the project's **extra files** (each time as a new version) and in the folder **1 - cable dimensions** of the project's **as-built**, while that is open. When the as-built is made later, the project's existing calculations are added to it automatically. Choosing another project or clearing it removes the PDF from the former project; a closed as-built stays as it is. In a project's extra files, **Make a cable calculation** starts a calculation for that project and **Cable calculations (n)** shows the project's.
+
 ## PDF
 
 With **PDF** (permission *Generate PDF*) you print the calculation on the **letterhead of the 604 delivery note**, with all data and the table of sections.

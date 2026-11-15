@@ -1109,6 +1109,10 @@ Le résultat montre S, le câble prévu (p. ex. *95 mm² par pôle*) et le rappo
 
 À côté du formulaire, vous voyez directement le **câble proposé** (p. ex. *3 × 6 mm² Cu XLPE*), ce qui détermine la section (courant, chute de tension ou court-circuit), Ib, In, les facteurs k1 et k2, Iz et la chute de tension, et les sections autour du choix. Enregistrez le calcul avec un nom et éventuellement un **projet** ; **Copier** crée une variante.
 
+## Projet et as-built
+
+Si un **projet** est choisi, le PDF est placé à chaque enregistrement dans les **fichiers supplémentaires** du projet (chaque fois en nouvelle version) et dans le dossier **1 - cable dimensions** de l'**as-built** du projet, tant qu'il est ouvert. Si l'as-built est créé plus tard, les calculs existants du projet y sont ajoutés automatiquement. Choisir un autre projet ou vider le projet retire le PDF de l'ancien projet ; un as-built clôturé reste inchangé. Dans les fichiers supplémentaires d'un projet, **Faire un calcul de câbles** démarre un calcul pour ce projet et **Calculs de câbles (n)** affiche ceux du projet.
+
 ## PDF
 
 Avec **PDF** (droit *Générer des PDF*), vous imprimez le calcul sur le **papier à en-tête de la note de livraison 604**, avec toutes les données et le tableau des sections.

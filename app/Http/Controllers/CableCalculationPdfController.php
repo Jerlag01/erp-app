@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CableCalculation;
-use App\Support\BatteryTemplates;
+use App\Support\CableCalculationDocuments;
 use App\Support\PdfAccess;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -20,16 +18,12 @@ class CableCalculationPdfController
     {
         abort_unless(Gate::allows('view', $calculation) && PdfAccess::canGenerate($request->user(), 'cable_calculations'), 403);
 
-        $calculation->loadMissing(['project', 'creator', 'circuits']);
-
-        $pdf = Pdf::loadView('cable-calculations.pdf', [
-            'calculation' => $calculation,
-            'background' => BatteryTemplates::backgroundDataUri(),
-        ])->setPaper('a4', 'portrait')->setOption('isFontSubsettingEnabled', true)->output();
+        $documents = app(CableCalculationDocuments::class);
+        $pdf = $documents->render($calculation);
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.Str::slug(__('erp.cable_calculator.singular').' '.$calculation->name).'.pdf"',
+            'Content-Disposition' => 'inline; filename="'.$documents->fileName($calculation).'"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }

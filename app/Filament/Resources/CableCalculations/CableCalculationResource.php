@@ -9,6 +9,7 @@ use App\Filament\Resources\CableCalculations\Pages\ListCableCalculations;
 use App\Models\CableCalculation;
 use App\Models\CableCalculationCircuit;
 use App\Models\Project;
+use App\Support\CableCalculationDocuments;
 use App\Support\CableCalculator;
 use App\Support\PdfAccess;
 use BackedEnum;
@@ -118,7 +119,8 @@ class CableCalculationResource extends Resource
                                 ->get()
                                 ->mapWithKeys(fn (Project $project): array => [$project->id => trim($project->reference.' — '.$project->subtitle(), ' —')])
                                 ->all())
-                            ->getOptionLabelUsing(fn (mixed $value): ?string => Project::query()->find($value)?->reference),
+                            ->getOptionLabelUsing(fn (mixed $value): ?string => Project::query()->find($value)?->reference)
+                            ->helperText(__('erp.cable_calculator.fields.project_help')),
                         Textarea::make('notes')->label(__('erp.cable_calculator.fields.notes'))->rows(2)->maxLength(5000)->columnSpanFull(),
                     ]),
                 // Several circuits at once, AC or DC each, from a start point to an end point.
@@ -430,6 +432,11 @@ class CableCalculationResource extends Resource
                 TextColumn::make('updated_at')->label(__('erp.cable_calculator.fields.updated_at'))->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->filters([
+                SelectFilter::make('project_id')
+                    ->label(__('erp.cable_calculator.fields.project'))
+                    ->relationship('project', 'reference', fn (Builder $query) => $query->visibleTo(auth()->user()))
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('kind')
                     ->label(__('erp.cable_calculator.fields.kind'))
                     ->options(self::options('kinds_short', ['ac', 'dc']))
@@ -444,12 +451,15 @@ class CableCalculationResource extends Resource
                     ->beforeReplicaSaved(function (CableCalculation $replica): void {
                         $replica->name = __('erp.cable_calculator.copy_of', ['name' => $replica->name]);
                         $replica->created_by = auth()->id();
+                        $replica->project_file_id = null;
+                        $replica->asbuilt_file_id = null;
                     })
                     // With all its circuits.
                     ->after(function (CableCalculation $record, CableCalculation $replica): void {
                         foreach ($record->circuits as $circuit) {
                             $replica->circuits()->create($circuit->replicate(['cable_calculation_id', 'result'])->getAttributes());
                         }
+                        app(CableCalculationDocuments::class)->sync($replica, auth()->user());
                     }),
                 EditAction::make(),
                 DeleteAction::make(),

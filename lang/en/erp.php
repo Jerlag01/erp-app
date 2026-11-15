@@ -3541,6 +3541,8 @@ return [
         'pin_heading' => 'PIN code of :card',
     ],
     'cable_calculator' => [
+        'make_for_project' => 'Make a cable calculation',
+        'of_project' => 'Cable calculations (:count)',
         'title' => 'Cable calculator',
         'singular' => 'cable calculation',
         'plural' => 'Cable calculations',
@@ -3594,6 +3596,7 @@ return [
             'name' => 'Name',
             'name_placeholder' => 'e.g. Calculation note 02NO1',
             'project' => 'Project',
+            'project_help' => "On every save the PDF goes to the project's extra files and to the cable dimensions of the as-built.",
             'system' => 'System',
             'voltage' => 'Voltage',
             'load_type' => 'Load as',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CableCalculationDocuments;
 use Database\Factories\CableCalculationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A cable calculation note: a name, optionally a project, and several circuits, AC or DC each, from a
- * start point to an end point (see CableCalculationCircuit), each with its own result.
+ * start point to an end point (see CableCalculationCircuit), each with its own result. With a project, its
+ * PDF is kept in the project's extra files and as-built (see CableCalculationDocuments).
  */
 #[Fillable(['name', 'project_id', 'notes', 'created_by'])]
 class CableCalculation extends Model
@@ -25,6 +27,26 @@ class CableCalculation extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * The PDF in the project's extra files.
+     *
+     * @return BelongsTo<ProjectFile, $this>
+     */
+    public function projectFile(): BelongsTo
+    {
+        return $this->belongsTo(ProjectFile::class);
+    }
+
+    /**
+     * The PDF in the "cable dimensions" of the project's as-built.
+     *
+     * @return BelongsTo<AsbuiltFile, $this>
+     */
+    public function asbuiltFile(): BelongsTo
+    {
+        return $this->belongsTo(AsbuiltFile::class);
     }
 
     /**
@@ -49,5 +71,10 @@ class CableCalculation extends Model
     public function failingCircuits(): int
     {
         return $this->circuits->filter(fn (CableCalculationCircuit $circuit): bool => ! (((array) $circuit->result)['ok'] ?? false))->count();
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(fn (self $calculation) => app(CableCalculationDocuments::class)->remove($calculation));
     }
 }

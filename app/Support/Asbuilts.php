@@ -96,6 +96,7 @@ class Asbuilts
             ]);
             $this->attach($asbuilt, $this->defaultFiles($project)->pluck('id')->all());
             $this->attachWiringDiagram($asbuilt);
+            app(CableCalculationDocuments::class)->attachToAsbuilt($asbuilt);
 
             return $asbuilt;
         });

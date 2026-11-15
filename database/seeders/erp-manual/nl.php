@@ -1110,6 +1110,10 @@ Het resultaat toont S, de voorziene kabel (bv. *95 mm² per pool*) en de verhoud
 
 Naast het formulier zie je meteen de **voorgestelde kabel** (bv. *3 × 6 mm² Cu XLPE*), wat de sectie bepaalt (stroom, spanningsval of kortsluiting), Ib, In, de correctiefactoren k1 en k2, Iz en de spanningsval, en de secties rond de keuze. Bewaar de berekening met een naam en eventueel een **project**; met **Kopiëren** maak je een variant.
 
+## Project en as-built
+
+Is er een **project** gekozen, dan komt de PDF bij elke opslag in de **extra bestanden** van het project (telkens als nieuwe versie) en in de map **1 - cable dimensions** van de **as-built** van het project, zolang die nog open is. Wordt de as-built later aangemaakt, dan komen de bestaande berekeningen van het project er automatisch in. Een ander project kiezen of het project leegmaken haalt de PDF weg bij het vorige project; een gesloten as-built blijft ongewijzigd. Bij de extra bestanden van een project start **Kabelberekening maken** een berekening voor dat project, en **Kabelberekeningen (n)** toont die van het project.
+
 ## PDF
 
 Met **PDF** (recht *PDF genereren*) druk je de berekening af op het **briefpapier van de 604-leveringsnota**, met alle gegevens en de tabel van de secties.

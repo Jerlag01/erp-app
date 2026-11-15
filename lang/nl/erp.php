@@ -3542,6 +3542,8 @@ return [
         'pin_heading' => 'PIN-code van :card',
     ],
     'cable_calculator' => [
+        'make_for_project' => 'Kabelberekening maken',
+        'of_project' => 'Kabelberekeningen (:count)',
         'title' => 'Kabelberekening',
         'singular' => 'kabelberekening',
         'plural' => 'Kabelberekeningen',
@@ -3595,6 +3597,7 @@ return [
             'name' => 'Naam',
             'name_placeholder' => 'bv. Berekeningsnota 02NO1',
             'project' => 'Project',
+            'project_help' => 'De PDF komt bij elke opslag in de extra bestanden van het project en in de kabeldimensies van de as-built.',
             'system' => 'Net',
             'voltage' => 'Spanning',
             'load_type' => 'Belasting als',
