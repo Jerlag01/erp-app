@@ -31,6 +31,8 @@ class DashboardAndLanguageTest extends TestCase
         $this->get('/')->assertOk()->assertSee(route('locale.update'), false)->assertSee('Français');
 
         $this->from('/')->post(route('locale.update'), ['locale' => 'fr'])->assertRedirect('/');
+        // Never back to another site.
+        $this->post(route('locale.update'), ['locale' => 'fr'], ['Referer' => 'https://evil.example.com/phish'])->assertRedirect(url('/'));
         $this->assertSame('fr', $user->fresh()->locale);
 
         $this->post(route('locale.update'), ['locale' => 'xx'])->assertSessionHasErrors('locale');

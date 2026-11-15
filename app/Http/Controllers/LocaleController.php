@@ -17,6 +17,9 @@ class LocaleController
 
         $request->user()->update(['locale' => $data['locale']]);
 
-        return redirect()->back();
+        // Back to the page the switch was used on, never to another site (the Referer header can be forged).
+        $previous = url()->previous();
+
+        return redirect()->to(parse_url($previous, PHP_URL_HOST) === $request->getHost() ? $previous : url('/'));
     }
 }
