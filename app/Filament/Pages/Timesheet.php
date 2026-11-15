@@ -172,18 +172,19 @@ class Timesheet extends Page implements HasSchemas
         $day = $this->day();
         $timesheets = app(Timesheets::class);
         $record = TimesheetDay::query()->where('user_id', $user->id)->whereDate('date', $day->toDateString())->first();
-        $status = $timesheets->statuses($user, $day, $day)[$day->toDateString()] ?? null;
+        $locked = $timesheets->lunchLock($user, $day)['locked'];
 
         $this->form->fill([
             'rows' => $record ? Timesheets::normaliseRows((array) $record->rows) : $timesheets->prefillRows($user, $day),
-            'lunch_break' => ($status['lunch_locked'] ?? false) || ($record?->lunch_break ?? true),
+            'lunch_break' => $locked || ($record?->lunch_break ?? true),
             'remarks' => $record?->remarks,
         ]);
     }
 
     public function form(Schema $schema): Schema
     {
-        $locked = fn (): bool => (bool) ($this->status()['lunch_locked'] ?? false);
+        $lock = fn (): array => app(Timesheets::class)->lunchLock($this->employeeUser(), $this->day());
+        $locked = fn (): bool => $lock()['locked'];
         $fixed = app(Timesheets::class)->fixedDay($this->employeeUser());
 
         return $schema
@@ -251,7 +252,7 @@ class Timesheet extends Page implements HasSchemas
                     ]),
                 Toggle::make('lunch_break')
                     ->label(__('erp.timesheets.lunch_break'))
-                    ->helperText(fn (): ?string => $locked() ? __('erp.timesheets.lunch_locked') : __('erp.timesheets.lunch_help', ['hours' => str_replace('.', ',', (string) app(Timesheets::class)->lunchHours())]))
+                    ->helperText(fn (): ?string => $locked() ? __($lock()['warehouse'] ? 'erp.timesheets.lunch_locked_warehouse' : 'erp.timesheets.lunch_locked') : __('erp.timesheets.lunch_help', ['hours' => str_replace('.', ',', (string) app(Timesheets::class)->lunchHours())]))
                     ->disabled($locked)
                     ->hidden($fixed)
                     ->live(),

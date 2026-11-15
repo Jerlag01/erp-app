@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PlanningKind;
 use App\Models\Employee;
 use App\Models\PlanningItem;
 use App\Models\Project;
@@ -64,6 +65,32 @@ class MobileTimesheetApiTest extends TestCase
             ->assertJsonPath('data.days.0.weekday', 'maandag');
 
         $this->getJson('/api/v1/timesheet/week')->assertUnauthorized();
+    }
+
+    #[Test]
+    public function the_lunch_break_is_mandatory_on_a_day_planned_in_the_warehouse(): void
+    {
+        PlanningItem::factory()->create(['user_id' => $this->user->id, 'date' => '2026-10-13', 'kind' => PlanningKind::Warehouse]);
+
+        $this->getJson('/api/v1/timesheet/days/2026-10-13', $this->auth)
+            ->assertOk()
+            ->assertJsonPath('data.lunch_locked', true)
+            ->assertJsonPath('data.lunch_locked_reason', __('erp.timesheets.lunch_locked_warehouse', [], 'nl'));
+        $this->getJson('/api/v1/timesheet/days/2026-10-14', $this->auth)->assertJsonPath('data.lunch_locked', false);
+
+        // Switched off in the request: saved on anyway, 0.5 h deducted.
+        $this->putJson('/api/v1/timesheet/days/2026-10-13', ['rows' => $this->rows(), 'lunch_break' => false], $this->auth)
+            ->assertOk()
+            ->assertJsonPath('data.lunch_break', true)
+            ->assertJsonPath('data.worked', 7.5);
+        $this->assertTrue(TimesheetDay::query()->sole()->lunch_break);
+
+        // With the setting off, the employee chooses.
+        settings()->save('timesheets', [...settings('timesheets'), 'warehouse_lunch_mandatory' => false]);
+        $this->putJson('/api/v1/timesheet/days/2026-10-13', ['rows' => $this->rows(), 'lunch_break' => false], $this->auth)
+            ->assertOk()
+            ->assertJsonPath('data.lunch_locked', false)
+            ->assertJsonPath('data.lunch_break', false);
     }
 
     #[Test]

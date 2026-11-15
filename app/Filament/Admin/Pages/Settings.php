@@ -564,6 +564,10 @@ class Settings extends Page
                     TextInput::make('timesheets.day_hours')->label(__('erp.settings.fields.timesheet_day_hours'))->helperText(__('erp.settings.help.timesheet_day_hours'))->numeric()->minValue(0)->maxValue(24)->step('any')->suffix('u')->required(),
                     TextInput::make('timesheets.lunch_hours')->label(__('erp.settings.fields.timesheet_lunch_hours'))->numeric()->minValue(0)->maxValue(4)->step('any')->suffix('u')->required(),
                     TextInput::make('timesheets.mobility_rate')->label(__('erp.settings.fields.timesheet_mobility_rate'))->helperText(__('erp.settings.help.timesheet_mobility_rate'))->numeric()->minValue(0)->maxValue(5)->step('any')->prefix('€')->suffix('/ km')->required(),
+                    Toggle::make('timesheets.warehouse_lunch_mandatory')
+                        ->label(__('erp.settings.fields.timesheet_warehouse_lunch_mandatory'))
+                        ->helperText(__('erp.settings.help.timesheet_warehouse_lunch_mandatory'))
+                        ->columnSpanFull(),
                 ]),
             Section::make(__('erp.settings.sections.timesheet_overtime'))
                 ->description(__('erp.settings.help.timesheet_overtime'))

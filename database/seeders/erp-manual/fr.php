@@ -399,7 +399,7 @@ La **fiche de prestations** quotidienne : heures, kilomètres et projets par jou
 2. Par ligne : **départ du magasin**, **travail sur le site COW**, éventuellement des **sites supplémentaires**, et **retour au magasin / à la maison**, avec les heures et les relevés kilométriques.
 3. Choisissez le projet dans **Imputation** et complétez la **description** (code COW ou chantier).
 4. **« Remplir depuis le planning »** reprend les projets de votre planning de ce jour.
-5. La **pause de midi** est déduite des heures prestées.
+5. La **pause de midi** est déduite des heures prestées. Si vous êtes planifié à l'**entrepôt** ce jour-là, la pause de midi est obligatoire et ne peut pas être désactivée (activable dans Paramètres → Prestations → *Pause de midi obligatoire à l'entrepôt*).
 
 Seuls le départ, le site et la fin de journée comptent pour les heures ; les sites supplémentaires intermédiaires non.
 

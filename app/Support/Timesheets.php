@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Actions\Timesheets\InterimTimesheets;
 use App\Enums\AbsenceType;
 use App\Enums\EmploymentCategory;
+use App\Enums\PlanningKind;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
 use App\Models\Holiday;
@@ -381,6 +382,49 @@ class Timesheets
     }
 
     /**
+     * Whether the lunch break is mandatory on days the employee is planned in the warehouse (Settings > Prestations).
+     */
+    public function warehouseLunchMandatory(): bool
+    {
+        return (bool) settings()->get('timesheets.warehouse_lunch_mandatory', true);
+    }
+
+    /**
+     * The days between two dates the employee is planned in the warehouse, when that makes the lunch break mandatory.
+     *
+     * @return array<string, true>
+     */
+    public function warehouseDays(User $user, CarbonInterface $from, CarbonInterface $until): array
+    {
+        if (! modules()->planning() || ! $this->warehouseLunchMandatory()) {
+            return [];
+        }
+
+        return PlanningItem::query()
+            ->where('user_id', $user->id)
+            ->where('kind', PlanningKind::Warehouse)
+            ->whereBetween('date', [$from->toDateString(), $until->toDateString()])
+            ->pluck('date')
+            ->mapWithKeys(fn (mixed $date): array => [substr((string) $date, 0, 10) => true])
+            ->all();
+    }
+
+    /**
+     * Whether the employee cannot switch the lunch break off on a day: an absence that counts as a full
+     * day (vacation, sickness, training, holiday) or a day planned in the warehouse.
+     *
+     * @return array{locked: bool, warehouse: bool}
+     */
+    public function lunchLock(User $user, CarbonInterface $day): array
+    {
+        $date = CarbonImmutable::instance($day)->startOfDay();
+        $warehouse = $this->warehouseDays($user, $date, $date) !== [];
+        $status = $this->statuses($user, $date, $date)[$date->toDateString()] ?? null;
+
+        return ['locked' => $warehouse || ($status['lunch_locked'] ?? false), 'warehouse' => $warehouse];
+    }
+
+    /**
      * Projects the employee can see, by reference, number, COW code or description.
      *
      * @return Collection<int, Project>
@@ -461,13 +505,14 @@ class Timesheets
      * Every working day (Monday–Friday) between two dates with what counts: worked hours, credited hours
      * for absences, the total, kilometres and the automatic note.
      *
-     * @return array<string, array{date: CarbonImmutable, record: ?TimesheetDay, rows: list<array<string, mixed>>, lunch: bool, status: ?array{type: string, note: string, credit: float, lunch_locked: bool}, worked: float, credit: float, total: float, km: int, remarks: ?string}>
+     * @return array<string, array{date: CarbonImmutable, record: ?TimesheetDay, rows: list<array<string, mixed>>, lunch: bool, lunch_locked: bool, warehouse: bool, status: ?array{type: string, note: string, credit: float, lunch_locked: bool}, worked: float, credit: float, total: float, km: int, remarks: ?string}>
      */
     public function days(User $user, CarbonInterface $from, CarbonInterface $until): array
     {
         $from = CarbonImmutable::instance($from)->startOfDay();
         $until = CarbonImmutable::instance($until)->startOfDay();
         $statuses = $this->statuses($user, $from, $until);
+        $warehouse = $this->warehouseDays($user, $from, $until);
         $records = TimesheetDay::query()->where('user_id', $user->id)->whereBetween('date', [$from->toDateString(), $until->toDateString()])->get()
             ->keyBy(fn (TimesheetDay $day): string => $day->date->toDateString());
         $days = [];
@@ -483,7 +528,8 @@ class Timesheets
             $record = $records->get($key);
             $status = $statuses[$key] ?? null;
             $rows = $record ? self::normaliseRows((array) $record->rows) : self::emptyRows();
-            $lunch = ($status['lunch_locked'] ?? false) || ($record?->lunch_break ?? true);
+            $lunchLocked = ($status['lunch_locked'] ?? false) || isset($warehouse[$key]);
+            $lunch = $lunchLocked || ($record?->lunch_break ?? true);
             $fixed = $this->fixedDay($user);
             $worked = $fixed ? $this->fixedWorked($status) : $this->workedHours($rows, $lunch);
             $credit = (float) ($status['credit'] ?? 0);
@@ -493,6 +539,8 @@ class Timesheets
                 'record' => $record,
                 'rows' => $rows,
                 'lunch' => $lunch,
+                'lunch_locked' => $lunchLocked,
+                'warehouse' => isset($warehouse[$key]),
                 'status' => $status,
                 'worked' => round($worked, 2),
                 'credit' => $credit,

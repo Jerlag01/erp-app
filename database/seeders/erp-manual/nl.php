@@ -400,7 +400,7 @@ De dagelijkse **prestatiefiche**: uren, kilometers en projecten per dag, met een
 2. Vul per regel in: **start in het magazijn**, **werk op de COW-site**, eventueel **extra sites**, en **terug in het magazijn / naar huis**, met uren en kilometerstanden.
 3. Kies bij **Imputatie** het project en vul de **omschrijving** in (COW-code of werf).
 4. Met **"Invullen vanuit planning"** zet je de projecten van je planning van die dag er meteen in.
-5. De **middagpauze** wordt van de gewerkte uren afgetrokken.
+5. De **middagpauze** wordt van de gewerkte uren afgetrokken. Sta je die dag in de planning op **magazijn**, dan is de middagpauze verplicht en kan je ze niet uitzetten (aan of uit bij Instellingen → Prestaties → *Middagpauze verplicht in het magazijn*).
 
 Enkel de start, de site en het einde van de dag tellen mee voor de uren; extra sites tussendoor niet.
 

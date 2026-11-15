@@ -399,7 +399,7 @@ The daily **prestation sheet**: hours, kilometres and projects per day, with a w
 2. Per line: **start at the warehouse**, **work on the COW site**, possibly **extra sites**, and **back at the warehouse / home**, with times and odometer readings.
 3. Choose the project under **Imputation** and fill in the **description** (COW code or site).
 4. **"Fill in from planning"** puts in the projects of your planning for that day.
-5. The **lunch break** is deducted from the hours worked.
+5. The **lunch break** is deducted from the hours worked. When you are planned in the **warehouse** that day, the lunch break is mandatory and cannot be switched off (on or off under Settings → Prestations → *Lunch break mandatory in the warehouse*).
 
 Only the start, the site and the end of the day count for the hours; extra sites in between don't.
 

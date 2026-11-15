@@ -34,11 +34,11 @@ class SaveTimesheetDay
             }
         }
 
-        $status = $this->timesheets->statuses($employee, $day, $day)[$day->toDateString()] ?? null;
+        $locked = $this->timesheets->lunchLock($employee, $day)['locked'];
 
         $record = TimesheetDay::query()->updateOrCreate(['user_id' => $employee->id, 'date' => $day->toDateString()], [
             'rows' => $rows,
-            'lunch_break' => ($status['lunch_locked'] ?? false) || (bool) ($data['lunch_break'] ?? true),
+            'lunch_break' => $locked || (bool) ($data['lunch_break'] ?? true),
             'remarks' => filled($data['remarks'] ?? null) ? mb_substr(trim((string) $data['remarks']), 0, 1000) : null,
             'updated_by' => $by->id,
         ]);

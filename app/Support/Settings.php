@@ -209,6 +209,8 @@ class Settings
                 'send_to_employee' => true,
                 // The overtime a month adds is paid out when the next month starts (off the balance), from this month on (empty: always).
                 'overtime_monthly_payout' => false,
+                // On days planned in the warehouse the lunch break is mandatory: employees cannot switch it off.
+                'warehouse_lunch_mandatory' => true,
                 'overtime_payout_from' => null,
             ],
             // Battery dossiers: templates, client, prices and the fixed texts of the shipping note (Settings > Batteries).
