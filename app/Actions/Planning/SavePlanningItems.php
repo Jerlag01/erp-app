@@ -174,9 +174,9 @@ class SavePlanningItems
             throw ValidationException::withMessages(['title' => __('validation.required', ['attribute' => __('erp.planning.title_field')])]);
         }
 
-        // A battery move (605): its origin or destination; anything else is not kept.
+        // A battery move (605): its origin or destination; an intervention: one of its COW codes; anything else is not kept.
         $workSiteId = (int) ($data['work_site_id'] ?? 0);
-        $workSiteId = $workSiteId > 0 && array_key_exists($workSiteId, PlanningItem::moveSiteOptions($projectId)) ? $workSiteId : null;
+        $workSiteId = $workSiteId > 0 && array_key_exists($workSiteId, PlanningItem::siteOptions($projectId)) ? $workSiteId : null;
 
         return [
             'kind' => $kind,

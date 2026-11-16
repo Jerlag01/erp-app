@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BatteryTechnology;
 use App\Enums\PlanningKind;
+use App\Support\Interventions;
 use App\Support\OutlookCalendar;
 use App\Support\Planning;
 use Carbon\CarbonInterface;
@@ -41,7 +42,8 @@ class PlanningItem extends Model
     }
 
     /**
-     * The site the item goes to when it is not the project's own (a battery move: origin or destination).
+     * The site the item goes to when it is not the project's own (a battery move: origin or destination; an
+     * intervention on several COW codes: one of them).
      *
      * @return BelongsTo<WorkSite, $this>
      */
@@ -76,6 +78,51 @@ class PlanningItem extends Model
         }
 
         return $this->workSite?->addressLine() ?? $this->project?->addressLine() ?? $this->project?->workSite?->addressLine();
+    }
+
+    /**
+     * The sites a project can be planned at when it has more than one, by id with a label: a battery move
+     * (605) its origin and destination, an intervention in one WO/PO its COW codes. Empty for the others.
+     *
+     * @return array<int, string>
+     */
+    public static function siteOptions(?int $projectId): array
+    {
+        $project = $projectId ? Project::query()->with(['category', 'workSite', 'interventionWorkSites', 'interventionReports.workSite'])->find($projectId) : null;
+        $interventions = app(Interventions::class);
+
+        if ($project !== null && $interventions->appliesTo($project) && $interventions->hasSeveralSites($project)) {
+            return collect($interventions->sites($project))
+                ->filter(fn (array $site): bool => $site['work_site'] !== null)
+                ->mapWithKeys(fn (array $site): array => [$site['work_site']->id => trim($site['work_site']->cow_code.' — '.($site['work_site']->addressLine() ?? ''), ' —')])
+                ->all();
+        }
+
+        return self::moveSiteOptions($projectId);
+    }
+
+    /**
+     * The site proposed when planning: a battery move's destination, an intervention's first COW code still
+     * to close (else its first).
+     */
+    public static function defaultSiteId(?int $projectId): ?int
+    {
+        $options = self::siteOptions($projectId);
+
+        if ($options === []) {
+            return null;
+        }
+
+        $project = Project::query()->with(['category', 'workSite', 'interventionWorkSites', 'interventionReports.workSite'])->find($projectId);
+        $interventions = app(Interventions::class);
+
+        if ($project !== null && $interventions->appliesTo($project) && $interventions->hasSeveralSites($project)) {
+            $open = collect($interventions->openSites($project))->first(fn (array $site): bool => array_key_exists((int) $site['work_site_id'], $options));
+
+            return $open['work_site_id'] ?? array_key_first($options);
+        }
+
+        return array_key_last($options);
     }
 
     /**

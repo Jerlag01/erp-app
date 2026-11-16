@@ -13,6 +13,7 @@ use App\Models\Absence;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
 use App\Models\Holiday;
+use App\Models\InterventionReport;
 use App\Models\MoveDossier;
 use App\Models\PlanningItem;
 use App\Models\Project;
@@ -128,6 +129,39 @@ class PlanningTest extends TestCase
             ->callAction('createItem', $this->projectItem($employee, $plain, ['date' => '2026-10-14', 'notify_mail' => false]))
             ->assertHasNoActionErrors();
         $this->assertNull(PlanningItem::query()->where('project_id', $plain->id)->value('work_site_id'));
+    }
+
+    #[Test]
+    public function an_intervention_on_several_cow_codes_is_planned_at_the_cow_code_they_go_to(): void
+    {
+        $planner = User::factory()->admin()->create();
+        $employee = User::factory()->inTeam()->create();
+        $main = WorkSite::factory()->create(['cow_code' => '02GAM', 'street' => 'Gamstraat', 'house_number' => '5', 'postal_code' => '1000', 'city' => 'Brussel']);
+        $extra = WorkSite::factory()->create(['cow_code' => '02NO1', 'street' => 'Mercuriusstraat', 'house_number' => '27', 'postal_code' => '1930', 'city' => 'Zaventem']);
+        $project = Project::factory()->inCategory('600')->for($main)->create(['work_order_number' => '123456', 'status' => ProjectStatus::InProgress]);
+        $single = Project::factory()->inCategory('600')->for($extra)->create(['work_order_number' => '654321', 'status' => ProjectStatus::InProgress]);
+        $this->actingAs($planner);
+
+        // Only one COW code: nothing to choose.
+        $this->assertSame([], PlanningItem::siteOptions($single->id));
+
+        $project->interventionWorkSites()->attach($extra);
+        $this->assertSame([$main->id, $extra->id], array_keys(PlanningItem::siteOptions($project->id)));
+        Livewire::test(Planning::class)
+            ->mountAction('createItem')
+            ->fillForm(['kind' => 'project', 'project_id' => $project->id])
+            ->assertSchemaStateSet(['work_site_id' => $main->id]);
+
+        // Once the first COW code is closed, the next one is proposed.
+        InterventionReport::factory()->for($project)->create(['work_site_id' => $main->id, 'cow_code' => '02GAM']);
+        $this->assertSame($extra->id, PlanningItem::defaultSiteId($project->id));
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['work_site_id' => $extra->id, 'notify_mail' => false]))
+            ->assertHasNoActionErrors();
+        $item = PlanningItem::sole();
+        $this->assertSame([$extra->id, '02NO1'], [$item->work_site_id, $item->cowCode()]);
+        $this->assertStringContainsString('Mercuriusstraat 27', (string) $item->addressLine());
     }
 
     #[Test]

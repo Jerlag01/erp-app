@@ -2482,7 +2482,7 @@ return [
         'kind' => 'Soort',
         'open_projects_only' => 'Enkel open projecten (gepland, uit te voeren, in uitvoering).',
         'move_site' => 'COW-code (route)',
-        'move_site_help' => 'Batterijverhuis: kies of het werk bij de vertreksite of bij de bestemming is. Dat adres staat in de routegegevens (app, Outlook).',
+        'move_site_help' => 'Batterijverhuis: kies of het werk bij de vertreksite of bij de bestemming is. Interventie op meerdere COW-codes: kies de COW-code waar ze naartoe moeten. Dat adres staat in de routegegevens (app, Outlook).',
         'move_origin' => 'Vertrek',
         'move_destination' => 'Bestemming',
         'title_field' => 'Onderwerp',

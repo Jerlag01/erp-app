@@ -2482,7 +2482,7 @@ return [
         'kind' => 'Type',
         'open_projects_only' => 'Only open projects (planned, to be executed, in progress).',
         'move_site' => 'COW code (route)',
-        'move_site_help' => 'Battery move: choose whether the work is at the origin site or at the destination. That address is used in the route details (app, Outlook).',
+        'move_site_help' => 'Battery move: choose whether the work is at the origin site or at the destination. Intervention on several COW codes: choose the COW code they need to go to. That address is used in the route details (app, Outlook).',
         'move_origin' => 'Origin',
         'move_destination' => 'Destination',
         'title_field' => 'Subject',

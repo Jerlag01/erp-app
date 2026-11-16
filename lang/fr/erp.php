@@ -2482,7 +2482,7 @@ return [
         'kind' => 'Type',
         'open_projects_only' => 'Uniquement les projets ouverts (planifié, à exécuter, en cours).',
         'move_site' => 'Code COW (itinéraire)',
-        'move_site_help' => 'Déménagement de batteries : choisissez si le travail se fait au site de départ ou à la destination. Cette adresse figure dans l\'itinéraire (app, Outlook).',
+        'move_site_help' => 'Déménagement de batteries : choisissez si le travail se fait au site de départ ou à la destination. Intervention sur plusieurs codes COW : choisissez le code COW où ils doivent aller. Cette adresse figure dans l\'itinéraire (app, Outlook).',
         'move_origin' => 'Départ',
         'move_destination' => 'Destination',
         'title_field' => 'Objet',

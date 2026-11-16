@@ -369,7 +369,7 @@ class Planning extends Page
                     'end_time' => $item->endsAt(),
                     'kind' => $item->kind->value,
                     'project_id' => $item->project_id,
-                    'work_site_id' => $item->work_site_id ?? array_key_last(PlanningItem::moveSiteOptions($item->project_id)),
+                    'work_site_id' => $item->work_site_id ?? PlanningItem::defaultSiteId($item->project_id),
                     'title' => $item->title,
                     'description' => $item->description,
                     'tasks' => array_column($item->taskList(), 'text'),
@@ -515,14 +515,14 @@ class Planning extends Page
                 ->visible($isKind(PlanningKind::Project))
                 ->required($isKind(PlanningKind::Project))
                 ->live()
-                // A battery move goes to its destination unless the origin is chosen.
-                ->afterStateUpdated(fn (mixed $state, Set $set) => $set('work_site_id', array_key_last(PlanningItem::moveSiteOptions((int) $state)))),
+                // A battery move goes to its destination unless the origin is chosen; an intervention on several COW codes to the first still to close.
+                ->afterStateUpdated(fn (mixed $state, Set $set) => $set('work_site_id', PlanningItem::defaultSiteId((int) $state))),
             Select::make('work_site_id')
                 ->label(__('erp.planning.move_site'))
                 ->helperText(__('erp.planning.move_site_help'))
-                ->options(fn (Get $get): array => PlanningItem::moveSiteOptions((int) $get('project_id')))
-                ->visible(fn (Get $get): bool => $get('kind') === PlanningKind::Project->value && PlanningItem::moveSiteOptions((int) $get('project_id')) !== [])
-                ->required(fn (Get $get): bool => $get('kind') === PlanningKind::Project->value && PlanningItem::moveSiteOptions((int) $get('project_id')) !== []),
+                ->options(fn (Get $get): array => PlanningItem::siteOptions((int) $get('project_id')))
+                ->visible(fn (Get $get): bool => $get('kind') === PlanningKind::Project->value && PlanningItem::siteOptions((int) $get('project_id')) !== [])
+                ->required(fn (Get $get): bool => $get('kind') === PlanningKind::Project->value && PlanningItem::siteOptions((int) $get('project_id')) !== []),
             TextInput::make('title')
                 ->label(fn (Get $get): string => $get('kind') === PlanningKind::Warehouse->value ? __('erp.planning.short_title') : __('erp.planning.title_field'))
                 ->maxLength(255)
