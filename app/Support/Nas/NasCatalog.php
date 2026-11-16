@@ -2,6 +2,7 @@
 
 namespace App\Support\Nas;
 
+use App\Actions\Interventions\InterventionPdf;
 use App\Models\Asbuilt;
 use App\Models\AsbuiltLibraryFile;
 use App\Models\Asset;
@@ -152,7 +153,8 @@ class NasCatalog
     public function interventionReport(InterventionReport $report): void
     {
         if ($report->project && filled($report->pdf_path)) {
-            $this->nas->put([...self::projectFolder($report->project), 'Interventierapport.pdf'], ['disk' => InterventionReport::DISK, 'path' => $report->pdf_path]);
+            $cowCode = InterventionPdf::extraCowCode($report);
+            $this->nas->put([...self::projectFolder($report->project), $cowCode ? "Interventierapport {$cowCode}.pdf" : 'Interventierapport.pdf'], ['disk' => InterventionReport::DISK, 'path' => $report->pdf_path]);
         }
     }
 

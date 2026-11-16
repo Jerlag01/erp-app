@@ -53,15 +53,13 @@ class ListInterventions extends ListRecords
     {
         return [
             'open' => Tab::make(__('erp.interventions.tabs.open'))
-                ->modifyQueryUsing(fn (Builder $query) => $query->where(fn (Builder $query) => $query
-                    ->doesntHave('interventionReport')
-                    ->orWhereHas('interventionReport', fn (Builder $query) => $query->where('status', InterventionReportStatus::Rejected->value)))),
+                ->modifyQueryUsing(fn (Builder $query) => $query->interventionOpen()),
             'pending' => Tab::make(__('erp.interventions.tabs.pending'))
-                ->badge(fn (): ?int => InterventionResource::getEloquentQuery()->whereHas('interventionReport', fn (Builder $query) => $query->where('status', InterventionReportStatus::Pending->value))->count() ?: null)
+                ->badge(fn (): ?int => InterventionResource::getEloquentQuery()->whereHas('interventionReports', fn (Builder $query) => $query->where('status', InterventionReportStatus::Pending->value))->count() ?: null)
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('interventionReport', fn (Builder $query) => $query->where('status', InterventionReportStatus::Pending->value))),
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('interventionReports', fn (Builder $query) => $query->where('status', InterventionReportStatus::Pending->value))),
             'approved' => Tab::make(__('erp.interventions.tabs.approved'))
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('interventionReport', fn (Builder $query) => $query->where('status', InterventionReportStatus::Approved->value))),
+                ->modifyQueryUsing(fn (Builder $query) => $query->interventionApproved()),
             'all' => Tab::make(__('erp.projects.all')),
         ];
     }

@@ -8,6 +8,7 @@ use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\InterventionReport;
 use App\Models\ProjectPoNumber;
 use App\Models\User;
+use App\Support\Interventions;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
@@ -16,11 +17,12 @@ use Illuminate\Validation\ValidationException;
 /**
  * An administrator approves a closed intervention, entering its PO number (added to the project's
  * PO numbers for invoicing; project status "invoicing to do"), or rejects it with a reason so the
- * employee corrects and closes it again (project status back to "in progress").
+ * employee corrects and closes it again (project status back to "in progress"). With several COW codes
+ * (one report each) the project goes to "invoicing to do" once all of them are approved.
  */
 class ReviewIntervention
 {
-    public function __construct(protected InterventionPdf $pdf) {}
+    public function __construct(protected InterventionPdf $pdf, protected Interventions $interventions) {}
 
     public function approve(InterventionReport $report, User $admin, string $poNumber, ?string $note = null): void
     {
@@ -39,8 +41,13 @@ class ReviewIntervention
                 'review_note' => $note,
             ]);
 
-            $report->project->poNumbers()->firstOrCreate(['number' => $poNumber]);
-            $report->project->update(['status' => ProjectStatus::InvoicingToDo]);
+            $project = $report->project;
+            $project->poNumbers()->firstOrCreate(['number' => $poNumber]);
+            $project->unsetRelation('interventionReports');
+
+            if ($this->interventions->allApproved($project)) {
+                $project->update(['status' => ProjectStatus::InvoicingToDo]);
+            }
         });
 
         $this->pdf->store($report->fresh());

@@ -23,8 +23,9 @@ use Illuminate\Validation\ValidationException;
 /**
  * The employee closes an intervention with all details: categories, COW code, room, material
  * used/freed, breaker/fuse positions, modified boards, time worked, co-workers and remarks.
- * The execution date is set here. The intervention then waits for review by an administrator
- * (project status "executed"), the PDF is made and the administrators are notified.
+ * The execution date is set here. The report then waits for review by an administrator, the PDF is made
+ * and the administrators are notified. An intervention on several COW codes (one WO/PO) gets a report per
+ * COW code; the project is "executed" once every COW code is closed.
  */
 class CloseIntervention
 {
@@ -39,6 +40,13 @@ class CloseIntervention
             abort(403);
         }
 
+        $workSite = WorkSite::query()->find($data['work_site_id'] ?? $project->work_site_id);
+        $site = $this->interventions->site($project, $workSite?->id);
+
+        if (! $this->interventions->isOpen($site)) {
+            throw ValidationException::withMessages(['work_site_id' => __('erp.interventions.errors.site_closed')]);
+        }
+
         $categories = InterventionCategory::query()->ofKind(InterventionCategoryKind::Category)->whereKey((array) ($data['categories'] ?? []))->get();
 
         if ($categories->isEmpty()) {
@@ -46,7 +54,6 @@ class CloseIntervention
         }
 
         $directions = $this->interventions->directions($categories);
-        $workSite = WorkSite::query()->find($data['work_site_id'] ?? $project->work_site_id);
         $materials = $this->materials((array) ($data['materials'] ?? []), $directions);
         $positions = $this->positions((array) ($data['positions'] ?? []));
         $boards = self::boardNames((array) ($data['modified_boards'] ?? []));
@@ -57,11 +64,16 @@ class CloseIntervention
             throw ValidationException::withMessages(['hours_worked' => __('erp.interventions.errors.hours')]);
         }
 
-        $report = DB::transaction(function () use ($project, $data, $user, $categories, $workSite, $materials, $positions, $boards, $coWorkers, $hours): InterventionReport {
-            $project->interventionCategories()->sync($categories->modelKeys());
-            $project->update(['status' => ProjectStatus::Executed]);
+        $several = $this->interventions->hasSeveralSites($project);
 
-            $report = InterventionReport::query()->updateOrCreate(['project_id' => $project->id], [
+        $report = DB::transaction(function () use ($project, $data, $user, $categories, $workSite, $site, $several, $materials, $positions, $boards, $coWorkers, $hours): InterventionReport {
+            // With several COW codes the intervention has the categories of all their reports.
+            $several
+                ? $project->interventionCategories()->syncWithoutDetaching($categories->modelKeys())
+                : $project->interventionCategories()->sync($categories->modelKeys());
+
+            $report = $site['report'] ?? new InterventionReport(['project_id' => $project->id]);
+            $report->fill([
                 'status' => InterventionReportStatus::Pending,
                 'work_site_id' => $workSite?->id,
                 'cow_code' => $workSite?->cow_code ?? $project->cow_code,
@@ -75,7 +87,13 @@ class CloseIntervention
                 'reviewed_by' => null,
                 'reviewed_at' => null,
                 'review_note' => null,
-            ]);
+            ])->save();
+
+            $project->unsetRelation('interventionReports');
+
+            if ($this->interventions->allClosed($project)) {
+                $project->update(['status' => ProjectStatus::Executed]);
+            }
 
             $report->materials()->delete();
             $report->materials()->createMany($materials);

@@ -28,20 +28,26 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 /**
  * "Close intervention": the employee fills in everything about the work done. Afterwards the
- * intervention waits for review by an administrator.
+ * intervention waits for review by an administrator. With several COW codes (one WO/PO) the form is
+ * per COW code: the employee picks one of the COW codes still to close.
  */
 class CloseInterventionAction
 {
     public static function make(): Action
     {
         return Action::make('closeIntervention')
-            ->label(fn (Project $record): string => $record->interventionReport ? __('erp.interventions.close_again') : __('erp.interventions.close'))
+            ->label(fn (Project $record): string => match (true) {
+                app(Interventions::class)->hasSeveralSites($record) => __('erp.interventions.close_site'),
+                $record->interventionReport !== null => __('erp.interventions.close_again'),
+                default => __('erp.interventions.close'),
+            })
             ->icon(Heroicon::OutlinedClipboardDocumentCheck)
             ->color('success')
             ->visible(fn (Project $record): bool => app(Interventions::class)->canClose(auth()->user(), $record))
@@ -71,13 +77,18 @@ class CloseInterventionAction
      *
      * @return array<string, mixed>
      */
-    public static function defaults(Project $project): array
+    public static function defaults(Project $project, ?int $workSiteId = null): array
     {
-        $report = $project->interventionReport?->loadMissing(['materials', 'positions', 'coWorkers']);
+        $interventions = app(Interventions::class);
+        $site = $workSiteId !== null ? $interventions->site($project, $workSiteId) : ($interventions->openSites($project)[0] ?? $interventions->sites($project)[0]);
+        $report = $site['report']?->loadMissing(['materials', 'positions', 'coWorkers']);
+        $categories = $report && $interventions->hasSeveralSites($project)
+            ? InterventionCategory::query()->ofKind(InterventionCategoryKind::Category)->whereIn('name', $report->categoryNames())->pluck('id')->all()
+            : $project->interventionCategories()->pluck('intervention_categories.id')->all();
 
         return [
-            'categories' => $project->interventionCategories()->pluck('intervention_categories.id')->all(),
-            'work_site_id' => $report->work_site_id ?? $project->work_site_id,
+            'categories' => $categories,
+            'work_site_id' => $site['work_site_id'],
             'room' => $report?->room,
             'hours_worked' => $report?->hours_worked,
             'remarks' => $report?->remarks,
@@ -89,6 +100,25 @@ class CloseInterventionAction
                 : $project->parts()->get()->map(fn ($part): array => ['stock_item_id' => $part->stock_item_id, 'description' => $part->description, 'quantity' => (float) $part->quantity, 'unit_id' => $part->unit_id, 'direction' => MaterialDirection::Used->value])->all(),
             'positions' => $report?->positions->map(fn (InterventionReportPosition $position): array => $position->only(['board_name', 'current', 'device', 'number', 'supply']))->all() ?? [],
         ];
+    }
+
+    /**
+     * The COW codes to choose from: with several, the ones still to close; else every work site (to correct it).
+     *
+     * @return array<int, string>
+     */
+    public static function siteOptions(Project $project): array
+    {
+        $interventions = app(Interventions::class);
+
+        if ($interventions->hasSeveralSites($project)) {
+            return collect($interventions->openSites($project))
+                ->filter(fn (array $site): bool => $site['work_site_id'] !== null)
+                ->mapWithKeys(fn (array $site): array => [$site['work_site_id'] => Interventions::siteLabel($site['work_site'])])
+                ->all();
+        }
+
+        return WorkSite::query()->orderBy('cow_code')->get()->mapWithKeys(fn (WorkSite $site): array => [$site->id => Interventions::siteLabel($site)])->all();
     }
 
     /**
@@ -110,12 +140,23 @@ class CloseInterventionAction
                         ->required()
                         ->live()
                         ->columnSpanFull(),
+                    // Several COW codes: one of those still to close.
                     Select::make('work_site_id')
                         ->label(__('erp.interventions.cow_code'))
-                        ->options(fn (): array => WorkSite::query()->orderBy('cow_code')->get()->mapWithKeys(fn (WorkSite $site): array => [$site->id => trim($site->cow_code.' · '.$site->city, ' ·')])->all())
+                        ->options(fn (): array => self::siteOptions($project))
                         ->searchable()
                         ->required()
-                        ->live(),
+                        ->live()
+                        ->afterStateUpdated(function (mixed $state, Set $set) use ($project): void {
+                            $interventions = app(Interventions::class);
+
+                            // A COW code sent back: its form as it was; a new one keeps what was entered.
+                            if (filled($state) && $interventions->hasSeveralSites($project) && $interventions->site($project, (int) $state)['report'] !== null) {
+                                foreach (Arr::except(self::defaults($project, (int) $state), ['work_site_id']) as $field => $value) {
+                                    $set($field, $value);
+                                }
+                            }
+                        }),
                     TextInput::make('room')
                         ->label(__('erp.interventions.room'))
                         ->required()

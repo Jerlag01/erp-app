@@ -22,10 +22,13 @@ use Illuminate\Http\Request;
 /**
  * Interventions in the mobile app: the ones the employee sees (as under Interventions on the
  * platform) and the closing form, the same as "Close intervention" on the project page, without a
- * signature. The intervention then waits for review by an administrator.
+ * signature. The intervention then waits for review by an administrator. An intervention on several COW
+ * codes (one WO/PO) has a form per COW code: "sites" lists them and ?site= picks the one to fill in.
  */
 class InterventionController extends Controller
 {
+    protected const RELATIONS = ['category', 'workSite', 'interventionReport', 'interventionReports.workSite', 'interventionWorkSites', 'interventionCategories'];
+
     public function __construct(protected Interventions $interventions) {}
 
     public function index(Request $request): JsonResponse
@@ -33,9 +36,9 @@ class InterventionController extends Controller
         $this->ensureEnabled();
 
         $projects = $this->interventions->visibleTo($request->user())
-            ->with(['category', 'workSite', 'interventionReport', 'interventionCategories'])
-            // Still to close or sent back first, then the newest.
-            ->orderByRaw('exists (select 1 from intervention_reports where intervention_reports.project_id = projects.id and intervention_reports.status <> ?) asc', [InterventionReportStatus::Rejected->value])
+            ->with(self::RELATIONS)
+            // Still to close (a COW code without report, or sent back) first, then the newest.
+            ->orderByRaw('('.Project::reportCountSql().' and intervention_reports.status <> ?) >= '.Project::siteCountSql().' asc', [InterventionReportStatus::Rejected->value])
             ->latest('id')
             ->limit(100)
             ->get();
@@ -48,24 +51,39 @@ class InterventionController extends Controller
         /** @var User $user */
         $user = $request->user();
         $project = $this->find($user, $id);
-        $canClose = $this->interventions->canClose($user, $project);
-        $report = $project->interventionReport;
+        $several = $this->interventions->hasSeveralSites($project);
+        $chosen = $request->integer('site') ?: null;
+        $site = $chosen !== null ? $this->interventions->site($project, $chosen) : ($this->interventions->openSites($project)[0] ?? $this->interventions->sites($project)[0]);
+        $canClose = $this->interventions->canClose($user, $project) && $this->interventions->isOpen($site);
+        $report = $site['report'];
         $current = $project->interventionCategories()->pluck('intervention_categories.id')->all();
-        $defaults = $canClose ? CloseInterventionAction::defaults($project) : null;
-        $workSite = WorkSite::query()->find($defaults['work_site_id'] ?? $project->work_site_id);
+        $defaults = $canClose ? CloseInterventionAction::defaults($project, $site['work_site_id']) : null;
+        $workSite = WorkSite::query()->find($defaults['work_site_id'] ?? $site['work_site_id'] ?? $project->work_site_id);
 
         return response()->json(['data' => [
             ...$this->summary($project, $user),
             'overview' => array_values(array_filter([
                 ['label' => __('erp.interventions.wo_number'), 'value' => $project->work_order_number],
-                ['label' => __('erp.interventions.cow_code'), 'value' => $project->workSite?->cow_code ?? $project->cow_code],
+                ['label' => __('erp.interventions.cow_code'), 'value' => $site['work_site']?->cow_code ?? $project->cow_code],
                 ['label' => __('erp.batteries.overview.address'), 'value' => $project->addressLine() ?? $project->workSite?->addressLine()],
                 ['label' => __('erp.interventions.subcategory'), 'value' => $project->interventionSubcategoryLabel()],
                 ['label' => __('erp.interventions.categories'), 'value' => $project->interventionCategories->pluck('name')->implode(', ') ?: null],
                 ['label' => __('erp.interventions.executed_by'), 'value' => $report ? implode(', ', $report->load(['closer', 'coWorkers'])->workerNames()) : null],
                 ['label' => __('erp.interventions.executed_at'), 'value' => $report?->executed_at?->format('d/m/Y H:i')],
             ], fn (array $row): bool => filled($row['value']))),
-            'maps_url' => $project->workSite?->googleMapsUrl(),
+            'maps_url' => ($site['work_site'] ?? $project->workSite)?->googleMapsUrl(),
+            // The COW codes of the intervention, each with its own form; site_id is the one shown.
+            'several_sites' => $several,
+            'site_id' => $site['work_site_id'],
+            'site_status_label' => $report?->status->getLabel() ?? __('erp.interventions.not_closed'),
+            'site_review_note' => $report?->status === InterventionReportStatus::Rejected ? $report->review_note : null,
+            'sites' => array_map(fn (array $row): array => [
+                'work_site_id' => $row['work_site_id'],
+                'label' => Interventions::siteLabel($row['work_site'], $project->cow_code),
+                'report_status' => $row['report']?->status->value,
+                'report_status_label' => $row['report']?->status->getLabel() ?? __('erp.interventions.not_closed'),
+                'can_close' => $this->interventions->isOpen($row) && $this->interventions->canClose($user, $project),
+            ], $this->interventions->sites($project)),
             'values' => $defaults === null ? null : [
                 ...$defaults,
                 'work_site_label' => $workSite ? $this->siteLabel($workSite) : null,
@@ -127,7 +145,7 @@ class InterventionController extends Controller
 
         $close->handle($project, $data, $user);
 
-        return response()->json(['message' => __('erp.interventions.closed').'. '.__('erp.interventions.closed_body'), 'data' => $this->summary($project->fresh(['category', 'workSite', 'interventionReport']), $user)]);
+        return response()->json(['message' => __('erp.interventions.closed').'. '.__('erp.interventions.closed_body'), 'data' => $this->summary($project->fresh(self::RELATIONS), $user)]);
     }
 
     public function stockItems(Request $request): JsonResponse
@@ -168,7 +186,7 @@ class InterventionController extends Controller
     {
         $this->ensureEnabled();
 
-        return $this->interventions->visibleTo($user)->with(['category', 'workSite', 'interventionReport', 'interventionCategories'])->findOrFail($id);
+        return $this->interventions->visibleTo($user)->with(self::RELATIONS)->findOrFail($id);
     }
 
     protected function siteLabel(WorkSite $site): string
@@ -182,17 +200,36 @@ class InterventionController extends Controller
     protected function summary(Project $project, User $user): array
     {
         $report = $project->interventionReport;
+        $sites = $this->interventions->sites($project);
+        $rejected = collect($sites)->filter(fn (array $site): bool => $site['report']?->status === InterventionReportStatus::Rejected);
+
+        // Several COW codes: rejected if one is, approved once all are, pending once all are closed.
+        if (count($sites) > 1) {
+            $closed = collect($sites)->filter(fn (array $site): bool => ! $this->interventions->isOpen($site))->count();
+            $status = match (true) {
+                $rejected->isNotEmpty() => InterventionReportStatus::Rejected,
+                $this->interventions->allApproved($project) => InterventionReportStatus::Approved,
+                $closed === count($sites) => InterventionReportStatus::Pending,
+                default => null,
+            };
+            $label = __('erp.interventions.sites_closed', ['closed' => $closed, 'total' => count($sites)]);
+            $note = $rejected->map(fn (array $site): string => ($site['work_site']?->cow_code ?? '').': '.$site['report']->review_note)->implode("\n") ?: null;
+        } else {
+            $status = $report?->status;
+            $label = $report?->status->getLabel() ?? __('erp.interventions.not_closed');
+            $note = $report?->status === InterventionReportStatus::Rejected ? $report->review_note : null;
+        }
 
         return [
             'id' => $project->id,
             'reference' => $project->reference,
             'subtitle' => $project->subtitle(),
-            'cow_code' => $project->workSite?->cow_code ?? $project->cow_code,
-            'city' => $project->workSite?->city,
+            'cow_code' => collect($sites)->map(fn (array $site): ?string => $site['work_site']?->cow_code)->filter()->implode(', ') ?: $project->cow_code,
+            'city' => ($sites[0]['work_site'] ?? $project->workSite)?->city,
             'status' => $project->status?->getLabel(),
-            'report_status' => $report?->status->value,
-            'report_status_label' => $report?->status->getLabel() ?? __('erp.interventions.not_closed'),
-            'review_note' => $report?->status === InterventionReportStatus::Rejected ? $report->review_note : null,
+            'report_status' => $status?->value,
+            'report_status_label' => $label,
+            'review_note' => $note,
             'can_close' => $this->interventions->canClose($user, $project),
         ];
     }
@@ -207,7 +244,7 @@ class InterventionController extends Controller
         $keys = [
             'categories', 'cow_code', 'room', 'hours_worked', 'hours_help', 'hours_suffix', 'co_workers', 'co_workers_help', 'materials', 'add_material',
             'direction', 'positions', 'positions_help', 'add_position', 'board', 'device', 'position_number', 'supply', 'modified_boards',
-            'modified_boards_help', 'remarks', 'remarks_help', 'executed_at_help', 'close', 'close_again', 'close_help', 'close_submit', 'review_note', 'review_status',
+            'modified_boards_help', 'remarks', 'remarks_help', 'executed_at_help', 'close', 'close_again', 'close_help', 'close_submit', 'review_note', 'review_status', 'cow_codes',
         ];
 
         return [

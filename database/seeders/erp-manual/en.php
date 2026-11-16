@@ -840,6 +840,15 @@ The team closes the intervention with a **closing report**: **material** used an
 ## Review
 
 The administrator **approves** with the PO number (a PO number of the project is proposed) or **sends it back** with a reason. Once approved, the project goes to **Invoicing to do** and the **PDF** is made.
+
+## One WO/PO on several COW codes
+
+On the project, fill in the **Extra COW codes** next to the COW site. Each COW code then gets its **own intervention form**:
+
+- **Close a COW code** on the project (or in the app): choose the COW code still to close and fill in the form. A COW code that was sent back opens with what was filled in before.
+- Each COW code has its own **review** and **PDF** (the PDF button offers one per COW code). The proposed PO number is the same.
+- The project goes to **Executed** once every COW code is closed and to **Invoicing to do** once they are all approved. If one is sent back, the project goes back to **In progress**.
+- In the list, the review status shows where each COW code stands, and you can also search on an extra COW code.
 MD,
         ],
 

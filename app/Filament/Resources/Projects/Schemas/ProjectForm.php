@@ -124,6 +124,16 @@ class ProjectForm
                                     ->preload()
                                     ->required($usesWorkSite)
                                     ->visible(fn (Get $get): bool => $usesWorkSite($get) && modules()->workSites()),
+                                // One WO/PO on several COW codes: each extra COW code gets its own intervention report.
+                                Select::make('interventionWorkSites')
+                                    ->label(__('erp.interventions.extra_cow_codes'))
+                                    ->helperText(__('erp.interventions.extra_cow_codes_help'))
+                                    ->relationship('interventionWorkSites', 'cow_code', fn (Builder $query, Get $get) => $query->when(filled($get('work_site_id')), fn (Builder $query) => $query->whereKeyNot($get('work_site_id'))))
+                                    ->getOptionLabelFromRecordUsing(fn (WorkSite $record): string => trim($record->cow_code.' · '.$record->city, ' ·'))
+                                    ->multiple()
+                                    ->searchable(['cow_code', 'city', 'street'])
+                                    ->visible(fn (Get $get): bool => $interventionFields($get) && $usesWorkSite($get) && modules()->workSites())
+                                    ->columnSpanFull(),
                                 // Every project has a description (required for new ones; older projects may still lack it).
                                 TextInput::make('short_description')
                                     ->label(__('erp.projects.short_description'))

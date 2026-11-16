@@ -100,7 +100,7 @@ class InterventionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'interventionCategories', 'interventionSubcategory', 'interventionReport']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'interventionCategories', 'interventionSubcategory', 'interventionReport', 'interventionReports.workSite', 'interventionWorkSites']))
             ->defaultSort('created_at', 'desc')
             ->recordUrl(fn (Project $record): string => ProjectResource::getUrl('view', ['record' => $record]))
             ->searchPlaceholder(__('erp.interventions.search'))
@@ -117,7 +117,12 @@ class InterventionResource extends Resource
                     ->label(__('erp.projects.reference'))
                     ->fontFamily(FontFamily::Mono)
                     ->description(fn (Project $record): ?string => $record->short_description)
-                    ->searchable(['reference', 'short_description', 'cow_code'])
+                    // Also on the extra COW codes.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(fn (Builder $query) => $query
+                        ->where('reference', 'like', "%{$search}%")
+                        ->orWhere('short_description', 'like', "%{$search}%")
+                        ->orWhere('cow_code', 'like', "%{$search}%")
+                        ->orWhereHas('interventionWorkSites', fn (Builder $query) => $query->where('cow_code', 'like', "%{$search}%"))))
                     ->sortable(),
                 TextColumn::make('interventionCategories.name')
                     ->label(__('erp.interventions.categories'))
@@ -131,6 +136,10 @@ class InterventionResource extends Resource
                 TextColumn::make('interventionReport.status')
                     ->label(__('erp.interventions.review_status'))
                     ->badge()
+                    // Several COW codes: where each one stands.
+                    ->description(fn (Project $record): ?string => app(Interventions::class)->hasSeveralSites($record)
+                        ? collect(app(Interventions::class)->sites($record))->map(fn (array $site): string => ($site['work_site']?->cow_code ?? $record->cow_code).': '.($site['report']?->status->getLabel() ?? __('erp.interventions.not_closed')))->implode(' · ')
+                        : null)
                     ->placeholder(__('erp.interventions.not_closed')),
                 TextColumn::make('interventionReport.executed_at')
                     ->label(__('erp.interventions.executed_at'))
@@ -158,7 +167,7 @@ class InterventionResource extends Resource
                 SelectFilter::make('review')
                     ->label(__('erp.interventions.review_status'))
                     ->options(InterventionReportStatus::class)
-                    ->query(fn (Builder $query, array $data) => $query->when($data['value'] ?? null, fn (Builder $query, $status) => $query->whereHas('interventionReport', fn (Builder $query) => $query->where('status', $status)))),
+                    ->query(fn (Builder $query, array $data) => $query->when($data['value'] ?? null, fn (Builder $query, $status) => $query->whereHas('interventionReports', fn (Builder $query) => $query->where('status', $status)))),
             ]);
     }
 

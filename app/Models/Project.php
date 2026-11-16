@@ -6,6 +6,7 @@ use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Batteries\CreateBatteryRoomDossier;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CreateFollowUpProject;
+use App\Enums\InterventionReportStatus;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Enums\SiteLocationType;
@@ -211,11 +212,33 @@ class Project extends Model
     }
 
     /**
+     * The newest intervention report; an intervention on several COW codes has one per COW code
+     * (interventionReports, see Interventions::sites()).
+     *
      * @return HasOne<InterventionReport, $this>
      */
     public function interventionReport(): HasOne
     {
-        return $this->hasOne(InterventionReport::class);
+        return $this->hasOne(InterventionReport::class)->latestOfMany();
+    }
+
+    /**
+     * @return HasMany<InterventionReport, $this>
+     */
+    public function interventionReports(): HasMany
+    {
+        return $this->hasMany(InterventionReport::class)->orderBy('id');
+    }
+
+    /**
+     * The extra COW codes of an intervention in one WO/PO, next to the project's own work site: each gets its
+     * own intervention report.
+     *
+     * @return BelongsToMany<WorkSite, $this>
+     */
+    public function interventionWorkSites(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkSite::class, 'project_intervention_work_site')->withTimestamps()->orderBy('cow_code');
     }
 
     /**
@@ -375,6 +398,38 @@ class Project extends Model
      * @param  Builder<Project>  $query
      * @param  string|null  $area  The area of a record that follows the project (e.g. "batteries"), whose "all_teams" counts too.
      */
+    /**
+     * Interventions with a COW code still to close (no report yet, or rejected): fewer reports awaiting or
+     * given approval than COW codes (the project's own plus the extra ones).
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeInterventionOpen(Builder $query): void
+    {
+        $query->whereRaw('('.self::reportCountSql().' and intervention_reports.status <> ?) < '.self::siteCountSql(), [InterventionReportStatus::Rejected->value]);
+    }
+
+    /**
+     * Interventions of which every COW code is approved.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeInterventionApproved(Builder $query): void
+    {
+        $query->whereRaw('('.self::reportCountSql().' and intervention_reports.status = ?) >= '.self::siteCountSql(), [InterventionReportStatus::Approved->value]);
+    }
+
+    public static function reportCountSql(): string
+    {
+        return 'select count(*) from intervention_reports where intervention_reports.project_id = projects.id';
+    }
+
+    public static function siteCountSql(): string
+    {
+        return '(1 + (select count(*) from project_intervention_work_site where project_intervention_work_site.project_id = projects.id'
+            .' and (projects.work_site_id is null or project_intervention_work_site.work_site_id <> projects.work_site_id)))';
+    }
+
     public function scopeVisibleTo(Builder $query, User $user, ?string $area = null): void
     {
         if ($user->seesOnlyOwnTeams(...array_filter(['projects', $area]))) {

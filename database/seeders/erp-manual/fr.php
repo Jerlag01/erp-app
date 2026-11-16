@@ -840,6 +840,15 @@ L'équipe clôture l'intervention avec un **rapport de clôture** : **matériel*
 ## Revue
 
 L'administrateur **approuve** avec le numéro PO (un numéro PO du projet est proposé) ou **renvoie** avec une raison. Après approbation, le projet passe à **À facturer** et le **PDF** est créé.
+
+## Un seul WO/PO sur plusieurs codes COW
+
+Sur le projet, complétez à côté du site COW les **Codes COW supplémentaires**. Chaque code COW a alors son **propre formulaire d'intervention** :
+
+- **Clôturer un code COW** sur le projet (ou dans l'app) : choisissez le code COW encore à clôturer et complétez le formulaire. Un code COW renvoyé s'ouvre avec ce qui avait été rempli.
+- Chaque code COW a sa propre **revue** et son propre **PDF** (le bouton PDF en propose un par code COW). Le numéro PO proposé est le même.
+- Le projet passe à **Exécuté** quand tous les codes COW sont clôturés et à **À facturer** quand ils sont tous approuvés. Si l'un d'eux est renvoyé, le projet revient à **En cours**.
+- Dans la liste, le statut de revue montre où en est chaque code COW, et vous pouvez aussi chercher sur un code COW supplémentaire.
 MD,
         ],
 

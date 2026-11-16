@@ -841,6 +841,15 @@ De ploeg sluit de interventie af met een **afsluitrapport**: gebruikt en vrijgek
 ## Review
 
 De beheerder **keurt goed** met het PO-nummer (een PO-nummer van het project wordt voorgesteld) of **stuurt terug** met een reden. Na goedkeuring gaat het project naar **Te factureren** en wordt de **PDF** gemaakt.
+
+## Eén WO/PO op meerdere COW-codes
+
+Vul bij het project naast de COW-site de **Extra COW-codes** in. Elke COW-code krijgt dan een **eigen interventieformulier**:
+
+- **COW-code afsluiten** op het project (of in de app): kies de COW-code die nog af te sluiten is en vul het formulier in. Een teruggestuurde COW-code opent met wat er eerder ingevuld was.
+- Elke COW-code heeft zijn eigen **review** en **PDF** (de PDF-knop toont er één per COW-code). Het voorgestelde PO-nummer is hetzelfde.
+- Het project gaat naar **Uitgevoerd** zodra alle COW-codes afgesloten zijn en naar **Te factureren** zodra ze allemaal goedgekeurd zijn. Wordt er één teruggestuurd, dan gaat het project terug naar **In uitvoering**.
+- In de lijst toont de reviewstatus per COW-code waar elke COW-code staat, en je kunt ook op een extra COW-code zoeken.
 MD,
         ],
 

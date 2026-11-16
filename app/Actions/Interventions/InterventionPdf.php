@@ -45,8 +45,21 @@ class InterventionPdf
         return $path;
     }
 
+    /**
+     * "600-001-02no1-wo123456.pdf"; a report on another COW code than the project's (one WO on several COW
+     * codes) also gets its COW code, so the PDFs do not overwrite each other.
+     */
     public static function filename(InterventionReport $report): string
     {
-        return Str::slug(implode('-', array_filter([$report->project->reference, $report->project->work_order_number ? 'WO'.$report->project->work_order_number : null]))).'.pdf';
+        return Str::slug(implode('-', array_filter([
+            $report->project->reference,
+            $report->project->work_order_number ? 'WO'.$report->project->work_order_number : null,
+            self::extraCowCode($report),
+        ]))).'.pdf';
+    }
+
+    public static function extraCowCode(InterventionReport $report): ?string
+    {
+        return filled($report->cow_code) && $report->cow_code !== $report->project->cow_code ? $report->cow_code : null;
     }
 }

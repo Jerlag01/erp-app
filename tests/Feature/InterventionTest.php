@@ -170,6 +170,81 @@ class InterventionTest extends TestCase
     }
 
     #[Test]
+    public function an_intervention_on_several_cow_codes_has_a_form_per_cow_code(): void
+    {
+        Repeater::fake();
+        $admin = User::factory()->admin()->create();
+        $team = Team::factory()->create();
+        $employee = User::factory()->withPermissions(['projects' => ['view', 'update']])->inTeam($team)->create();
+        $project = $this->intervention(team: $team);
+        $extra = WorkSite::factory()->create(['cow_code' => '02NO1', 'city' => 'Zaventem']);
+        $this->actingAs($employee);
+
+        // The extra COW code is set on the project.
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
+            ->fillForm(['interventionWorkSites' => [$extra->id]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame(['02NO1'], $project->fresh()->interventionWorkSites->pluck('cow_code')->all());
+
+        Livewire::test(ListInterventions::class)->set('activeTab', 'open')->assertCanSeeTableRecords([$project]);
+
+        // First COW code: the project is not executed yet.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->assertActionHasLabel('closeIntervention', __('erp.interventions.close_site'))
+            ->callAction('closeIntervention', $this->closeData($project))
+            ->assertHasNoActionErrors();
+        $this->assertSame(ProjectStatus::ToBeExecuted, $project->fresh()->status);
+
+        // That one is closed now: closing it again is refused, the other one is left.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('closeIntervention', $this->closeData($project))
+            ->assertHasActionErrors(['work_site_id']);
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('closeIntervention')
+            ->assertSchemaStateSet(['work_site_id' => $extra->id], 'mountedActionSchema0')
+            ->setActionData($this->closeData($project, ['work_site_id' => $extra->id]))
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        $reports = InterventionReport::query()->orderBy('id')->get();
+        $this->assertSame(['02GAM', '02NO1'], $reports->pluck('cow_code')->all());
+        $this->assertNotSame($reports[0]->pdf_path, $reports[1]->pdf_path);
+        $this->assertSame(ProjectStatus::Executed, $project->fresh()->status);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])->assertActionHidden('closeIntervention');
+
+        // Approving the first one is not enough for invoicing; both are.
+        $this->actingAs($admin);
+        $review = app(\App\Actions\Interventions\ReviewIntervention::class);
+        $review->approve($reports[0], $admin, '4500123456');
+        $this->assertSame(ProjectStatus::Executed, $project->fresh()->status);
+
+        // A rejected COW code can be closed again on its own.
+        $review->reject($reports[1], $admin, 'Wrong room');
+        $this->assertSame(ProjectStatus::InProgress, $project->fresh()->status);
+        $this->actingAs($employee);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('closeIntervention')
+            ->assertSchemaStateSet(['work_site_id' => $extra->id, 'room' => 'Technical room 2'], 'mountedActionSchema0')
+            ->setActionData(['room' => 'Room 3'])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+        $this->assertSame(2, InterventionReport::query()->count());
+        $this->assertSame('Room 3', $reports[1]->fresh()->room);
+
+        $review->approve($reports[1]->fresh(), $admin, '4500123456');
+        $this->assertSame(ProjectStatus::InvoicingToDo, $project->fresh()->status);
+        $this->assertSame(['4500123456'], $project->poNumbers()->pluck('number')->all());
+
+        $this->actingAs($admin);
+        Livewire::test(ListInterventions::class)->set('activeTab', 'approved')->assertCanSeeTableRecords([$project]);
+        Livewire::test(ListInterventions::class)->set('activeTab', 'open')->assertCanNotSeeTableRecords([$project]);
+        Livewire::test(ListInterventions::class)->set('activeTab', 'all')->searchTable('02NO1')->assertCanSeeTableRecords([$project]);
+        $this->get(\App\Filament\Resources\Projects\ProjectResource::getUrl('view', ['record' => $project]))->assertOk()->assertSee('02NO1 · Zaventem');
+    }
+
+    #[Test]
     public function freed_material_needs_a_deconnect_category(): void
     {
         Repeater::fake();

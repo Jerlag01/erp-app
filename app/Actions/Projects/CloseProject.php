@@ -72,11 +72,12 @@ class CloseProject
             }
         });
 
-        $report = $project->interventionReport;
-
-        if ($report instanceof InterventionReport && filled($report->pdf_path) && Storage::disk(InterventionReport::DISK)->exists($report->pdf_path)) {
-            $add('interventie/'.basename($report->pdf_path), (string) Storage::disk(InterventionReport::DISK)->get($report->pdf_path));
-        }
+        // One report per COW code of the intervention.
+        $project->interventionReports()->get()->each(function (InterventionReport $report) use ($add): void {
+            if (filled($report->pdf_path) && Storage::disk(InterventionReport::DISK)->exists($report->pdf_path)) {
+                $add('interventie/'.basename($report->pdf_path), (string) Storage::disk(InterventionReport::DISK)->get($report->pdf_path));
+            }
+        });
 
         collect([BatteryDossier::class, EnersysDossier::class, MoveDossier::class])->flatMap(fn (string $model) => $model::query()->where('project_id', $project->id)->get())->each(function (BatteryDossier $dossier) use ($add): void {
             foreach ($dossier->availableDocuments() as $document) {

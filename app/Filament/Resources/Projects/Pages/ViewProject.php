@@ -25,6 +25,7 @@ use App\Models\BaeOrder;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
 use App\Models\EnersysDossier;
+use App\Models\InterventionReport;
 use App\Models\MoveDossier;
 use App\Models\Project;
 use App\Models\ProjectCategory;
@@ -35,6 +36,7 @@ use App\Support\Interventions;
 use App\Support\PdfAccess;
 use App\Support\ProjectProgress;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
@@ -124,6 +126,24 @@ class ViewProject extends ViewRecord
             && (Gate::allows('update', $project) || ProjectForm::mayAddInterventionPo());
     }
 
+    protected function canDownloadInterventionPdf(Project $project): bool
+    {
+        return app(Interventions::class)->canDownloadPdf(auth()->user(), $project) && PdfAccess::canGenerate(auth()->user(), 'projects');
+    }
+
+    /**
+     * @return list<Action>
+     */
+    protected function interventionPdfActions(): array
+    {
+        /** @var Project $project */
+        $project = $this->getRecord();
+
+        return $project->interventionReports->map(fn (InterventionReport $report): Action => Action::make('interventionPdf'.$report->id)
+            ->label($report->cow_code ?? __('erp.interventions.pdf_button'))
+            ->url(route('interventions.pdf', $report), shouldOpenInNewTab: true))->values()->all();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -190,7 +210,14 @@ class ViewProject extends ViewRecord
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')
                 ->url(fn (Project $record): ?string => $record->interventionReport ? route('interventions.pdf', $record->interventionReport) : null, shouldOpenInNewTab: true)
-                ->visible(fn (Project $record): bool => $record->interventionReport !== null && app(Interventions::class)->canDownloadPdf(auth()->user(), $record) && PdfAccess::canGenerate(auth()->user(), 'projects')),
+                ->visible(fn (Project $record): bool => $record->interventionReport !== null && ! app(Interventions::class)->hasSeveralSites($record) && $this->canDownloadInterventionPdf($record)),
+            // Several COW codes: a PDF per closed COW code.
+            ActionGroup::make($this->interventionPdfActions())
+                ->label(__('erp.interventions.pdf_button'))
+                ->icon(Heroicon::OutlinedDocumentArrowDown)
+                ->color('gray')
+                ->button()
+                ->visible(fn (): bool => app(Interventions::class)->hasSeveralSites($this->getRecord()) && $this->getRecord()->interventionReports->isNotEmpty() && $this->canDownloadInterventionPdf($this->getRecord())),
             Action::make('batteryDossier')
                 ->label(__('erp.batteries.dossier_button'))
                 ->icon(Heroicon::OutlinedBattery100)

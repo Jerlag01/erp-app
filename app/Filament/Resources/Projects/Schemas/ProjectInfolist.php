@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Actions\Batteries\CreateBaeOrder;
+use App\Enums\InterventionReportStatus;
 use App\Filament\Resources\WorkSites\WorkSiteResource;
 use App\Models\Project;
 use App\Models\Team;
@@ -179,15 +180,28 @@ class ProjectInfolist
                         TextEntry::make('interventionReport.status')
                             ->label(__('erp.interventions.review_status'))
                             ->badge()
+                            ->visible(fn (Project $record): bool => ! app(Interventions::class)->hasSeveralSites($record))
                             ->placeholder(__('erp.interventions.not_closed')),
+                        // One WO/PO on several COW codes: each with its own report.
+                        TextEntry::make('intervention_sites')
+                            ->label(__('erp.interventions.cow_codes'))
+                            ->state(fn (Project $record): array => array_map(fn (array $site): string => Interventions::siteLabel($site['work_site'], $record->cow_code).' — '
+                                .($site['report'] ? $site['report']->status->getLabel().' · '.$site['report']->executed_at?->format('d/m/Y').' ('.implode(', ', $site['report']->workerNames()).')'
+                                    .($site['report']->status === InterventionReportStatus::Rejected && filled($site['report']->review_note) ? ': '.$site['report']->review_note : '')
+                                    : __('erp.interventions.not_closed')), app(Interventions::class)->sites($record)))
+                            ->listWithLineBreaks()
+                            ->bulleted()
+                            ->visible(fn (Project $record): bool => app(Interventions::class)->hasSeveralSites($record))
+                            ->columnSpan(2),
                         TextEntry::make('interventionReport.executed_at')
                             ->label(__('erp.interventions.executed_at'))
                             ->dateTime('d/m/Y H:i')
                             ->helperText(fn (Project $record): ?string => $record->interventionReport ? implode(', ', $record->interventionReport->workerNames()) : null)
+                            ->visible(fn (Project $record): bool => ! app(Interventions::class)->hasSeveralSites($record))
                             ->placeholder('—'),
                         TextEntry::make('interventionReport.review_note')
                             ->label(__('erp.interventions.review_note'))
-                            ->visible(fn (Project $record): bool => filled($record->interventionReport?->review_note))
+                            ->visible(fn (Project $record): bool => filled($record->interventionReport?->review_note) && ! app(Interventions::class)->hasSeveralSites($record))
                             ->columnSpanFull(),
                     ]),
                 Section::make(fn (Project $record): string => $record->isThirdParty() ? __('erp.projects.third_party') : __('erp.projects.client'))
