@@ -533,6 +533,7 @@ return [
             'export' => 'Lijst met prijzen exporteren (Excel)',
             'view_pin' => 'PIN-code tonen',
             'view_signatures' => 'Handtekeningen bekijken',
+            'sign' => 'Toolboxen lezen en tekenen, ook buiten het personeelsregister (enkel per gebruiker)',
             'manage_suppliers' => 'Leveranciers beheren',
             'reset_two_factor' => '2-stapsverificatie resetten',
             'view' => 'Bekijken',

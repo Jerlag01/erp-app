@@ -1294,6 +1294,8 @@ MD,
 
 **Veiligheidsinstructies** met tekst en bijlagen die elke werknemer volledig leest en ondertekent.
 
+Wie moet tekenen: de actieve werknemers uit het **personeelsregister**. Iemand die daar niet in staat (bv. een interimkracht of externe) zet je erbij met het recht **Toolbox → Toolboxen lezen en tekenen** bij **Gebruikers → eigen rechten** (enkel per gebruiker, nooit via een rol). Die krijgt dan ook de melding bij publicatie en staat op de aanwezigheidslijst en in de opvolging.
+
 ## Waar?
 
 - **Veiligheid → Toolboxmeetings**: lezen, ondertekenen en (met het recht) aanmaken.

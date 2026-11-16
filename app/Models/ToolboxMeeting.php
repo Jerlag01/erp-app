@@ -86,7 +86,7 @@ class ToolboxMeeting extends Model
 
     /**
      * Who has to sign: active employees of the employee register (or, without that module, all active
-     * accounts with a role).
+     * accounts with a role), plus every active user given "toolbox.sign" on their own account.
      *
      * @return Collection<int, User>
      */
@@ -94,11 +94,13 @@ class ToolboxMeeting extends Model
     {
         return User::query()
             ->active()
-            ->when(
-                modules()->employees(),
-                fn (Builder $query) => $query->whereHas('employee', fn (Builder $query) => $query->whereNull('left_on')),
-                fn (Builder $query) => $query->whereNotNull('role_id'),
-            )
+            ->where(fn (Builder $query) => $query
+                ->when(
+                    modules()->employees(),
+                    fn (Builder $query) => $query->whereHas('employee', fn (Builder $query) => $query->whereNull('left_on')),
+                    fn (Builder $query) => $query->whereNotNull('role_id'),
+                )
+                ->orWhereJsonContains('permissions->toolbox', 'sign'))
             ->orderBy('name')
             ->get();
     }

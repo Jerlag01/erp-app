@@ -109,7 +109,7 @@ class Permissions
         'announcements' => ['module' => Modules::ANNOUNCEMENTS, 'abilities' => ['update']],
         'asbuilt' => ['module' => Modules::ASBUILT, 'abilities' => ['view', 'manage', 'library', 'reopen', 'delete']],
         'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
-        'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
+        'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf', 'sign']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'offers' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'view_prices']],
         'offer_master_data' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete']],
@@ -128,11 +128,13 @@ class Permissions
 
     /**
      * Permissions that are never part of a role: they are given to a user alone (their own permissions),
-     * and administrators do not have them unless ticked for them.
+     * and administrators do not have them unless ticked for them. "toolbox.sign" makes someone who is not in
+     * the employee register (e.g. an external or interim worker) one of the people who read and sign the
+     * toolbox meetings.
      *
      * @var list<string>
      */
-    public const USER_ONLY = ['project_workdays.view'];
+    public const USER_ONLY = ['project_workdays.view', 'toolbox.sign'];
 
     public static function isUserOnly(string $permission): bool
     {

@@ -1293,6 +1293,8 @@ MD,
 
 **Safety instructions** with text and attachments that every employee reads in full and signs.
 
+Who has to sign: the active employees of the **employee register**. Someone who is not in it (e.g. an interim or external worker) is added with the permission **Toolbox → Read and sign toolbox meetings** under **Users → own permissions** (per user only, never through a role). They then also get the notification when a meeting is published and appear on the attendance list and in the follow-up.
+
 ## Where?
 
 - **Safety → Toolbox Meetings**: reading, signing and (with the permission) creating.

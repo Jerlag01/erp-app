@@ -136,6 +136,37 @@ class ToolboxMeetingTest extends TestCase
     }
 
     #[Test]
+    public function someone_outside_the_employee_register_signs_with_the_own_toolbox_sign_permission(): void
+    {
+        $external = User::factory()->inTeam($this->team)->create(['name' => 'Interim Jan', 'permissions' => ['toolbox' => ['sign']]]);
+        $other = User::factory()->inTeam($this->team)->create(['name' => 'Zonder recht']);
+
+        $this->assertTrue($external->fresh()->hasPermission('toolbox.sign'));
+        $this->assertSame(['Interim Jan', 'Kevin Rouzée'], ToolboxMeeting::expectedUsers()->pluck('name')->all());
+
+        // A role never grants it, not even an administrator role.
+        $this->assertFalse(User::factory()->admin()->create()->hasPermission('toolbox.sign'));
+        $this->assertFalse(User::factory()->withPermissions(['toolbox' => ['sign']])->create()->hasPermission('toolbox.sign'));
+
+        $preparer = $this->employee('Rudy Cools', ['create', 'update']);
+        $draft = ToolboxMeeting::factory()->create();
+        $this->actingAs($preparer);
+        Livewire::test(ViewToolboxMeeting::class, ['record' => $draft->getRouteKey()])->callAction('publish');
+        $this->assertCount(1, $external->notifications);
+        $this->assertCount(0, $other->notifications);
+
+        $meeting = $this->meeting(['body' => null]);
+        $this->actingAs($external);
+        Livewire::test(ViewToolboxMeeting::class, ['record' => $meeting->getRouteKey()])
+            ->call('download', 0)
+            ->callAction('sign', ['signer_name' => 'Interim Jan', 'signature' => $this->signature()])
+            ->assertHasNoActionErrors();
+
+        $this->assertTrue($meeting->participants()->where('user_id', $external->id)->sole()->isSigned());
+        $this->assertContains('Interim Jan', $meeting->attendees()->pluck('name')->all());
+    }
+
+    #[Test]
     public function a_meeting_with_only_attachments_or_only_text_needs_just_that(): void
     {
         $this->actingAs($this->employee);

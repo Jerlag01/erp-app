@@ -533,6 +533,7 @@ return [
             'export' => 'Exporter la liste avec les prix (Excel)',
             'view_pin' => 'Afficher le code PIN',
             'view_signatures' => 'Voir les signatures',
+            'sign' => 'Lire et signer les toolbox, aussi hors du registre du personnel (par utilisateur uniquement)',
             'manage_suppliers' => 'Gérer les fournisseurs',
             'reset_two_factor' => 'Réinitialiser la vérification en 2 étapes',
             'view' => 'Consulter',

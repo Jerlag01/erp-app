@@ -1293,6 +1293,8 @@ MD,
 
 Des **instructions de sécurité** avec texte et pièces jointes que chaque employé lit entièrement et signe.
 
+Qui doit signer : les employés actifs du **registre du personnel**. Une personne qui n'y figure pas (p. ex. un intérimaire ou un externe) s'ajoute avec le droit **Toolbox → Lire et signer les toolbox** dans **Utilisateurs → droits propres** (par utilisateur uniquement, jamais via un rôle). Elle reçoit alors aussi la notification à la publication et figure sur la liste de présence et dans le suivi.
+
 ## Où ?
 
 - **Sécurité → Toolbox Meetings** : lire, signer et (avec le droit) créer.

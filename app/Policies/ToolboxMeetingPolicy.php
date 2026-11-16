@@ -6,7 +6,8 @@ use App\Models\ToolboxMeeting;
 use App\Models\User;
 
 /**
- * Every employee sees the published toolbox meetings and signs them. Making them needs
+ * Every employee sees the published toolbox meetings and signs them; someone outside the employee register
+ * given "toolbox.sign" on their own account also has to sign them (ToolboxMeeting::expectedUsers). Making them needs
  * "toolbox.create" / "toolbox.update" / "toolbox.delete"; the list of signatures (and its overview)
  * "toolbox.view_signatures", the PDF also "toolbox.generate_pdf". Nothing while the module is off.
  */

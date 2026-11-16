@@ -533,6 +533,7 @@ return [
             'export' => 'Export the list with prices (Excel)',
             'view_pin' => 'Show PIN code',
             'view_signatures' => 'View signatures',
+            'sign' => 'Read and sign toolbox meetings, also outside the employee register (per user only)',
             'manage_suppliers' => 'Manage suppliers',
             'reset_two_factor' => 'Reset two-step verification',
             'view' => 'View',
