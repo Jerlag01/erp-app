@@ -13,7 +13,8 @@ namespace App\Support;
  * given these rights. "credit_notes.override" allows changing what a credit note copied from
  * its invoice (after switching that on per credit note); "expenses.validate" accepts or rejects
  * incoming invoices. "offers" (module Offers, with or without finance) makes offers for projects and
- * "offer_master_data" manages their categories and default lines; turning an offer into an invoice also
+ * "offers.view_prices" shows the cost prices (warehouse prices) and profit factors on the lines; without it
+ * stock lines get the item's price and the default factor behind the scenes. "offer_master_data" manages their categories and default lines; turning an offer into an invoice also
  * needs the finance module and "invoices.create". The client's internal memo is for administrators only.
  * "projects" only reaches the projects a user leads or one of their teams is assigned to;
  * "projects.files" and "projects.parts" allow uploading/replacing/removing files and editing the
@@ -110,7 +111,7 @@ class Permissions
         'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
-        'offers' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
+        'offers' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'view_prices']],
         'offer_master_data' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete']],
         'cable_calculations' => ['module' => Modules::CABLE_CALCULATOR, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'board_deliveries' => ['module' => Modules::BOARD_DELIVERIES, 'abilities' => ['view', 'create', 'update', 'delete', 'manage_suppliers', 'all_teams']],

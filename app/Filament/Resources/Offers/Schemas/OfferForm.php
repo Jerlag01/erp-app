@@ -26,6 +26,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 /**
@@ -174,6 +175,7 @@ class OfferForm
                                 ->step(0.01)
                                 ->minValue(0.01)
                                 ->default(fn (): float => OfferLine::defaultFactor())
+                                ->visible(fn (): bool => self::canSeePrices())
                                 ->required(),
                         ])
                         ->action(fn (array $data, Get $get, Set $set) => self::addStockItems($data, $get, $set)),
@@ -188,6 +190,10 @@ class OfferForm
                     ->collapsible()
                     ->itemLabel(fn (array $state): ?string => filled($state['offer_category_id'] ?? null) ? (OfferCategory::query()->find($state['offer_category_id'])?->label()) : null)
                     ->live(debounce: 500)
+                    // Without "offers.view_prices" the cost price and factor never reach the browser: stock lines get them here.
+                    ->mutateRelationshipDataBeforeFillUsing(fn (array $data): array => self::canSeePrices() ? $data : Arr::except($data, ['cost_price', 'factor']))
+                    ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => self::withHiddenPrices($data))
+                    ->mutateRelationshipDataBeforeSaveUsing(fn (array $data, OfferLine $record): array => self::withHiddenPrices($data, $record))
                     ->schema([
                         Select::make('offer_category_id')
                             ->label(__('erp.finance.offers.category'))
@@ -217,7 +223,7 @@ class OfferForm
                             ->prefix('€')
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => $set('supply_price', OfferLine::priceFromCost($get('cost_price'), $get('factor'))))
-                            ->visible(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->visible(fn (Get $get): bool => filled($get('stock_item_id')) && self::canSeePrices())
                             ->required(fn (Get $get): bool => filled($get('stock_item_id')))
                             ->columnSpan(['default' => 6, 'md' => 3]),
                         TextInput::make('factor')
@@ -228,7 +234,7 @@ class OfferForm
                             ->minValue(0.01)
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => $set('supply_price', OfferLine::priceFromCost($get('cost_price'), $get('factor'))))
-                            ->visible(fn (Get $get): bool => filled($get('stock_item_id')))
+                            ->visible(fn (Get $get): bool => filled($get('stock_item_id')) && self::canSeePrices())
                             ->required(fn (Get $get): bool => filled($get('stock_item_id')))
                             ->columnSpan(['default' => 6, 'md' => 3]),
                         TextInput::make('quantity')
@@ -320,9 +326,11 @@ class OfferForm
      */
     public static function stockLabels(array $ids): array
     {
+        $prices = self::canSeePrices();
+
         return StockItem::query()->whereKey(array_filter($ids))->orderBy('name')->get()
             ->mapWithKeys(fn (StockItem $item): array => [$item->id => trim($item->localizedName().($item->manufacturer_reference ? ' · '.$item->manufacturer_reference : ''))
-                .' — '.($item->market_price !== null ? Invoice::money($item->market_price) : __('erp.finance.offers.no_price'))])
+                .(! $prices ? '' : ' — '.($item->market_price !== null ? Invoice::money($item->market_price) : __('erp.finance.offers.no_price')))])
             ->all();
     }
 
@@ -344,10 +352,45 @@ class OfferForm
         $factor = filled($get('factor')) ? (float) $get('factor') : OfferLine::defaultFactor();
         $set('description', mb_substr($item->localizedName(), 0, 255));
         $set('unit', $item->unit?->abbreviation ?: $get('unit'));
-        $set('cost_price', $item->market_price !== null ? (float) $item->market_price : null);
-        $set('factor', $factor);
+        if (self::canSeePrices()) {
+            $set('cost_price', $item->market_price !== null ? (float) $item->market_price : null);
+            $set('factor', $factor);
+        }
         $set('supply_price', OfferLine::priceFromCost($item->market_price, $factor));
         $set('quantity', filled($get('quantity')) ? $get('quantity') : 1);
+    }
+
+    public static function canSeePrices(): bool
+    {
+        return (bool) auth()->user()?->can('viewPrices', Offer::class);
+    }
+
+    /**
+     * For a user without "offers.view_prices": a new stock line (or one with another item) gets the item's price as
+     * cost price and the default factor; an unchanged one keeps what it had. Lines without an item have neither.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected static function withHiddenPrices(array $data, ?OfferLine $record = null): array
+    {
+        if (self::canSeePrices()) {
+            return $data;
+        }
+
+        $itemId = filled($data['stock_item_id'] ?? null) ? (int) $data['stock_item_id'] : null;
+
+        if ($itemId === null) {
+            return [...$data, 'cost_price' => null, 'factor' => null];
+        }
+
+        if ($record !== null && (int) $record->stock_item_id === $itemId && $record->cost_price !== null) {
+            return Arr::except($data, ['cost_price', 'factor']);
+        }
+
+        $price = StockItem::query()->whereKey($itemId)->value('market_price');
+
+        return [...$data, 'cost_price' => $price, 'factor' => $record?->factor ?? OfferLine::defaultFactor()];
     }
 
     /**
@@ -357,8 +400,11 @@ class OfferForm
     {
         $state = (array) $get('lines');
 
+        $prices = self::canSeePrices();
+        $data['factor'] = $prices ? $data['factor'] : OfferLine::defaultFactor();
+
         foreach (StockItem::query()->with('unit')->whereKey(array_map('intval', (array) $data['stock_items']))->orderBy('name')->get() as $item) {
-            $state[(string) Str::uuid()] = [
+            $line = [
                 'offer_category_id' => (int) $data['offer_category_id'],
                 'stock_item_id' => $item->id,
                 'description' => mb_substr($item->localizedName(), 0, 255),
@@ -369,6 +415,7 @@ class OfferForm
                 'supply_price' => OfferLine::priceFromCost($item->market_price, $data['factor']),
                 'install_price' => null,
             ];
+            $state[(string) Str::uuid()] = $prices ? $line : Arr::except($line, ['cost_price', 'factor']);
         }
 
         $set('lines', $state);

@@ -568,6 +568,7 @@ return [
             'secrets' => 'Voir les données confidentielles (mots de passe, codes, fichiers VPN)',
             'control' => 'Publier / fermer le contrôle annuel',
             'generate_pdf' => 'Générer des PDF',
+            'view_prices' => 'Voir les prix de revient et facteurs de marge',
             'download_pdf' => 'Télécharger des fichiers PDF',
             'edit_finished' => 'Modifier les dossiers clôturés (facturation) / rouvrir',
             'copy' => 'Copier des projets',

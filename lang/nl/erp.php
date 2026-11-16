@@ -568,6 +568,7 @@ return [
             'secrets' => 'Vertrouwelijke gegevens zien (wachtwoorden, codes, VPN-bestanden)',
             'control' => 'Jaarlijkse controle publiceren / sluiten',
             'generate_pdf' => 'PDF genereren',
+            'view_prices' => 'Kostprijzen en winstfactoren zien',
             'download_pdf' => 'PDF-bestanden downloaden',
             'edit_finished' => 'Afgeronde dossiers wijzigen (facturatie) / heropenen',
             'copy' => 'Projecten kopiëren',

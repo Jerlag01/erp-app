@@ -227,6 +227,52 @@ class OfferTest extends TestCase
     }
 
     #[Test]
+    public function cost_prices_and_factors_need_the_view_prices_permission(): void
+    {
+        settings()->save('offers', [...Settings::defaults()['offers'], 'default_factor' => 1.25]);
+        $sales = User::factory()->withPermissions(['offers' => ['view', 'create', 'update']])->inTeam()->create();
+        $this->actingAs($sales);
+        Filament::setCurrentPanel('app');
+        $category = OfferCategory::query()->where('code', 'A')->value('id');
+        $pdu = StockItem::factory()->create(['name' => 'PDU 9x(2P+A)16A', 'manufacturer_reference' => '50578', 'market_price' => 40]);
+        $this->assertFalse(OfferForm::canSeePrices());
+        // The search shows no warehouse price.
+        $this->assertSame('PDU 9x(2P+A)16A · 50578', OfferForm::stockSearch('PDU')[$pdu->id]);
+        $undo = Repeater::fake();
+
+        $page = Livewire::test(CreateOffer::class)
+            ->callAction(TestAction::make('addStockItems')->schemaComponent('offer_actions'), [
+                'offer_category_id' => $category, 'stock_items' => [$pdu->id],
+            ])
+            ->assertHasNoActionErrors();
+
+        $line = collect($page->get('data.lines'))->sole();
+        $this->assertArrayNotHasKey('cost_price', $line);
+        $this->assertArrayNotHasKey('factor', $line);
+        $this->assertSame(50.0, $line['supply_price']);
+
+        $page->fillForm(['client_id' => Client::factory()->create()->id, 'subject' => 'Test'])->call('create')->assertHasNoFormErrors();
+        $undo();
+
+        // Saved with the item's price and the default factor behind the scenes, and kept when the line is saved again.
+        $offer = Offer::query()->sole();
+        $saved = $offer->lines()->sole();
+        $this->assertSame(['40.00', '1.250', '50.00'], [$saved->cost_price, $saved->factor, $saved->supply_price]);
+        $saved->update(['factor' => 1.5]);
+
+        $edit = Livewire::test(EditOffer::class, ['record' => $offer->getRouteKey()]);
+        $state = collect($edit->get('data.lines'))->sole();
+        // The browser never gets the cost price or the factor.
+        $this->assertNull($state['cost_price'] ?? null);
+        $this->assertNull($state['factor'] ?? null);
+        $edit->call('save')->assertHasNoFormErrors();
+        $this->assertSame(['40.00', '1.500', '60.00'], [$saved->fresh()->cost_price, $saved->fresh()->factor, $saved->fresh()->supply_price]);
+
+        $this->actingAs(User::factory()->withPermissions(['offers' => ['view', 'view_prices']])->inTeam()->create());
+        $this->assertTrue(OfferForm::canSeePrices());
+    }
+
+    #[Test]
     public function offers_work_without_the_finance_module_and_can_be_switched_off(): void
     {
         $this->admin();

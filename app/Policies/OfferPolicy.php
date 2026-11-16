@@ -34,6 +34,14 @@ class OfferPolicy extends AreaPolicy
         return $this->allows($user, 'generate_pdf');
     }
 
+    /**
+     * The cost prices and profit factors of the lines (the warehouse prices hold distributor agreements).
+     */
+    public function viewPrices(User $user): bool
+    {
+        return $this->allows($user, 'view_prices');
+    }
+
     public function createInvoice(User $user, Offer $offer): bool
     {
         return modules()->finance() && $offer->invoice_id === null && $offer->client_id !== null && $offer->status !== OfferStatus::Rejected

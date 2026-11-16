@@ -568,6 +568,7 @@ return [
             'secrets' => 'See confidential data (passwords, codes, VPN files)',
             'control' => 'Publish / close the yearly control',
             'generate_pdf' => 'Generate PDF',
+            'view_prices' => 'See cost prices and profit factors',
             'download_pdf' => 'Download PDF files',
             'edit_finished' => 'Change finished dossiers (invoicing) / reopen',
             'copy' => 'Copy projects',
