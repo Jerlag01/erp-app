@@ -1003,6 +1003,7 @@ return [
             'in_progress' => 'In progress',
             'executed' => 'Executed',
             'invoicing_to_do' => 'Invoicing to do',
+            'invoice_requested' => 'Invoice requested',
             'invoiced' => 'Invoiced',
             'closed' => 'Closed',
         ],
@@ -1699,6 +1700,7 @@ return [
     ],
     'projects' => [
         'estimated_workdays' => 'Estimated workdays',
+        'invoice_requested_at' => 'Invoice requested on',
         'estimated_workdays_help' => 'How many workdays the project is estimated to need.',
         'days_suffix' => 'days',
         'workdays' => 'Workdays',

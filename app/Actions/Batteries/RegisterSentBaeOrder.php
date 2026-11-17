@@ -26,7 +26,7 @@ class RegisterSentBaeOrder
     public const UNCONFIRMED_NUMBER = '0000000';
 
     /** Statuses the project keeps: the work has started or is done. */
-    public const KEEPS_STATUS = [ProjectStatus::InProgress, ProjectStatus::Executed, ProjectStatus::InvoicingToDo, ProjectStatus::Invoiced, ProjectStatus::Closed];
+    public const KEEPS_STATUS = [ProjectStatus::InProgress, ProjectStatus::Executed, ProjectStatus::InvoicingToDo, ProjectStatus::InvoiceRequested, ProjectStatus::Invoiced, ProjectStatus::Closed];
 
     public function __construct(protected BaeOrderDocument $document) {}
 

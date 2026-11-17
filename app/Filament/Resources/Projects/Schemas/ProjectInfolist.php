@@ -88,6 +88,10 @@ class ProjectInfolist
                                 TextEntry::make('status')
                                     ->label(__('erp.fields.status'))
                                     ->badge(),
+                                TextEntry::make('invoice_requested_at')
+                                    ->label(__('erp.projects.invoice_requested_at'))
+                                    ->date('d/m/Y')
+                                    ->visible(fn (Project $record): bool => $record->invoice_requested_at !== null),
                                 // 604: when the battery order went to the supplier, by whom and to whom.
                                 TextEntry::make('bae_order_sent_at')
                                     ->label(__('erp.batteries.bae_order.project_sent'))

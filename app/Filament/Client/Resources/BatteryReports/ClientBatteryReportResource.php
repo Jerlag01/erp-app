@@ -105,7 +105,7 @@ class ClientBatteryReportResource extends ClientResource
             ])
             ->filters([
                 SelectFilter::make('status')->label(__('erp.client_portal.status'))
-                    ->options(collect([ProjectStatus::InvoicingToDo, ProjectStatus::Invoiced, ProjectStatus::Closed])->mapWithKeys(fn (ProjectStatus $status): array => [$status->value => $status->getLabel()])->all()),
+                    ->options(collect([ProjectStatus::InvoicingToDo, ProjectStatus::InvoiceRequested, ProjectStatus::Invoiced, ProjectStatus::Closed])->mapWithKeys(fn (ProjectStatus $status): array => [$status->value => $status->getLabel()])->all()),
             ])
             ->recordActions([
                 ViewAction::make()->label(__('erp.client_portal.battery_reports.open')),

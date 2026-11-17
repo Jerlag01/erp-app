@@ -1003,6 +1003,7 @@ return [
             'in_progress' => 'En cours',
             'executed' => 'Exécuté',
             'invoicing_to_do' => 'À facturer',
+            'invoice_requested' => 'Facture demandée',
             'invoiced' => 'Facturé',
             'closed' => 'Clôturé',
         ],
@@ -1699,6 +1700,7 @@ return [
     ],
     'projects' => [
         'estimated_workdays' => 'Jours de travail estimés',
+        'invoice_requested_at' => 'Facture demandée le',
         'estimated_workdays_help' => 'Combien de jours de travail le projet demande selon l\'estimation.',
         'days_suffix' => 'jours',
         'workdays' => 'Jours de travail',

@@ -441,4 +441,41 @@ class ProjectTest extends TestCase
         $this->assertSame(260100, ProjectCategory::query()->where('code', '605')->value('next_number'));
         $this->assertSame('605-260012-02GAM', DB::table('waste_entry_lines')->where('id', $line)->value('project_reference'));
     }
+
+    #[Test]
+    public function invoice_requested_needs_the_date_the_invoice_was_requested(): void
+    {
+        $this->travelTo(now()->setDate(2027, 1, 19));
+        $project = Project::factory()->inCategory('607')->for(WorkSite::factory())->create(['status' => ProjectStatus::Executed, 'short_description' => 'Nieuwe verlichting']);
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('app');
+
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
+            ->fillForm(['status' => ProjectStatus::InvoiceRequested->value, 'invoice_requested_at' => null])
+            ->call('save')
+            ->assertHasFormErrors(['invoice_requested_at' => 'required']);
+        $this->assertSame(ProjectStatus::Executed, $project->fresh()->status);
+
+        Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])
+            ->fillForm(['status' => ProjectStatus::InvoiceRequested->value, 'invoice_requested_at' => '2027-01-15'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $project->refresh();
+        $this->assertSame(ProjectStatus::InvoiceRequested, $project->status);
+        $this->assertSame('2027-01-15', $project->invoice_requested_at->toDateString());
+        $this->assertNotNull($project->executed_at, 'Invoice requested comes after executed.');
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->assertSee('15/01/2027');
+
+        // Invoiced keeps the date; going back clears it.
+        $project->update(['status' => ProjectStatus::Invoiced]);
+        $this->assertSame('2027-01-15', $project->fresh()->invoice_requested_at->toDateString());
+        $project->update(['status' => ProjectStatus::InvoicingToDo]);
+        $this->assertNull($project->fresh()->invoice_requested_at);
+
+        // Set without the form (e.g. on reopening): today.
+        $project->update(['status' => ProjectStatus::InvoiceRequested]);
+        $this->assertSame('2027-01-19', $project->fresh()->invoice_requested_at->toDateString());
+    }
 }

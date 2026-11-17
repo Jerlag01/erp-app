@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\DB;
  * teams assigned to it can see it (while the teams module is on).
  */
 #[Fillable([
-    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'location_type', 'short_description', 'estimated_workdays', 'status',
+    'project_category_id', 'number', 'work_order_number', 'work_site_id', 'location_type', 'short_description', 'estimated_workdays', 'status', 'invoice_requested_at',
     'intervention_subcategory_id', 'intervention_phase', 'intervention_tags',
     'client_name', 'client_company', 'client_email', 'client_phone',
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by', 'source_project_id',
@@ -545,6 +545,14 @@ class Project extends Model
                 } elseif ($project->status !== ProjectStatus::Closed) {
                     $project->executed_at = null;
                 }
+
+                // "Invoice requested" always has a date (today when it was set without the form, e.g. on reopening);
+                // it is kept once invoiced or closed and cleared when the project goes back.
+                if ($project->status === ProjectStatus::InvoiceRequested) {
+                    $project->invoice_requested_at ??= today();
+                } elseif (! in_array($project->status, [ProjectStatus::Invoiced, ProjectStatus::Closed], true)) {
+                    $project->invoice_requested_at = null;
+                }
             }
         });
 
@@ -601,6 +609,7 @@ class Project extends Model
             'intervention_tags' => 'array',
             'archived_at' => 'datetime',
             'executed_at' => 'datetime',
+            'invoice_requested_at' => 'date',
         ];
     }
 }

@@ -1003,6 +1003,7 @@ return [
             'in_progress' => 'In uitvoering',
             'executed' => 'Uitgevoerd',
             'invoicing_to_do' => 'Te factureren',
+            'invoice_requested' => 'Factuur aangevraagd',
             'invoiced' => 'Gefactureerd',
             'closed' => 'Afgesloten',
         ],
@@ -1699,6 +1700,7 @@ return [
     ],
     'projects' => [
         'estimated_workdays' => 'Geschatte werkdagen',
+        'invoice_requested_at' => 'Factuur aangevraagd op',
         'estimated_workdays_help' => 'Hoeveel werkdagen het project naar schatting nodig heeft.',
         'days_suffix' => 'dagen',
         'workdays' => 'Werkdagen',

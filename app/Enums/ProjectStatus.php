@@ -39,6 +39,11 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
 
     case InvoicingToDo = 'invoicing_to_do';
 
+    /**
+     * The invoice was requested; the date it was requested is filled in with it (projects.invoice_requested_at).
+     */
+    case InvoiceRequested = 'invoice_requested';
+
     case Invoiced = 'invoiced';
 
     /**
@@ -73,7 +78,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
      */
     public function allowsGpwRequest(): bool
     {
-        return ! in_array($this, [self::Offer, self::InvoicingToDo, self::Invoiced, self::Closed], true);
+        return ! in_array($this, [self::Offer, self::InvoicingToDo, self::InvoiceRequested, self::Invoiced, self::Closed], true);
     }
 
     /**
@@ -83,7 +88,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
      */
     public static function executedOrLater(): array
     {
-        return [self::Executed, self::InvoicingToDo, self::Invoiced];
+        return [self::Executed, self::InvoicingToDo, self::InvoiceRequested, self::Invoiced];
     }
 
     public function getColor(): string
@@ -98,6 +103,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
             self::InProgress => 'warning',
             self::Executed => 'success',
             self::InvoicingToDo => 'danger',
+            self::InvoiceRequested => 'info',
             self::Invoiced => 'success',
             self::Closed => 'gray',
         };
@@ -115,6 +121,7 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
             self::InProgress => Heroicon::OutlinedWrenchScrewdriver,
             self::Executed => Heroicon::OutlinedCheckCircle,
             self::InvoicingToDo => Heroicon::OutlinedCurrencyEuro,
+            self::InvoiceRequested => Heroicon::OutlinedPaperAirplane,
             self::Invoiced => Heroicon::OutlinedBanknotes,
             self::Closed => Heroicon::OutlinedArchiveBox,
         };

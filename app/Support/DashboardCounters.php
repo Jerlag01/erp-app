@@ -63,7 +63,7 @@ class DashboardCounters
             'open_projects' => [
                 'icon' => Heroicon::OutlinedBriefcase, 'color' => 'primary',
                 'visible' => fn (User $user): bool => $can(ProjectResource::class),
-                'count' => fn (User $user): int => $query(ProjectResource::class)->whereNotIn('status', [ProjectStatus::Executed, ProjectStatus::InvoicingToDo, ProjectStatus::Invoiced])->count(),
+                'count' => fn (User $user): int => $query(ProjectResource::class)->whereNotIn('status', [ProjectStatus::Executed, ProjectStatus::InvoicingToDo, ProjectStatus::InvoiceRequested, ProjectStatus::Invoiced])->count(),
                 'url' => fn (): ?string => ProjectResource::getUrl(),
             ],
             'projects_to_invoice' => [

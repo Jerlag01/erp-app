@@ -42,7 +42,7 @@ class CreateFollowUpProject
     /**
      * The statuses of a 604 whose works are done: from here on it has its 609.
      */
-    public const DONE_STATUSES = [ProjectStatus::InvoicingToDo, ProjectStatus::Invoiced, ProjectStatus::Closed];
+    public const DONE_STATUSES = [ProjectStatus::InvoicingToDo, ProjectStatus::InvoiceRequested, ProjectStatus::Invoiced, ProjectStatus::Closed];
 
     public static function sourceDone(?Project $project): bool
     {

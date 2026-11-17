@@ -14,6 +14,7 @@ use App\Models\ProjectPoNumber;
 use App\Models\Team;
 use App\Models\WorkSite;
 use Closure;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -154,7 +155,17 @@ class ProjectForm
                                     ->label(__('erp.fields.status'))
                                     ->options(ProjectStatus::class)
                                     ->default(ProjectStatus::Offer)
-                                    ->required(),
+                                    ->required()
+                                    ->live(),
+                                // "Invoice requested" needs the date the invoice was requested.
+                                DatePicker::make('invoice_requested_at')
+                                    ->label(__('erp.projects.invoice_requested_at'))
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->maxDate(today())
+                                    ->default(today())
+                                    ->visible(fn (Get $get): bool => self::isInvoiceRequested($get('status')))
+                                    ->required(fn (Get $get): bool => self::isInvoiceRequested($get('status'))),
                                 Textarea::make('notes')
                                     ->label(__('erp.fields.notes'))
                                     ->rows(3)
@@ -354,5 +365,10 @@ class ProjectForm
         }
 
         return $data;
+    }
+
+    protected static function isInvoiceRequested(mixed $status): bool
+    {
+        return ($status instanceof ProjectStatus ? $status : ProjectStatus::tryFrom((string) $status)) === ProjectStatus::InvoiceRequested;
     }
 }
