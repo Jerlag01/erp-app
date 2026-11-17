@@ -153,6 +153,17 @@ Folders and PDFs are always in Dutch, whatever the language of who uploads the f
 
 Under **Admin → System → NAS systems** you add one or more NAS systems; every active NAS gets a copy of every file, for extra redundancy. Each NAS has its own queue: when one is offline, the others carry on. Per NAS you choose the **connection**: **Synology** (File Station over HTTPS: the DSM address, e.g. `https://nas.company.be:5001`), **SMB** (Windows share or Samba: server, share and optionally domain), **FTP/FTPS** (preferably encrypted) or **SFTP** (SSH, with password or private key), the main folder and an own account with write access. The list shows per NAS how many files wait, failed or are already on the NAS, with the buttons **Test connection**, **Copy everything to the NAS** (e.g. for a new NAS: only that NAS is filled) and **Retry failed ones**. What fails is retried every 10 minutes. Everything already on the platform can also be copied in one go on the server with `php artisan nas:export` (or `--target=<id>` for one NAS); it shows the progress and what failed. Nothing is ever deleted from a NAS. For an employee you can also upload a copy of the **identity card**.
 
+## System backups
+
+Separate from the NAS systems (which keep a readable copy of the documents), **Admin → System → Backups** makes full **backups of the platform** to one or more **backup targets**: **SFTP**, **SMB** (Windows / NAS share), **Synology** (File Station) or a **folder on the server** (e.g. a mounted NAS). Per target you choose:
+
+- **What**: the **source code** (with the configuration), the **database** and the **files on the server**.
+- **When**: daily or weekly at a set time, or manual only, and **how many backups** are kept (older ones are removed on that target).
+
+On a target: **Test** (writes and removes a test file), **Back up now** and **Restore**. To restore, choose **any backup still on the target** (the restore point), what to put back (database, files, source code and optionally the configuration) and type **RESTORE** to confirm. Before the database is put back, the platform keeps the current database on the server. Below is the **log** of all backups and restores.
+
+If the platform itself no longer works, restore on the server with `php artisan backups:restore` (lists the targets and their backups), or with `--file=` from a zip copied from the NAS.
+
 ## E-mail templates
 
 - Every e-mail the platform sends (welcome, invoice, reminder, planning, prestation sheet, GPW request, …) has a **template per language** (NL, FR, EN).

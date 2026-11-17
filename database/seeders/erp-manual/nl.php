@@ -154,6 +154,17 @@ Mappen en PDF's zijn altijd in het Nederlands, ongeacht de taal van wie het best
 
 Bij **Beheer → Systeem → NAS-systemen** voeg je één of meer NAS-systemen toe; elk actief NAS-systeem krijgt een kopie van elk bestand, voor extra redundantie. Elke NAS heeft zijn eigen wachtrij: is er één offline, dan gaan de andere gewoon door. Per NAS kies je de **verbinding**: **Synology** (File Station over HTTPS: het adres van DSM, bv. `https://nas.bedrijf.be:5001`), **SMB** (Windows-share of Samba: server, share en eventueel domein), **FTP/FTPS** (best versleuteld) of **SFTP** (SSH, met wachtwoord of private sleutel), de hoofdmap en een eigen account met schrijfrechten. In de lijst zie je per NAS hoeveel bestanden wachten, mislukt zijn of al op de NAS staan, met de knoppen **Verbinding testen**, **Alles naar de NAS kopiëren** (bv. voor een nieuwe NAS: enkel die NAS wordt gevuld) en **Mislukte opnieuw proberen**. Wat mislukt, wordt elke 10 minuten opnieuw geprobeerd. Alles wat al op het platform staat in één keer kopiëren kan ook op de server met `php artisan nas:export` (of `--target=<id>` voor één NAS); dat toont de voortgang en wat mislukte. Op een NAS wordt nooit iets verwijderd. Bij een werknemer kan je ook een kopie van de **identiteitskaart** uploaden.
 
+## Systeemback-ups
+
+Los van de NAS-systemen (die een leesbare kopie van de documenten bijhouden) maak je bij **Beheer → Systeem → Back-ups** volledige **back-ups van het platform** naar één of meer **back-updoelen**: **SFTP**, **SMB** (Windows-/NAS-share), **Synology** (File Station) of een **map op de server** (bv. een gekoppelde NAS). Per doel kies je:
+
+- **Wat**: de **broncode** (met de configuratie), de **database** en de **bestanden op de server**.
+- **Wanneer**: dagelijks of wekelijks op een tijdstip, of enkel manueel, en **hoeveel back-ups** er bewaard blijven (oudere worden op dat doel verwijderd).
+
+Op een doel: **Testen** (schrijft en verwijdert een testbestand), **Nu back-uppen** en **Herstellen**. Bij herstellen kies je **elke back-up die nog op het doel staat** (het herstelpunt), wat je terugzet (database, bestanden, broncode en eventueel de configuratie) en typ je **RESTORE** ter bevestiging. Voor de database teruggezet wordt, bewaart het platform de huidige database op de server. Onderaan staat het **logboek** van alle back-ups en herstellingen.
+
+Werkt het platform zelf niet meer, herstel dan op de server met `php artisan backups:restore` (toont de doelen en hun back-ups), of met `--file=` vanuit een zip die je van de NAS kopieerde.
+
 ## E-mailsjablonen
 
 - Elke e-mail die het platform verstuurt (welkomstmail, factuur, herinnering, planning, prestatiefiche, GPW-aanvraag, …) heeft een **sjabloon per taal** (NL, FR, EN).

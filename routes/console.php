@@ -21,3 +21,6 @@ Schedule::command('nas:sync')->everyTenMinutes()->withoutOverlapping();
 
 // The orders placed at the distributors whose API offers them (Purchasing > Orders).
 Schedule::command('distributors:sync-orders')->hourly()->withoutOverlapping();
+
+// System backups to the backup targets that are due (Systeem → Back-ups); each target has its own time and frequency.
+Schedule::command('backups:run')->everyFifteenMinutes()->withoutOverlapping();
