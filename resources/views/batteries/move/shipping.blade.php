@@ -28,7 +28,8 @@
     <table class="w ship" style="margin-top: 6px;">
         <tr><td class="k">Ref PI</td><td class="bold">{{ $dossier->reference() }}</td></tr>
         <tr><td class="k">Ref klant <i>/ client</i></td><td>{{ $client }} PO N°: {{ $dossier->po_number }}</td></tr>
-        <tr><td class="k">Datum <i>/ Date</i></td><td>{{ $dossier->execution_date?->format('d/m/Y') }}</td></tr>
+        {{-- Left empty: filled in by hand on the day of the move. --}}
+        <tr><td class="k">Datum <i>/ Date</i></td><td></td></tr>
         <tr><td class="k">Verzender (ophaling) <i>/ Expéditeur (enlèvement)</i></td><td>{{ $client }}: <strong>{{ $dossier->sourceCowCode() }}</strong><br>{!! implode('<br>', array_map('e', $from)) !!}</td></tr>
         <tr><td class="k">Vervoerder <i>/ Transporteur</i></td><td>{!! implode('<br>', array_map('e', $lines('shipping_transporter'))) !!}<br>{{ $dossier->truck_plate }}</td></tr>
         <tr><td class="k">Bestemming (levering) <i>/ Destination (livraison)</i></td><td>{{ $client }}: <strong>{{ $dossier->cowCode() }}</strong><br>{!! implode('<br>', array_map('e', $to)) !!}</td></tr>

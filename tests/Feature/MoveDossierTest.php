@@ -116,6 +116,13 @@ class MoveDossierTest extends TestCase
         $this->assertStringContainsString('02GAM', $html);
         $this->assertStringContainsString('14EIN', $html);
         $this->assertStringContainsString('84 Kg', $html);
+
+        // The date on a shipping note is always left empty (filled in by hand).
+        $move->update(['execution_date' => '2026-11-03', 'removal' => true, 'old_count' => 2, 'old_capacity_ah' => 300]);
+        foreach (['shipping_move', 'shipping'] as $document) {
+            $this->assertStringNotContainsString('03/11/2026', app(BatteryDocument::class)->html($move->fresh(), $document));
+        }
+        $move->update(['removal' => false, 'old_count' => 0]);
         $this->assertStringContainsString('Wegnemen van 2 batterijen te 02GAM', app(BatteryDocument::class)->html($move, 'delivery'));
 
         foreach ($move->availableDocuments() as $document) {
