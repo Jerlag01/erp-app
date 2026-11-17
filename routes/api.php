@@ -26,9 +26,10 @@ use Illuminate\Support\Facades\Route;
 // sends them as "Authorization: Bearer <key>.<secret>".
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
-    Route::post('/auth/login', [MobileAuthController::class, 'login'])->middleware('throttle:10,1')->name('auth.login');
+    Route::post('/auth/login', [MobileAuthController::class, 'login'])->middleware('throttle:mobile-login')->name('auth.login');
 
-    Route::middleware([AuthenticateMobileKey::class, 'throttle:120,1'])->group(function (): void {
+    // Limited per employee (see AppServiceProvider; the key is checked first, see bootstrap/app.php).
+    Route::middleware([AuthenticateMobileKey::class, 'throttle:mobile'])->group(function (): void {
         Route::post('/auth/logout', [MobileAuthController::class, 'logout'])->name('auth.logout');
         Route::get('/me', ProfileController::class)->name('me');
         Route::put('/push-token', PushTokenController::class)->name('push-token');

@@ -48,6 +48,16 @@ class AppServiceProvider extends ServiceProvider
 
         // The app's test notification: its own counter per phone, so the app's other requests (which
         // count for the API's general limit) do not use it up.
+        // The mobile app: a limit per signed-in employee (never shared with colleagues on the same IP address).
+        RateLimiter::for('mobile', fn (Request $request): Limit => Limit::perMinute(240)->by('mobile|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        // Signing in: per e-mail address (so wrong passwords for one account stop there), and a wider net per IP
+        // address, which many phones can share on a mobile network.
+        RateLimiter::for('mobile-login', fn (Request $request): array => [
+            Limit::perMinute(10)->by('mobile-login|'.mb_strtolower(trim((string) $request->input('email'))).'|'.$request->ip()),
+            Limit::perMinute(60)->by('mobile-login-ip|'.$request->ip()),
+        ]);
+
         RateLimiter::for('push-test', fn (Request $request): Limit => Limit::perMinute(6)->by('push-test|'.($request->attributes->get('mobile_key')?->id ?? $request->ip())));
     }
 }
