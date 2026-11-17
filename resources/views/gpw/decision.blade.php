@@ -36,6 +36,7 @@
         .error { color: var(--no); font-size: .9rem; }
         .muted { color: var(--muted); font-size: .9rem; }
         .sites { margin: 0; padding-left: 1.1rem; }
+        .internal { margin: 1rem 0 0; padding: .75rem 1rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: .5rem; }
     </style>
 </head>
 <body>
@@ -85,6 +86,8 @@
                 <label for="note">{{ $mode === 'reject' ? __('erp.gpw.page.reject_reason') : __('erp.gpw.page.note') }}</label>
                 <textarea id="note" name="note" maxlength="2000" @if ($mode === 'reject') autofocus @endif>{{ old('note') }}</textarea>
                 @error('note') <p class="error">{{ __('erp.gpw.page.note_required') }}</p> @enderror
+                {{-- The client's own systems are not updated: the decision is only for our project follow-up. --}}
+                <p class="internal"><strong>{{ __('erp.gpw.page.internal_only') }}</strong></p>
                 <div class="buttons">
                     <button class="approve" type="submit" name="decision" value="approve">{{ __('erp.gpw.approve') }}</button>
                     <button class="reject" type="submit" name="decision" value="reject">{{ __('erp.gpw.reject') }}</button>

@@ -3052,6 +3052,7 @@ return [
         ],
         'page' => [
             'deciding_as' => 'You decide as :name.',
+            'internal_only' => 'Please note: your decision is not sent automatically to your own system. It is used purely internally, for the follow-up of our projects.',
             'reject_reason' => 'Why do you refuse the request? (required)',
             'link_used' => 'This link no longer works',
             'link_used_body' => 'The buttons in the e-mail work once and while the request is open. Log in to see the GPW request.',

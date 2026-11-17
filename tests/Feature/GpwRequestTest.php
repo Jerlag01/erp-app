@@ -406,7 +406,8 @@ class GpwRequestTest extends TestCase
         // Without logging in, in the recipient's language. Opening either link decides nothing: the page has both buttons.
         $page = $this->get($links['marc@proximus.example']['approve'])->assertOk()
             ->assertSee('name="decision" value="approve"', escape: false)->assertSee('name="decision" value="reject"', escape: false)
-            ->assertDontSee('.submit()', escape: false)->assertSee('Marc Peeters');
+            ->assertDontSee('.submit()', escape: false)->assertSee('Marc Peeters')
+            ->assertSee('<strong>'.e(__('erp.gpw.page.internal_only', [], 'nl')).'</strong>', escape: false);
         $this->get($links['marc@proximus.example']['reject'])->assertOk()->assertSee('name="decision" value="approve"', escape: false);
         $token = substr(parse_url($links['marc@proximus.example']['approve'], PHP_URL_PATH), strlen('/gpw/key/'), 48);
         $this->assertSame(GpwStatus::Pending, $gpw->fresh()->status, 'Opening the links alone decides nothing.');

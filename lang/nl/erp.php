@@ -3052,6 +3052,7 @@ return [
         ],
         'page' => [
             'deciding_as' => 'U beslist als :name.',
+            'internal_only' => 'Let op: uw beslissing wordt niet automatisch doorgestuurd naar uw eigen systeem. Ze dient enkel intern, voor de opvolging van onze projecten.',
             'reject_reason' => 'Waarom weigert u de aanvraag? (verplicht)',
             'link_used' => 'Deze link werkt niet meer',
             'link_used_body' => 'De knoppen in de e-mail werken één keer en zolang de aanvraag openstaat. Meld u aan om de GPW-aanvraag te bekijken.',

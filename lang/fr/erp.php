@@ -3052,6 +3052,7 @@ return [
         ],
         'page' => [
             'deciding_as' => 'Vous décidez au nom de :name.',
+            'internal_only' => 'Attention : votre décision n\'est pas transmise automatiquement à votre propre système. Elle sert uniquement en interne, pour le suivi de nos projets.',
             'reject_reason' => 'Pourquoi refusez-vous la demande ? (obligatoire)',
             'link_used' => 'Ce lien ne fonctionne plus',
             'link_used_body' => 'Les boutons de l\'e-mail fonctionnent une seule fois et tant que la demande est ouverte. Connectez-vous pour voir la demande GPW.',
