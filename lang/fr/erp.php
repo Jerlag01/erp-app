@@ -2956,6 +2956,16 @@ return [
         'download_menu' => 'Télécharger l\'application mobile',
     ],
     'gpw' => [
+        'sites' => [
+            'cow_codes' => 'Codes COW',
+            'cow_codes_help' => 'Une seule demande (un mail, une approbation) pour tous les codes COW cochés.',
+            'split' => 'Une autre période par code COW',
+            'split_help' => 'Chaque code COW avec sa propre période ; un code COW peut aussi revenir plusieurs fois. L\'approbation vaut pour toute la demande.',
+            'per_cow_code' => 'Période par code COW',
+            'add' => 'Ajouter un code COW',
+            'none' => 'Choisissez au moins un code COW.',
+            'unknown' => 'Ce code COW n\'appartient pas au projet.',
+        ],
         'recipients_help' => 'Personne n\'est choisi d\'avance : choisissez vous-même à qui la demande est envoyée. En haut figurent, pour une intervention (600, 608.1), les personnes de contact interventions de la zone, pour les autres projets les personnes de contact du code COW et de la zone. Cherchez toute autre personne de contact par nom, société ou e-mail, ou ajoutez une nouvelle personne. Un login pour le portail client n\'est pas nécessaire.',
         'request_help_choose' => 'Choisissez à qui la demande est envoyée. Chacun reçoit un e-mail dans sa langue avec les boutons Approuver et Refuser (sans se connecter), avec vous en copie.',
         'recipients' => 'Envoyer à',
@@ -3041,7 +3051,7 @@ return [
             'open' => 'Ouvrir le projet',
         ],
         'page' => [
-            'approving' => 'Votre approbation est envoyée au nom de :name …',
+            'deciding_as' => 'Vous décidez au nom de :name.',
             'reject_reason' => 'Pourquoi refusez-vous la demande ? (obligatoire)',
             'link_used' => 'Ce lien ne fonctionne plus',
             'link_used_body' => 'Les boutons de l\'e-mail fonctionnent une seule fois et tant que la demande est ouverte. Connectez-vous pour voir la demande GPW.',

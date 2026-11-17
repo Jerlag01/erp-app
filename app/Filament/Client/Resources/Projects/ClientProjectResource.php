@@ -74,7 +74,7 @@ class ClientProjectResource extends ClientResource
     public static function getEloquentQuery(): Builder
     {
         return static::visibleProjects()
-            ->with(['category', 'workSite', 'poNumbers', 'batteryDeliveries', 'asbuilt', 'gpwRequests' => fn ($query) => $query->where('status', '!=', GpwStatus::Cancelled)])
+            ->with(['category', 'workSite', 'poNumbers', 'batteryDeliveries', 'asbuilt', 'gpwRequests' => fn ($query) => $query->with('sites')->where('status', '!=', GpwStatus::Cancelled)])
             ->withMin('planningItems', 'date')
             ->withMax('planningItems', 'date');
     }

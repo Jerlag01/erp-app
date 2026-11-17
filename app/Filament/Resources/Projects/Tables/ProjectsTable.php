@@ -26,7 +26,7 @@ class ProjectsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers', 'latestGpwRequest'])->withCount('steps')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers', 'latestGpwRequest.sites'])->withCount('steps')
                 ->when(ProjectWorkdays::canView(auth()->user()), fn (Builder $query) => ProjectWorkdays::withWorkedDays($query)))
             ->defaultSort('created_at', 'desc')
             ->searchPlaceholder(__('erp.projects.search'))

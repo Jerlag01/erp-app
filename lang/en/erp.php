@@ -2956,6 +2956,16 @@ return [
         'download_menu' => 'Download the mobile app',
     ],
     'gpw' => [
+        'sites' => [
+            'cow_codes' => 'COW codes',
+            'cow_codes_help' => 'One request (one mail, one approval) for all ticked COW codes.',
+            'split' => 'A different period per COW code',
+            'split_help' => 'Each COW code with its own period; a COW code can also appear more than once. The approval covers everything in this request.',
+            'per_cow_code' => 'Period per COW code',
+            'add' => 'Add COW code',
+            'none' => 'Choose at least one COW code.',
+            'unknown' => 'This COW code does not belong to the project.',
+        ],
         'recipients_help' => 'Nobody is chosen beforehand: choose who the request goes to. At the top: for an intervention (600, 608.1) the area\'s intervention contacts, for other projects the contact persons of the COW code and of the area. Search any other contact person by name, company or e-mail, or add a new person. A client portal login is not needed.',
         'request_help_choose' => 'Choose who the request goes to. Each gets an e-mail in their own language with the Approve and Refuse buttons (without logging in), with you in copy.',
         'recipients' => 'Send to',
@@ -3041,7 +3051,7 @@ return [
             'open' => 'Open project',
         ],
         'page' => [
-            'approving' => 'Your approval is being sent as :name …',
+            'deciding_as' => 'You decide as :name.',
             'reject_reason' => 'Why do you refuse the request? (required)',
             'link_used' => 'This link no longer works',
             'link_used_body' => 'The buttons in the e-mail work once and while the request is open. Log in to see the GPW request.',

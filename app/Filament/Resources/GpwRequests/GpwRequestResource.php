@@ -13,6 +13,7 @@ use App\Models\GpwRequest;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\User;
+use App\Support\GpwSites;
 use BackedEnum;
 use Closure;
 use Filament\Actions\Action;
@@ -139,7 +140,7 @@ class GpwRequestResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['project.workSite', 'project.category', 'requester', 'team']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['project.workSite', 'project.category', 'requester', 'team', 'sites']))
             ->defaultSort('starts_on', 'desc')
             ->emptyStateHeading(__('erp.gpw.none'))
             ->columns([
@@ -150,8 +151,8 @@ class GpwRequestResource extends Resource
                     ->description(fn (GpwRequest $record): ?string => $record->project?->subtitle())
                     ->url(fn (GpwRequest $record): ?string => $record->project && Gate::allows('view', $record->project) ? ProjectResource::getUrl('view', ['record' => $record->project]) : null)
                     ->searchable(),
-                TextColumn::make('project.workSite.cow_code')->label(__('erp.client_portal.cow_code'))->fontFamily(FontFamily::Mono)->placeholder('—')->searchable(),
-                TextColumn::make('starts_on')->label(__('erp.gpw.starts_on'))->date('d/m/Y')->sortable(),
+                TextColumn::make('project.workSite.cow_code')->label(__('erp.client_portal.cow_code'))->state(fn (GpwRequest $record): ?string => $record->cowCodes())->fontFamily(FontFamily::Mono)->placeholder('—')->wrap()->searchable(),
+                TextColumn::make('starts_on')->label(__('erp.gpw.starts_on'))->date('d/m/Y')->description(fn (GpwRequest $record): ?string => $record->sites->count() > 1 && $record->period() !== $record->overallPeriod() ? $record->period() : null)->sortable(),
                 TextColumn::make('ends_on')->label(__('erp.gpw.ends_on'))->date('d/m/Y')->sortable(),
                 self::statusColumn(),
                 TextColumn::make('contact_name')
@@ -218,7 +219,7 @@ class GpwRequestResource extends Resource
      *
      * @return list<mixed>
      */
-    public static function manualSchema(bool $withProject = true): array
+    public static function manualSchema(bool $withProject = true, ?Project $project = null): array
     {
         $decided = fn (Get $get): bool => in_array($get('status'), [GpwStatus::Approved->value, GpwStatus::Rejected->value], true);
 
@@ -238,10 +239,11 @@ class GpwRequestResource extends Resource
                     ->all())
                 ->getOptionLabelUsing(fn (mixed $value): ?string => Project::query()->find($value)?->reference)
                 ->required(),
-            Grid::make(2)->schema([
+            // For one project: its COW codes (intervention, battery move) in one period or each in its own.
+            ...($project !== null ? GpwSites::schema($project, future: false) : [Grid::make(2)->schema([
                 DatePicker::make('starts_on')->label(__('erp.gpw.starts_on'))->native(false)->displayFormat('d/m/Y')->required()->live(),
                 DatePicker::make('ends_on')->label(__('erp.gpw.ends_on'))->native(false)->displayFormat('d/m/Y')->afterOrEqual('starts_on')->required(),
-            ]),
+            ])]),
             ToggleButtons::make('status')
                 ->label(__('erp.gpw.overview_status_label'))
                 ->options([
@@ -281,7 +283,7 @@ class GpwRequestResource extends Resource
             ->authorize(fn (): bool => Gate::allows('manageGpw', $project()) && (bool) $project()->status?->allowsGpwRequest())
             ->modalHeading(__('erp.gpw.add_manual'))
             ->modalDescription(__('erp.gpw.add_manual_help'))
-            ->schema(self::manualSchema(withProject: false))
+            ->schema(fn (): array => self::manualSchema(withProject: false, project: $project()))
             ->action(function (array $data) use ($project): void {
                 self::addManual([...$data, 'project_id' => $project()->id]);
                 Notification::make()->title(__('erp.gpw.manual_added'))->success()->send();

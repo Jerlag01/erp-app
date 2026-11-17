@@ -41,7 +41,7 @@ class PlanGpw
         $until = CarbonImmutable::parse($data['until'])->startOfDay();
 
         if ($from->isBefore($request->starts_on) || $until->isAfter($request->ends_on) || $until->isBefore($from)) {
-            throw ValidationException::withMessages(['date' => __('erp.gpw.errors.outside_period', ['period' => $request->period()])]);
+            throw ValidationException::withMessages(['date' => __('erp.gpw.errors.outside_period', ['period' => $request->overallPeriod()])]);
         }
 
         $result = $this->planning->create([

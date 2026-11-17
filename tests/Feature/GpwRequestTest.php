@@ -16,8 +16,10 @@ use App\Models\ClientUser;
 use App\Models\GpwRequest;
 use App\Models\GpwRequestKey;
 use App\Models\MailTemplate;
+use App\Models\MoveDossier;
 use App\Models\PlanningItem;
 use App\Models\Project;
+use App\Models\ProjectCategory;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
@@ -25,6 +27,7 @@ use App\Models\WorkSiteArea;
 use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -400,10 +403,13 @@ class GpwRequestTest extends TestCase
         $this->assertSame(2, GpwRequestKey::query()->where('gpw_request_id', $gpw->id)->count());
         $this->assertStringNotContainsString(GpwRequestKey::query()->value('token_hash'), $links['sophie@proximus.example']['approve']);
 
-        // "Approve" without logging in: the page sends it by itself (in the recipient's language).
-        $page = $this->get($links['marc@proximus.example']['approve'])->assertOk()->assertSee('id="gpw-approve"', escape: false)->assertSee('Marc Peeters');
+        // Without logging in, in the recipient's language. Opening either link decides nothing: the page has both buttons.
+        $page = $this->get($links['marc@proximus.example']['approve'])->assertOk()
+            ->assertSee('name="decision" value="approve"', escape: false)->assertSee('name="decision" value="reject"', escape: false)
+            ->assertDontSee('.submit()', escape: false)->assertSee('Marc Peeters');
+        $this->get($links['marc@proximus.example']['reject'])->assertOk()->assertSee('name="decision" value="approve"', escape: false);
         $token = substr(parse_url($links['marc@proximus.example']['approve'], PHP_URL_PATH), strlen('/gpw/key/'), 48);
-        $this->assertSame(GpwStatus::Pending, $gpw->fresh()->status, 'Opening the link alone sends nothing yet.');
+        $this->assertSame(GpwStatus::Pending, $gpw->fresh()->status, 'Opening the links alone decides nothing.');
         $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk()->assertSee(GpwStatus::Approved->getLabel());
 
         $gpw->refresh();
@@ -496,5 +502,141 @@ class GpwRequestTest extends TestCase
         $this->assertArrayNotHasKey($interventionContact->id, RequestGpw::searchRecipients('ivo', $project));
         $this->expectException(ValidationException::class);
         app(RequestGpw::class)->handle($project, $this->requester($project), [...$dates, 'contact_ids' => [$interventionContact->id]]);
+    }
+
+    /**
+     * An intervention (600) on three COW codes, with the GPW contact on the first.
+     */
+    protected function interventionOnThreeSites(): Project
+    {
+        $project = $this->project();
+        $project->update(['work_order_number' => '123456']);
+        Project::query()->whereKey($project->id)->update(['project_category_id' => ProjectCategory::query()->where('code', '600')->value('id')]);
+        $project = $project->fresh();
+        $project->interventionWorkSites()->attach([
+            WorkSite::factory()->create(['cow_code' => '03ABC'])->id,
+            WorkSite::factory()->create(['cow_code' => '04XYZ'])->id,
+        ]);
+
+        return $project->fresh();
+    }
+
+    #[Test]
+    public function one_request_covers_several_cow_codes_in_one_period_and_one_approval_covers_them_all(): void
+    {
+        $project = $this->interventionOnThreeSites();
+        $requester = $this->requester($project, 'nl', 'jan@power.example');
+        $this->actingAs($requester);
+        Filament::setCurrentPanel('app');
+        Mail::fake();
+        $sites = $project->interventionWorkSites->pluck('id', 'cow_code');
+
+        // All COW codes are ticked beforehand, one period.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('requestGpw')
+            ->assertSchemaStateSet(['work_site_ids' => [$project->work_site_id, $sites['03ABC'], $sites['04XYZ']], 'split' => false]);
+        $from = today()->addWeek();
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('requestGpw', [
+                'contact_ids' => [$this->contact->id],
+                'work_site_ids' => [$project->work_site_id, $sites['04XYZ']],
+                'starts_on' => $from->toDateString(),
+                'ends_on' => $from->copy()->addDay()->toDateString(),
+            ])
+            ->assertHasNoActionErrors();
+
+        $gpw = GpwRequest::query()->sole();
+        $this->assertSame(['02GAM', '04XYZ'], $gpw->sites->pluck('cow_code')->all());
+        $this->assertSame('02GAM, 04XYZ', $gpw->cowCodes());
+        $this->assertSame($gpw->overallPeriod(), $gpw->period());
+        Mail::assertSent(SystemMail::class, 1);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => str_contains($mail->rendered['subject'], '02GAM, 04XYZ'));
+
+        // One approval for all of them.
+        $this->post(RequestGpw::decisionUrl($gpw), ['decision' => 'approve'])->assertRedirect();
+        $this->assertSame(GpwStatus::Approved, $gpw->fresh()->status);
+    }
+
+    #[Test]
+    public function each_cow_code_can_get_its_own_period_in_the_same_request(): void
+    {
+        Repeater::fake();
+        $project = $this->interventionOnThreeSites();
+        $requester = $this->requester($project);
+        $this->actingAs($requester);
+        Filament::setCurrentPanel('app');
+        Mail::fake();
+        $sites = $project->interventionWorkSites->pluck('id', 'cow_code');
+        $day = fn (int $days): string => today()->addDays($days)->toDateString();
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('requestGpw', [
+                'contact_ids' => [$this->contact->id],
+                'split' => true,
+                'sites' => [
+                    ['work_site_id' => $project->work_site_id, 'starts_on' => $day(7), 'ends_on' => $day(7)],
+                    ['work_site_id' => $sites['03ABC'], 'starts_on' => $day(8), 'ends_on' => $day(9)],
+                    // The same COW code again, on another date.
+                    ['work_site_id' => $sites['03ABC'], 'starts_on' => $day(14), 'ends_on' => $day(14)],
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        $gpw = GpwRequest::query()->sole();
+        $this->assertSame($day(7), $gpw->starts_on->toDateString());
+        $this->assertSame($day(14), $gpw->ends_on->toDateString());
+        $this->assertCount(3, $gpw->sites);
+        $f = fn (int $days): string => today()->addDays($days)->format('d/m/Y');
+        $this->assertSame("02GAM: {$f(7)} · 03ABC: {$f(8)} – {$f(9)} · 03ABC: {$f(14)}", $gpw->period());
+        $this->assertSame('02GAM, 03ABC', $gpw->cowCodes());
+        Mail::assertSent(SystemMail::class, 1);
+
+        // The page behind the mail lists each COW code with its period.
+        $this->get(RequestGpw::decisionUrl($gpw))->assertOk()->assertSeeInOrder(['02GAM', $f(7), '03ABC', $f(8), $f(14)]);
+
+        // A COW code of another project, or a period in the past, is refused.
+        foreach ([
+            ['work_site_id' => WorkSite::factory()->create()->id, 'starts_on' => $day(7), 'ends_on' => $day(7)],
+            ['work_site_id' => $sites['04XYZ'], 'starts_on' => $day(-1), 'ends_on' => $day(1)],
+            ['work_site_id' => $sites['04XYZ'], 'starts_on' => $day(5), 'ends_on' => $day(4)],
+        ] as $row) {
+            try {
+                app(RequestGpw::class)->handle($project, $requester, ['contact_ids' => [$this->contact->id], 'split' => true, 'sites' => [$row]]);
+                $this->fail('An invalid COW code or period was accepted.');
+            } catch (ValidationException $exception) {
+                $this->assertNotEmpty(array_filter(array_keys($exception->errors()), fn (string $key): bool => str_starts_with($key, 'sites.0.')));
+            }
+        }
+        $this->assertSame(1, GpwRequest::query()->count());
+    }
+
+    #[Test]
+    public function a_battery_move_is_requested_for_its_origin_and_destination_at_once(): void
+    {
+        $origin = WorkSite::factory()->hasAttached($this->contact ??= WorkSiteContact::factory()->create(['email' => 'sophie@proximus.example', 'locale' => 'fr']), [], 'contacts')->create(['cow_code' => 'COW-ORIG']);
+        $destination = WorkSite::factory()->create(['cow_code' => 'COW-DEST']);
+        $dossier = MoveDossier::factory()->create(['move_from_work_site_id' => $origin->id, 'move_to_work_site_id' => $destination->id]);
+        $project = $dossier->project;
+        $project->update(['status' => ProjectStatus::ToBeExecuted]);
+        $requester = $this->requester($project);
+        Mail::fake();
+
+        // The origin's contacts are suggested too.
+        $this->assertArrayHasKey($this->contact->id, RequestGpw::candidateOptions($project));
+
+        $gpw = app(RequestGpw::class)->handle($project, $requester, [
+            'contact_ids' => [$this->contact->id],
+            'split' => true,
+            'sites' => [
+                ['work_site_id' => $origin->id, 'starts_on' => today()->addWeek()->toDateString(), 'ends_on' => today()->addWeek()->toDateString()],
+                ['work_site_id' => $destination->id, 'starts_on' => today()->addWeek()->addDay()->toDateString(), 'ends_on' => today()->addWeek()->addDay()->toDateString()],
+            ],
+        ]);
+        $this->assertSame('COW-ORIG, COW-DEST', $gpw->cowCodes());
+
+        // Added by hand (asked by personal mail): the same choice, also in the past.
+        $this->actingAs(User::factory()->admin()->create());
+        $manual = GpwRequestResource::addManual(['project_id' => $project->id, 'status' => GpwStatus::Approved->value, 'contact_name' => 'Sophie', 'work_site_ids' => [$origin->id, $destination->id], 'starts_on' => today()->subDay()->toDateString(), 'ends_on' => today()->toDateString()]);
+        $this->assertSame(['COW-ORIG', 'COW-DEST'], $manual->sites->pluck('cow_code')->all());
     }
 }

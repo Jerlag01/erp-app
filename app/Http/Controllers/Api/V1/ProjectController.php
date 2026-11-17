@@ -8,6 +8,7 @@ use App\Enums\ProjectStatus;
 use App\Filament\Resources\Projects\RelationManagers\PartsRelationManager;
 use App\Http\Controllers\Controller;
 use App\Models\GpwRequest;
+use App\Models\GpwRequestSite;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\ProjectFile;
@@ -186,6 +187,13 @@ class ProjectController extends Controller
             'ends_on' => $gpw->ends_on->toDateString(),
             'period' => $gpw->period(),
             'days' => (int) $gpw->starts_on->diffInDays($gpw->ends_on) + 1,
+            // Several COW codes in one request, each with its own period.
+            'sites' => $gpw->sites->map(fn (GpwRequestSite $site): array => [
+                'cow_code' => $site->cow_code,
+                'starts_on' => $site->starts_on->toDateString(),
+                'ends_on' => $site->ends_on->toDateString(),
+                'period' => $site->period(),
+            ])->values()->all(),
         ];
     }
 

@@ -1,7 +1,7 @@
 {{--
     The public page of a GPW request link: the request, and approve / refuse buttons while it is pending.
-    From the buttons in the mail (a personal key, see GpwKeyController) $mode is "approve" (sent at once by
-    the page itself, with a button in case scripts are off) or "reject" (the reason is asked).
+    From the buttons in the mail (a personal key, see GpwKeyController) $mode is "approve" or "reject": the
+    same page with both buttons (nothing is decided by opening it); "reject" puts the cursor in the reason.
 --}}
 @php
     $project = $gpw->project;
@@ -35,6 +35,7 @@
         .status.approved, .status.planned { color: var(--ok); } .status.rejected { color: var(--no); }
         .error { color: var(--no); font-size: .9rem; }
         .muted { color: var(--muted); font-size: .9rem; }
+        .sites { margin: 0; padding-left: 1.1rem; }
     </style>
 </head>
 <body>
@@ -50,9 +51,21 @@
     <article>
         <h1>{{ __('erp.gpw.page.title', ['project' => $project?->reference]) }}</h1>
         <dl>
-            <dt>{{ __('erp.gpw.page.period') }}</dt><dd class="period">{{ $gpw->period() }}</dd>
-            <dt>{{ __('erp.client_portal.cow_code') }}</dt><dd>{{ $project?->workSite?->cow_code ?? $project?->cow_code ?? '—' }}</dd>
-            <dt>{{ __('erp.gpw.page.address') }}</dt><dd>{{ $project?->addressLine() ?? $project?->workSite?->addressLine() ?? '—' }}</dd>
+            <dt>{{ __('erp.gpw.page.period') }}</dt><dd class="period">{{ $gpw->sites->count() > 1 ? $gpw->overallPeriod() : $gpw->period() }}</dd>
+            @if ($gpw->sites->count() > 1)
+                {{-- One request for several COW codes, each with its own period; one decision covers them all. --}}
+                <dt>{{ __('erp.gpw.sites.cow_codes') }}</dt>
+                <dd>
+                    <ul class="sites">
+                        @foreach ($gpw->sites as $site)
+                            <li><strong>{{ $site->cow_code ?? '—' }}</strong>: {{ $site->period() }}@if ($address = $site->workSite?->addressLine())<br><span class="muted">{{ $address }}</span>@endif</li>
+                        @endforeach
+                    </ul>
+                </dd>
+            @else
+                <dt>{{ __('erp.client_portal.cow_code') }}</dt><dd>{{ $project?->workSite?->cow_code ?? $project?->cow_code ?? '—' }}</dd>
+                <dt>{{ __('erp.gpw.page.address') }}</dt><dd>{{ $project?->addressLine() ?? $project?->workSite?->addressLine() ?? '—' }}</dd>
+            @endif
             @if (filled($project?->short_description))
                 <dt>{{ __('erp.client_portal.description') }}</dt><dd>{{ $project->short_description }}</dd>
             @endif
@@ -62,32 +75,15 @@
             <dt>{{ __('erp.gpw.page.requested_by') }}</dt><dd>{{ $gpw->requester?->name ?? settings()->siteName() }}</dd>
         </dl>
 
-        @if ($gpw->isPending() && $mode === 'approve')
-            <form method="post" action="{{ $action }}" id="gpw-approve">
+        @if ($gpw->isPending())
+            {{-- Opening a link never decides anything: the request is approved or refused only with these buttons. --}}
+            <form method="post" @if ($action) action="{{ $action }}" @endif>
                 @csrf
-                <input type="hidden" name="decision" value="approve">
-                <p>{{ __('erp.gpw.page.approving', ['name' => $decider ?? '']) }}</p>
-                <div class="buttons">
-                    <button class="approve" type="submit">{{ __('erp.gpw.approve') }}</button>
-                </div>
-            </form>
-            <script>document.getElementById('gpw-approve').submit();</script>
-        @elseif ($gpw->isPending() && $mode === 'reject')
-            <form method="post" action="{{ $action }}">
-                @csrf
-                <input type="hidden" name="decision" value="reject">
-                <label for="note">{{ __('erp.gpw.page.reject_reason') }}</label>
-                <textarea id="note" name="note" maxlength="2000" required autofocus>{{ old('note') }}</textarea>
-                @error('note') <p class="error">{{ __('erp.gpw.page.note_required') }}</p> @enderror
-                <div class="buttons">
-                    <button class="reject" type="submit">{{ __('erp.gpw.reject') }}</button>
-                </div>
-            </form>
-        @elseif ($gpw->isPending())
-            <form method="post">
-                @csrf
-                <label for="note">{{ __('erp.gpw.page.note') }}</label>
-                <textarea id="note" name="note" maxlength="2000">{{ old('note') }}</textarea>
+                @if (filled($decider ?? null))
+                    <p>{{ __('erp.gpw.page.deciding_as', ['name' => $decider]) }}</p>
+                @endif
+                <label for="note">{{ $mode === 'reject' ? __('erp.gpw.page.reject_reason') : __('erp.gpw.page.note') }}</label>
+                <textarea id="note" name="note" maxlength="2000" @if ($mode === 'reject') autofocus @endif>{{ old('note') }}</textarea>
                 @error('note') <p class="error">{{ __('erp.gpw.page.note_required') }}</p> @enderror
                 <div class="buttons">
                     <button class="approve" type="submit" name="decision" value="approve">{{ __('erp.gpw.approve') }}</button>

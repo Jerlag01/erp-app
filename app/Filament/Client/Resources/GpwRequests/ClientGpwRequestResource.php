@@ -74,7 +74,7 @@ class ClientGpwRequestResource extends ClientResource
         $user = ClientPortal::user();
 
         return GpwRequest::query()
-            ->with(['project.workSite', 'requester', 'team'])
+            ->with(['project.workSite', 'requester', 'team', 'sites'])
             ->where('status', '!=', GpwStatus::Cancelled)
             ->whereHas('project', fn (Builder $query) => $user ? $user->restrictProjects($query) : $query->whereRaw('1 = 0'));
     }
@@ -94,6 +94,8 @@ class ClientGpwRequestResource extends ClientResource
                     ->searchable(),
                 TextColumn::make('project.cow_code')
                     ->label(__('erp.client_portal.cow_code'))
+                    ->state(fn (GpwRequest $record): ?string => $record->cowCodes())
+                    ->wrap()
                     ->fontFamily(FontFamily::Mono)
                     ->description(fn (GpwRequest $record): ?string => $record->project?->workSite?->city)
                     ->searchable(),

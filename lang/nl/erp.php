@@ -2956,6 +2956,16 @@ return [
         'download_menu' => 'Mobiele app downloaden',
     ],
     'gpw' => [
+        'sites' => [
+            'cow_codes' => 'COW-codes',
+            'cow_codes_help' => 'Eén aanvraag (één mail, één goedkeuring) voor alle aangevinkte COW-codes.',
+            'split' => 'Andere periode per COW-code',
+            'split_help' => 'Elke COW-code met een eigen periode; een COW-code mag ook meerdere keren voorkomen. De goedkeuring geldt voor alles in deze aanvraag.',
+            'per_cow_code' => 'Periode per COW-code',
+            'add' => 'COW-code toevoegen',
+            'none' => 'Kies minstens één COW-code.',
+            'unknown' => 'Deze COW-code hoort niet bij het project.',
+        ],
         'recipients_help' => 'Niemand is vooraf gekozen: kies zelf naar wie de aanvraag gaat. Bovenaan staan bij een interventie (600, 608.1) de interventiecontactpersonen van de area, bij andere projecten de contactpersonen van de COW-code en van de area. Zoek elke andere contactpersoon op naam, bedrijf of e-mail, of voeg een nieuwe persoon toe. Een login voor het klantenportaal is niet nodig.',
         'request_help_choose' => 'Kies naar wie de aanvraag gaat. Elk krijgt een e-mail in zijn eigen taal met de knoppen Goedkeuren en Weigeren (zonder aanmelden), met jou in kopie.',
         'recipients' => 'Versturen naar',
@@ -3041,7 +3051,7 @@ return [
             'open' => 'Project openen',
         ],
         'page' => [
-            'approving' => 'Uw goedkeuring wordt verstuurd als :name …',
+            'deciding_as' => 'U beslist als :name.',
             'reject_reason' => 'Waarom weigert u de aanvraag? (verplicht)',
             'link_used' => 'Deze link werkt niet meer',
             'link_used_body' => 'De knoppen in de e-mail werken één keer en zolang de aanvraag openstaat. Meld u aan om de GPW-aanvraag te bekijken.',

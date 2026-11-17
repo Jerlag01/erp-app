@@ -468,6 +468,17 @@ class ProjectTest extends TestCase
         Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
             ->assertSee('15/01/2027');
 
+        // The "change status" button asks for the date too.
+        $project->update(['status' => ProjectStatus::Executed]);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('changeStatus', ['status' => ProjectStatus::InvoiceRequested->value, 'invoice_requested_at' => null])
+            ->assertHasActionErrors(['invoice_requested_at' => 'required']);
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('changeStatus', ['status' => ProjectStatus::InvoiceRequested->value, 'invoice_requested_at' => '2027-01-15'])
+            ->assertHasNoActionErrors();
+        $this->assertSame('2027-01-15', $project->fresh()->invoice_requested_at->toDateString());
+        $project->refresh();
+
         // Invoiced keeps the date; going back clears it.
         $project->update(['status' => ProjectStatus::Invoiced]);
         $this->assertSame('2027-01-15', $project->fresh()->invoice_requested_at->toDateString());

@@ -3,16 +3,20 @@
 namespace App\Models;
 
 use App\Enums\GpwStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\GpwRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A GPW request for a project: the period we ask the COW site's contact person to work in, with
  * remarks. The client approves or refuses it (mail link or client portal); once approved, the
- * requester plans a team in that period.
+ * requester plans a team in that period. A request can cover several COW codes of the project (an
+ * intervention's COW codes, a battery move's origin and destination), each with its own period
+ * (GpwRequestSite); starts_on/ends_on then span all of them, and one approval covers them all.
  */
 #[Fillable([
     'project_id', 'requested_by', 'work_site_contact_id', 'contact_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
@@ -63,6 +67,16 @@ class GpwRequest extends Model
         return $this->belongsTo(Team::class);
     }
 
+    /**
+     * The COW codes this request covers with their periods, when it was asked for several (else none).
+     *
+     * @return HasMany<GpwRequestSite, $this>
+     */
+    public function sites(): HasMany
+    {
+        return $this->hasMany(GpwRequestSite::class)->orderBy('starts_on')->orderBy('id');
+    }
+
     public const SOURCE_MAIL = 'mail';
 
     public const SOURCE_MANUAL = 'manual';
@@ -87,13 +101,41 @@ class GpwRequest extends Model
     }
 
     /**
-     * "12/11/2026 – 14/11/2026", or one date for a single day.
+     * "12/11/2026 – 14/11/2026", or one date for a single day. For a request with COW codes on different
+     * dates: each COW code with its own period, "02GAM: 12/11/2026 · 03ABC: 13/11/2026 – 14/11/2026".
      */
     public function period(): string
     {
-        $from = $this->starts_on->format('d/m/Y');
+        $sites = $this->sites;
 
-        return $this->starts_on->equalTo($this->ends_on) ? $from : $from.' – '.$this->ends_on->format('d/m/Y');
+        if ($sites->count() > 1 && $sites->contains(fn (GpwRequestSite $site): bool => ! $site->starts_on->equalTo($this->starts_on) || ! $site->ends_on->equalTo($this->ends_on))) {
+            return $sites->map(fn (GpwRequestSite $site): string => ($site->cow_code ?? '—').': '.$site->period())->implode(' · ');
+        }
+
+        return $this->overallPeriod();
+    }
+
+    /**
+     * From the first to the last day asked for, over all COW codes.
+     */
+    public function overallPeriod(): string
+    {
+        return self::formatPeriod($this->starts_on, $this->ends_on);
+    }
+
+    public static function formatPeriod(CarbonInterface $from, CarbonInterface $until): string
+    {
+        return $from->equalTo($until) ? $from->format('d/m/Y') : $from->format('d/m/Y').' – '.$until->format('d/m/Y');
+    }
+
+    /**
+     * The COW codes asked for: "02GAM, 03ABC", or the project's.
+     */
+    public function cowCodes(): ?string
+    {
+        $codes = $this->sites->pluck('cow_code')->filter()->unique()->values();
+
+        return $codes->isNotEmpty() ? $codes->implode(', ') : ($this->project?->workSite?->cow_code ?? $this->project?->cow_code);
     }
 
     /**

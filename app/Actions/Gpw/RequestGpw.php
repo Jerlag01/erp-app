@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkSiteContact;
 use App\Support\ClientPortal;
+use App\Support\GpwSites;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -41,13 +42,17 @@ class RequestGpw
      */
     public static function candidatesFor(Project $project): Collection
     {
-        $project->loadMissing('category', 'workSite.contacts', 'workSite.area.contacts', 'workSite.area.interventionContacts');
+        $project->loadMissing('category', 'workSite');
 
-        $contacts = $project->isIntervention()
-            ? ($project->workSite?->area?->interventionContacts ?? new Collection)
-            : ($project->workSite?->allContacts() ?? new Collection);
+        // All COW codes of the project (an intervention on several, a battery move's origin and destination).
+        $sites = GpwSites::workSites($project)->load('contacts', 'area.contacts', 'area.interventionContacts');
+        $contacts = new Collection;
 
-        return $contacts->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->values();
+        foreach ($sites as $site) {
+            $contacts = $contacts->merge($project->isIntervention() ? ($site->area?->interventionContacts ?? new Collection) : $site->allContacts());
+        }
+
+        return $contacts->filter(fn (WorkSiteContact $contact): bool => filled($contact->email))->unique('id')->values();
     }
 
     /**
@@ -101,7 +106,7 @@ class RequestGpw
     }
 
     /**
-     * @param  array{starts_on: string, ends_on: string, remarks?: string|null, contact_ids: list<int|string>}  $data  contact_ids: the people chosen in the request window
+     * @param  array{starts_on?: string, ends_on?: string, remarks?: string|null, contact_ids: list<int|string>, work_site_ids?: list<int|string>, split?: bool, sites?: list<array{work_site_id: int|string, starts_on: string, ends_on: string}>}  $data  contact_ids: the people chosen in the request window; for a project with several COW codes the COW codes in one period (work_site_ids) or each in its own (split + sites)
      */
     public function handle(Project $project, User $actor, array $data): GpwRequest
     {
@@ -120,30 +125,26 @@ class RequestGpw
             throw ValidationException::withMessages(['contact_ids' => __('erp.gpw.errors.no_recipient')]);
         }
 
-        $from = CarbonImmutable::parse($data['starts_on'])->startOfDay();
-        $until = CarbonImmutable::parse($data['ends_on'])->startOfDay();
+        $period = GpwSites::resolve($project, $data);
 
-        if ($from->isBefore(today())) {
-            throw ValidationException::withMessages(['starts_on' => __('erp.gpw.errors.past')]);
-        }
+        $request = DB::transaction(function () use ($project, $actor, $contact, $contacts, $period, $data): GpwRequest {
+            $request = GpwRequest::query()->create([
+                'project_id' => $project->id,
+                'requested_by' => $actor->id,
+                'work_site_contact_id' => $contact->id,
+                'contact_ids' => $contacts->modelKeys(),
+                'contact_name' => mb_substr($contacts->map(fn (WorkSiteContact $contact): string => $contact->fullName())->implode(', '), 0, 500),
+                'contact_email' => mb_substr($contacts->pluck('email')->implode(', '), 0, 1000),
+                'locale' => $contact->preferredLocale(),
+                'starts_on' => $period['starts_on']->toDateString(),
+                'ends_on' => $period['ends_on']->toDateString(),
+                'remarks' => filled($data['remarks'] ?? null) ? trim((string) $data['remarks']) : null,
+                'status' => GpwStatus::Pending,
+            ]);
+            GpwSites::store($request, $period['sites']);
 
-        if ($until->isBefore($from)) {
-            throw ValidationException::withMessages(['ends_on' => __('validation.after_or_equal', ['attribute' => __('erp.gpw.ends_on'), 'date' => $from->format('d/m/Y')])]);
-        }
-
-        $request = GpwRequest::query()->create([
-            'project_id' => $project->id,
-            'requested_by' => $actor->id,
-            'work_site_contact_id' => $contact->id,
-            'contact_ids' => $contacts->modelKeys(),
-            'contact_name' => mb_substr($contacts->map(fn (WorkSiteContact $contact): string => $contact->fullName())->implode(', '), 0, 500),
-            'contact_email' => mb_substr($contacts->pluck('email')->implode(', '), 0, 1000),
-            'locale' => $contact->preferredLocale(),
-            'starts_on' => $from->toDateString(),
-            'ends_on' => $until->toDateString(),
-            'remarks' => filled($data['remarks'] ?? null) ? trim((string) $data['remarks']) : null,
-            'status' => GpwStatus::Pending,
-        ]);
+            return $request;
+        });
 
         $this->mailFailed = ! $this->mail($request);
 
@@ -188,6 +189,12 @@ class RequestGpw
         // A new mailing: the keys of earlier mails that were not used stop working.
         GpwRequestKey::query()->where('gpw_request_id', $request->id)->whereNull('used_at')->whereNull('revoked_at')->update(['revoked_at' => now()]);
 
+        // Several COW codes: the address of each.
+        $request->loadMissing('sites.workSite');
+        $address = $request->sites->count() > 1
+            ? $request->sites->map(fn ($site): string => trim(($site->cow_code ?? '—').' '.($site->workSite?->addressLine() ?? '')))->unique()->implode(' · ')
+            : ($project->addressLine() ?? $project->workSite?->addressLine() ?? '—');
+
         // Everyone it goes to, shown in every mail.
         $everyone = $recipients->map(fn (array $recipient): string => $recipient[1].' ('.$recipient[0].')')->implode(', ');
 
@@ -205,8 +212,8 @@ class RequestGpw
                         'contact_name' => $names,
                         'recipients' => $everyone,
                         'project' => $project->reference,
-                        'cow_code' => $project->workSite?->cow_code ?? $project->cow_code ?? '—',
-                        'address' => $project->addressLine() ?? $project->workSite?->addressLine() ?? '—',
+                        'cow_code' => $request->cowCodes() ?? '—',
+                        'address' => $address,
                         'description' => $project->short_description ?? '',
                         'period' => $request->period(),
                         'from' => $request->starts_on->format('d/m/Y'),

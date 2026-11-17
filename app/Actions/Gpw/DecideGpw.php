@@ -95,7 +95,7 @@ class DecideGpw
             Mail::to($requester->email, $requester->name)->send(new SystemMail($approved ? MailTemplateKey::GpwApproved : MailTemplateKey::GpwRejected, $locale, [
                 'name' => $requester->name,
                 'project' => $project->reference,
-                'cow_code' => $project->workSite?->cow_code ?? '—',
+                'cow_code' => $request->cowCodes() ?? '—',
                 'period' => $request->period(),
                 'decided_by' => $request->decided_by_name,
                 'note' => $request->decision_note ?? '—',

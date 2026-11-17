@@ -58,13 +58,14 @@ class GpwRequestsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('sites'))
             ->emptyStateHeading(__('erp.gpw.none'))
             ->headerActions([
                 // Asked through a personal mail: added here by hand, with its status.
                 GpwRequestResource::manualAction(fn (): Project => $this->getOwnerRecord(), 'addManual'),
             ])
             ->columns([
-                TextColumn::make('starts_on')->label(__('erp.gpw.period'))->state(fn (GpwRequest $record): string => $record->period())->sortable(),
+                TextColumn::make('starts_on')->label(__('erp.gpw.period'))->state(fn (GpwRequest $record): string => $record->period())->description(fn (GpwRequest $record): ?string => $record->sites->count() > 1 ? $record->cowCodes() : null)->wrap()->sortable(),
                 GpwRequestResource::statusColumn(),
                 TextColumn::make('contact_name')->label(__('erp.gpw.sent_to'))->description(fn (GpwRequest $record): string => $record->contact_email.' · '.strtoupper($record->locale)),
                 TextColumn::make('requester.name')->label(__('erp.gpw.requested_by'))->description(fn (GpwRequest $record): string => $record->created_at->format('d/m/Y H:i')),

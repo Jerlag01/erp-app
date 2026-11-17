@@ -14,8 +14,8 @@ use Illuminate\View\View;
 
 /**
  * The buttons "Approve" and "Refuse" in a GPW request mail: with the recipient's personal key the
- * request is decided without logging in. "Approve" goes through at once (the page sends it by itself);
- * "Refuse" asks for the reason. A key that is used, replaced, expired or of a decided request no longer
+ * request is decided without logging in. Both open the request with an "Approve" and a "Refuse" button;
+ * opening a link decides nothing (refusing asks for the reason). A key that is used, replaced, expired or of a decided request no longer
  * works: the client then logs in to the portal (where a decided request shows its outcome).
  */
 class GpwKeyController

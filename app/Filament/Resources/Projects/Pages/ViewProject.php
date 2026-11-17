@@ -32,6 +32,7 @@ use App\Models\ProjectCategory;
 use App\Models\ProjectPoNumber;
 use App\Models\WorkSiteContact;
 use App\Support\Asbuilts;
+use App\Support\GpwSites;
 use App\Support\Interventions;
 use App\Support\PdfAccess;
 use App\Support\ProjectProgress;
@@ -47,7 +48,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -378,10 +379,8 @@ class ViewProject extends ViewRecord
                         ->createOptionUsing(fn (array $data): int => WorkSiteContact::query()->create($data)->getKey())
                         ->required()
                         ->validationMessages(['required' => __('erp.gpw.errors.no_recipient')]),
-                    Grid::make(2)->schema([
-                        DatePicker::make('starts_on')->label(__('erp.gpw.starts_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->required()->live(),
-                        DatePicker::make('ends_on')->label(__('erp.gpw.ends_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->afterOrEqual('starts_on')->required(),
-                    ]),
+                    // Several COW codes (intervention, battery move): all in one request, in one period or each in its own.
+                    ...GpwSites::schema($record),
                     Textarea::make('remarks')->label(__('erp.gpw.remarks'))->helperText(__('erp.gpw.remarks_help'))->rows(4)->maxLength(2000),
                 ])
                 ->action(function (Project $record, array $data, RequestGpw $requests): void {
@@ -398,16 +397,28 @@ class ViewProject extends ViewRecord
                 ->color('gray')
                 ->visible(fn (Project $record): bool => Gate::allows('update', $record))
                 ->authorize(fn (Project $record): bool => Gate::allows('update', $record))
-                ->fillForm(fn (Project $record): array => ['status' => $record->status])
+                ->fillForm(fn (Project $record): array => ['status' => $record->status, 'invoice_requested_at' => $record->invoice_requested_at ?? today()])
                 ->modalDescription(__('erp.projects.status_closed_help'))
                 ->schema([
                     ToggleButtons::make('status')
                         ->hiddenLabel()
                         ->options(ProjectStatus::class)
-                        ->required(),
+                        ->required()
+                        ->live(),
+                    // "Invoice requested" needs the date the invoice was requested.
+                    DatePicker::make('invoice_requested_at')
+                        ->label(__('erp.projects.invoice_requested_at'))
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->maxDate(today())
+                        ->visible(fn (Get $get): bool => self::isInvoiceRequested($get('status')))
+                        ->required(fn (Get $get): bool => self::isInvoiceRequested($get('status'))),
                 ])
                 ->action(function (Project $record, array $data): void {
-                    $record->update(['status' => $data['status']]);
+                    $record->update(array_filter([
+                        'status' => $data['status'],
+                        'invoice_requested_at' => $data['invoice_requested_at'] ?? null,
+                    ], fn (mixed $value): bool => $value !== null));
                     $record->refresh();
                 })
                 ->successNotificationTitle(__('erp.projects.status_changed')),
@@ -433,5 +444,10 @@ class ViewProject extends ViewRecord
             && $project->work_site_id !== null
             && Gate::allows('view', $project)
             && (self::followUp($project) !== null || (! $project->isArchived() && Gate::allows('create', BatteryRoomDossier::class)));
+    }
+
+    protected static function isInvoiceRequested(mixed $status): bool
+    {
+        return ($status instanceof ProjectStatus ? $status : ProjectStatus::tryFrom((string) $status)) === ProjectStatus::InvoiceRequested;
     }
 }
