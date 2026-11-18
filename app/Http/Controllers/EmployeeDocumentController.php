@@ -3,20 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\EmployeeCertificate;
+use App\Models\EmployeeMedicalCheck;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Certificate PDFs (also of certificates employees submitted), medical check-up files and copies of
- * the driver license from the employee register, for administrators only.
+ * the driver license from the employee register, for administrators (certificates and medical files also with
+ * "certificates.view" / "medical_checks.view").
  * A medical check-up holds several files; $file is the position in its list.
  */
 class EmployeeDocumentController
 {
     public function __invoke(Employee $employee, string $kind, int $id, int $file = 0): StreamedResponse
     {
-        abort_unless(Gate::allows('view', $employee), 403);
+        // Also for whoever sees the certificates or the medical check-ups (overview "Trainings & medical check-ups").
+        abort_unless(Gate::allows('view', $employee)
+            || ($kind === 'certificate' && Gate::allows('viewAny', EmployeeCertificate::class))
+            || ($kind === 'medical' && Gate::allows('viewAny', EmployeeMedicalCheck::class)), 403);
 
         if ($kind === 'certificate' || $kind === 'request') {
             $record = $kind === 'certificate' ? $employee->certificates()->find($id) : $employee->certificateRequests()->find($id);

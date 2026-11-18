@@ -18,6 +18,7 @@ class ListIncidents extends ListRecords
         return [
             // All reports of one employee in one PDF.
             Action::make('exportEmployee')
+                ->visible(fn (): bool => IncidentResource::canExportPdf())
                 ->label(__('erp.incidents.export_employee'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
                 ->color('gray')

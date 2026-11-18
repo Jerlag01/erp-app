@@ -9,6 +9,7 @@ use App\Filament\Admin\Resources\Incidents\Pages\ListIncidents;
 use App\Filament\Admin\Resources\Incidents\Pages\ViewIncident;
 use App\Models\Incident;
 use App\Models\User;
+use App\Support\PdfAccess;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -36,7 +37,8 @@ use Illuminate\Database\Eloquent\Collection;
 use UnitEnum;
 
 /**
- * Incident submissions, per employee, with PDF export. Administrators only.
+ * Incident submissions, per employee, with PDF export. Administrators, and in the employee portal whoever has
+ * "incidents.view" (handling, deleting and the PDF need their own permission, see IncidentPolicy).
  */
 class IncidentResource extends Resource
 {
@@ -70,6 +72,11 @@ class IncidentResource extends Resource
     public static function getNavigationBadgeColor(): string
     {
         return 'danger';
+    }
+
+    public static function canExportPdf(): bool
+    {
+        return PdfAccess::canGenerate(auth()->user(), 'incidents');
     }
 
     public static function pdfUrl(iterable $ids): string
@@ -233,6 +240,7 @@ class IncidentResource extends Resource
                     ->icon(Heroicon::OutlinedDocumentArrowDown)
                     ->iconButton()
                     ->tooltip(__('erp.incidents.export_pdf'))
+                    ->visible(fn (): bool => static::canExportPdf())
                     ->url(fn (Incident $record): string => static::pdfUrl([$record->id]), shouldOpenInNewTab: true),
                 ViewAction::make(),
             ])
@@ -241,6 +249,7 @@ class IncidentResource extends Resource
                     BulkAction::make('exportPdf')
                         ->label(__('erp.incidents.export_pdf'))
                         ->icon(Heroicon::OutlinedDocumentArrowDown)
+                        ->visible(fn (): bool => static::canExportPdf())
                         ->action(fn (Collection $records, $livewire) => $livewire->js('window.open('.json_encode(static::pdfUrl($records->modelKeys())).', "_blank")'))
                         ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),

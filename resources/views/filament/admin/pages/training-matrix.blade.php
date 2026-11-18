@@ -53,7 +53,7 @@
                 @forelse ($matrix['rows'] as $row)
                     <tr wire:key="tm-{{ $row['employee']->id }}">
                         <td class="sticky">
-                            <a href="{{ \App\Filament\Admin\Resources\Employees\EmployeeResource::getUrl('view', ['record' => $row['employee']]) }}" style="text-decoration: none;">{{ $row['name'] }}</a>
+                            <a href="{{ $employeeUrl($row['employee']) }}" style="text-decoration: none;">{{ $row['name'] }}</a>
                         </td>
                         <td class="text">{{ $row['function'] ?: '—' }}</td>
                         <td>{{ $row['mentor'] ? '✓' : '' }}</td>

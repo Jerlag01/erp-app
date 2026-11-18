@@ -15,6 +15,11 @@ enum IncidentType: string implements HasColor, HasLabel
 
     case DangerousAction = 'dangerous_action';
 
+    /**
+     * A regular incident: something that went wrong without being an accident or a (near) danger.
+     */
+    case Regular = 'regular';
+
     public function getLabel(): string
     {
         return __('erp.enums.incident_type.'.$this->value);
@@ -27,6 +32,7 @@ enum IncidentType: string implements HasColor, HasLabel
             self::NearMiss => 'warning',
             self::DangerousSituation => 'info',
             self::DangerousAction => 'info',
+            self::Regular => 'gray',
         };
     }
 }

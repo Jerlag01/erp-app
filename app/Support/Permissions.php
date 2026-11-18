@@ -35,6 +35,11 @@ namespace App\Support;
  * "access_control" covers the badge & electronic key list and the security tag list (deleting needs
  * "access_control.delete"). "onboarding.manage" manages the onboarding documents,
  * "onboarding.view_signatures" sees who signed them.
+ * Safety: "toolbox" (see ToolboxMeetingPolicy) and "incidents": view sees everyone's incident reports, update
+ * handles them (status, follow-up), delete removes them, generate_pdf exports them. Reporting needs no permission.
+ * The overview "Trainings & medical check-ups": "certificates" and "medical_checks" (view/create/update/delete)
+ * on the certificates and medical check-ups of the employees; either "view" opens the overview, which shows
+ * only the columns the user may see. Medical data is separate on purpose.
  * "planning.trainings" plans trainings. Everyone fills in their own prestation sheet; "timesheets.see_all"
  * sees, "timesheets.edit_all" changes everyone's (also after sending) and "timesheets.send" sends weeks;
  * "timesheets.verify_interim" verifies the weeks of interims before they go to their interim office.
@@ -110,6 +115,11 @@ class Permissions
         'asbuilt' => ['module' => Modules::ASBUILT, 'abilities' => ['view', 'manage', 'library', 'reopen', 'delete']],
         'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf', 'sign']],
+        // Safety: the incident reports of everyone (reporting your own needs no permission).
+        'incidents' => ['module' => Modules::INCIDENTS, 'abilities' => ['view', 'update', 'delete', 'generate_pdf']],
+        // Training & medical check-up overview: the certificates and the medical check-ups of the employees.
+        'certificates' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'medical_checks' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'offers' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'view_prices']],
         'offer_master_data' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete']],

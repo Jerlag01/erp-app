@@ -108,6 +108,7 @@ class ReportIncident extends Page
                                 IncidentType::NearMiss->value => 'heroicon-o-hand-raised',
                                 IncidentType::DangerousSituation->value => 'heroicon-o-eye',
                                 IncidentType::DangerousAction->value => 'heroicon-o-no-symbol',
+                                IncidentType::Regular->value => 'heroicon-o-information-circle',
                             ])
                             ->inline()
                             ->required(),

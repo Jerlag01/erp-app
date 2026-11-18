@@ -72,7 +72,8 @@ class ReportIncident
 
     protected function notifyAdministrators(Incident $incident): void
     {
-        $admins = User::query()->active()->whereHas('role', fn ($query) => $query->where('is_admin', true))->get();
+        // Administrators, and in the employee portal whoever sees everyone's incidents ("incidents.view").
+        $admins = User::query()->active()->with('role')->get()->filter(fn (User $user): bool => $user->hasPermission('incidents.view'));
 
         foreach ($admins as $admin) {
             $locale = $admin->preferredLocale();
@@ -85,7 +86,7 @@ class ReportIncident
                 ->actions([
                     Action::make('open')
                         ->label(__('erp.incidents.open', [], $locale))
-                        ->url(IncidentResource::getUrl('view', ['record' => $incident], panel: 'admin')),
+                        ->url(IncidentResource::getUrl('view', ['record' => $incident], panel: $admin->isAdmin() ? 'admin' : 'app')),
                 ])
                 ->sendToDatabase($admin);
         }

@@ -3,16 +3,25 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Enums\NavigationGroup;
+use App\Filament\Admin\Resources\Employees\EmployeeResource;
+use App\Filament\App\Resources\EmployeeTrainings\EmployeeTrainingResource;
+use App\Models\Employee;
+use App\Models\EmployeeCertificate;
+use App\Models\EmployeeMedicalCheck;
 use App\Support\TrainingMatrix as Matrix;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
- * "Opleidingen & medisch onderzoek": the certificates and medical check-ups of all employees at a glance.
+ * "Opleidingen & medisch onderzoek": the certificates and medical check-ups of all employees at a glance. In the
+ * admin panel and, for whoever has "certificates.view" or "medical_checks.view", in the employee portal; the
+ * columns follow those permissions and a name opens the employee's certificates and check-ups.
  */
 class TrainingMatrix extends Page
 {
@@ -34,7 +43,7 @@ class TrainingMatrix extends Page
 
     public static function canAccess(): bool
     {
-        return modules()->employees() && (bool) auth()->user()?->isAdmin();
+        return modules()->employees() && (Gate::allows('viewAny', EmployeeCertificate::class) || Gate::allows('viewAny', EmployeeMedicalCheck::class));
     }
 
     public static function getNavigationLabel(): string
@@ -57,6 +66,11 @@ class TrainingMatrix extends Page
      */
     protected function getViewData(): array
     {
-        return ['matrix' => app(Matrix::class)->build($this->search, $this->onlyProblems)];
+        return [
+            'matrix' => app(Matrix::class)->build($this->search, $this->onlyProblems, Gate::allows('viewAny', EmployeeCertificate::class), Gate::allows('viewAny', EmployeeMedicalCheck::class)),
+            'employeeUrl' => fn (Employee $employee): string => Filament::getCurrentPanel()?->getId() === 'admin'
+                ? EmployeeResource::getUrl('view', ['record' => $employee], panel: 'admin')
+                : EmployeeTrainingResource::getUrl('view', ['record' => $employee], panel: 'app'),
+        ];
     }
 }

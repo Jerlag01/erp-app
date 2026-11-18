@@ -22,11 +22,14 @@ class ViewIncident extends ViewRecord
             Action::make('pdf')
                 ->label(__('erp.incidents.export_pdf'))
                 ->icon(Heroicon::OutlinedDocumentArrowDown)
+                ->visible(fn (): bool => IncidentResource::canExportPdf())
                 ->url(fn (Incident $record): string => IncidentResource::pdfUrl([$record->id]), shouldOpenInNewTab: true),
             Action::make('handle')
                 ->label(__('erp.incidents.handle'))
                 ->icon(Heroicon::OutlinedClipboardDocumentCheck)
                 ->color('gray')
+                ->visible(fn (Incident $record): bool => IncidentResource::canEdit($record))
+                ->authorize(fn (Incident $record): bool => IncidentResource::canEdit($record))
                 ->fillForm(fn (Incident $record): array => ['status' => $record->status->value, 'follow_up' => $record->follow_up])
                 ->schema([
                     Select::make('status')

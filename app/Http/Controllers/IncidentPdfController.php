@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Incident;
+use App\Support\PdfAccess;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +16,7 @@ class IncidentPdfController
 {
     public function __invoke(Request $request): Response
     {
-        abort_unless(Gate::allows('viewAny', Incident::class), 403);
+        abort_unless(Gate::allows('viewAny', Incident::class) && PdfAccess::canGenerate($request->user(), 'incidents'), 403);
 
         $ids = collect((array) $request->query('incidents'))->map(fn (mixed $id): int => (int) $id)->filter()->take(200);
         $incidents = Incident::query()->whereKey($ids)->with(['user', 'place', 'handler'])->orderBy('reporter_name')->orderBy('reported_at')->get();

@@ -33,12 +33,15 @@ class TrainingMatrix
     public const LEFT_OUT = [CertificateType::SchoolDegree];
 
     /**
+     * @param  bool  $certificates  with the certificate columns
+     * @param  bool  $medical  with the medical check-up column
      * @return array{columns: list<array{key: string, label: string, until: bool}>, rows: list<array<string, mixed>>, expired: int, soon: int}
      */
-    public function build(string $search = '', bool $onlyProblems = false): array
+    public function build(string $search = '', bool $onlyProblems = false, bool $certificates = true, bool $medical = true): array
     {
         $employees = Employee::query()->employed()->with(['user', 'certificates', 'latestMedicalCheck'])->orderBy('last_name')->orderBy('first_name')->get();
-        $columns = $this->columns($employees);
+        // Only the columns the user may see: the certificates and/or the medical check-up.
+        $columns = array_values(array_filter($this->columns($employees), fn (array $column): bool => $column['key'] === 'medical' ? $medical : $certificates));
         $rows = $employees->map(fn (Employee $employee): array => $this->row($employee, $columns))->all();
 
         $states = collect($rows)->flatMap(fn (array $row): array => array_column($row['cells'], 'state'));
