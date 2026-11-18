@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Actions\Gpw\DecideGpw;
 use App\Actions\Gpw\PlanGpw;
 use App\Actions\Gpw\RequestGpw;
+use App\Actions\Projects\CloseProject;
 use App\Enums\GpwStatus;
 use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
 use App\Filament\Client\Resources\GpwRequests\Pages\ListClientGpwRequests;
 use App\Filament\Client\Resources\Projects\Pages\ListClientProjects;
 use App\Filament\Resources\GpwRequests\GpwRequestResource;
+use App\Filament\Resources\GpwRequests\Pages\ListGpwRequests;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Mail\SystemMail;
 use App\Models\ClientUser;
@@ -282,6 +284,79 @@ class GpwRequestTest extends TestCase
         $item->update(['date' => $monday->toDateString()]);
         $this->assertSame(GpwStatus::Planned, $second->fresh()->status);
         $this->assertSame(ProjectStatus::Planned, $other->fresh()->status);
+    }
+
+    #[Test]
+    public function a_request_is_in_progress_once_a_planned_day_has_come_and_executed_once_the_project_is_archived(): void
+    {
+        $project = $this->project();
+        $requester = $this->requester($project);
+        $monday = today()->next('Monday');
+        $gpw = $this->gpw($project, $requester, ['starts_on' => $monday->toDateString(), 'ends_on' => $monday->copy()->addDays(2)->toDateString()]);
+        app(DecideGpw::class)->approve($gpw, 'Sophie Dubois');
+        PlanningItem::factory()->forProject($project)->create(['date' => $monday->copy()->addDay()->toDateString()]);
+        $this->assertSame(GpwStatus::Planned, $gpw->fresh()->status);
+
+        // The first day of the period: nothing planned yet that day, still planned.
+        $this->travelTo($monday);
+        $this->artisan('gpw:sync-statuses')->assertSuccessful();
+        $this->assertSame(GpwStatus::Planned, $gpw->fresh()->status);
+
+        // The planned day: in progress, the project too; it stays so after the period.
+        $this->travelTo($monday->copy()->addDay());
+        $this->artisan('gpw:sync-statuses')->assertSuccessful();
+        $this->assertSame(GpwStatus::InProgress, $gpw->fresh()->status);
+        $this->assertSame(ProjectStatus::InProgress, $project->fresh()->status);
+        $this->travelTo($monday->copy()->addWeeks(2));
+        $this->artisan('gpw:sync-statuses')->assertSuccessful();
+        $this->assertSame(GpwStatus::InProgress, $gpw->fresh()->status);
+
+        // Archived: executed; reopened: back in progress.
+        $project->fresh()->update(['status' => ProjectStatus::Closed]);
+        $this->assertSame(GpwStatus::Executed, $gpw->fresh()->status);
+        app(CloseProject::class)->reopen($project->fresh(), ProjectStatus::InProgress);
+        $this->assertSame(GpwStatus::InProgress, $gpw->fresh()->status);
+
+        // The planning removed: back to approved.
+        PlanningItem::query()->where('project_id', $project->id)->get()->each->delete();
+        $this->assertSame(GpwStatus::Approved, $gpw->fresh()->status);
+    }
+
+    #[Test]
+    public function an_administrator_sets_the_status_by_hand_and_it_is_no_longer_changed(): void
+    {
+        $project = $this->project();
+        $requester = $this->requester($project);
+        $monday = today()->next('Monday');
+        $gpw = $this->gpw($project, $requester, ['starts_on' => $monday->toDateString(), 'ends_on' => $monday->toDateString()]);
+        app(DecideGpw::class)->approve($gpw, 'Sophie Dubois');
+
+        // Only administrators.
+        $this->actingAs($requester);
+        Livewire::test(ListGpwRequests::class)->assertTableActionHidden('setStatus', $gpw);
+
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+        Livewire::test(ListGpwRequests::class)
+            ->callTableAction('setStatus', $gpw, ['status' => GpwStatus::Executed->value, 'locked' => true])
+            ->assertHasNoTableActionErrors();
+        $this->assertSame(GpwStatus::Executed, $gpw->fresh()->status);
+        $this->assertSame($admin->id, $gpw->fresh()->status_locked_by);
+
+        // Planned and the days going by change nothing.
+        PlanningItem::factory()->forProject($project)->create(['date' => $monday->toDateString()]);
+        $this->travelTo($monday);
+        $this->artisan('gpw:sync-statuses')->assertSuccessful();
+        $this->assertSame(GpwStatus::Executed, $gpw->fresh()->status);
+        $this->assertSame(ProjectStatus::ToBePlanned, $project->fresh()->status);
+
+        // Handed back: the automatic check takes over at once.
+        Livewire::test(ListGpwRequests::class)
+            ->callTableAction('setStatus', $gpw, ['status' => GpwStatus::Approved->value, 'locked' => false])
+            ->assertHasNoTableActionErrors();
+        $this->assertFalse($gpw->fresh()->isLocked());
+        $this->assertSame(GpwStatus::InProgress, $gpw->fresh()->status);
+        $this->assertSame(ProjectStatus::InProgress, $project->fresh()->status);
     }
 
     #[Test]

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Actions\Gpw\MarkGpwPlanned;
+use App\Actions\Gpw\SyncGpwStatus;
 use App\Enums\BatteryTechnology;
 use App\Enums\PlanningKind;
 use App\Support\Interventions;
@@ -327,10 +327,17 @@ class PlanningItem extends Model
             defer(fn () => app(OutlookCalendar::class)->remove($mailbox, $event));
         });
 
-        // Planned in the period of an approved GPW request: that request becomes "planned" (see MarkGpwPlanned).
+        // The GPW requests of the project follow its planning (planned, in progress; see SyncGpwStatus).
         static::saved(function (self $item): void {
-            if ($item->kind === PlanningKind::Project && $item->project_id !== null && ($item->wasRecentlyCreated || $item->wasChanged(['project_id', 'date', 'kind']))) {
-                app(MarkGpwPlanned::class)->forProject($item->project_id);
+            if ($item->wasRecentlyCreated || $item->wasChanged(['project_id', 'date', 'kind'])) {
+                foreach (array_unique(array_filter([$item->project_id, $item->getOriginal('project_id')])) as $projectId) {
+                    app(SyncGpwStatus::class)->forProject((int) $projectId);
+                }
+            }
+        });
+        static::deleted(function (self $item): void {
+            if ($item->project_id !== null) {
+                app(SyncGpwStatus::class)->forProject($item->project_id);
             }
         });
 

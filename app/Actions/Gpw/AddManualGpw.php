@@ -64,7 +64,7 @@ class AddManualGpw
                 $project->update(['status' => ProjectStatus::ToBePlanned]);
             }
 
-            app(MarkGpwPlanned::class)->handle($request);
+            app(SyncGpwStatus::class)->handle($request);
 
             return $request->refresh();
         });

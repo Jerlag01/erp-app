@@ -21,7 +21,7 @@ use Throwable;
 /**
  * The client approves or refuses a pending GPW request (from the mail link or the client portal).
  * Approved: the project becomes "to be planned", in the approved period, or the request "planned" when
- * the project is already in the planning in that period (MarkGpwPlanned). Either way the requester
+ * the project is already in the planning in that period (SyncGpwStatus). Either way the requester
  * is told in the ERP, on their phone and by e-mail, in their own language.
  */
 class DecideGpw
@@ -59,8 +59,8 @@ class DecideGpw
                 $project->update(['status' => ProjectStatus::ToBePlanned]);
             }
 
-            // Already in the planning within the approved period: planned straight away.
-            app(MarkGpwPlanned::class)->handle($request);
+            // Already in the planning within the approved period: planned (or in progress) straight away.
+            app(SyncGpwStatus::class)->handle($request);
         });
 
         $request->refresh();

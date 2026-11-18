@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'project_id', 'requested_by', 'work_site_contact_id', 'contact_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
     'status', 'source', 'mailed_at', 'decided_at', 'decided_by_client_user_id', 'decided_by_name', 'decision_note', 'team_id', 'planned_at', 'planned_by',
+    'status_locked_at', 'status_locked_by',
 ])]
 class GpwRequest extends Model
 {
@@ -95,6 +96,22 @@ class GpwRequest extends Model
         return __('erp.gpw.overview_status.'.$this->status->value);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function statusLockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'status_locked_by');
+    }
+
+    /**
+     * Set by an administrator: no longer follows the project (see SyncGpwStatus).
+     */
+    public function isLocked(): bool
+    {
+        return $this->status_locked_at !== null;
+    }
+
     public function isPending(): bool
     {
         return $this->status === GpwStatus::Pending;
@@ -143,7 +160,7 @@ class GpwRequest extends Model
      */
     public function canBePlannedBy(User $user): bool
     {
-        return in_array($this->status, [GpwStatus::Approved, GpwStatus::Planned], true)
+        return in_array($this->status, [GpwStatus::Approved, GpwStatus::Planned, GpwStatus::InProgress], true)
             && $this->project !== null
             && ($this->requested_by === $user->id || $user->isAdmin() || $user->hasPermission('planning.plan') || $this->project->isLedBy($user));
     }
@@ -161,6 +178,7 @@ class GpwRequest extends Model
             'mailed_at' => 'datetime',
             'decided_at' => 'datetime',
             'planned_at' => 'datetime',
+            'status_locked_at' => 'datetime',
         ];
     }
 }

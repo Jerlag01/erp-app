@@ -182,7 +182,7 @@ class ProjectController extends Controller
         return [
             'status' => $gpw->status->value,
             'label' => $gpw->overviewStatus(),
-            'approved' => in_array($gpw->status, [GpwStatus::Approved, GpwStatus::Planned], true),
+            'approved' => in_array($gpw->status, [GpwStatus::Approved, GpwStatus::Planned, GpwStatus::InProgress, GpwStatus::Executed], true),
             'starts_on' => $gpw->starts_on->toDateString(),
             'ends_on' => $gpw->ends_on->toDateString(),
             'period' => $gpw->period(),

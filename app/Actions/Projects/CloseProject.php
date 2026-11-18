@@ -4,6 +4,7 @@ namespace App\Actions\Projects;
 
 use App\Actions\Batteries\BatteryDocument;
 use App\Actions\Batteries\BatteryRoomDocument;
+use App\Actions\Gpw\SyncGpwStatus;
 use App\Enums\ProjectStatus;
 use App\Models\BatteryDossier;
 use App\Models\BatteryRoomDossier;
@@ -47,6 +48,9 @@ class CloseProject
         // A 604 that skipped "invoicing to do" still gets its 609 (see Project::booted()); nothing is made twice.
         app(CreateFollowUpProject::class)->handle($project);
         app(Asbuilts::class)->sourceDone($project);
+
+        // Its GPW requests: executed.
+        app(SyncGpwStatus::class)->forProject($project);
     }
 
     /**
@@ -141,5 +145,6 @@ class CloseProject
     public function reopen(Project $project, ProjectStatus $status): void
     {
         $project->forceFill(['status' => $status, 'archived_at' => null])->saveQuietly();
+        app(SyncGpwStatus::class)->forProject($project);
     }
 }

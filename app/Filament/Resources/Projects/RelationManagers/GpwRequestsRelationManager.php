@@ -158,6 +158,7 @@ class GpwRequestsRelationManager extends RelationManager
                     ->requiresConfirmation()
                     ->action(fn (GpwRequest $record) => $record->update(['status' => GpwStatus::Cancelled]))
                     ->successNotificationTitle(__('erp.gpw.cancelled')),
+                GpwRequestResource::statusAction(),
                 GpwRequestResource::deleteAction(),
             ]);
     }

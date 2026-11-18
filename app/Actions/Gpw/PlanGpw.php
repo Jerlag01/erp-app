@@ -59,6 +59,9 @@ class PlanGpw
             $request->project->update(['status' => ProjectStatus::Planned]);
         }
 
+        // Planned for today or a day already begun: in progress.
+        app(SyncGpwStatus::class)->handle($request->refresh());
+
         return $result;
     }
 }

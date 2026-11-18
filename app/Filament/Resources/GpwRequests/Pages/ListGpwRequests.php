@@ -36,7 +36,7 @@ class ListGpwRequests extends ListRecords
         $counts = GpwRequestResource::getEloquentQuery()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $tabs = ['all' => Tab::make(__('erp.gpw.all'))];
 
-        foreach ([GpwStatus::Pending, GpwStatus::Approved, GpwStatus::Rejected, GpwStatus::Planned] as $status) {
+        foreach ([GpwStatus::Pending, GpwStatus::Approved, GpwStatus::Rejected, GpwStatus::Planned, GpwStatus::InProgress, GpwStatus::Executed] as $status) {
             $tabs[$status->value] = Tab::make(__('erp.gpw.overview_status.'.$status->value))
                 ->icon($status->getIcon())
                 ->badge((int) ($counts[$status->value] ?? 0) ?: null)

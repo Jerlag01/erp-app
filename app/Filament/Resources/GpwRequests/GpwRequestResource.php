@@ -4,6 +4,7 @@ namespace App\Filament\Resources\GpwRequests;
 
 use App\Actions\Gpw\AddManualGpw;
 use App\Actions\Gpw\DecideGpw;
+use App\Actions\Gpw\SyncGpwStatus;
 use App\Enums\GpwStatus;
 use App\Enums\NavigationGroup;
 use App\Enums\ProjectStatus;
@@ -22,6 +23,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -108,6 +110,47 @@ class GpwRequestResource extends Resource
             ->modalDescription(__('erp.gpw.delete_help'));
     }
 
+    /**
+     * Administrators set the status by hand; it then no longer follows the project (SyncGpwStatus) until
+     * they hand it back to the automatic check.
+     */
+    public static function statusAction(): Action
+    {
+        $isAdmin = fn (): bool => auth()->user() instanceof User && auth()->user()->isAdmin();
+
+        return Action::make('setStatus')
+            ->label(__('erp.gpw.set_status'))
+            ->icon(Heroicon::OutlinedAdjustmentsHorizontal)
+            ->color('gray')
+            ->visible($isAdmin)
+            ->authorize($isAdmin)
+            ->modalDescription(__('erp.gpw.set_status_help'))
+            ->fillForm(fn (GpwRequest $record): array => ['status' => $record->status->value, 'locked' => true])
+            ->schema([
+                ToggleButtons::make('status')
+                    ->label(__('erp.fields.status'))
+                    ->options(GpwStatus::class)
+                    ->inline()
+                    ->required(),
+                Toggle::make('locked')
+                    ->label(__('erp.gpw.status_locked'))
+                    ->helperText(__('erp.gpw.status_locked_help')),
+            ])
+            ->action(function (GpwRequest $record, array $data, SyncGpwStatus $sync): void {
+                $record->update([
+                    'status' => $data['status'],
+                    'status_locked_at' => $data['locked'] ? now() : null,
+                    'status_locked_by' => $data['locked'] ? auth()->id() : null,
+                ]);
+
+                if (! $data['locked']) {
+                    $sync->handle($record->refresh());
+                }
+
+                Notification::make()->title(__('erp.gpw.status_saved'))->success()->send();
+            });
+    }
+
     public static function getNavigationBadge(): ?string
     {
         $count = static::canViewAny() ? static::getEloquentQuery()->where('status', GpwStatus::Pending)->count() : 0;
@@ -134,6 +177,7 @@ class GpwRequestResource extends Resource
             ->formatStateUsing(fn (GpwRequest $record): string => $record->overviewStatus())
             ->badge()
             ->color(fn (GpwRequest $record): string => $record->status->getColor())
+            ->description(fn (GpwRequest $record): ?string => $record->isLocked() ? __('erp.gpw.status_locked_by', ['date' => $record->status_locked_at->format('d/m/Y')]) : null)
             ->icon(fn (GpwRequest $record): Heroicon => $record->status->getIcon());
     }
 
@@ -210,6 +254,7 @@ class GpwRequestResource extends Resource
 
                         Notification::make()->title(__('erp.gpw.decision_saved'))->success()->send();
                     }),
+                static::statusAction(),
                 static::deleteAction(),
             ]);
     }

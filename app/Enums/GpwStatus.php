@@ -9,7 +9,8 @@ use Filament\Support\Icons\Heroicon;
 
 /**
  * Where a GPW request stands: waiting for the client, approved or refused by them, planned for a
- * team in the approved period, or withdrawn by us.
+ * team in the approved period, in progress (work has begun in the period), executed (project archived), or
+ * withdrawn by us. From approved on it follows the project by itself (SyncGpwStatus).
  */
 enum GpwStatus: string implements HasColor, HasIcon, HasLabel
 {
@@ -20,6 +21,10 @@ enum GpwStatus: string implements HasColor, HasIcon, HasLabel
     case Rejected = 'rejected';
 
     case Planned = 'planned';
+
+    case InProgress = 'in_progress';
+
+    case Executed = 'executed';
 
     case Cancelled = 'cancelled';
 
@@ -35,6 +40,8 @@ enum GpwStatus: string implements HasColor, HasIcon, HasLabel
             self::Approved => 'success',
             self::Rejected => 'danger',
             self::Planned => 'info',
+            self::InProgress => 'primary',
+            self::Executed => 'success',
             self::Cancelled => 'gray',
         };
     }
@@ -46,6 +53,8 @@ enum GpwStatus: string implements HasColor, HasIcon, HasLabel
             self::Approved => Heroicon::OutlinedCheckCircle,
             self::Rejected => Heroicon::OutlinedXCircle,
             self::Planned => Heroicon::OutlinedCalendarDays,
+            self::InProgress => Heroicon::OutlinedWrenchScrewdriver,
+            self::Executed => Heroicon::OutlinedCheckBadge,
             self::Cancelled => Heroicon::OutlinedMinusCircle,
         };
     }
