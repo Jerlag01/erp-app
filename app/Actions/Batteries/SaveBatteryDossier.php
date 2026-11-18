@@ -104,6 +104,15 @@ class SaveBatteryDossier
                         $values[$key] = $number($row[$key]);
                     }
                 }
+
+                // Mobile app builds from before the total fields (< 1.1.4) show the sum of the cells as the
+                // total but never send one: keep that sum rather than leaving the measurement report without.
+                foreach (['total_voltage' => 'cell_voltages', 'floating_total_voltage' => 'floating_voltages'] as $total => $cellsKey) {
+                    if (! array_key_exists($total, $row) && array_key_exists($cellsKey, $row) && $battery->{$total} === null) {
+                        $measured = array_filter($values[$cellsKey], fn (?float $value): bool => $value !== null);
+                        $values[$total] = $measured === [] ? null : round(array_sum($measured), 2);
+                    }
+                }
             }
 
             if ($mayChangeIds && filled($row['id_number'] ?? null)) {

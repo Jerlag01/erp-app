@@ -111,6 +111,33 @@ class MobileBatteryDossierApiTest extends TestCase
     }
 
     #[Test]
+    public function the_total_voltage_is_kept_through_signing_and_older_apps_get_the_sum_of_the_cells(): void
+    {
+        $auth = $this->technician();
+        $project = $this->project();
+        $dossier = BatteryDossier::factory()->create(['project_id' => $project->id, 'new_count' => 2, 'cells_per_battery' => 3]);
+
+        // The current app sends the measured total; signing keeps it.
+        $this->putJson("/api/v1/dossiers/bae/{$dossier->id}", ['batteries' => [1 => ['cell_voltages' => [2.21, 2.22, 2.2], 'total_voltage' => 6.7]]], $auth)->assertOk();
+        $this->postJson("/api/v1/dossiers/bae/{$dossier->id}/signatures/measurement", ['name' => 'Jan Peeters', 'width' => 320, 'height' => 120, 'strokes' => $this->strokes()], $auth)
+            ->assertOk()
+            ->assertJsonPath('data.batteries.0.total_voltage', 6.7);
+
+        // An app from before the total field sends only the cells: their sum is kept as the total.
+        $older = BatteryDossier::factory()->create(['project_id' => $project->id, 'new_count' => 1, 'cells_per_battery' => 3]);
+        $this->putJson("/api/v1/dossiers/bae/{$older->id}", ['batteries' => [1 => ['cell_voltages' => [2.21, 2.22, 2.2]]]], $auth)->assertOk();
+        $this->postJson("/api/v1/dossiers/bae/{$older->id}/signatures/measurement", ['name' => 'Jan Peeters', 'width' => 320, 'height' => 120, 'strokes' => $this->strokes()], $auth)
+            ->assertOk()
+            ->assertJsonPath('data.batteries.0.total_voltage', 6.63);
+
+        // A total filled in is never overwritten by the sum.
+        $older->batteries()->sole()->update(['total_voltage' => 6.8]);
+        $older->signature('measurement')?->delete();
+        $this->putJson("/api/v1/dossiers/bae/{$older->id}", ['batteries' => [1 => ['cell_voltages' => [2.21, 2.22, 2.25]]]], $auth)->assertOk();
+        $this->assertEqualsWithDelta(6.8, $older->batteries()->sole()->endVoltage(), 0.001);
+    }
+
+    #[Test]
     public function enersys_dossiers_follow_their_own_rights_and_measure_floating_voltages(): void
     {
         $dossier = EnersysDossier::factory()->create(['project_id' => $this->project('605')->id, 'new_count' => 1, 'cells_per_battery' => 2]);
