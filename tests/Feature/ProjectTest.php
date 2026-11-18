@@ -479,8 +479,9 @@ class ProjectTest extends TestCase
         $this->assertSame('2027-01-15', $project->fresh()->invoice_requested_at->toDateString());
         $project->refresh();
 
-        // Invoiced keeps the date; going back clears it.
+        // Invoiced (closed straight away) keeps the date; going back clears it.
         $project->update(['status' => ProjectStatus::Invoiced]);
+        $this->assertSame(ProjectStatus::Closed, $project->fresh()->status);
         $this->assertSame('2027-01-15', $project->fresh()->invoice_requested_at->toDateString());
         $project->update(['status' => ProjectStatus::InvoicingToDo]);
         $this->assertNull($project->fresh()->invoice_requested_at);

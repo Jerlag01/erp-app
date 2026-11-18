@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Gpw\MarkGpwPlanned;
 use App\Enums\BatteryTechnology;
 use App\Enums\PlanningKind;
 use App\Support\Interventions;
@@ -324,6 +325,13 @@ class PlanningItem extends Model
         static::deleted(function (self $item): void {
             [$mailbox, $event] = [$item->outlook_mailbox, $item->outlook_event_id];
             defer(fn () => app(OutlookCalendar::class)->remove($mailbox, $event));
+        });
+
+        // Planned in the period of an approved GPW request: that request becomes "planned" (see MarkGpwPlanned).
+        static::saved(function (self $item): void {
+            if ($item->kind === PlanningKind::Project && $item->project_id !== null && ($item->wasRecentlyCreated || $item->wasChanged(['project_id', 'date', 'kind']))) {
+                app(MarkGpwPlanned::class)->forProject($item->project_id);
+            }
         });
 
         static::saving(function (self $item): void {

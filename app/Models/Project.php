@@ -570,7 +570,7 @@ class Project extends Model
             app(CreateBatteryRoomDossier::class)->handle($project, $by instanceof User ? $by : null);
         });
 
-        // Status changes: closing (and "invoiced" on 610–650 projects) archives the project. A 604 whose
+        // Status changes: closing, and "invoiced" (which goes straight on to "closed"), archives the project. A 604 whose
         // works are done ("invoicing to do", set when its battery dossier is finished, or later) gets its
         // 609 in Flanders or Brussels (see CreateFollowUpProject; CloseProject does it too).
         static::updated(function (self $project): void {
@@ -578,7 +578,7 @@ class Project extends Model
                 return;
             }
 
-            if ($project->status === ProjectStatus::Closed || ($project->status === ProjectStatus::Invoiced && ProjectProgress::appliesTo($project))) {
+            if (in_array($project->status, [ProjectStatus::Invoiced, ProjectStatus::Closed], true)) {
                 app(CloseProject::class)->handle($project);
 
                 return;

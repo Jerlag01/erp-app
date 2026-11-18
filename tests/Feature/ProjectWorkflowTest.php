@@ -116,11 +116,10 @@ class ProjectWorkflowTest extends TestCase
         $project = $this->project('607');
         ProjectFile::store($project, ProjectFileSection::Documents, UploadedFile::fake()->create('meetstaat.xlsx', 10));
 
+        // Invoiced goes straight on to closed, for every project.
         $project->update(['status' => ProjectStatus::Invoiced]);
-        $this->assertFalse($project->fresh()->isArchived(), 'Invoiced only closes 610–650 projects.');
-
-        $project->update(['status' => ProjectStatus::Closed]);
         $this->assertTrue($project->fresh()->isArchived());
+        $this->assertSame(ProjectStatus::Closed, $project->fresh()->status);
         Storage::disk('local')->assertExists($project->fresh()->archive_path);
         $this->assertSame($project->fresh()->archive_path, app(CloseProject::class)->zip($project->fresh()), 'Same name when built again.');
     }

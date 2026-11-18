@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Gpw\DecideGpw;
 use App\Actions\Gpw\PlanGpw;
 use App\Actions\Gpw\RequestGpw;
 use App\Enums\GpwStatus;
@@ -250,6 +251,37 @@ class GpwRequestTest extends TestCase
         Livewire::test(ListClientProjects::class)
             ->assertSee(ProjectStatus::Planned->getLabel())
             ->assertSee(GpwStatus::Planned->getLabel().' · '.$gpw->period());
+    }
+
+    #[Test]
+    public function a_request_is_planned_once_the_project_is_in_the_planning_within_its_period(): void
+    {
+        $project = $this->project();
+        $requester = $this->requester($project);
+        $monday = today()->next('Monday');
+
+        // Already in the planning in the period: approving makes it planned straight away.
+        PlanningItem::factory()->forProject($project)->create(['date' => $monday->copy()->addDay()->toDateString(), 'created_by' => $requester->id]);
+        $gpw = $this->gpw($project, $requester, ['starts_on' => $monday->toDateString(), 'ends_on' => $monday->copy()->addDays(2)->toDateString()]);
+        $this->assertSame(GpwStatus::Pending, $gpw->status, 'Waiting for the client stays waiting.');
+
+        app(DecideGpw::class)->approve($gpw, 'Sophie Dubois');
+        $this->assertSame(GpwStatus::Planned, $gpw->fresh()->status);
+        $this->assertSame($requester->id, $gpw->fresh()->planned_by);
+        $this->assertSame(ProjectStatus::Planned, $project->fresh()->status);
+
+        // Approved first, planned later (outside the period does not count).
+        $other = Project::factory()->inCategory('610')->for($project->workSite)->create(['status' => ProjectStatus::ToBeExecuted]);
+        $second = $this->gpw($other, $this->requester($other), ['starts_on' => $monday->toDateString(), 'ends_on' => $monday->toDateString()]);
+        app(DecideGpw::class)->approve($second, 'Sophie Dubois');
+        $this->assertSame(GpwStatus::Approved, $second->fresh()->status);
+
+        $item = PlanningItem::factory()->forProject($other)->create(['date' => $monday->copy()->addWeek()->toDateString()]);
+        $this->assertSame(GpwStatus::Approved, $second->fresh()->status);
+
+        $item->update(['date' => $monday->toDateString()]);
+        $this->assertSame(GpwStatus::Planned, $second->fresh()->status);
+        $this->assertSame(ProjectStatus::Planned, $other->fresh()->status);
     }
 
     #[Test]
