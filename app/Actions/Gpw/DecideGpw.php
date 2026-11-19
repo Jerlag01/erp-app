@@ -64,12 +64,13 @@ class DecideGpw
         });
 
         $request->refresh();
-        $this->notifyRequester($request);
+        // Told what was decided: an approval may already have moved on to planned or in progress.
+        $this->notifyRequester($request, $status === GpwStatus::Approved);
 
         return $request;
     }
 
-    protected function notifyRequester(GpwRequest $request): void
+    protected function notifyRequester(GpwRequest $request, bool $approved): void
     {
         $request->loadMissing('requester', 'project.workSite');
         $requester = $request->requester;
@@ -79,7 +80,6 @@ class DecideGpw
             return;
         }
 
-        $approved = $request->status === GpwStatus::Approved;
         $locale = $requester->preferredLocale() ?? config('app.locale');
         $url = ProjectResource::getUrl('view', ['record' => $project], panel: 'app');
         $title = __($approved ? 'erp.gpw.notifications.approved_title' : 'erp.gpw.notifications.rejected_title', ['project' => $project->reference], $locale);

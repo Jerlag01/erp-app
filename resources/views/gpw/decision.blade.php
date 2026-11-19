@@ -32,7 +32,7 @@
         button { font: inherit; font-weight: 600; border: 0; border-radius: .5rem; padding: .65rem 1.25rem; cursor: pointer; color: #fff; }
         .approve { background: var(--ok); } .reject { background: var(--no); }
         .status { padding: .75rem 1rem; border-radius: .5rem; border: 1px solid var(--line); font-weight: 600; }
-        .status.approved, .status.planned { color: var(--ok); } .status.rejected { color: var(--no); }
+        .status.approved, .status.planned, .status.in_progress, .status.executed { color: var(--ok); } .status.rejected { color: var(--no); }
         .error { color: var(--no); font-size: .9rem; }
         .muted { color: var(--muted); font-size: .9rem; }
         .sites { margin: 0; padding-left: 1.1rem; }

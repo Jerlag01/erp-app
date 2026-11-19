@@ -267,9 +267,14 @@ class GpwRequestTest extends TestCase
         $gpw = $this->gpw($project, $requester, ['starts_on' => $monday->toDateString(), 'ends_on' => $monday->copy()->addDays(2)->toDateString()]);
         $this->assertSame(GpwStatus::Pending, $gpw->status, 'Waiting for the client stays waiting.');
 
+        Mail::fake();
         app(DecideGpw::class)->approve($gpw, 'Sophie Dubois');
         $this->assertSame(GpwStatus::Planned, $gpw->fresh()->status);
         $this->assertSame($requester->id, $gpw->fresh()->planned_by);
+        // The requester hears it was approved, not refused, even though it is planned already.
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo($requester->email) && $mail->key === MailTemplateKey::GpwApproved);
+        Mail::assertNotSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::GpwRejected);
+        $this->assertSame(__('erp.gpw.notifications.approved_title', ['project' => $project->reference], $requester->preferredLocale() ?? config('app.locale')), $requester->notifications()->latest()->first()->data['title']);
         $this->assertSame(ProjectStatus::Planned, $project->fresh()->status);
 
         // Approved first, planned later (outside the period does not count).
