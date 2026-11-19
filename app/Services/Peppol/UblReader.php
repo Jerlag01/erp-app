@@ -13,7 +13,7 @@ use InvalidArgumentException;
 class UblReader
 {
     /**
-     * @return array{is_credit_note: bool, supplier_name: string, supplier_vat: ?string, supplier_endpoint: ?string, receiver_endpoint: ?string, supplier_invoice_number: string, invoice_date: string, due_date: ?string, subtotal: float, vat_total: float, total: float, description: ?string, pdf: ?array{name: string, data: string}, order_reference: ?string, sales_order_id: ?string, buyer_reference: ?string, despatch_references: list<string>, sales_order_ids: list<string>, lines: list<array{seller_id: ?string, manufacturer_id: ?string, name: ?string, quantity: float, unit: ?string, price: ?float}>}
+     * @return array{is_credit_note: bool, supplier_name: string, supplier_vat: ?string, supplier_endpoint: ?string, receiver_endpoint: ?string, supplier_invoice_number: string, invoice_date: string, due_date: ?string, subtotal: float, vat_total: float, total: float, description: ?string, pdf: ?array{name: string, data: string}, order_reference: ?string, sales_order_id: ?string, buyer_reference: ?string, despatch_references: list<string>, sales_order_ids: list<string>, lines: list<array{seller_id: ?string, manufacturer_id: ?string, name: ?string, quantity: float, unit: ?string, price: ?float, line_total: float, vat_category: ?string, vat_percent: ?float}>, payment_id: ?string, currency: string, note: ?string, billing_reference: ?string, customer: array{name: ?string, vat: ?string, endpoint: ?string, street: ?string, house_number: ?string, postal_code: ?string, city: ?string, country: ?string, email: ?string}}
      */
     public function read(string $xml): array
     {
@@ -79,6 +79,34 @@ class UblReader
             'despatch_references' => $this->distinct($xpath, '/*/cac:DespatchDocumentReference/cbc:ID | //cac:DespatchLineReference/cac:DocumentReference/cbc:ID'),
             'sales_order_ids' => $this->distinct($xpath, '/*/cac:OrderReference/cbc:SalesOrderID | //cac:OrderLineReference/cac:OrderReference/cbc:SalesOrderID'),
             'lines' => $this->lines($xpath),
+            'payment_id' => $value('/*/cac:PaymentMeans/cbc:PaymentID'),
+            'currency' => $value('/*/cbc:DocumentCurrencyCode') ?? 'EUR',
+            'note' => $value('/*/cbc:Note'),
+            'billing_reference' => $value('/*/cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID'),
+            'customer' => $this->party($xpath, '/*/cac:AccountingCustomerParty/cac:Party', $endpoint),
+        ];
+    }
+
+    /**
+     * A party's name, VAT number, address and e-mail address.
+     *
+     * @param  callable(string): ?string  $endpoint
+     * @return array{name: ?string, vat: ?string, endpoint: ?string, street: ?string, house_number: ?string, postal_code: ?string, city: ?string, country: ?string, email: ?string}
+     */
+    protected function party(DOMXPath $xpath, string $party, callable $endpoint): array
+    {
+        $value = fn (string $path): ?string => ($node = $xpath->query("{$party}/{$path}")->item(0)) && trim($node->textContent) !== '' ? trim($node->textContent) : null;
+
+        return [
+            'name' => $value('cac:PartyLegalEntity/cbc:RegistrationName') ?? $value('cac:PartyName/cbc:Name'),
+            'vat' => $value('cac:PartyTaxScheme/cbc:CompanyID') ?? $value('cac:PartyLegalEntity/cbc:CompanyID'),
+            'endpoint' => $endpoint($party),
+            'street' => $value('cac:PostalAddress/cbc:StreetName'),
+            'house_number' => $value('cac:PostalAddress/cbc:BuildingNumber'),
+            'postal_code' => $value('cac:PostalAddress/cbc:PostalZone'),
+            'city' => $value('cac:PostalAddress/cbc:CityName'),
+            'country' => $value('cac:PostalAddress/cac:Country/cbc:IdentificationCode'),
+            'email' => $value('cac:Contact/cbc:ElectronicMail'),
         ];
     }
 
@@ -117,6 +145,9 @@ class UblReader
                 'quantity' => (float) ($quantity?->textContent ?? 0),
                 'unit' => $quantity?->attributes?->getNamedItem('unitCode')?->nodeValue,
                 'price' => $price === null ? null : round((float) $price / $base, 4),
+                'line_total' => (float) ($value('cbc:LineExtensionAmount') ?? 0),
+                'vat_category' => $value('cac:Item/cac:ClassifiedTaxCategory/cbc:ID'),
+                'vat_percent' => ($percent = $value('cac:Item/cac:ClassifiedTaxCategory/cbc:Percent')) === null ? null : (float) $percent,
             ];
         }
 

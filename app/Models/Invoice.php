@@ -139,6 +139,14 @@ class Invoice extends Model
         return $this->status === InvoiceStatus::Draft;
     }
 
+    /**
+     * An earlier invoice read from its UBL file (it keeps its own number and PDF).
+     */
+    public function isImported(): bool
+    {
+        return $this->source === 'import';
+    }
+
     public function isPaid(): bool
     {
         return $this->status === InvoiceStatus::Paid;
@@ -315,6 +323,7 @@ class Invoice extends Model
             'vat_total' => 'decimal:2',
             'total' => 'decimal:2',
             'finalized_at' => 'datetime',
+            'accounting_exported_at' => 'datetime',
             'sent_at' => 'datetime',
             'last_reminder_at' => 'datetime',
             'reminder_level' => 'integer',

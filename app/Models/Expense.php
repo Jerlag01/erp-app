@@ -19,8 +19,8 @@ use LogicException;
  */
 #[Fillable([
     'supplier_name', 'supplier_vat', 'supplier_invoice_number', 'is_credit_note', 'invoice_date', 'due_date',
-    'subtotal', 'vat_total', 'total', 'description', 'project_id', 'document', 'document_name', 'source', 'ubl_path',
-    'paid_on', 'created_by',
+    'subtotal', 'vat_total', 'total', 'description', 'project_id', 'document', 'document_name', 'document_hash', 'source',
+    'inbox_reference', 'payment_reference', 'ubl_path', 'paid_on', 'created_by',
 ])]
 class Expense extends Model
 {
@@ -133,6 +133,7 @@ class Expense extends Model
             'due_date' => 'date',
             'paid_on' => 'date',
             'validated_at' => 'datetime',
+            'accounting_exported_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'vat_total' => 'decimal:2',
             'total' => 'decimal:2',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Finance\InvoicePdf;
 use App\Actions\Finance\OfferPdf;
+use App\Models\AccountingExport;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Offer;
@@ -16,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Invoice and offer PDFs, Peppol UBL files, and the documents of incoming invoices (PDF, UBL and the
- * validation signature), for users with the matching finance rights.
+ * validation signature), and the exports for the accountant, for users with the matching finance rights.
  */
 class FinanceDocumentController
 {
@@ -27,7 +28,12 @@ class FinanceDocumentController
         if ($format === 'ubl') {
             abort_if($invoice->isDraft(), 404);
 
-            return response($peppol->ublFor($invoice, $pdf->render($invoice)), 200, [
+            // An imported invoice: the UBL it was read from.
+            $xml = $invoice->source_xml_path && Storage::disk('local')->exists($invoice->source_xml_path)
+                ? (string) Storage::disk('local')->get($invoice->source_xml_path)
+                : $peppol->ublFor($invoice, $pdf->render($invoice));
+
+            return response($xml, 200, [
                 'Content-Type' => 'application/xml',
                 'Content-Disposition' => 'attachment; filename="'.str_replace('.pdf', '.xml', InvoicePdf::filename($invoice)).'"',
             ]);
@@ -40,6 +46,14 @@ class FinanceDocumentController
             'Content-Disposition' => 'inline; filename="'.InvoicePdf::filename($invoice).'"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    public function accountingExport(AccountingExport $export): Response
+    {
+        abort_unless(Gate::allows('view', $export), 403);
+        abort_unless(Storage::disk(AccountingExport::DISK)->exists($export->path), 404);
+
+        return Storage::disk(AccountingExport::DISK)->download($export->path, $export->filename(), ['Content-Type' => 'application/zip']);
     }
 
     public function offer(Offer $offer, OfferPdf $pdf): Response

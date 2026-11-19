@@ -159,6 +159,29 @@ class Settings
                 'peppol_provider_url' => null,
                 'peppol_api_key' => null,
                 'peppol_inbound_secret' => null,
+                // The accountant who receives the exports.
+                'accountant_email' => null,
+                'accountant_locale' => 'nl',
+                // Doccle mailbox (incoming e-invoices).
+                'doccle_enabled' => false,
+                'doccle_api_url' => null,
+                'doccle_api_key' => null,
+                // Mailbox folder read as a backup way in for incoming invoices (IMAP).
+                'inbox_enabled' => false,
+                'inbox_host' => null,
+                'inbox_port' => 993,
+                'inbox_encryption' => 'ssl',
+                'inbox_username' => null,
+                'inbox_password' => null,
+                'inbox_folder' => 'INBOX',
+                'inbox_processed_folder' => null,
+                // Ponto Connect: reading the bank accounts (ING, Belfius, KBC…).
+                'ponto_sandbox' => false,
+                'ponto_client_id' => null,
+                'ponto_client_secret' => null,
+                'ponto_certificate' => null,
+                'ponto_private_key' => null,
+                'ponto_key_passphrase' => null,
             ],
             // Offers (Settings > Offers): numbering, the hourly rate for the workdays, the default remarks, and
             // the company on the offer (empty: the finance company details, else the site name).

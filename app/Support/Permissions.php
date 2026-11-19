@@ -12,7 +12,10 @@ namespace App\Support;
  * The finance areas are not granted to any role by default: employees only see finance once
  * given these rights. "credit_notes.override" allows changing what a credit note copied from
  * its invoice (after switching that on per credit note); "expenses.validate" accepts or rejects
- * incoming invoices. "offers" (module Offers, with or without finance) makes offers for projects and
+ * incoming invoices. "banking" reads the bank accounts (view), links movements to invoices (match),
+ * imports CODA files or starts a Ponto read (import) and manages the accounts and the Ponto connection
+ * (manage); nothing is ever paid from the ERP. "accounting_export" downloads (view), makes (create) and
+ * mails (send) the exports for the accountant. "offers" (module Offers, with or without finance) makes offers for projects and
  * "offers.view_prices" shows the cost prices (warehouse prices) and profit factors on the lines; without it
  * stock lines get the item's price and the default factor behind the scenes. "offer_master_data" manages their categories and default lines; turning an offer into an invoice also
  * needs the finance module and "invoices.create". The client's internal memo is for administrators only.
@@ -105,6 +108,8 @@ class Permissions
         'credit_notes' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'send', 'override', 'generate_pdf']],
         'expenses' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete', 'validate', 'download_pdf']],
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'banking' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'match', 'import', 'manage']],
+        'accounting_export' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'send']],
         'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other', 'trainings']],
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf', 'verify_interim']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],

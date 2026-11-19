@@ -38,6 +38,7 @@ use App\Http\Controllers\MoveDocumentController;
 use App\Http\Controllers\OnboardingDocumentController;
 use App\Http\Controllers\ParentalLeaveDocumentController;
 use App\Http\Controllers\PeppolInboundController;
+use App\Http\Controllers\PontoConnectController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\ProjectArchiveController;
 use App\Http\Controllers\ProjectFileController;
@@ -128,6 +129,9 @@ Route::middleware(['auth', SetUserLocale::class])->group(function (): void {
     Route::get('/parental-leaves/{leave}/certificate', ParentalLeaveDocumentController::class)->whereNumber('leave')->name('parental-leaves.document');
     Route::get('/finance/invoices/{invoice}/{format}', [FinanceDocumentController::class, 'invoice'])->whereIn('format', ['pdf', 'ubl'])->name('finance.invoice-document');
     Route::get('/finance/offers/{offer}/pdf', [FinanceDocumentController::class, 'offer'])->whereNumber('offer')->name('finance.offer-pdf');
+    Route::get('/finance/accounting-exports/{export}/download', [FinanceDocumentController::class, 'accountingExport'])->whereNumber('export')->name('finance.accounting-export');
+    Route::get('/banking/ponto/connect', [PontoConnectController::class, 'connect'])->name('banking.ponto.connect');
+    Route::get('/banking/ponto/callback', [PontoConnectController::class, 'callback'])->name('banking.ponto.callback');
     Route::get('/finance/expenses/{expense}/{kind}', [FinanceDocumentController::class, 'expense'])->whereIn('kind', ['document', 'ubl', 'signature'])->name('finance.expense-document');
     Route::post('/mobile-app/dismiss', MobileAppDismissController::class)->name('mobile-app.dismiss');
     Route::get('/toolbox-meetings/{meeting}/pdf', ToolboxPdfController::class)->name('toolbox.pdf');

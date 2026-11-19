@@ -4,15 +4,21 @@ namespace App\Actions\Finance;
 
 use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * The PDF of an invoice or credit note, in the client's language.
+ * The PDF of an invoice or credit note, in the client's language (an imported one: its original PDF).
  */
 class InvoicePdf
 {
     public function render(Invoice $invoice): string
     {
+        // An imported earlier invoice keeps the PDF it was sent with.
+        if (filled($invoice->original_pdf_path) && Storage::disk('local')->exists($invoice->original_pdf_path)) {
+            return (string) Storage::disk('local')->get($invoice->original_pdf_path);
+        }
+
         $invoice->loadMissing(['client.country', 'contact', 'lines', 'poNumbers', 'project', 'creditedInvoice.poNumbers']);
         $previous = app()->getLocale();
         app()->setLocale($invoice->client->locale ?: config('app.locale'));

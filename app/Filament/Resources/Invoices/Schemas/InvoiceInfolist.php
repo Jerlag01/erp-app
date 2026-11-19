@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Invoices\Schemas;
 
+use App\Actions\Banking\MatchBankTransactions;
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Models\BankTransaction;
 use App\Models\Invoice;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
@@ -79,7 +81,19 @@ class InvoiceInfolist
                                     ->state(fn (Invoice $record): ?string => $record->sent_at ? $record->sent_at->format('d/m/Y H:i').' · '.$record->sent_to : null)
                                     ->helperText(fn (Invoice $record): ?string => $record->peppol_status ? 'Peppol: '.__("erp.finance.peppol.{$record->peppol_status}") : null)
                                     ->placeholder('—'),
-                                TextEntry::make('paid_on')->label(__('erp.finance.invoices.paid_on'))->date('d/m/Y')->placeholder('—')->hidden(fn (Invoice $record): bool => $record->isCreditNote()),
+                                TextEntry::make('paid_on')
+                                    ->label(__('erp.finance.invoices.paid_on'))
+                                    ->date('d/m/Y')
+                                    ->placeholder('—')
+                                    // The bank movement(s) that paid it, when read from the bank.
+                                    ->helperText(fn (Invoice $record): ?string => ($movements = MatchBankTransactions::forDocument($record))->isEmpty() ? null : __('erp.banking.paid_by', [
+                                        'movements' => $movements->map(fn (BankTransaction $movement): string => Invoice::money($movement->amount).' · '.$movement->booking_date->format('d/m/Y').' · '.($movement->counterparty_name ?: $movement->account?->formattedIban()))->implode('; '),
+                                    ]))
+                                    ->hidden(fn (Invoice $record): bool => $record->isCreditNote()),
+                                TextEntry::make('source')
+                                    ->label(__('erp.finance.expenses.source'))
+                                    ->state(fn (Invoice $record): string => __('erp.finance.import.imported_on', ['date' => $record->created_at?->format('d/m/Y')]))
+                                    ->visible(fn (Invoice $record): bool => $record->isImported()),
                                 TextEntry::make('reminders')
                                     ->label(__('erp.finance.invoices.reminders'))
                                     ->state(fn (Invoice $record): array => $record->reminders->map(fn ($reminder): string => __('erp.finance.invoices.reminder_line', ['level' => $reminder->level, 'date' => $reminder->sent_at->format('d/m/Y')]))->all())

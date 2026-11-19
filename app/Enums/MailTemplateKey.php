@@ -50,6 +50,9 @@ enum MailTemplateKey: string implements HasLabel
 
     case BaeOrder = 'bae_order';
 
+    /** The documents of a period for the accountant (ZIP attached). */
+    case AccountingExport = 'accounting_export';
+
     public function getLabel(): string
     {
         return __('erp.enums.mail_template.'.$this->value);
@@ -76,6 +79,7 @@ enum MailTemplateKey: string implements HasLabel
             self::ClientWelcome => [...$company, 'name', 'email', 'company', 'portal_name', 'portal_url', 'password_link', 'link_days', 'overviews'],
             self::GpwRequest => [...$company, 'contact_name', 'project', 'cow_code', 'address', 'description', 'period', 'from', 'until', 'remarks', 'requested_by', 'requester_email', 'contact_person', 'contact_person_email', 'contact_person_phone', 'employees', 'recipients', 'approve_url', 'reject_url', 'view_url', 'portal_url'],
             self::AsbuiltAvailable => [...$company, 'name', 'project', 'cow_code', 'file_name', 'portal_url'],
+            self::AccountingExport => [...$company, 'from', 'until', 'sales_count', 'purchase_count', 'file_name', 'sender'],
             self::BaeOrder => [...$company, 'supplier', 'contact_name', 'order_number', 'order_subject', 'cow_code', 'reference', 'delivery_date', 'delivery_address', 'total', 'message', 'sender', 'sender_email'],
             self::SuggestionResponse => [...$company, 'name', 'author', 'type', 'submitted_on', 'message', 'url'],
             self::GpwApproved, self::GpwRejected => [...$company, 'name', 'project', 'cow_code', 'period', 'decided_by', 'note', 'project_url'],

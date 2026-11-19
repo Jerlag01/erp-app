@@ -179,3 +179,62 @@ be uploaded or copied from the Cebeo/Rexel web shop with
 
 [NOTE]   The automatic payment reminders (finance:send-reminders, every day
          08:00) also need the scheduler cron from section 1.
+
+
+4. INCOMING INVOICES: DOCCLE AND THE MAILBOX FOLDER (finance module)
+--------------------------------------------------------------------
+
+[READY]  finance:fetch-incoming runs every 15 minutes (needs the scheduler cron
+         from section 1) and reads, each only when set up in Settings > Finance:
+         - Doccle: new documents in the company's Doccle mailbox;
+         - a mailbox folder (IMAP), e.g. "Facturen", as a backup way in.
+         UBL e-invoices become incoming invoices with all their data; a PDF
+         without UBL becomes an incoming invoice to complete. Nothing is added
+         twice (same supplier + number, or the same PDF).
+
+[TODO]   Doccle has NO public API documentation. Ask Doccle (business support)
+         for API access to the company mailbox and send me their API docs. The
+         client (app/Services/Doccle/DoccleClient.php) assumes the usual shape:
+           GET  {url}/documents?status=new        list of new documents
+           GET  {url}/documents/{id}/content      the file (UBL or PDF)
+           POST {url}/documents/{id}/acknowledge  mark as fetched
+         with "Authorization: Bearer <key>". The paths will be adapted to what
+         Doccle supplies. Until then: the mailbox folder, or download from
+         Doccle and use "Import XML" (several files / a ZIP at once).
+
+[TODO]   Mailbox folder: create a mailbox (or a folder in one) for invoices,
+         e.g. a rule that moves supplier invoice mails to "Facturen". Fill in
+         host, port (993 SSL or 143 STARTTLS), user, password and the folder.
+         Microsoft 365: basic IMAP login must be allowed for that mailbox
+         (app password / IMAP enabled), as OAuth is not used here.
+         Optional "processed" folder: the folder must exist.
+
+
+5. BANK ACCOUNTS: ING, BELFIUS, KBC (finance module)
+----------------------------------------------------
+
+[NOTE]   The banks' own PSD2 APIs (developer.ing.com, developer.belfius.be,
+         developer.kbc.be) are only open to licensed payment institutions
+         (TPP, registered with the NBB, with eIDAS QWAC/QSeal certificates).
+         A company cannot use them for its own accounts. The ERP therefore
+         reads the accounts through Ponto (Isabel / Ibanity), which holds that
+         licence and covers ING, Belfius, KBC/CBC and the other Belgian banks.
+         Read only: balances and transactions, never payments.
+
+[TODO]   Ponto:
+         1. Create a Ponto account for the company (myponto.com) and a Ponto
+            Connect application in the Ponto developer portal (sandbox first).
+         2. Redirect URI of the application:
+              https://<erp host>/banking/ponto/callback
+            (shown in Settings > Finance > Ponto).
+         3. Download the application's client certificate and private key
+            (PEM) and note the client id, client secret and key passphrase.
+         4. Settings > Finance > Ponto: fill these in (sandbox on for testing).
+         5. Finance > Bank accounts > "Connect Ponto": log in at Ponto and
+            choose the accounts. banking:sync then reads them every two hours
+            (needs the scheduler cron) and links payments to invoices.
+         Ponto costs a small monthly fee per account (see myponto.com).
+
+[READY]  Without Ponto: Finance > Bank movements > "Import CODA" reads the CODA
+         statement files every Belgian bank provides (ING, Belfius, KBC
+         business banking or via the accountant / CodaBox).

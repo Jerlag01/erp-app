@@ -27,3 +27,9 @@ Schedule::command('backups:run')->everyFifteenMinutes()->withoutOverlapping();
 
 // GPW requests follow their project as the days go by: "in progress" once a planned day of the period has come.
 Schedule::command('gpw:sync-statuses')->dailyAt('00:15')->withoutOverlapping();
+
+// Incoming invoices from Doccle and the invoice mailbox folder (each only when set up in Settings > Finance).
+Schedule::command('finance:fetch-incoming')->everyFifteenMinutes()->withoutOverlapping();
+
+// Bank movements through Ponto (Ponto itself refreshes about four times a day) and matching with invoices.
+Schedule::command('banking:sync')->everyTwoHours()->withoutOverlapping();

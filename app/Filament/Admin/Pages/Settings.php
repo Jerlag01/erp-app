@@ -8,6 +8,8 @@ use App\Http\Controllers\PeppolInboundController;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\ProjectCategory;
+use App\Services\Doccle\DoccleClient;
+use App\Services\Inbox\FetchInvoiceMailbox;
 use App\Support\MobileApp;
 use App\Support\Modules;
 use App\Support\OutlookCalendar;
@@ -86,6 +88,10 @@ class Settings extends Page
         $values = $settings->all();
         $values['mail']['password'] = null;
         $values['finance']['peppol_api_key'] = null;
+
+        foreach (['doccle_api_key', 'inbox_password', 'ponto_client_secret', 'ponto_key_passphrase'] as $secret) {
+            $values['finance'][$secret] = null;
+        }
         $values['planning']['outlook_client_secret'] = null;
 
         $this->form->fill($values);
@@ -195,6 +201,23 @@ class Settings extends Page
                 ? Crypt::encryptString($data['finance']['peppol_api_key'])
                 : $settings->get('finance.peppol_api_key');
             $data['finance']['peppol_inbound_secret'] = $settings->get('finance.peppol_inbound_secret') ?: Str::random(40);
+
+            // Secrets: a new value is encrypted, an empty field keeps the stored one.
+            foreach (['doccle_api_key', 'inbox_password', 'ponto_client_secret', 'ponto_key_passphrase'] as $secret) {
+                $data['finance'][$secret] = filled($data['finance'][$secret] ?? null)
+                    ? Crypt::encryptString($data['finance'][$secret])
+                    : $settings->get('finance.'.$secret);
+            }
+
+            foreach (['ponto_certificate', 'ponto_private_key'] as $file) {
+                $old = $settings->get('finance.'.$file);
+
+                if (filled($old) && Arr::has($data, 'finance.'.$file) && $old !== ($data['finance'][$file] ?? null)) {
+                    Storage::disk('local')->delete($old);
+                }
+            }
+
+            $data['finance']['inbox_port'] = (int) ($data['finance']['inbox_port'] ?? 993) ?: 993;
             $data['finance']['vat_number'] = Client::normaliseVat($data['finance']['vat_number'] ?? null);
             $data['finance']['iban'] = filled($data['finance']['iban'] ?? null) ? strtoupper(preg_replace('/\s+/', '', $data['finance']['iban'])) : null;
         }
@@ -237,6 +260,10 @@ class Settings extends Page
 
         $this->data['mail']['password'] = null;
         $this->data['finance']['peppol_api_key'] = null;
+
+        foreach (['doccle_api_key', 'inbox_password', 'ponto_client_secret', 'ponto_key_passphrase'] as $secret) {
+            $this->data['finance'][$secret] = null;
+        }
         $this->data['planning']['outlook_client_secret'] = null;
 
         Notification::make()
@@ -514,6 +541,92 @@ class Settings extends Page
                         ->revealable(),
                     Text::make(fn (): string => __('erp.settings.help.peppol_inbound', ['url' => PeppolInboundController::url() ?? __('erp.settings.help.peppol_inbound_after_save')]))
                         ->columnSpanFull(),
+                ]),
+            Section::make(__('erp.settings.sections.finance_accountant'))
+                ->description(__('erp.settings.help.finance_accountant'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('finance.accountant_email')
+                        ->label(__('erp.settings.fields.accountant_email'))
+                        ->helperText(__('erp.settings.help.accountant_email'))
+                        ->maxLength(500),
+                    Select::make('finance.accountant_locale')
+                        ->label(__('erp.settings.fields.accountant_locale'))
+                        ->options(config('app.locales'))
+                        ->default('nl'),
+                ]),
+            Section::make('Doccle')
+                ->description(__('erp.settings.help.doccle'))
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    Toggle::make('finance.doccle_enabled')->label(__('erp.settings.fields.doccle_enabled'))->columnSpanFull(),
+                    TextInput::make('finance.doccle_api_url')->label(__('erp.settings.fields.doccle_api_url'))->url()->maxLength(255),
+                    TextInput::make('finance.doccle_api_key')->label(__('erp.settings.fields.doccle_api_key'))->helperText(__('erp.help.password_keep'))->password()->revealable(),
+                ]),
+            Section::make(__('erp.settings.sections.finance_inbox'))
+                ->description(__('erp.settings.help.finance_inbox'))
+                ->columns(6)
+                ->collapsed()
+                ->schema([
+                    Toggle::make('finance.inbox_enabled')->label(__('erp.settings.fields.inbox_enabled'))->columnSpanFull(),
+                    TextInput::make('finance.inbox_host')->label(__('erp.settings.fields.inbox_host'))->placeholder('outlook.office365.com')->maxLength(255)->columnSpan(3),
+                    TextInput::make('finance.inbox_port')->label(__('erp.settings.fields.inbox_port'))->integer()->minValue(1)->maxValue(65535)->default(993)->columnSpan(1),
+                    Select::make('finance.inbox_encryption')
+                        ->label(__('erp.settings.fields.inbox_encryption'))
+                        ->options(['ssl' => 'SSL/TLS', 'tls' => 'STARTTLS', 'none' => __('erp.settings.fields.inbox_no_encryption')])
+                        ->default('ssl')
+                        ->selectablePlaceholder(false)
+                        ->columnSpan(2),
+                    TextInput::make('finance.inbox_username')->label(__('erp.settings.fields.inbox_username'))->maxLength(255)->columnSpan(3),
+                    TextInput::make('finance.inbox_password')->label(__('erp.settings.fields.inbox_password'))->helperText(__('erp.help.password_keep'))->password()->revealable()->columnSpan(3),
+                    TextInput::make('finance.inbox_folder')->label(__('erp.settings.fields.inbox_folder'))->helperText(__('erp.settings.help.inbox_folder'))->placeholder('INBOX/Facturen')->maxLength(255)->columnSpan(3),
+                    TextInput::make('finance.inbox_processed_folder')->label(__('erp.settings.fields.inbox_processed_folder'))->helperText(__('erp.settings.help.inbox_processed_folder'))->maxLength(255)->columnSpan(3),
+                    Actions::make([
+                        Action::make('fetchIncomingNow')
+                            ->label(__('erp.settings.fields.fetch_incoming_now'))
+                            ->icon(Heroicon::OutlinedInboxArrowDown)
+                            ->color('gray')
+                            ->action(function (FetchInvoiceMailbox $mailbox, DoccleClient $doccle): void {
+                                $lines = [];
+
+                                foreach (['Doccle' => fn (): ?array => DoccleClient::isConfigured() ? $doccle->fetch() : null, 'Mailbox' => fn (): ?array => FetchInvoiceMailbox::isConfigured() ? $mailbox->run() : null] as $name => $run) {
+                                    try {
+                                        $result = $run();
+                                        $lines[] = $result === null ? "{$name}: ".__('erp.settings.help.not_set_up') : "{$name}: ".__('erp.finance.inbox.fetched', ['created' => $result['created'], 'duplicates' => $result['duplicates']]);
+                                    } catch (Throwable $exception) {
+                                        $lines[] = "{$name}: ".$exception->getMessage();
+                                    }
+                                }
+
+                                Notification::make()->title(__('erp.settings.fields.fetch_incoming_now'))->body(implode("\n", $lines))->info()->send();
+                            }),
+                    ])->key('financeInboxActions')->columnSpanFull(),
+                ]),
+            Section::make('Ponto')
+                ->description(__('erp.settings.help.ponto'))
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    Toggle::make('finance.ponto_sandbox')->label(__('erp.settings.fields.ponto_sandbox'))->columnSpanFull(),
+                    TextInput::make('finance.ponto_client_id')->label(__('erp.settings.fields.ponto_client_id'))->maxLength(255),
+                    TextInput::make('finance.ponto_client_secret')->label(__('erp.settings.fields.ponto_client_secret'))->helperText(__('erp.help.password_keep'))->password()->revealable(),
+                    FileUpload::make('finance.ponto_certificate')
+                        ->label(__('erp.settings.fields.ponto_certificate'))
+                        ->disk('local')
+                        ->directory('banking/ponto')
+                        ->visibility('private')
+                        ->rules(['extensions:pem,crt,cer'])
+                        ->maxSize(64),
+                    FileUpload::make('finance.ponto_private_key')
+                        ->label(__('erp.settings.fields.ponto_private_key'))
+                        ->disk('local')
+                        ->directory('banking/ponto')
+                        ->visibility('private')
+                        ->rules(['extensions:pem,key'])
+                        ->maxSize(64),
+                    TextInput::make('finance.ponto_key_passphrase')->label(__('erp.settings.fields.ponto_key_passphrase'))->helperText(__('erp.help.password_keep'))->password()->revealable(),
+                    Text::make(fn (): string => __('erp.settings.help.ponto_redirect', ['url' => route('banking.ponto.callback')]))->columnSpanFull(),
                 ]),
         ];
     }

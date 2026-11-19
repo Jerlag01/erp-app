@@ -100,11 +100,12 @@ class PeppolGateway
 
     /**
      * Turns a received UBL document into an expense waiting for validation. A document that was
-     * already received (same supplier VAT and invoice number) is not added twice.
+     * already received (same supplier VAT and invoice number) is not added twice. The source says
+     * where it came from: peppol, doccle, mail or import.
      *
      * @return array{expense: Expense, duplicate: bool}
      */
-    public function receive(string $xml, ?int $userId = null): array
+    public function receive(string $xml, ?int $userId = null, string $source = 'peppol', ?string $inboxReference = null): array
     {
         $data = $this->reader->read($xml);
 
@@ -119,7 +120,7 @@ class PeppolGateway
             return ['expense' => $existing, 'duplicate' => true];
         }
 
-        $result = DB::transaction(function () use ($xml, $data, $vat, $userId): array {
+        $result = DB::transaction(function () use ($xml, $data, $vat, $userId, $source, $inboxReference): array {
             $folder = 'expenses/'.now()->format('Y/m');
             $ublPath = $folder.'/'.Str::random(24).'.xml';
             Storage::disk(Expense::DISK)->put($ublPath, $xml);
@@ -138,12 +139,15 @@ class PeppolGateway
                 'is_credit_note' => $data['is_credit_note'],
                 'invoice_date' => $data['invoice_date'],
                 'due_date' => $data['due_date'],
+                'payment_reference' => $data['payment_id'] ? Str::limit($data['payment_id'], 60, '') : null,
                 'subtotal' => $data['subtotal'],
                 'vat_total' => $data['vat_total'],
                 'description' => $data['description'] ? Str::limit($data['description'], 250) : null,
                 'document' => $documentPath,
                 'document_name' => $data['pdf']['name'] ?? null,
-                'source' => 'peppol',
+                'document_hash' => $data['pdf'] !== null ? hash('sha256', $data['pdf']['data']) : null,
+                'source' => $source,
+                'inbox_reference' => $inboxReference ? Str::limit($inboxReference, 190, '') : null,
                 'ubl_path' => $ublPath,
                 'created_by' => $userId,
             ]);
