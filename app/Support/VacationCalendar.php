@@ -117,7 +117,7 @@ class VacationCalendar
             // An approved overtime request is shown as its overtime absence.
             ->where(fn (Builder $query) => $query->vacation()->orWhere('status', VacationStatus::Pending))
             ->when($teamId, fn (Builder $query, int $teamId) => $query->whereHas('user.teams', fn (Builder $query) => $query->whereKey($teamId)))
-            ->with(['user', 'customType'])
+            ->with('user')
             ->orderBy('start_date')
             ->get();
     }
@@ -131,7 +131,7 @@ class VacationCalendar
             ->visibleTo($viewer)
             ->overlapping($from->toDateString(), $until->toDateString())
             ->when($teamId, fn (Builder $query, int $teamId) => $query->whereHas('user.teams', fn (Builder $query) => $query->whereKey($teamId)))
-            ->with('user')
+            ->with(['user', 'customType'])
             ->orderBy('start_date')
             ->get();
     }
