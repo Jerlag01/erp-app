@@ -11,13 +11,11 @@ use App\Filament\Admin\Resources\InterventionReports\Pages\ViewInterventionRepor
 use App\Models\InterventionReport;
 use App\Models\InterventionReportMaterial;
 use App\Models\InterventionReportPosition;
-use App\Models\ProjectPoNumber;
 use App\Support\PdfAccess;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -170,21 +168,11 @@ class InterventionReportResource extends Resource
             ->visible(fn (InterventionReport $record): bool => Gate::allows('review', $record))
             ->authorize(fn (InterventionReport $record): bool => Gate::allows('review', $record))
             ->modalDescription(__('erp.interventions.approve_help'))
-            // A PO number entered when the intervention was created is proposed.
-            ->fillForm(fn (InterventionReport $record): array => ['po_number' => $record->project?->poNumbers()->oldest('id')->value('number')])
             ->schema([
-                TextInput::make('po_number')
-                    ->label(__('erp.interventions.po_number'))
-                    ->placeholder('4500123456')
-                    ->required()
-                    ->length(10)
-                    ->regex(ProjectPoNumber::PATTERN)
-                    ->validationMessages(['regex' => __('erp.projects.po_number_invalid')])
-                    ->extraInputAttributes(['inputmode' => 'numeric', 'style' => 'font-family: var(--erp-mono);']),
                 Textarea::make('note')->label(__('erp.interventions.review_note'))->rows(2)->maxLength(2000),
             ])
             ->action(function (InterventionReport $record, array $data): void {
-                app(ReviewIntervention::class)->approve($record, auth()->user(), $data['po_number'], $data['note'] ?? null);
+                app(ReviewIntervention::class)->approve($record, auth()->user(), $data['note'] ?? null);
             })
             ->successNotificationTitle(__('erp.interventions.approved'));
     }

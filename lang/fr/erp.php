@@ -2652,7 +2652,7 @@ return [
             'approved' => 'Approuvées',
         ],
         'approve' => 'Approuver',
-        'approve_help' => 'Saisissez le numéro PO. Il est ajouté à l\'intervention pour la facturation.',
+        'approve_help' => 'Approuve l\'intervention pour la facturation. Le numéro PO du projet (s\'il est rempli) figure sur le rapport.',
         'approved' => 'Intervention approuvée',
         'reject' => 'Renvoyer',
         'reject_help' => 'L\'employé corrige l\'intervention et la clôture à nouveau.',

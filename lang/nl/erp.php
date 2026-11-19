@@ -2652,7 +2652,7 @@ return [
             'approved' => 'Goedgekeurd',
         ],
         'approve' => 'Goedkeuren',
-        'approve_help' => 'Vul het PO-nummer in. Het wordt aan de interventie toegevoegd voor de facturatie.',
+        'approve_help' => 'Keurt de interventie goed voor de facturatie. Het PO-nummer van het project (indien ingevuld) komt op het rapport.',
         'approved' => 'Interventie goedgekeurd',
         'reject' => 'Terugsturen',
         'reject_help' => 'De werknemer verbetert de interventie en sluit ze opnieuw af.',

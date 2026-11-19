@@ -6,17 +6,15 @@ use App\Enums\InterventionReportStatus;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\InterventionReport;
-use App\Models\ProjectPoNumber;
 use App\Models\User;
 use App\Support\Interventions;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 /**
- * An administrator approves a closed intervention, entering its PO number (added to the project's
- * PO numbers for invoicing; project status "invoicing to do"), or rejects it with a reason so the
+ * An administrator approves a closed intervention (project status "invoicing to do"; no PO number is asked,
+ * the report shows the project's PO number, entered on the project), or rejects it with a reason so the
  * employee corrects and closes it again (project status back to "in progress"). With several COW codes
  * (one report each) the project goes to "invoicing to do" once all of them are approved.
  */
@@ -24,25 +22,20 @@ class ReviewIntervention
 {
     public function __construct(protected InterventionPdf $pdf, protected Interventions $interventions) {}
 
-    public function approve(InterventionReport $report, User $admin, string $poNumber, ?string $note = null): void
+    public function approve(InterventionReport $report, User $admin, ?string $note = null): void
     {
-        $poNumber = trim($poNumber);
+        DB::transaction(function () use ($report, $admin, $note): void {
+            $project = $report->project;
 
-        if (! preg_match(ProjectPoNumber::PATTERN, $poNumber)) {
-            throw ValidationException::withMessages(['po_number' => __('erp.projects.po_number_invalid')]);
-        }
-
-        DB::transaction(function () use ($report, $admin, $poNumber, $note): void {
             $report->update([
                 'status' => InterventionReportStatus::Approved,
-                'po_number' => $poNumber,
+                // For the PDF: the (first) PO number of the project, if any.
+                'po_number' => $project->poNumbers()->oldest('id')->value('number'),
                 'reviewed_by' => $admin->id,
                 'reviewed_at' => now(),
                 'review_note' => $note,
             ]);
 
-            $project = $report->project;
-            $project->poNumbers()->firstOrCreate(['number' => $poNumber]);
             $project->unsetRelation('interventionReports');
 
             if ($this->interventions->allApproved($project)) {

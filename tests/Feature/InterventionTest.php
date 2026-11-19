@@ -220,7 +220,7 @@ class InterventionTest extends TestCase
         // Approving the first one is not enough for invoicing; both are.
         $this->actingAs($admin);
         $review = app(ReviewIntervention::class);
-        $review->approve($reports[0], $admin, '4500123456');
+        $review->approve($reports[0], $admin);
         $this->assertSame(ProjectStatus::Executed, $project->fresh()->status);
 
         // A rejected COW code can be closed again on its own.
@@ -236,9 +236,8 @@ class InterventionTest extends TestCase
         $this->assertSame(2, InterventionReport::query()->count());
         $this->assertSame('Room 3', $reports[1]->fresh()->room);
 
-        $review->approve($reports[1]->fresh(), $admin, '4500123456');
+        $review->approve($reports[1]->fresh(), $admin);
         $this->assertSame(ProjectStatus::InvoicingToDo, $project->fresh()->status);
-        $this->assertSame(['4500123456'], $project->poNumbers()->pluck('number')->all());
 
         $this->actingAs($admin);
         Livewire::test(ListInterventions::class)->set('activeTab', 'approved')->assertCanSeeTableRecords([$project]);
@@ -267,7 +266,7 @@ class InterventionTest extends TestCase
     }
 
     #[Test]
-    public function an_administrator_approves_with_the_po_number_or_sends_it_back(): void
+    public function an_administrator_approves_without_asking_a_po_number_or_sends_it_back(): void
     {
         Repeater::fake();
         $admin = User::factory()->admin()->create();
@@ -287,12 +286,13 @@ class InterventionTest extends TestCase
 
         $report->refresh()->update(['status' => InterventionReportStatus::Pending]);
 
+        // No PO number is asked any more: the project's own (if any) goes on the report.
+        $project->poNumbers()->create(['number' => '4500123456']);
         Livewire::test(ViewInterventionReport::class, ['record' => $report->getRouteKey()])
-            ->callAction('approve', ['po_number' => '12345'])
-            ->assertHasActionErrors(['po_number']);
-
-        Livewire::test(ViewInterventionReport::class, ['record' => $report->getRouteKey()])
-            ->callAction('approve', ['po_number' => '4500123456'])
+            ->mountAction('approve')
+            ->assertSchemaComponentDoesNotExist('po_number', 'mountedActionSchema0')
+            ->setActionData(['note' => 'OK'])
+            ->callMountedAction()
             ->assertHasNoActionErrors();
 
         $report->refresh();
@@ -384,13 +384,14 @@ class InterventionTest extends TestCase
         $project = Project::query()->where('work_order_number', '222222')->sole();
         $this->assertSame(['4500999999'], $project->poNumbers()->pluck('number')->all());
 
-        // When approving, that PO number is proposed.
+        // Approving puts that PO number on the report, without asking it again.
         $report = InterventionReport::factory()->for($project)->create(['closed_by' => User::factory()->create()->id]);
         $this->actingAs(User::factory()->admin()->create());
         Filament::setCurrentPanel('admin');
         Livewire::test(ViewInterventionReport::class, ['record' => $report->getRouteKey()])
-            ->mountAction('approve')
-            ->assertSchemaStateSet(['po_number' => '4500999999']);
+            ->callAction('approve')
+            ->assertHasNoActionErrors();
+        $this->assertSame('4500999999', $report->fresh()->po_number);
     }
 
     #[Test]

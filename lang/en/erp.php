@@ -2652,7 +2652,7 @@ return [
             'approved' => 'Approved',
         ],
         'approve' => 'Approve',
-        'approve_help' => 'Enter the PO number. It is added to the intervention for invoicing.',
+        'approve_help' => 'Approves the intervention for invoicing. The project\'s PO number (if filled in) goes on the report.',
         'approved' => 'Intervention approved',
         'reject' => 'Send back',
         'reject_help' => 'The employee corrects the intervention and closes it again.',
