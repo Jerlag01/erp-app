@@ -2,9 +2,9 @@
 
 namespace App\Services\Peppol;
 
-use App\Enums\VatRate;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
+use App\Models\VatCode;
 use DOMDocument;
 use DOMElement;
 
@@ -208,19 +208,23 @@ class UblWriter
 
         $item = $this->cac($element, 'Item');
         $this->cbc($item, 'Name', mb_substr($line->description, 0, 200));
-        $this->taxCategory($this->cac($item, 'ClassifiedTaxCategory'), $line->vat_rate ?? VatRate::TwentyOne);
+        $this->taxCategory($this->cac($item, 'ClassifiedTaxCategory'), $line->vat_rate ?? VatCode::forCode(VatCode::STANDARD));
 
         $this->amount($this->cac($element, 'Price'), 'PriceAmount', (float) $line->unit_price);
     }
 
-    protected function taxCategory(DOMElement $category, VatRate $rate, bool $withReason = false): void
+    protected function taxCategory(DOMElement $category, VatCode $rate, bool $withReason = false): void
     {
         $this->cbc($category, 'ID', $rate->ublCategory());
         $this->cbc($category, 'Percent', $this->decimal($rate->percentage(), 2));
 
-        if ($withReason && $rate === VatRate::ReverseCharge) {
-            $this->cbc($category, 'TaxExemptionReasonCode', 'VATEX-EU-AE');
-            $this->cbc($category, 'TaxExemptionReason', 'Reverse charge');
+        // Categories without VAT (reverse charge, intra-EU, export, exempt) carry their reason.
+        if ($withReason && ! in_array($rate->ublCategory(), ['S', 'Z'], true)) {
+            if ($reason = $rate->exemptionReasonCode()) {
+                $this->cbc($category, 'TaxExemptionReasonCode', $reason);
+            }
+
+            $this->cbc($category, 'TaxExemptionReason', $rate->mention('en') ?? $rate->label('en'));
         }
 
         $this->cbc($this->cac($category, 'TaxScheme'), 'ID', 'VAT');

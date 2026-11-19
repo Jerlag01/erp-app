@@ -11,24 +11,27 @@ use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
- * Sends a final invoice or credit note: by e-mail (template + PDF + UBL) to the client's
- * accounting address, and over Peppol when the client is reachable and an access point is set.
+ * Sends a final invoice or credit note: by e-mail (template + PDF + UBL) to the client's communication
+ * point the invoice is addressed to, else to all its points that receive invoices (else the accounting
+ * address), and over Peppol when the client is reachable and an access point is set.
  */
 class SendInvoice
 {
     public function __construct(protected InvoicePdf $pdf, protected PeppolGateway $peppol) {}
 
     /**
+     * @param  string|list<string>|null  $email  one or more addresses; none = the invoice's recipients
      * @return array{email: ?string, peppol: ?string}
      */
-    public function handle(Invoice $invoice, ?string $email = null, bool $viaPeppol = true): array
+    public function handle(Invoice $invoice, string|array|null $email = null, bool $viaPeppol = true): array
     {
         if ($invoice->isDraft()) {
             throw new InvalidArgumentException('Finalise the invoice before sending it.');
         }
 
-        $invoice->loadMissing('client');
-        $email = $email ?: $invoice->client->invoiceEmail();
+        $invoice->loadMissing('client.contacts', 'contact');
+        $emails = self::addresses($email) ?: $invoice->recipients();
+        $email = $emails !== [] ? implode(', ', $emails) : null;
         $pdf = $this->pdf->render($invoice);
         $peppolStatus = null;
 
@@ -37,7 +40,7 @@ class SendInvoice
         }
 
         if ($email !== null) {
-            Mail::to($email)->send(new SystemMail(
+            Mail::to($emails)->send(new SystemMail(
                 $invoice->isCreditNote() ? MailTemplateKey::CreditNoteSent : MailTemplateKey::InvoiceSent,
                 $invoice->client->locale ?: config('app.locale'),
                 self::placeholders($invoice),
@@ -55,10 +58,23 @@ class SendInvoice
         $invoice->forceFill([
             'status' => $invoice->isPaid() ? InvoiceStatus::Paid : InvoiceStatus::Sent,
             'sent_at' => now(),
-            'sent_to' => $email ?? $invoice->client->peppolParticipant(),
+            'sent_to' => mb_substr((string) ($email ?? $invoice->client->peppolParticipant()), 0, 1000),
         ])->saveQuietly();
 
         return ['email' => $email, 'peppol' => $peppolStatus];
+    }
+
+    /**
+     * "a@x.be, b@y.be" or a list: the valid, distinct addresses.
+     *
+     * @param  string|list<string>|null  $email
+     * @return list<string>
+     */
+    public static function addresses(string|array|null $email): array
+    {
+        $list = is_array($email) ? $email : preg_split('/[,;\s]+/', (string) $email);
+
+        return array_values(array_unique(array_filter(array_map(fn (mixed $address): string => strtolower(trim((string) $address)), (array) $list), fn (string $address): bool => filter_var($address, FILTER_VALIDATE_EMAIL) !== false)));
     }
 
     /**

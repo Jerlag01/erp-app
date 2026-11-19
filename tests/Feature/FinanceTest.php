@@ -6,7 +6,6 @@ use App\Enums\ExpenseStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\MailTemplateKey;
-use App\Enums\VatRate;
 use App\Filament\Admin\Resources\MailTemplates\Pages\ManageMailTemplates;
 use App\Filament\Pages\FinanceStatistics;
 use App\Filament\Resources\Clients\Pages\ManageClients;
@@ -107,7 +106,7 @@ class FinanceTest extends TestCase
     {
         Repeater::fake();
         $this->admin();
-        $client = Client::factory()->create(['default_vat_rate' => VatRate::Six]);
+        $client = Client::factory()->create(['default_vat_rate' => '6']);
         $project = Project::factory()->create();
         $billed = $project->poNumbers()->create(['number' => '4500000001']);
         $open = $project->poNumbers()->create(['number' => '4500000002']);
@@ -275,7 +274,7 @@ class FinanceTest extends TestCase
     {
         Storage::fake('local');
         $client = Client::factory()->create(['company_name' => 'Klant NV']);
-        $invoice = Invoice::factory()->for($client)->withLine(1000, VatRate::TwentyOne)->finalized()->create();
+        $invoice = Invoice::factory()->for($client)->withLine(1000, '21')->finalized()->create();
 
         $xml = app(UblWriter::class)->write($invoice, '%PDF-1.4 test');
         $this->assertStringContainsString(UblWriter::CUSTOMIZATION, $xml);

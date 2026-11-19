@@ -26,6 +26,7 @@ class CreateCreditNote
                 'type' => InvoiceType::CreditNote,
                 'status' => InvoiceStatus::Draft,
                 'client_id' => $invoice->client_id,
+                'client_contact_id' => $invoice->client_contact_id,
                 'project_id' => $invoice->project_id,
                 'credited_invoice_id' => $invoice->id,
                 'issue_date' => today(),

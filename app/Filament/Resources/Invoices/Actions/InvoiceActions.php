@@ -16,7 +16,7 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
@@ -54,11 +54,12 @@ class InvoiceActions
                 ->color('primary')
                 ->visible(fn (Invoice $record): bool => Gate::allows('send', $record))
                 ->authorize(fn (Invoice $record): bool => Gate::allows('send', $record))
-                ->fillForm(fn (Invoice $record): array => ['email' => $record->client->invoiceEmail(), 'peppol' => (bool) $record->client->peppolParticipant()])
+                ->fillForm(fn (Invoice $record): array => ['email' => $record->recipients(), 'peppol' => (bool) $record->client->peppolParticipant()])
                 ->schema(fn (Invoice $record): array => [
-                    TextInput::make('email')
+                    TagsInput::make('email')
                         ->label(__('erp.finance.invoices.send_to'))
-                        ->email()
+                        ->helperText(__('erp.finance.invoices.send_to_help'))
+                        ->nestedRecursiveRules(['email:rfc', 'max:255'])
                         ->required(fn (): bool => ! settings()->get('finance.peppol_enabled') || ! $record->client->peppolParticipant()),
                     Toggle::make('peppol')
                         ->label(__('erp.finance.invoices.via_peppol', ['id' => $record->client->peppolParticipant() ?? '—']))
@@ -102,7 +103,7 @@ class InvoiceActions
                 ->visible(fn (Invoice $record): bool => $record->isOverdue() && $record->reminder_level < SendPaymentReminder::MAX_LEVEL && Gate::allows('send', $record))
                 ->authorize(fn (Invoice $record): bool => Gate::allows('send', $record))
                 ->requiresConfirmation()
-                ->modalDescription(fn (Invoice $record): string => __('erp.finance.invoices.reminder_help', ['level' => $record->reminder_level + 1, 'email' => $record->client->invoiceEmail() ?? '—']))
+                ->modalDescription(fn (Invoice $record): string => __('erp.finance.invoices.reminder_help', ['level' => $record->reminder_level + 1, 'email' => implode(', ', $record->reminderRecipients()) ?: '—']))
                 ->action(function (Invoice $record, SendPaymentReminder $reminder): void {
                     try {
                         $level = $reminder->handle($record, auth()->user());

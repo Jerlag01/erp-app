@@ -2,20 +2,30 @@
 
 namespace App\Filament\Resources\Clients;
 
+use App\Enums\InvoiceType;
 use App\Enums\NavigationGroup;
-use App\Enums\VatRate;
 use App\Filament\Resources\Clients\Pages\ManageClients;
+use App\Filament\Resources\Clients\Pages\ViewClient;
+use App\Filament\Resources\Clients\RelationManagers\InvoicesRelationManager;
 use App\Models\Client;
+use App\Models\ClientContact;
 use App\Models\Country;
+use App\Models\Invoice;
+use App\Models\VatCode;
 use BackedEnum;
 use Closure;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -145,17 +155,43 @@ class ClientResource extends Resource
                             ->maxLength(255),
                         TextInput::make('phone')->label(__('erp.fields.phone'))->tel()->maxLength(50),
                     ]),
+                // Communication points for invoicing: who receives the invoices and/or the reminders.
+                Section::make(__('erp.finance.clients.contacts'))
+                    ->description(__('erp.finance.clients.contacts_help'))
+                    ->columnSpanFull()
+                    ->schema([
+                        Repeater::make('contacts')
+                            ->hiddenLabel()
+                            ->relationship()
+                            ->orderColumn('sort')
+                            ->addActionLabel(__('erp.finance.clients.add_contact'))
+                            ->itemLabel(fn (array $state): ?string => trim(implode(' · ', array_filter([$state['role'] ?? null, $state['name'] ?? null]))) ?: null)
+                            ->collapsible()
+                            ->columns(6)
+                            ->defaultItems(0)
+                            ->schema([
+                                TextInput::make('name')->label(__('erp.fields.name'))->required()->maxLength(150)->columnSpan(2),
+                                TextInput::make('role')->label(__('erp.finance.clients.contact_role'))->placeholder(__('erp.finance.clients.contact_role_placeholder'))->maxLength(100)->columnSpan(2),
+                                TextInput::make('phone')->label(__('erp.fields.phone'))->tel()->maxLength(50)->columnSpan(2),
+                                TextInput::make('email')->label(__('erp.fields.email'))->email()->required()->maxLength(255)->columnSpan(2),
+                                Toggle::make('receives_invoices')->label(__('erp.finance.clients.receives_invoices'))->default(true)->inline(false)->columnSpan(2),
+                                Toggle::make('receives_reminders')->label(__('erp.finance.clients.receives_reminders'))->default(true)->inline(false)->columnSpan(2),
+                                TextInput::make('notes')->label(__('erp.finance.clients.contact_notes'))->maxLength(500)->columnSpanFull(),
+                            ]),
+                    ]),
                 Section::make(__('erp.finance.clients.invoicing'))
                     ->columns(3)
                     ->columnSpanFull()
                     ->schema([
                         Select::make('default_vat_rate')
                             ->label(__('erp.finance.clients.default_vat_rate'))
-                            ->options(VatRate::class)
-                            ->default(VatRate::TwentyOne)
+                            ->helperText(__('erp.finance.clients.default_vat_rate_help'))
+                            ->options(fn (mixed $state): array => VatCode::options($state))
+                            ->default(VatCode::STANDARD)
                             ->required(),
                         TextInput::make('payment_term_days')
                             ->label(__('erp.finance.clients.payment_term'))
+                            ->helperText(__('erp.finance.clients.payment_term_help'))
                             ->integer()
                             ->minValue(0)
                             ->maxValue(365)
@@ -232,7 +268,9 @@ class ClientResource extends Resource
                 TernaryFilter::make('is_private')->label(__('erp.finance.clients.is_private')),
                 TernaryFilter::make('is_active')->label(__('erp.fields.active'))->default(true),
             ])
+            ->recordUrl(fn (Client $record): string => static::getUrl('view', ['record' => $record]))
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make()->slideOver(),
                 DeleteAction::make(),
             ]);
@@ -242,6 +280,99 @@ class ClientResource extends Resource
     {
         return [
             'index' => ManageClients::route('/'),
+            'view' => ViewClient::route('/{record}'),
         ];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            InvoicesRelationManager::class,
+        ];
+    }
+
+    /**
+     * The client's card: details, communication points and where its invoices stand.
+     */
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->columns(3)
+            ->components([
+                Section::make()
+                    ->columnSpan(['lg' => 2])
+                    ->columns(['default' => 1, 'sm' => 2])
+                    ->schema([
+                        TextEntry::make('company_name')
+                            ->label(__('erp.finance.clients.company_name'))
+                            ->helperText(fn (Client $record): string => implode(', ', $record->addressLines())),
+                        TextEntry::make('vat_number')
+                            ->label(__('erp.finance.clients.vat_number'))
+                            ->fontFamily(FontFamily::Mono)
+                            ->placeholder(fn (Client $record): string => $record->is_private ? __('erp.finance.clients.private') : '—'),
+                        TextEntry::make('payment_term_days')
+                            ->label(__('erp.finance.clients.payment_term'))
+                            ->suffix(' '.__('erp.vacations.days')),
+                        TextEntry::make('default_vat_rate')
+                            ->label(__('erp.finance.clients.default_vat_rate'))
+                            ->state(fn (Client $record): ?string => $record->default_vat_rate?->label())
+                            ->badge()
+                            ->color(fn (Client $record): string => $record->default_vat_rate?->isReverseCharge() ? 'warning' : 'gray'),
+                        TextEntry::make('peppol')
+                            ->label('Peppol')
+                            ->state(fn (Client $record): ?string => $record->peppolParticipant())
+                            ->fontFamily(FontFamily::Mono)
+                            ->placeholder('—'),
+                        IconEntry::make('send_reminders')
+                            ->label(__('erp.finance.clients.send_reminders'))
+                            ->boolean(),
+                        RepeatableEntry::make('contacts')
+                            ->label(__('erp.finance.clients.contacts'))
+                            ->placeholder(fn (Client $record): string => __('erp.finance.clients.no_contacts', ['email' => $record->invoiceEmail() ?? '—']))
+                            ->columns(['default' => 1, 'sm' => 3])
+                            ->columnSpanFull()
+                            ->schema([
+                                TextEntry::make('name')
+                                    ->hiddenLabel()
+                                    ->weight('bold')
+                                    ->helperText(fn (ClientContact $record): ?string => $record->role),
+                                TextEntry::make('email')
+                                    ->hiddenLabel()
+                                    ->helperText(fn (ClientContact $record): ?string => $record->phone),
+                                TextEntry::make('receives')
+                                    ->hiddenLabel()
+                                    ->state(fn (ClientContact $record): array => array_values(array_filter([
+                                        $record->receives_invoices ? __('erp.finance.clients.receives_invoices') : null,
+                                        $record->receives_reminders ? __('erp.finance.clients.receives_reminders') : null,
+                                    ])))
+                                    ->badge()
+                                    ->color('gray'),
+                            ]),
+                    ]),
+                Section::make(__('erp.finance.clients.balance'))
+                    ->columnSpan(['lg' => 1])
+                    ->schema([
+                        TextEntry::make('outstanding')
+                            ->label(__('erp.finance.clients.outstanding'))
+                            ->state(fn (Client $record): string => Invoice::money($record->invoices()->outstanding()->sum('total')))
+                            ->weight('bold'),
+                        TextEntry::make('overdue')
+                            ->label(__('erp.finance.clients.overdue'))
+                            ->state(fn (Client $record): string => Invoice::money($record->invoices()->outstanding()->whereDate('due_date', '<', today())->sum('total')))
+                            ->helperText(fn (Client $record): string => trans_choice('erp.finance.clients.overdue_count', $count = $record->invoices()->outstanding()->whereDate('due_date', '<', today())->count(), ['count' => $count]))
+                            ->color(fn (Client $record): ?string => $record->invoices()->outstanding()->whereDate('due_date', '<', today())->exists() ? 'danger' : null),
+                        TextEntry::make('invoiced_year')
+                            ->label(fn (): string => __('erp.finance.clients.invoiced_year', ['year' => today()->year]))
+                            ->state(fn (Client $record): string => Invoice::money(
+                                (float) $record->invoices()->booked()->where('type', InvoiceType::Invoice)->whereYear('issue_date', today()->year)->sum('subtotal')
+                                - (float) $record->invoices()->booked()->where('type', InvoiceType::CreditNote)->whereYear('issue_date', today()->year)->sum('subtotal')
+                            ))
+                            ->helperText(__('erp.finance.amounts_excl')),
+                    ]),
+                TextEntry::make('internal_memo')
+                    ->label(__('erp.finance.clients.internal_memo'))
+                    ->visible(fn (Client $record): bool => filled($record->internal_memo) && (bool) auth()->user()?->isAdmin())
+                    ->columnSpanFull(),
+            ]);
     }
 }

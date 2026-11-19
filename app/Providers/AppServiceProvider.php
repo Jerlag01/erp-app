@@ -6,6 +6,7 @@ use App\Models\ClientUser;
 use App\Support\Modules;
 use App\Support\Nas\NasTriggers;
 use App\Support\Settings;
+use App\Support\VatCodes;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Settings::class);
         $this->app->singleton(Modules::class);
+        $this->app->scoped(VatCodes::class);
     }
 
     /**

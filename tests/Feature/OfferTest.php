@@ -6,7 +6,6 @@ use App\Actions\Finance\OfferPdf;
 use App\Enums\InvoiceStatus;
 use App\Enums\OfferStatus;
 use App\Enums\ProjectFileSection;
-use App\Enums\VatRate;
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
 use App\Filament\Resources\Offers\Schemas\OfferForm;
@@ -157,7 +156,7 @@ class OfferTest extends TestCase
     public function an_accepted_offer_becomes_a_draft_invoice_and_is_then_locked(): void
     {
         $this->admin();
-        $client = Client::factory()->create(['default_vat_rate' => VatRate::Six]);
+        $client = Client::factory()->create(['default_vat_rate' => '6']);
         $offer = Offer::factory()->create(['client_id' => $client->id, 'project_id' => $this->project()->id]);
         $works = OfferCategory::factory()->create(['code' => 'A']);
         $general = OfferCategory::factory()->generalCosts()->create(['code' => 'G']);
@@ -180,7 +179,7 @@ class OfferTest extends TestCase
         // The text line is left out; supply + installation per line; the client's VAT rate.
         $this->assertSame(['A · Omvormer', 'G · Studie'], $invoice->lines->pluck('description')->all());
         $this->assertSame(['125.00', '50.00'], $invoice->lines->pluck('unit_price')->all());
-        $this->assertSame(VatRate::Six, $invoice->lines->first()->vat_rate);
+        $this->assertSame('6', $invoice->lines->first()->vat_rate->code);
         $this->assertSame('300.00', $invoice->subtotal);
 
         // Invoiced: read-only, not deleted, no second invoice.

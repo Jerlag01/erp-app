@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
-use App\Enums\VatRate;
 use App\Models\Client;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -31,7 +30,7 @@ class InvoiceFactory extends Factory
     /**
      * Adds a line of the given amount (excl. VAT) at the given rate and recalculates.
      */
-    public function withLine(float $amount = 1000, VatRate $rate = VatRate::TwentyOne): static
+    public function withLine(float $amount = 1000, string $rate = '21'): static
     {
         return $this->afterCreating(function (Invoice $invoice) use ($amount, $rate): void {
             $invoice->lines()->create(['description' => 'Werken', 'quantity' => 1, 'unit_price' => $amount, 'vat_rate' => $rate]);

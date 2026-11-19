@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\VatRate;
+use App\Casts\AsVatCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +21,7 @@ class StandardInvoiceLine extends Model
         return [
             'quantity' => 'decimal:3',
             'unit_price' => 'decimal:2',
-            'vat_rate' => VatRate::class,
+            'vat_rate' => AsVatCode::class,
             'is_active' => 'boolean',
         ];
     }

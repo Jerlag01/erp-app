@@ -32,7 +32,7 @@
             </tr>
         </tbody>
     </table>
-    @if ($invoice->hasReverseCharge())
-        <p style="margin-top: .5rem; font-weight: 600;">{{ __('erp.finance.pdf.reverse_charge') }}</p>
-    @endif
+    @foreach ($invoice->vatMentions() as $mention)
+        <p style="margin-top: .5rem; font-weight: 600;">{{ $mention }}</p>
+    @endforeach
 </div>

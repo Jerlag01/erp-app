@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\InvoiceType;
 use App\Enums\OfferStatus;
-use App\Enums\VatRate;
 use Database\Factories\OfferFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -235,7 +234,7 @@ class Offer extends Model
     {
         return DB::transaction(function () use ($user): Invoice {
             $this->loadMissing(['lines.category', 'client']);
-            $rate = $this->client?->default_vat_rate ?? VatRate::TwentyOne;
+            $rate = $this->client?->default_vat_rate?->code ?? VatCode::STANDARD;
 
             $invoice = Invoice::query()->create([
                 'type' => InvoiceType::Invoice,

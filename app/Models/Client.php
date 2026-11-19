@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\VatRate;
+use App\Casts\AsVatCode;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,6 +38,52 @@ class Client extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * The communication points for invoicing (accounting, purchasing, …).
+     *
+     * @return HasMany<ClientContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(ClientContact::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * Who gets an invoice: the communication point it is addressed to, else every point that receives
+     * invoices, else the accounting (or first general) address.
+     *
+     * @return list<string>
+     */
+    public function invoiceRecipients(?ClientContact $point = null): array
+    {
+        return $this->recipients($point, 'receives_invoices');
+    }
+
+    /**
+     * Who gets the payment reminders: the invoice's communication point, else every point that receives
+     * reminders, else the accounting (or first general) address.
+     *
+     * @return list<string>
+     */
+    public function reminderRecipients(?ClientContact $point = null): array
+    {
+        return $this->recipients($point, 'receives_reminders');
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function recipients(?ClientContact $point, string $flag): array
+    {
+        if ($point !== null && filled($point->email)) {
+            return [$point->email];
+        }
+
+        $emails = $this->contacts->where($flag, true)->pluck('email')->filter()->unique()->values()->all();
+
+        return $emails !== [] ? $emails : array_values(array_filter([$this->invoiceEmail()]));
     }
 
     /**
@@ -126,7 +172,7 @@ class Client extends Model
         return [
             'is_private' => 'boolean',
             'emails' => 'array',
-            'default_vat_rate' => VatRate::class,
+            'default_vat_rate' => AsVatCode::class,
             'payment_term_days' => 'integer',
             'send_reminders' => 'boolean',
             'is_active' => 'boolean',

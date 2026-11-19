@@ -30,6 +30,10 @@ class InvoiceInfolist
                                     ->helperText(fn (Invoice $record): string => implode(', ', $record->client->addressLines()))
                                     ->columnSpan(2),
                                 TextEntry::make('client.vat_number')->label(__('erp.finance.clients.vat_number'))->fontFamily(FontFamily::Mono)->placeholder('—'),
+                                TextEntry::make('recipients')
+                                    ->label(__('erp.finance.invoices.contact'))
+                                    ->state(fn (Invoice $record): ?string => $record->contact?->label())
+                                    ->placeholder(fn (Invoice $record): string => __('erp.finance.invoices.contact_all').' ('.(implode(', ', $record->recipients()) ?: '—').')'),
                                 TextEntry::make('issue_date')->label(__('erp.finance.invoices.issue_date'))->date('d/m/Y'),
                                 TextEntry::make('due_date')
                                     ->label(__('erp.finance.invoices.due_date'))

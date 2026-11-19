@@ -21,15 +21,17 @@ class SendPaymentReminder
 
     public function handle(Invoice $invoice, ?User $user = null): int
     {
-        $email = $invoice->client->invoiceEmail();
+        $invoice->loadMissing('client.contacts', 'contact');
+        $emails = $invoice->reminderRecipients();
+        $email = implode(', ', $emails);
 
-        if (! $invoice->isOverdue() || $email === null) {
+        if (! $invoice->isOverdue() || $emails === []) {
             throw new InvalidArgumentException('Only overdue invoices of clients with an e-mail address get reminders.');
         }
 
         $level = min($invoice->reminder_level + 1, self::MAX_LEVEL);
 
-        Mail::to($email)->send(new SystemMail(
+        Mail::to($emails)->send(new SystemMail(
             MailTemplateKey::reminder($level),
             $invoice->client->locale ?: config('app.locale'),
             SendInvoice::placeholders($invoice),
@@ -37,7 +39,7 @@ class SendPaymentReminder
         ));
 
         $invoice->forceFill(['reminder_level' => $level, 'last_reminder_at' => now()])->saveQuietly();
-        $invoice->reminders()->create(['level' => $level, 'sent_to' => $email, 'sent_by' => $user?->id, 'sent_at' => now()]);
+        $invoice->reminders()->create(['level' => $level, 'sent_to' => mb_substr($email, 0, 1000), 'sent_by' => $user?->id, 'sent_at' => now()]);
 
         return $level;
     }

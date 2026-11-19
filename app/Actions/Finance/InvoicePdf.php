@@ -13,7 +13,7 @@ class InvoicePdf
 {
     public function render(Invoice $invoice): string
     {
-        $invoice->loadMissing(['client.country', 'lines', 'poNumbers', 'project', 'creditedInvoice.poNumbers']);
+        $invoice->loadMissing(['client.country', 'contact', 'lines', 'poNumbers', 'project', 'creditedInvoice.poNumbers']);
         $previous = app()->getLocale();
         app()->setLocale($invoice->client->locale ?: config('app.locale'));
 

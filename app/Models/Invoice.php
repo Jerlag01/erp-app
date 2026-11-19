@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
-use App\Enums\VatRate;
 use Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,7 +21,7 @@ use LogicException;
  * Mistakes in a final invoice are corrected with a credit note.
  */
 #[Fillable([
-    'type', 'status', 'client_id', 'project_id', 'credited_invoice_id', 'allow_changes',
+    'type', 'status', 'client_id', 'client_contact_id', 'project_id', 'credited_invoice_id', 'allow_changes',
     'issue_date', 'due_date', 'subject', 'client_reference', 'notes', 'paid_on', 'created_by',
 ])]
 class Invoice extends Model
@@ -52,6 +51,32 @@ class Invoice extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * The client's communication point the invoice is addressed to (else all that receive invoices).
+     *
+     * @return BelongsTo<ClientContact, $this>
+     */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(ClientContact::class, 'client_contact_id');
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function recipients(): array
+    {
+        return $this->client?->invoiceRecipients($this->contact) ?? [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function reminderRecipients(): array
+    {
+        return $this->client?->reminderRecipients($this->contact) ?? [];
     }
 
     /**
@@ -149,16 +174,16 @@ class Invoice extends Model
     }
 
     /**
-     * @return array<string, array{rate: VatRate, base: float, vat: float}>
+     * @return array<string, array{rate: VatCode, base: float, vat: float}>
      */
     public function vatBreakdown(): array
     {
         $groups = [];
 
         foreach ($this->lines as $line) {
-            $rate = $line->vat_rate ?? VatRate::TwentyOne;
-            $groups[$rate->value] ??= ['rate' => $rate, 'base' => 0.0, 'vat' => 0.0];
-            $groups[$rate->value]['base'] += (float) $line->line_total;
+            $rate = $line->vat_rate ?? VatCode::forCode(VatCode::STANDARD);
+            $groups[$rate->code] ??= ['rate' => $rate, 'base' => 0.0, 'vat' => 0.0];
+            $groups[$rate->code]['base'] += (float) $line->line_total;
         }
 
         foreach ($groups as &$group) {
@@ -171,7 +196,22 @@ class Invoice extends Model
 
     public function hasReverseCharge(): bool
     {
-        return $this->lines->contains(fn (InvoiceLine $line): bool => $line->vat_rate === VatRate::ReverseCharge);
+        return $this->lines->contains(fn (InvoiceLine $line): bool => (bool) $line->vat_rate?->isReverseCharge());
+    }
+
+    /**
+     * The legal mentions of the VAT codes on the invoice (reverse charge, exemption), once each.
+     *
+     * @return list<string>
+     */
+    public function vatMentions(?string $locale = null): array
+    {
+        return $this->lines
+            ->map(fn (InvoiceLine $line): ?string => $line->vat_rate?->mention($locale))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**

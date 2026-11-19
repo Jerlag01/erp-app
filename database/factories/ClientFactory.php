@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Enums\VatRate;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\VatCode;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -30,7 +30,7 @@ class ClientFactory extends Factory
             'country_id' => fn () => Country::belgiumId(),
             // A valid Belgian VAT number (mod 97).
             'vat_number' => fn (): string => self::belgianVat(),
-            'default_vat_rate' => VatRate::TwentyOne,
+            'default_vat_rate' => VatCode::STANDARD,
             'payment_term_days' => 30,
             'locale' => 'nl',
         ];

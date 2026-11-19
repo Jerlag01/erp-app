@@ -3,12 +3,13 @@
 namespace App\Filament\Resources\Invoices\Schemas;
 
 use App\Enums\InvoiceType;
-use App\Enums\VatRate;
 use App\Models\Client;
+use App\Models\ClientContact;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
 use App\Models\Project;
 use App\Models\StandardInvoiceLine;
+use App\Models\VatCode;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -66,8 +67,20 @@ class InvoiceForm
                             ->searchable()
                             ->required()
                             ->live()
-                            ->afterStateUpdated(fn (mixed $state, Get $get, Set $set) => self::applyClientVatRate($state, $get, $set))
+                            ->afterStateUpdated(function (mixed $state, Get $get, Set $set): void {
+                                $set('client_contact_id', null);
+                                self::applyClientVatRate($state, $get, $set);
+                            })
                             ->disabled($locked)
+                            ->columnSpanFull(),
+                        // Addressed to one communication point of the client, or (empty) to all that receive invoices.
+                        Select::make('client_contact_id')
+                            ->label(__('erp.finance.invoices.contact'))
+                            ->helperText(__('erp.finance.invoices.contact_help'))
+                            ->options(fn (Get $get): array => ClientContact::query()->where('client_id', $get('client_id') ?: 0)->orderBy('sort')->orderBy('id')->get()
+                                ->mapWithKeys(fn (ClientContact $contact): array => [$contact->id => $contact->label()])->all())
+                            ->placeholder(__('erp.finance.invoices.contact_all'))
+                            ->visible(fn (Get $get): bool => filled($get('client_id')) && ClientContact::query()->where('client_id', $get('client_id'))->exists())
                             ->columnSpanFull(),
                         Select::make('project_id')
                             ->label(__('erp.resources.project.singular'))
@@ -154,7 +167,7 @@ class InvoiceForm
                             ->columnSpan(['default' => 4, 'md' => 2]),
                         Select::make('vat_rate')
                             ->label(__('erp.finance.pdf.vat_rate'))
-                            ->options(VatRate::class)
+                            ->options(fn (mixed $state): array => VatCode::options($state))
                             ->required()
                             ->columnSpan(['default' => 6, 'md' => 2]),
                         Text::make(fn (Get $get): string => Invoice::money(InvoiceLine::totalFor($get('quantity'), $get('unit_price'))))
@@ -184,7 +197,7 @@ class InvoiceForm
                 'quantity' => (float) $line->quantity,
                 'unit' => $line->unit,
                 'unit_price' => (float) $line->unit_price,
-                'vat_rate' => $line->vat_rate?->value,
+                'vat_rate' => $line->vat_rate?->code,
                 'is_standard' => true,
             ])->all();
     }
@@ -194,7 +207,7 @@ class InvoiceForm
      */
     protected static function applyClientVatRate(mixed $clientId, Get $get, Set $set): void
     {
-        $rate = Client::find($clientId)?->default_vat_rate?->value;
+        $rate = Client::find($clientId)?->default_vat_rate?->code;
 
         if ($rate === null) {
             return;
@@ -219,12 +232,12 @@ class InvoiceForm
         $bases = [];
 
         foreach ($lines as $line) {
-            $rate = VatRate::tryFrom((string) ($line['vat_rate'] instanceof VatRate ? $line['vat_rate']->value : ($line['vat_rate'] ?? ''))) ?? VatRate::TwentyOne;
-            $bases[$rate->value] = ($bases[$rate->value] ?? 0) + InvoiceLine::totalFor($line['quantity'] ?? 0, $line['unit_price'] ?? 0);
+            $rate = VatCode::forCode(($line['vat_rate'] ?? null) ?: VatCode::STANDARD);
+            $bases[$rate->code] = ($bases[$rate->code] ?? 0) + InvoiceLine::totalFor($line['quantity'] ?? 0, $line['unit_price'] ?? 0);
         }
 
         $subtotal = array_sum($bases);
-        $vat = array_sum(array_map(fn (string $rate, float $base): float => round($base * VatRate::from($rate)->percentage() / 100, 2), array_keys($bases), $bases));
+        $vat = array_sum(array_map(fn (string|int $rate, float $base): float => round($base * VatCode::forCode((string) $rate)->percentage() / 100, 2), array_keys($bases), $bases));
 
         return __('erp.finance.invoices.totals_text', ['subtotal' => Invoice::money($subtotal), 'vat' => Invoice::money($vat), 'total' => Invoice::money($subtotal + $vat)]);
     }

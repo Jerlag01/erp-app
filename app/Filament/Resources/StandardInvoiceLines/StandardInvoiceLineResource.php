@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\StandardInvoiceLines;
 
 use App\Enums\NavigationGroup;
-use App\Enums\VatRate;
 use App\Filament\Resources\StandardInvoiceLines\Pages\ManageStandardInvoiceLines;
 use App\Models\StandardInvoiceLine;
+use App\Models\VatCode;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -57,7 +57,7 @@ class StandardInvoiceLineResource extends Resource
                 TextInput::make('quantity')->label(__('erp.finance.pdf.quantity'))->numeric()->default(1)->required(),
                 TextInput::make('unit')->label(__('erp.finance.invoices.unit'))->maxLength(20),
                 TextInput::make('unit_price')->label(__('erp.finance.pdf.unit_price'))->numeric()->step(0.01)->prefix('€')->default(0)->required(),
-                Select::make('vat_rate')->label(__('erp.finance.pdf.vat_rate'))->options(VatRate::class)->placeholder(__('erp.finance.standard_lines.client_rate')),
+                Select::make('vat_rate')->label(__('erp.finance.pdf.vat_rate'))->options(fn (mixed $state): array => VatCode::options($state))->placeholder(__('erp.finance.standard_lines.client_rate')),
                 Toggle::make('is_active')->label(__('erp.finance.standard_lines.is_active'))->helperText(__('erp.finance.standard_lines.is_active_help'))->default(true),
                 TextInput::make('sort_order')->label(__('erp.kb.sort_order'))->integer()->default(0),
             ]);
@@ -72,7 +72,7 @@ class StandardInvoiceLineResource extends Resource
                 TextColumn::make('description')->label(__('erp.finance.pdf.description'))->weight('medium'),
                 TextColumn::make('quantity')->label(__('erp.finance.pdf.quantity'))->formatStateUsing(fn (StandardInvoiceLine $record): string => rtrim(rtrim((string) $record->quantity, '0'), '.').' '.$record->unit),
                 TextColumn::make('unit_price')->label(__('erp.finance.pdf.unit_price'))->money('EUR', locale: 'nl_BE'),
-                TextColumn::make('vat_rate')->label(__('erp.finance.pdf.vat_rate'))->placeholder(__('erp.finance.standard_lines.client_rate')),
+                TextColumn::make('vat_rate')->label(__('erp.finance.pdf.vat_rate'))->state(fn (StandardInvoiceLine $record): ?string => $record->vat_rate?->label())->placeholder(__('erp.finance.standard_lines.client_rate')),
                 IconColumn::make('is_active')->label(__('erp.finance.standard_lines.is_active'))->boolean(),
             ])
             ->recordActions([

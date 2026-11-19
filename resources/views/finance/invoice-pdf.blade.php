@@ -89,6 +89,7 @@
                 <strong>{{ $client->company_name }}</strong><br>
                 @foreach ($client->addressLines() as $line){{ $line }}<br>@endforeach
                 @if ($client->vat_number){{ __('erp.finance.pdf.vat') }} {{ $client->vat_number }}@endif
+                @if ($invoice->contact)<br>{{ __('erp.finance.pdf.attention') }} {{ implode(' – ', array_filter([$invoice->contact->name, $invoice->contact->role])) }}@endif
             </td>
         </tr>
     </table>
@@ -132,9 +133,9 @@
         <tr class="grand"><td>{{ $isCredit ? __('erp.finance.pdf.total_credit') : __('erp.finance.pdf.total') }}</td><td class="num">{{ $money($invoice->total) }}</td></tr>
     </table>
 
-    @if ($invoice->hasReverseCharge())
-        <p class="legal">{{ __('erp.finance.pdf.reverse_charge') }}</p>
-    @endif
+    @foreach ($invoice->vatMentions() as $mention)
+        <p class="legal">{{ $mention }}</p>
+    @endforeach
 
     @if ($invoice->notes)
         <p>{!! nl2br(e($invoice->notes)) !!}</p>
