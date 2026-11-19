@@ -58,7 +58,7 @@ class SafetyAndTrainingPermissionsTest extends TestCase
     {
         $roles = Permissions::forRoles();
 
-        $this->assertSame(['view', 'update', 'delete', 'generate_pdf'], $roles['incidents']);
+        $this->assertSame(['view', 'update', 'change_incident_type', 'delete', 'generate_pdf'], $roles['incidents']);
         $this->assertSame(['view', 'create', 'update', 'delete'], $roles['certificates']);
         $this->assertSame(['view', 'create', 'update', 'delete'], $roles['medical_checks']);
         $this->assertContains('create', $roles['toolbox']);

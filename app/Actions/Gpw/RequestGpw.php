@@ -28,6 +28,8 @@ use Throwable;
  * without a client portal login, who decide with the buttons in the mail. The request is stored with them
  * and mailed to each, in their language, with a copy to the requester. The mail links to a page
  * where the contact approves or refuses it; client portal users who see the project can do so too.
+ * The requester also picks the employees who will do the work; the contact person named in the mail is
+ * always a project leader (the chosen one when the project has several), in copy with the requester.
  */
 class RequestGpw
 {
@@ -106,7 +108,7 @@ class RequestGpw
     }
 
     /**
-     * @param  array{starts_on?: string, ends_on?: string, remarks?: string|null, contact_ids: list<int|string>, work_site_ids?: list<int|string>, split?: bool, sites?: list<array{work_site_id: int|string, starts_on: string, ends_on: string}>}  $data  contact_ids: the people chosen in the request window; for a project with several COW codes the COW codes in one period (work_site_ids) or each in its own (split + sites)
+     * @param  array{starts_on?: string, ends_on?: string, remarks?: string|null, contact_ids: list<int|string>, employee_ids?: list<int|string>, contact_user_id?: int|string|null, work_site_ids?: list<int|string>, split?: bool, sites?: list<array{work_site_id: int|string, starts_on: string, ends_on: string}>}  $data  contact_ids: the people chosen in the request window; for a project with several COW codes the COW codes in one period (work_site_ids) or each in its own (split + sites)
      */
     public function handle(Project $project, User $actor, array $data): GpwRequest
     {
@@ -126,13 +128,17 @@ class RequestGpw
         }
 
         $period = GpwSites::resolve($project, $data);
+        $leader = self::contactLeader($project, $data['contact_user_id'] ?? null);
+        $employees = self::employeeIds($data['employee_ids'] ?? []);
 
-        $request = DB::transaction(function () use ($project, $actor, $contact, $contacts, $period, $data): GpwRequest {
+        $request = DB::transaction(function () use ($project, $actor, $contact, $contacts, $period, $data, $leader, $employees): GpwRequest {
             $request = GpwRequest::query()->create([
                 'project_id' => $project->id,
                 'requested_by' => $actor->id,
+                'contact_user_id' => $leader?->id,
                 'work_site_contact_id' => $contact->id,
                 'contact_ids' => $contacts->modelKeys(),
+                'employee_ids' => $employees !== [] ? $employees : null,
                 'contact_name' => mb_substr($contacts->map(fn (WorkSiteContact $contact): string => $contact->fullName())->implode(', '), 0, 500),
                 'contact_email' => mb_substr($contacts->pluck('email')->implode(', '), 0, 1000),
                 'locale' => $contact->preferredLocale(),
@@ -149,6 +155,59 @@ class RequestGpw
         $this->mailFailed = ! $this->mail($request);
 
         return $request;
+    }
+
+    /**
+     * The project leaders, "Jan Peeters" by id, to choose the contact person from.
+     *
+     * @return array<int, string>
+     */
+    public static function leaderOptions(Project $project): array
+    {
+        return $project->leaders()->orderBy('name')->pluck('users.name', 'users.id')->all();
+    }
+
+    /**
+     * Active employees to choose who will do the work, "Jan Peeters" by id.
+     *
+     * @return array<int, string>
+     */
+    public static function employeeOptions(): array
+    {
+        return User::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    /**
+     * The contact person in the mail is always a project leader: the chosen one when there are several,
+     * else the only one. Without project leaders, the requester stays the contact (null).
+     */
+    public static function contactLeader(Project $project, int|string|null $chosen): ?User
+    {
+        $leaders = $project->leaders()->orderBy('name')->get();
+
+        if ($leaders->count() > 1 && filled($chosen) && ($leader = $leaders->firstWhere('id', (int) $chosen)) !== null) {
+            return $leader;
+        }
+
+        if ($leaders->count() > 1) {
+            throw ValidationException::withMessages(['contact_user_id' => __('erp.gpw.errors.no_contact_leader')]);
+        }
+
+        return $leaders->first();
+    }
+
+    /**
+     * The chosen employees that exist, in the order chosen.
+     *
+     * @param  list<int|string>|mixed  $ids
+     * @return list<int>
+     */
+    public static function employeeIds(mixed $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', (array) $ids)));
+        $existing = User::query()->whereKey($ids)->pluck('id')->map(fn (mixed $id): int => (int) $id)->all();
+
+        return array_values(array_intersect($ids, $existing));
     }
 
     /**
@@ -172,9 +231,15 @@ class RequestGpw
      */
     public function mail(GpwRequest $request): bool
     {
-        $request->loadMissing('project.workSite', 'requester');
+        $request->loadMissing('project.workSite', 'requester', 'contactUser');
         $project = $request->project;
         $requester = $request->requester;
+        // Our contact person for the client: the project leader (else the requester).
+        $contactPerson = $request->contactPerson();
+        $contactLine = $contactPerson !== null
+            ? $contactPerson->name.' ('.collect([$contactPerson->email, $contactPerson->phone])->filter()->implode(', ').')'
+            : settings()->siteName();
+        $copy = collect([$requester?->email, $contactPerson?->email])->filter()->unique()->values()->all();
 
         $recipients = WorkSiteContact::query()
             ->whereKey(filled($request->contact_ids) ? (array) $request->contact_ids : array_filter([$request->work_site_contact_id]))
@@ -207,7 +272,7 @@ class RequestGpw
                 [$token] = GpwRequestKey::issue($request, $group->pluck(0)->implode(', '), $names, $locale, $group->count() === 1 ? $group->first()[3] : null);
 
                 Mail::to($group->map(fn (array $recipient): array => ['email' => $recipient[0], 'name' => $recipient[1]])->all())
-                    ->cc($index === 0 && $requester?->email ? [$requester->email] : [])
+                    ->cc($index === 0 ? $copy : [])
                     ->send(new SystemMail(MailTemplateKey::GpwRequest, $locale, [
                         'contact_name' => $names,
                         'recipients' => $everyone,
@@ -219,8 +284,13 @@ class RequestGpw
                         'from' => $request->starts_on->format('d/m/Y'),
                         'until' => $request->ends_on->format('d/m/Y'),
                         'remarks' => $request->remarks ?? '—',
-                        'requested_by' => $requester?->name ?? settings()->siteName(),
-                        'requester_email' => $requester?->email ?? '',
+                        // The contact person is always the project leader, also in templates that still say "requested by".
+                        'requested_by' => $contactPerson?->name ?? settings()->siteName(),
+                        'requester_email' => $contactPerson?->email ?? '',
+                        'contact_person' => $contactLine,
+                        'contact_person_email' => $contactPerson?->email ?? '',
+                        'contact_person_phone' => $contactPerson?->phone ?? '',
+                        'employees' => $request->employeeNames() ?? '—',
                         'approve_url' => route('gpw.key.approve', $token),
                         'reject_url' => route('gpw.key.reject', $token),
                         'view_url' => self::decisionUrl($request, $locale),

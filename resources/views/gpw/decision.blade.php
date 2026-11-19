@@ -73,7 +73,11 @@
             @if (filled($gpw->remarks))
                 <dt>{{ __('erp.gpw.remarks') }}</dt><dd style="white-space: pre-line">{{ $gpw->remarks }}</dd>
             @endif
-            <dt>{{ __('erp.gpw.page.requested_by') }}</dt><dd>{{ $gpw->requester?->name ?? settings()->siteName() }}</dd>
+            @if ($employees = $gpw->employeeNames())
+                <dt>{{ __('erp.gpw.employees') }}</dt><dd>{{ $employees }}</dd>
+            @endif
+            @php($contactPerson = $gpw->contactPerson())
+            <dt>{{ __('erp.gpw.contact_person') }}</dt><dd>{{ $contactPerson?->name ?? settings()->siteName() }}@if ($contactPerson)<br><span class="muted">{{ collect([$contactPerson->email, $contactPerson->phone])->filter()->implode(' · ') }}</span>@endif</dd>
         </dl>
 
         @if ($gpw->isPending())

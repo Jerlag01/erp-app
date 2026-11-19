@@ -173,6 +173,25 @@ class IncidentTest extends TestCase
     }
 
     #[Test]
+    public function only_who_has_the_permission_changes_the_type_of_an_incident(): void
+    {
+        $incident = Incident::factory()->create(['type' => IncidentType::NearMiss]);
+        Filament::setCurrentPanel('app');
+
+        // Handling incidents is not enough.
+        $this->actingAs(User::factory()->withPermissions(['incidents' => ['view', 'update']])->inTeam()->create());
+        Livewire::test(ViewIncident::class, ['record' => $incident->getRouteKey()])->assertActionHidden('changeType');
+
+        $this->actingAs(User::factory()->withPermissions(['incidents' => ['view', 'change_incident_type']])->inTeam()->create());
+        Livewire::test(ViewIncident::class, ['record' => $incident->getRouteKey()])
+            ->assertActionVisible('changeType')
+            ->callAction('changeType', ['type' => 'accident'])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(IncidentType::Accident, $incident->fresh()->type);
+    }
+
+    #[Test]
     public function incidents_are_exported_to_pdf_by_administrators_only(): void
     {
         Storage::fake('local');

@@ -69,6 +69,7 @@ class GpwRequestsRelationManager extends RelationManager
                 GpwRequestResource::statusColumn(),
                 TextColumn::make('contact_name')->label(__('erp.gpw.sent_to'))->description(fn (GpwRequest $record): string => $record->contact_email.' · '.strtoupper($record->locale)),
                 TextColumn::make('requester.name')->label(__('erp.gpw.requested_by'))->description(fn (GpwRequest $record): string => $record->created_at->format('d/m/Y H:i')),
+                TextColumn::make('employees')->label(__('erp.gpw.employees'))->state(fn (GpwRequest $record): ?string => $record->employeeNames())->description(fn (GpwRequest $record): ?string => $record->contactUser ? __('erp.gpw.contact_person').': '.$record->contactUser->name : null)->placeholder('—')->wrap()->toggleable(),
                 TextColumn::make('remarks')->label(__('erp.gpw.remarks'))->limit(60)->tooltip(fn (GpwRequest $record): ?string => $record->remarks)->placeholder('—')->toggleable(),
                 TextColumn::make('decided_by_name')
                     ->label(__('erp.gpw.decision'))

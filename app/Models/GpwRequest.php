@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * A GPW request for a project: the period we ask the COW site's contact person to work in, with
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * (GpwRequestSite); starts_on/ends_on then span all of them, and one approval covers them all.
  */
 #[Fillable([
-    'project_id', 'requested_by', 'work_site_contact_id', 'contact_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
+    'project_id', 'requested_by', 'contact_user_id', 'work_site_contact_id', 'contact_ids', 'employee_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
     'status', 'source', 'mailed_at', 'decided_at', 'decided_by_client_user_id', 'decided_by_name', 'decision_note', 'team_id', 'planned_at', 'planned_by',
     'status_locked_at', 'status_locked_by',
 ])]
@@ -42,6 +43,52 @@ class GpwRequest extends Model
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    /**
+     * The project leader who is the contact person in the mail (else the requester).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function contactUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'contact_user_id');
+    }
+
+    /**
+     * Our contact person for the client: the chosen project leader, or else the requester.
+     */
+    public function contactPerson(): ?User
+    {
+        return $this->contactUser ?? $this->requester;
+    }
+
+    /**
+     * The employees who will do the work, in the order chosen.
+     *
+     * @return Collection<int, User>
+     */
+    public function employees(): Collection
+    {
+        $ids = array_map('intval', (array) ($this->employee_ids ?? []));
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        $users = User::query()->whereKey($ids)->get()->keyBy('id');
+
+        return collect($ids)->map(fn (int $id): ?User => $users->get($id))->filter()->values();
+    }
+
+    /**
+     * "Jan Peeters, Ann Smet", or null when none were chosen.
+     */
+    public function employeeNames(): ?string
+    {
+        $names = $this->employees()->pluck('name');
+
+        return $names->isNotEmpty() ? $names->implode(', ') : null;
     }
 
     /**
@@ -173,6 +220,7 @@ class GpwRequest extends Model
         return [
             'status' => GpwStatus::class,
             'contact_ids' => 'array',
+            'employee_ids' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
             'mailed_at' => 'datetime',

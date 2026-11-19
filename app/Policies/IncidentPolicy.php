@@ -7,7 +7,7 @@ use App\Models\User;
 
 /**
  * Every employee may report an incident and always sees their own reports. Everyone's reports: "incidents.view";
- * handling them (status, follow-up) "incidents.update", removing them "incidents.delete" (administrators have all).
+ * handling them (status, follow-up) "incidents.update", changing their kind "incidents.change_incident_type", removing them "incidents.delete" (administrators have all).
  */
 class IncidentPolicy
 {
@@ -29,6 +29,11 @@ class IncidentPolicy
     public function update(User $user, Incident $incident): bool
     {
         return $this->viewAny($user) && $user->hasPermission('incidents.update');
+    }
+
+    public function changeType(User $user, Incident $incident): bool
+    {
+        return $this->viewAny($user) && $user->hasPermission('incidents.change_incident_type');
     }
 
     public function delete(User $user, Incident $incident): bool

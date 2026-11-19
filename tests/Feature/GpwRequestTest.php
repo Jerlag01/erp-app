@@ -752,4 +752,72 @@ class GpwRequestTest extends TestCase
         $manual = GpwRequestResource::addManual(['project_id' => $project->id, 'status' => GpwStatus::Approved->value, 'contact_name' => 'Sophie', 'work_site_ids' => [$origin->id, $destination->id], 'starts_on' => today()->subDay()->toDateString(), 'ends_on' => today()->toDateString()]);
         $this->assertSame(['COW-ORIG', 'COW-DEST'], $manual->sites->pluck('cow_code')->all());
     }
+
+    #[Test]
+    public function the_request_names_the_employees_and_a_project_leader_as_contact_person(): void
+    {
+        Mail::fake();
+        $project = $this->project();
+        $requester = $this->requester($project, email: 'jan@power.example');
+        $anna = User::factory()->create(['name' => 'Anna Leider', 'email' => 'anna@power.example', 'phone' => '0470 11 22 33']);
+        $bart = User::factory()->create(['name' => 'Bart Leider', 'email' => 'bart@power.example']);
+        $project->leaders()->attach([$anna->id, $bart->id]);
+        $piet = User::factory()->create(['name' => 'Piet Technieker']);
+        $karel = User::factory()->create(['name' => 'Karel Technieker']);
+        $this->actingAs($requester);
+        Filament::setCurrentPanel('app');
+        $data = [
+            'starts_on' => today()->addWeek()->toDateString(),
+            'ends_on' => today()->addWeek()->addDays(2)->toDateString(),
+            'contact_ids' => [$this->contact->id],
+            'employee_ids' => [$piet->id, $karel->id],
+        ];
+
+        // Several project leaders: one has to be chosen.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('requestGpw')
+            ->assertSchemaComponentExists('contact_user_id')
+            ->callMountedAction([...$data, 'contact_user_id' => null])
+            ->assertHasActionErrors(['contact_user_id' => 'required']);
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('requestGpw', [...$data, 'contact_user_id' => $anna->id])
+            ->assertHasNoActionErrors();
+
+        $gpw = GpwRequest::query()->sole();
+        $this->assertSame([$piet->id, $karel->id], $gpw->employee_ids);
+        $this->assertTrue($gpw->contactUser->is($anna));
+        $this->assertSame('Piet Technieker, Karel Technieker', $gpw->employeeNames());
+
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->hasTo('sophie@proximus.example')
+            && $mail->hasCc('jan@power.example') && $mail->hasCc('anna@power.example') && ! $mail->hasCc('bart@power.example')
+            && str_contains($mail->rendered['html'], 'Piet Technieker, Karel Technieker')
+            && str_contains($mail->rendered['html'], 'Personne de contact : Anna Leider') && str_contains($mail->rendered['html'], '0470 11 22 33')
+            && ! str_contains($mail->rendered['html'], 'Demandé par'));
+
+        // The decision page shows them too.
+        $this->get(RequestGpw::decisionUrl($gpw))->assertOk()->assertSee('Piet Technieker, Karel Technieker')->assertSee('Anna Leider');
+    }
+
+    #[Test]
+    public function with_one_project_leader_that_leader_is_the_contact_person_without_asking(): void
+    {
+        $project = $this->project();
+        $leader = User::factory()->create();
+        $project->leaders()->attach($leader);
+        $this->actingAs($this->requester($project));
+        Filament::setCurrentPanel('app');
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('requestGpw')
+            ->assertSchemaComponentHidden('contact_user_id', 'mountedActionSchema0');
+
+        $gpw = $this->gpw($project, $this->requester($project));
+        $this->assertTrue($gpw->contactUser->is($leader));
+
+        // Two leaders through the action without a choice is refused.
+        $project->leaders()->attach(User::factory()->create());
+        $this->expectException(ValidationException::class);
+        $this->gpw($project, $this->requester($project));
+    }
 }

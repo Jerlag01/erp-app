@@ -36,7 +36,8 @@ namespace App\Support;
  * "access_control.delete"). "onboarding.manage" manages the onboarding documents,
  * "onboarding.view_signatures" sees who signed them.
  * Safety: "toolbox" (see ToolboxMeetingPolicy) and "incidents": view sees everyone's incident reports, update
- * handles them (status, follow-up), delete removes them, generate_pdf exports them. Reporting needs no permission.
+ * handles them (status, follow-up), change_incident_type changes the kind of incident (accident, near miss, …),
+ * delete removes them, generate_pdf exports them. Reporting needs no permission.
  * The overview "Trainings & medical check-ups": "certificates" and "medical_checks" (view/create/update/delete)
  * on the certificates and medical check-ups of the employees; either "view" opens the overview, which shows
  * only the columns the user may see. Medical data is separate on purpose.
@@ -116,7 +117,7 @@ class Permissions
         'hr_calculations' => ['module' => Modules::HR_CALCULATIONS, 'abilities' => ['view', 'manage']],
         'toolbox' => ['module' => Modules::TOOLBOX, 'abilities' => ['create', 'update', 'delete', 'view_signatures', 'generate_pdf', 'sign']],
         // Safety: the incident reports of everyone (reporting your own needs no permission).
-        'incidents' => ['module' => Modules::INCIDENTS, 'abilities' => ['view', 'update', 'delete', 'generate_pdf']],
+        'incidents' => ['module' => Modules::INCIDENTS, 'abilities' => ['view', 'update', 'change_incident_type', 'delete', 'generate_pdf']],
         // Training & medical check-up overview: the certificates and the medical check-ups of the employees.
         'certificates' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'medical_checks' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete']],

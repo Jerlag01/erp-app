@@ -379,6 +379,20 @@ class ViewProject extends ViewRecord
                         ->createOptionUsing(fn (array $data): int => WorkSiteContact::query()->create($data)->getKey())
                         ->required()
                         ->validationMessages(['required' => __('erp.gpw.errors.no_recipient')]),
+                    // Who will do the work, named in the mail.
+                    Select::make('employee_ids')
+                        ->label(__('erp.gpw.employees'))
+                        ->helperText(__('erp.gpw.employees_help'))
+                        ->multiple()
+                        ->searchable()
+                        ->options(RequestGpw::employeeOptions()),
+                    // The contact person in the mail is a project leader: chosen when there are several.
+                    Select::make('contact_user_id')
+                        ->label(__('erp.gpw.contact_leader'))
+                        ->helperText(__('erp.gpw.contact_leader_help'))
+                        ->options(RequestGpw::leaderOptions($record))
+                        ->visible(count(RequestGpw::leaderOptions($record)) > 1)
+                        ->required(),
                     // Several COW codes (intervention, battery move): all in one request, in one period or each in its own.
                     ...GpwSites::schema($record),
                     Textarea::make('remarks')->label(__('erp.gpw.remarks'))->helperText(__('erp.gpw.remarks_help'))->rows(4)->maxLength(2000),

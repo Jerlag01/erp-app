@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Incidents\Pages;
 
 use App\Enums\IncidentStatus;
+use App\Enums\IncidentType;
 use App\Filament\Admin\Resources\Incidents\IncidentResource;
 use App\Models\Incident;
 use Filament\Actions\Action;
@@ -51,6 +52,24 @@ class ViewIncident extends ViewRecord
                     $record->refresh();
                 })
                 ->successNotificationTitle(__('erp.incidents.saved')),
+            Action::make('changeType')
+                ->label(__('erp.incidents.change_type'))
+                ->icon(Heroicon::OutlinedTag)
+                ->color('gray')
+                ->visible(fn (Incident $record): bool => (bool) auth()->user()?->can('changeType', $record))
+                ->authorize(fn (Incident $record): bool => (bool) auth()->user()?->can('changeType', $record))
+                ->fillForm(fn (Incident $record): array => ['type' => $record->type->value])
+                ->schema([
+                    Select::make('type')
+                        ->label(__('erp.incidents.type'))
+                        ->options(IncidentType::class)
+                        ->required(),
+                ])
+                ->action(function (Incident $record, array $data): void {
+                    $record->update(['type' => $data['type']]);
+                    $record->refresh();
+                })
+                ->successNotificationTitle(__('erp.incidents.type_changed')),
             DeleteAction::make(),
         ];
     }
