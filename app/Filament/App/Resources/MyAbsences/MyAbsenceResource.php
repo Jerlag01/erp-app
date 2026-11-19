@@ -108,6 +108,7 @@ class MyAbsenceResource extends Resource
                     ->sortable(),
                 TextColumn::make('type')
                     ->label(__('erp.absences.type'))
+                    ->formatStateUsing(fn (Absence $record): string => $record->typeLabel())
                     ->badge(),
                 TextColumn::make('days')
                     ->label(__('erp.vacations.days'))

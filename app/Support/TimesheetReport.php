@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\CustomAbsenceType;
 use App\Models\TimesheetDay;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -24,7 +25,47 @@ class TimesheetReport
     public const CODES = [
         'vacation' => 'V', 'medical' => 'Z', 'overtime' => 'R', 'recuperation' => 'IR', 'family' => 'FV', 'justified' => 'GA', 'training' => 'OP', 'holiday' => 'F',
         'mobility' => 'MV', 'economic' => 'EW', 'short_leave' => 'KV', 'seniority' => 'AN', 'job_search' => 'SV', 'work_accident' => 'WO', 'parental' => 'OV',
+        'bad_weather' => 'WV',
     ];
+
+    /**
+     * The code of a day's status: the fixed one, or that of an absence type added by administration.
+     *
+     * @param  array{type: string, code?: string}  $status
+     */
+    public static function codeOf(array $status): ?string
+    {
+        return $status['code'] ?? self::CODES[$status['type']] ?? null;
+    }
+
+    /**
+     * Every code with its meaning, for the legend and the columns: the fixed ones, then the absence types
+     * added by administration (also inactive ones, which old months can still show).
+     *
+     * @return array<string, string>
+     */
+    public static function legend(): array
+    {
+        $fixed = (array) __('erp.pdf.report.legend');
+        $night = [self::NIGHT => $fixed[self::NIGHT] ?? self::NIGHT];
+        unset($fixed[self::NIGHT]);
+
+        $custom = CustomAbsenceType::query()->orderBy('sort')->orderBy('name')->get()
+            ->mapWithKeys(fn (CustomAbsenceType $type): array => [$type->code => $type->label()])
+            ->all();
+
+        return [...$fixed, ...array_diff_key($custom, $fixed), ...$night];
+    }
+
+    /**
+     * The codes counted per employee and month.
+     *
+     * @return list<string>
+     */
+    public static function allCodes(): array
+    {
+        return array_values(array_unique([...array_values(self::CODES), ...array_keys(self::legend())]));
+    }
 
     /** Night work: the hours of a day with work between 20:00 and 06:00 get this tag ("8N"); its total is in hours. */
     public const NIGHT = 'N';
@@ -92,12 +133,12 @@ class TimesheetReport
         $last = $month->endOfMonth()->startOfDay();
         $working = $this->timesheets->days($user, $first, $last);
         $days = [];
-        $codes = array_fill_keys([...array_values(self::CODES), self::NIGHT], 0.0);
+        $codes = array_fill_keys(self::allCodes(), 0.0);
 
         foreach (CarbonPeriod::create($first, $last) as $date) {
             $key = $date->toDateString();
             $day = $working[$key] ?? null;
-            $code = $day && $day['status'] ? (self::CODES[$day['status']['type']] ?? null) : null;
+            $code = $day && $day['status'] ? self::codeOf($day['status']) : null;
             $worked = (float) ($day['worked'] ?? 0);
             $half = $day && $day['status'] && $day['status']['credit'] > 0 && $day['status']['credit'] < $this->timesheets->dayHours();
 
@@ -146,7 +187,7 @@ class TimesheetReport
         $counts = array_fill_keys(self::COUNTED, 0.0);
 
         foreach ($statuses as $date => $status) {
-            $code = self::CODES[$status['type']] ?? null;
+            $code = self::codeOf($status);
 
             if ($code && isset($counts[$code]) && ! CarbonImmutable::parse($date)->isWeekend()) {
                 $counts[$code] += $status['credit'] > 0 && $status['credit'] < $this->timesheets->dayHours() ? 0.5 : 1;
@@ -177,7 +218,7 @@ class TimesheetReport
                 $data = $this->month($user, $month);
                 $rows[] = ['user' => $user, 'allowance' => (float) $user->vacation_days, 'year' => $this->yearToDate($user, $month), ...$data];
 
-                $summary[$user->id] ??= ['user' => $user, 'hours' => 0.0, 'total' => 0.0, 'km' => 0, 'mobility' => 0.0, 'codes' => array_fill_keys([...array_values(self::CODES), self::NIGHT], 0.0)];
+                $summary[$user->id] ??= ['user' => $user, 'hours' => 0.0, 'total' => 0.0, 'km' => 0, 'mobility' => 0.0, 'codes' => array_fill_keys(self::allCodes(), 0.0)];
                 $summary[$user->id]['hours'] += $data['hours'];
                 $summary[$user->id]['total'] += $data['total'];
                 $summary[$user->id]['km'] += $data['km'];

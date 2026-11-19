@@ -13,10 +13,12 @@ use Filament\Support\Icons\Heroicon;
  *  - Z  sickness (certificate), R overtime taken as leave, FV family leave, GA justified absence;
  *  - OB unpaid leave: not worked and not paid, taken off the expected hours of the week (the overtime stays);
  *  - MV mobility leave, AN seniority leave, SV sollicitatieverlof: asked by the employee, paid (a full day);
- *  - EW economically unemployed and OV parental leave: not worked (paid by the RVA), but the day is taken
+ *  - EW economically unemployed, WV weerverlet (bad weather) and OV parental leave: not worked (paid by the RVA), but the day is taken
  *    off the expected hours of the week, so the overtime balance stays as it is;
  *  - KV klein verlet (a reason of the royal decree of 28/08/1963, certificate): a full day worked;
- *  - WO work accident, linked to the accident report: paid with a certificate within 48 hours, else unpaid.
+ *  - WO work accident, linked to the accident report: paid with a certificate within 48 hours, else unpaid;
+ *  - custom: a type added by administration (CustomAbsenceType), with its own code and counting; the
+ *    Absence model asks its type for the label, code, colour and rules.
  */
 enum AbsenceType: string implements HasColor, HasIcon, HasLabel
 {
@@ -44,6 +46,10 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
 
     case Parental = 'parental';
 
+    case BadWeather = 'bad_weather';
+
+    case Custom = 'custom';
+
     public function getLabel(): string
     {
         return __('erp.enums.absence_type.'.$this->value);
@@ -67,6 +73,8 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::JobSearch => 'SV',
             self::WorkAccident => 'WO',
             self::Parental => 'OV',
+            self::BadWeather => 'WV',
+            self::Custom => '',
         };
     }
 
@@ -76,7 +84,8 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::Medical, self::WorkAccident => 'danger',
             self::Overtime, self::Mobility => 'info',
             self::Family, self::ShortLeave => 'warning',
-            self::Unpaid, self::Economic => 'gray',
+            self::Unpaid, self::Economic, self::Custom => 'gray',
+            self::BadWeather => 'info',
             self::Justified, self::Seniority, self::JobSearch, self::Parental => 'success',
         };
     }
@@ -96,6 +105,8 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::JobSearch => Heroicon::OutlinedBriefcase,
             self::WorkAccident => Heroicon::OutlinedExclamationTriangle,
             self::Parental => Heroicon::OutlinedUserGroup,
+            self::BadWeather => Heroicon::OutlinedCloud,
+            self::Custom => Heroicon::OutlinedTag,
         };
     }
 
@@ -136,7 +147,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
      */
     public function isAdministrationOnly(): bool
     {
-        return in_array($this, [self::Economic, self::ShortLeave, self::WorkAccident, self::Parental], true);
+        return in_array($this, [self::Economic, self::ShortLeave, self::WorkAccident, self::Parental, self::BadWeather, self::Custom], true);
     }
 
     /**
@@ -152,7 +163,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
      */
     public function keepsOvertime(): bool
     {
-        return in_array($this, [self::Economic, self::Parental], true);
+        return in_array($this, [self::Economic, self::Parental, self::BadWeather], true);
     }
 
     /**
@@ -189,6 +200,8 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::JobSearch => '#16a34a',
             self::WorkAccident => '#b91c1c',
             self::Parental => '#db2777',
+            self::BadWeather => '#0369a1',
+            self::Custom => '#64748b',
         };
     }
 }

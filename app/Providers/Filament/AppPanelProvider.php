@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Admin\Pages\TimesheetMonthlyOverview;
 use App\Filament\Admin\Pages\TrainingMatrix;
 use App\Filament\Admin\Resources\Absences\AbsenceResource;
+use App\Filament\Admin\Resources\CustomAbsenceTypes\CustomAbsenceTypeResource;
 use App\Filament\Admin\Resources\Incidents\IncidentResource;
 use App\Filament\Admin\Resources\ParentalLeaves\ParentalLeaveResource;
 use App\Filament\Pages\Announcement;
@@ -55,6 +56,7 @@ class AppPanelProvider extends PanelProvider
             // Absences and parental leave also here, for those who manage all leave (e.g. Administratie).
             ->resources([
                 AbsenceResource::class,
+                CustomAbsenceTypeResource::class,
                 ParentalLeaveResource::class,
                 // Safety and the training overview, for whoever has their permissions.
                 IncidentResource::class,

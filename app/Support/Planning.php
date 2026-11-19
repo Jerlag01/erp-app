@@ -217,7 +217,8 @@ class Planning
     }
 
     /**
-     * The days on which nothing can be planned: sickness (also "arbeidsongeschikt"), a work accident and family leave.
+     * The days on which nothing can be planned: sickness (also "arbeidsongeschikt"), a work accident, family leave and
+     * the absence types added by administration that block the planning.
      * Vacation, IR days, overtime as leave, trainings and other absences only show in the planning;
      * projects can still be planned on them.
      *
@@ -235,7 +236,10 @@ class Planning
 
         if (modules()->vacations()) {
             Absence::query()
-                ->whereIn('type', array_values(array_filter(AbsenceType::cases(), fn (AbsenceType $type): bool => $type->blocksPlanning())))
+                ->where(fn (Builder $query) => $query
+                    ->whereIn('type', array_values(array_filter(AbsenceType::cases(), fn (AbsenceType $type): bool => $type->blocksPlanning())))
+                    ->orWhereHas('customType', fn (Builder $query) => $query->where('blocks_planning', true)))
+                ->with('customType')
                 ->when($userIds !== null, fn (Builder $query) => $query->whereIn('user_id', $userIds))
                 ->overlapping($from->toDateString(), $until->toDateString())
                 ->get()

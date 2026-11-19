@@ -8,6 +8,7 @@ use App\Enums\NavigationGroup;
 use App\Filament\Admin\Resources\Absences\Pages\ManageAbsences;
 use App\Filament\Resources\VacationRequests\VacationRequestResource;
 use App\Models\Absence;
+use App\Models\CustomAbsenceType;
 use App\Models\Incident;
 use App\Models\ParentalLeave;
 use App\Models\User;
@@ -104,6 +105,15 @@ class AbsenceResource extends Resource
                     ->options(AbsenceType::class)
                     ->inline()
                     ->required()
+                    ->live()
+                    ->columnSpanFull(),
+                // "Own type": one of the types added under Absence types.
+                Select::make('custom_absence_type_id')
+                    ->label(__('erp.custom_absence_types.singular'))
+                    ->helperText(__('erp.custom_absence_types.pick_help'))
+                    ->options(fn (?Absence $record): array => CustomAbsenceType::options($record?->custom_absence_type_id))
+                    ->required(fn (Get $get): bool => self::type($get('type')) === AbsenceType::Custom)
+                    ->visible(fn (Get $get): bool => self::type($get('type')) === AbsenceType::Custom)
                     ->live()
                     ->columnSpanFull(),
                 DatePicker::make('start_date')
@@ -234,7 +244,7 @@ class AbsenceResource extends Resource
                     ->maxSize(Absence::DOCUMENT_MAX_KILOBYTES)
                     ->storeFileNamesIn('document_name')
                     // A certificate for sickness, the proof for a justified absence.
-                    ->visible(fn (Get $get): bool => self::takesDocument($get('type')))
+                    ->visible(fn (Get $get): bool => self::takesDocument($get('type'), $get('custom_absence_type_id')))
                     ->columnSpanFull(),
             ]);
     }
@@ -263,8 +273,12 @@ class AbsenceResource extends Resource
         return (bool) self::type($type)?->needsCertificate();
     }
 
-    public static function takesDocument(mixed $type): bool
+    public static function takesDocument(mixed $type, mixed $customTypeId = null): bool
     {
+        if (self::type($type) === AbsenceType::Custom) {
+            return (bool) CustomAbsenceType::query()->whereKey((int) $customTypeId)->value('takes_document');
+        }
+
         return (bool) self::type($type)?->takesDocument();
     }
 
@@ -342,7 +356,7 @@ class AbsenceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('user'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'customType']))
             ->defaultSort('start_date', 'desc')
             ->columns([
                 TextColumn::make('user.name')
@@ -352,6 +366,7 @@ class AbsenceResource extends Resource
                     ->sortable(),
                 TextColumn::make('type')
                     ->label(__('erp.absences.type'))
+                    ->formatStateUsing(fn (Absence $record): string => $record->typeLabel())
                     ->badge(),
                 TextColumn::make('start_date')
                     ->label(__('erp.fields.period'))

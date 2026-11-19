@@ -117,7 +117,7 @@ class VacationCalendar
             // An approved overtime request is shown as its overtime absence.
             ->where(fn (Builder $query) => $query->vacation()->orWhere('status', VacationStatus::Pending))
             ->when($teamId, fn (Builder $query, int $teamId) => $query->whereHas('user.teams', fn (Builder $query) => $query->whereKey($teamId)))
-            ->with('user')
+            ->with(['user', 'customType'])
             ->orderBy('start_date')
             ->get();
     }
@@ -138,7 +138,7 @@ class VacationCalendar
 
     public function absenceColor(Absence $absence, User $viewer): string
     {
-        return $absence->labelFor($viewer) === $absence->type->getLabel() ? $absence->type->hex() : self::PRIVATE_ABSENCE_COLOR;
+        return $absence->labelFor($viewer) === $absence->typeLabel() ? $absence->typeHex() : self::PRIVATE_ABSENCE_COLOR;
     }
 
     public function colorFor(int $userId): string

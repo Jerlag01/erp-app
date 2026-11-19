@@ -191,7 +191,7 @@ class LeaveController extends Controller
         return [
             'id' => $absence->id,
             'type' => $absence->type->value,
-            'type_label' => $absence->type->getLabel(),
+            'type_label' => $absence->typeLabel(),
             'start_date' => $absence->start_date->toDateString(),
             'end_date' => $absence->end_date->toDateString(),
             'half_day' => (bool) $absence->half_day,

@@ -1,7 +1,7 @@
 {{-- The prestation overview of a month, two months or a year as PDF (A4 landscape, one month per page). --}}
 @php
     $dec = fn (float $value) => \App\Support\TimesheetReport::number($value);
-    $legend = __('erp.pdf.report.legend');
+    $legend = \App\Support\TimesheetReport::legend();
 @endphp
 <!doctype html>
 <html lang="{{ app()->getLocale() }}">

@@ -8,6 +8,7 @@ use App\Enums\EmploymentCategory;
 use App\Enums\PlanningKind;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
+use App\Models\CustomAbsenceType;
 use App\Models\Holiday;
 use App\Models\IncapacityPeriod;
 use App\Models\PlanningItem;
@@ -738,19 +739,21 @@ class Timesheets
     /**
      * Absences, vacation, trainings and public holidays per date: what is noted and credited.
      *
-     * @return array<string, array{type: string, note: string, credit: float, lunch_locked: bool, expected_off: float}>
+     * "code": the short code of an absence type added by administration (type "custom").
+     *
+     * @return array<string, array{type: string, note: string, credit: float, lunch_locked: bool, expected_off: float, code?: string}>
      */
     public function statuses(User $user, CarbonImmutable $from, CarbonImmutable $until): array
     {
         $day = $this->dayHours();
         $statuses = [];
         // "expected_off": hours taken off the week's expected hours (unpaid leave, economically unemployed, parental leave).
-        $set = function (CarbonInterface $start, CarbonInterface $end, string $type, string $note, float $credit, bool $lunchLocked, float $expectedOff = 0.0) use (&$statuses, $from, $until): void {
+        $set = function (CarbonInterface $start, CarbonInterface $end, string $type, string $note, float $credit, bool $lunchLocked, float $expectedOff = 0.0, ?string $code = null) use (&$statuses, $from, $until): void {
             foreach (CarbonPeriod::create(CarbonImmutable::instance($start)->max($from), CarbonImmutable::instance($end)->min($until)) as $date) {
-                $statuses[$date->toDateString()] ??= ['type' => $type, 'note' => $note, 'credit' => $credit, 'lunch_locked' => $lunchLocked, 'expected_off' => $expectedOff];
+                $statuses[$date->toDateString()] ??= ['type' => $type, 'note' => $note, 'credit' => $credit, 'lunch_locked' => $lunchLocked, 'expected_off' => $expectedOff, ...($code !== null ? ['code' => $code] : [])];
             }
         };
-        $label = fn (Absence $absence, string $suffix = ''): string => trim(__('erp.enums.absence_type.'.$absence->type->value, [], 'nl')
+        $label = fn (Absence $absence, string $suffix = ''): string => trim($absence->typeLabel('nl')
             .($absence->type === AbsenceType::ShortLeave && filled($absence->reason) ? ': '.__('erp.short_leave.reasons.'.$absence->reason, [], 'nl') : '')
             .($absence->half_day ? ' (halve dag)' : '').$suffix);
         $hours = fn (Absence $absence): float => $absence->half_day ? $day / 2 : $day;
@@ -767,7 +770,7 @@ class Timesheets
         }
 
         if (modules()->vacations()) {
-            $absences = Absence::query()->where('user_id', $user->id)->overlapping($from->toDateString(), $until->toDateString())->get();
+            $absences = Absence::query()->with('customType')->where('user_id', $user->id)->overlapping($from->toDateString(), $until->toDateString())->get();
 
             $absences->where('type', AbsenceType::Medical)
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'medical', $absence->half_day ? 'Ziekte (halve dag)' : 'Ziekte', $absence->half_day ? $day / 2 : $day, true));
@@ -823,9 +826,17 @@ class Timesheets
                 ->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, 'overtime', 'Recup', 0, false));
 
             // Not worked (paid by the RVA), but the overtime balance stays: the day is off the expected hours.
-            foreach ([AbsenceType::Economic, AbsenceType::Parental] as $type) {
+            foreach ([AbsenceType::Economic, AbsenceType::Parental, AbsenceType::BadWeather] as $type) {
                 $absences->where('type', $type)->each(fn (Absence $absence) => $set($absence->start_date, $absence->end_date, $type->value, $label($absence), 0, false, $hours($absence)));
             }
+
+            // Types added by administration: counted as they are set up, with their own code.
+            $absences->where('type', AbsenceType::Custom)->filter(fn (Absence $absence): bool => $absence->customType !== null)
+                ->each(fn (Absence $absence) => match ($absence->customType->counting) {
+                    CustomAbsenceType::WORKED => $set($absence->start_date, $absence->end_date, 'custom', $label($absence), $hours($absence), true, 0.0, $absence->customType->code),
+                    CustomAbsenceType::KEEPS_OVERTIME => $set($absence->start_date, $absence->end_date, 'custom', $label($absence), 0, false, $hours($absence), $absence->customType->code),
+                    default => $set($absence->start_date, $absence->end_date, 'custom', $label($absence), 0, false, 0.0, $absence->customType->code),
+                });
         }
 
         return $statuses;

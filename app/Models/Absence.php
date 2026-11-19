@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
  * The certificate is uploaded by the administrator or, while there is none from the
  * administrator, by the employee; an administrator's certificate can only be downloaded.
  */
-#[Fillable(['user_id', 'type', 'start_date', 'end_date', 'half_day', 'days', 'reason', 'incident_id', 'parental_leave_id', 'note', 'document', 'document_name', 'document_source', 'document_uploaded_at', 'created_by'])]
+#[Fillable(['user_id', 'type', 'custom_absence_type_id', 'start_date', 'end_date', 'half_day', 'days', 'reason', 'incident_id', 'parental_leave_id', 'note', 'document', 'document_name', 'document_source', 'document_uploaded_at', 'created_by'])]
 class Absence extends Model
 {
     /** @use HasFactory<AbsenceFactory> */
@@ -55,6 +55,65 @@ class Absence extends Model
     public function incident(): BelongsTo
     {
         return $this->belongsTo(Incident::class);
+    }
+
+    /**
+     * The type added by administration, for an absence of type "custom".
+     *
+     * @return BelongsTo<CustomAbsenceType, $this>
+     */
+    public function customType(): BelongsTo
+    {
+        return $this->belongsTo(CustomAbsenceType::class, 'custom_absence_type_id');
+    }
+
+    public function isCustom(): bool
+    {
+        return $this->type === AbsenceType::Custom;
+    }
+
+    /**
+     * The name of the type: the custom type's own name, or the fixed type's.
+     */
+    public function typeLabel(?string $locale = null): string
+    {
+        if ($this->isCustom()) {
+            return $this->customType?->label($locale) ?? __('erp.enums.absence_type.custom', [], $locale);
+        }
+
+        return __('erp.enums.absence_type.'.$this->type->value, [], $locale);
+    }
+
+    /**
+     * The short code on the prestation overviews ("Z", "WV", or the custom type's).
+     */
+    public function typeCode(): string
+    {
+        return $this->isCustom() ? (string) $this->customType?->code : $this->type->code();
+    }
+
+    /**
+     * Calendar colour of the type.
+     */
+    public function typeHex(): string
+    {
+        return $this->isCustom() ? ($this->customType?->color ?: $this->type->hex()) : $this->type->hex();
+    }
+
+    /**
+     * Colleagues only see "absent".
+     */
+    public function isPrivateType(): bool
+    {
+        return $this->isCustom() ? (bool) ($this->customType?->is_private ?? true) : $this->type->isPrivate();
+    }
+
+    /**
+     * Whether a document (certificate, proof) can be added.
+     */
+    public function takesDocument(): bool
+    {
+        return $this->isCustom() ? (bool) $this->customType?->takes_document : $this->type->takesDocument();
     }
 
     /**
@@ -157,14 +216,18 @@ class Absence extends Model
      */
     public function labelFor(User $viewer): string
     {
-        return $this->type->isPrivate() && $viewer->id !== $this->user_id && ! $viewer->isAdmin()
+        return $this->isPrivateType() && $viewer->id !== $this->user_id && ! $viewer->isAdmin()
             ? __('erp.absences.absent')
-            : $this->type->getLabel();
+            : $this->typeLabel();
     }
 
     protected static function booted(): void
     {
         static::saving(function (self $absence): void {
+            if (! $absence->isCustom()) {
+                $absence->custom_absence_type_id = null;
+            }
+
             if ($absence->isDirty(['start_date', 'end_date', 'half_day']) || ! $absence->exists) {
                 $absence->days = WorkingDays::count($absence->start_date, $absence->end_date, (bool) $absence->half_day, $absence->user_id);
             }

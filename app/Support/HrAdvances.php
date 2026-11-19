@@ -6,6 +6,7 @@ use App\Enums\AbsenceType;
 use App\Enums\EmploymentCategory;
 use App\Enums\VacationStatus;
 use App\Models\Absence;
+use App\Models\CustomAbsenceType;
 use App\Models\Employee;
 use App\Models\Holiday;
 use App\Models\VacationRequest;
@@ -108,12 +109,14 @@ class HrAdvances
 
             // Not worked: family and unpaid leave, a work accident without its certificate (unpaid), and
             // what the RVA pays (economically unemployed, parental leave).
-            Absence::query()->where('user_id', $employee->user_id)->whereIn('type', [AbsenceType::Family, AbsenceType::Unpaid, AbsenceType::WorkAccident, AbsenceType::Economic, AbsenceType::Parental])
+            Absence::query()->where('user_id', $employee->user_id)->whereIn('type', [AbsenceType::Family, AbsenceType::Unpaid, AbsenceType::WorkAccident, AbsenceType::Economic, AbsenceType::Parental, AbsenceType::BadWeather, AbsenceType::Custom])
+                ->with('customType')
                 ->overlapping($from->toDateString(), $until->toDateString())->get()
-                ->reject(fn (Absence $absence): bool => $absence->isPaidWorkAccident())
-                ->each(fn (Absence $absence) => $add(match ($absence->type) {
-                    AbsenceType::Family => 'family',
-                    AbsenceType::Economic, AbsenceType::Parental => 'rva',
+                ->reject(fn (Absence $absence): bool => $absence->isPaidWorkAccident() || ($absence->isCustom() && ($absence->customType?->counting ?? CustomAbsenceType::WORKED) === CustomAbsenceType::WORKED))
+                ->each(fn (Absence $absence) => $add(match (true) {
+                    $absence->type === AbsenceType::Family => 'family',
+                    in_array($absence->type, [AbsenceType::Economic, AbsenceType::Parental, AbsenceType::BadWeather], true) => 'rva',
+                    $absence->isCustom() && $absence->customType->counting === CustomAbsenceType::KEEPS_OVERTIME => 'rva',
                     default => 'unpaid',
                 }, $absence->start_date, $absence->end_date, (bool) $absence->half_day));
         }

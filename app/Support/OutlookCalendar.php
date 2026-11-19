@@ -228,8 +228,8 @@ class OutlookCalendar
         if ($source instanceof Absence) {
             return [
                 ...$payload,
-                'subject' => __('erp.enums.absence_type.'.$source->type->value, [], $locale).($source->half_day ? ' ('.__('erp.planning.outlook.half_day', [], $locale).')' : ''),
-                'sensitivity' => $source->type->isPrivate() ? 'private' : 'normal',
+                'subject' => $source->typeLabel($locale).($source->half_day ? ' ('.__('erp.planning.outlook.half_day', [], $locale).')' : ''),
+                'sensitivity' => $source->isPrivateType() ? 'private' : 'normal',
             ];
         }
 

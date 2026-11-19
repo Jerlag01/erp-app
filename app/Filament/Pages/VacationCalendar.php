@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\AbsenceType;
 use App\Enums\NavigationGroup;
 use App\Filament\App\Resources\MyVacations\MyVacationResource;
+use App\Models\CustomAbsenceType;
 use App\Models\Team;
 use App\Support\VacationCalendar as Calendar;
 use BackedEnum;
@@ -144,7 +145,10 @@ class VacationCalendar extends Page
             return [];
         }
 
-        $legend = array_map(fn (AbsenceType $type): array => ['label' => $type->getLabel(), 'color' => $type->hex()], AbsenceType::cases());
+        $legend = [
+            ...array_map(fn (AbsenceType $type): array => ['label' => $type->getLabel(), 'color' => $type->hex()], array_filter(AbsenceType::cases(), fn (AbsenceType $type): bool => $type !== AbsenceType::Custom)),
+            ...CustomAbsenceType::query()->active()->orderBy('sort')->orderBy('name')->get()->map(fn (CustomAbsenceType $type): array => ['label' => $type->label(), 'color' => $type->color])->all(),
+        ];
 
         if (! auth()->user()?->isAdmin()) {
             $legend[] = ['label' => __('erp.absences.absent_legend'), 'color' => Calendar::PRIVATE_ABSENCE_COLOR];
