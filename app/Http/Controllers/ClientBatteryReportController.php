@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * The documents of a finished battery replacement (604) for a client portal user with "battery_reports"
+ * The documents of a finished battery replacement (604) or battery move (605) for a client portal user with "battery_reports"
  * who sees the project (see BatteryReports): the dossier's PDFs, its photos and the waste report.
  */
 class ClientBatteryReportController
@@ -26,7 +26,7 @@ class ClientBatteryReportController
     public function document(Project $project, string $document): Response
     {
         $dossier = $this->dossier($project);
-        abort_unless(in_array($document, BatteryReports::DOCUMENTS, true), 404);
+        abort_unless(in_array($document, BatteryReports::documents($dossier), true), 404);
 
         return response(app(BatteryDocument::class)->render($dossier, $document), 200, [
             'Content-Type' => 'application/pdf',

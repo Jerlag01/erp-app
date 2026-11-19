@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Interventions\ReviewIntervention;
 use App\Enums\InterventionCategoryKind;
 use App\Enums\InterventionReportStatus;
 use App\Enums\MaterialDirection;
@@ -11,6 +12,8 @@ use App\Filament\Resources\Interventions\Pages\ListInterventions;
 use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\ProjectResource;
+use App\Filament\Resources\Projects\RelationManagers\WasteReportsRelationManager;
 use App\Models\InterventionCategory;
 use App\Models\InterventionReport;
 use App\Models\PlanningItem;
@@ -216,7 +219,7 @@ class InterventionTest extends TestCase
 
         // Approving the first one is not enough for invoicing; both are.
         $this->actingAs($admin);
-        $review = app(\App\Actions\Interventions\ReviewIntervention::class);
+        $review = app(ReviewIntervention::class);
         $review->approve($reports[0], $admin, '4500123456');
         $this->assertSame(ProjectStatus::Executed, $project->fresh()->status);
 
@@ -241,7 +244,7 @@ class InterventionTest extends TestCase
         Livewire::test(ListInterventions::class)->set('activeTab', 'approved')->assertCanSeeTableRecords([$project]);
         Livewire::test(ListInterventions::class)->set('activeTab', 'open')->assertCanNotSeeTableRecords([$project]);
         Livewire::test(ListInterventions::class)->set('activeTab', 'all')->searchTable('02NO1')->assertCanSeeTableRecords([$project]);
-        $this->get(\App\Filament\Resources\Projects\ProjectResource::getUrl('view', ['record' => $project]))->assertOk()->assertSee('02NO1 · Zaventem');
+        $this->get(ProjectResource::getUrl('view', ['record' => $project]))->assertOk()->assertSee('02NO1 · Zaventem');
     }
 
     #[Test]
@@ -419,5 +422,17 @@ class InterventionTest extends TestCase
             ->assertHasActionErrors(['number']);
 
         Livewire::test(EditProject::class, ['record' => $project->getRouteKey()])->assertSchemaComponentVisible('poNumbers');
+    }
+
+    #[Test]
+    public function colibri_phase_2_interventions_get_the_waste_report_zone(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setCurrentPanel('app');
+        $colibri = $this->category('COLIBRI');
+
+        $this->assertTrue(WasteReportsRelationManager::canViewForRecord($this->intervention(['intervention_subcategory_id' => $colibri->id, 'intervention_phase' => 'PHASE 2']), ViewProject::class));
+        $this->assertFalse(WasteReportsRelationManager::canViewForRecord($this->intervention(['intervention_subcategory_id' => $colibri->id, 'intervention_phase' => 'PHASE 1']), ViewProject::class));
+        $this->assertFalse(WasteReportsRelationManager::canViewForRecord($this->intervention(), ViewProject::class));
     }
 }

@@ -1,4 +1,4 @@
-{{-- In the client portal: the documents (PDF), waste report and photos of a finished battery replacement (604). --}}
+{{-- In the client portal: the documents (PDF), waste report and photos of a finished battery replacement (604) or battery move (605). --}}
 @php
     $project = $getRecord();
     $dossier = \App\Support\BatteryReports::dossier($project);
@@ -12,7 +12,7 @@
     <x-filament::section :heading="__('erp.client_portal.battery_reports.documents')">
         <div style="display: grid; gap: .5rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));">
             @if ($dossier)
-                @foreach (\App\Support\BatteryReports::DOCUMENTS as $document)
+                @foreach (\App\Support\BatteryReports::documents($dossier) as $document)
                     <a href="{{ route('client.battery-report.document', [$project, $document]) }}" target="_blank" rel="noopener" style="{{ $row }}">
                         <span><x-filament::icon icon="heroicon-o-document-text" style="width: 1.1rem; height: 1.1rem; display: inline-block; vertical-align: -3px;" /> {{ __('erp.batteries.documents.'.$document) }}</span>
                         <span style="font-size: .75rem; opacity: .6;">PDF</span>

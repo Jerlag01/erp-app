@@ -6,6 +6,7 @@ use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\ProjectFileSection;
 use App\Models\BatteryDossier;
 use App\Models\ClientUser;
+use App\Models\MoveDossier;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,18 +14,27 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * The documents of a finished battery replacement (604) in the client portal: once the project is "to
- * be invoiced" (or later), the client sees per project the COW-code and description, the photos of the
- * battery dossier, its measurement report, delivery note, visual inspection and invoice request (PDF,
- * made from the dossier as it is), and the measurement report of BAE and the waste report uploaded on
- * the project afterwards.
+ * The documents of a finished battery replacement (604) or battery move (605 with a move dossier) in the
+ * client portal: once the project is "to be invoiced" (or later), the client sees per project the COW-code
+ * and description, the photos of the dossier, its measurement report, delivery note, visual inspection
+ * (and for a 604 the invoice request; PDF, made from the dossier as it is), and the files uploaded on the
+ * project afterwards: the waste report (604 and every 605) and the measurement report of BAE (604).
  */
 class BatteryReports
 {
     public const CATEGORY = '604';
 
+    /** Enersys and battery moves; only the moves are shown to the client. */
+    public const MOVE_CATEGORY = '605';
+
+    /** The projects with a waste report to upload. */
+    public const WASTE_REPORT_CATEGORIES = [self::CATEGORY, self::MOVE_CATEGORY];
+
     /** The dossier's documents the client gets, in this order. */
     public const DOCUMENTS = ['measurement', 'delivery', 'inspection', 'invoice_request'];
+
+    /** Those of a battery move (it has no invoice request). */
+    public const MOVE_DOCUMENTS = ['measurement', 'delivery', 'inspection'];
 
     /**
      * The 604 projects of the client user whose works are done ("to be invoiced", invoiced or closed).
@@ -34,7 +44,11 @@ class BatteryReports
     public static function query(?ClientUser $user): Builder
     {
         $query = Project::query()
-            ->whereHas('category', fn (Builder $query) => $query->where('code', self::CATEGORY))
+            ->where(fn (Builder $query) => $query
+                ->whereHas('category', fn (Builder $query) => $query->where('code', self::CATEGORY))
+                ->orWhere(fn (Builder $query) => $query
+                    ->whereHas('category', fn (Builder $query) => $query->where('code', self::MOVE_CATEGORY))
+                    ->whereIn('projects.id', MoveDossier::query()->select('project_id'))))
             ->whereIn('status', CreateFollowUpProject::DONE_STATUSES);
 
         return $user ? $user->restrictProjects($query) : $query->whereRaw('1 = 0');
@@ -49,9 +63,42 @@ class BatteryReports
             && self::query($user)->whereKey($project->id)->exists();
     }
 
+    /**
+     * The battery dossier of a 604, the move dossier of a 605.
+     */
     public static function dossier(Project $project): ?BatteryDossier
     {
-        return BatteryDossier::query()->where('project_id', $project->id)->latest('id')->first();
+        $model = (string) $project->category?->code === self::CATEGORY ? BatteryDossier::class : MoveDossier::class;
+
+        return $model::query()->where('project_id', $project->id)->latest('id')->first();
+    }
+
+    /**
+     * The documents of the dossier the client gets.
+     *
+     * @return list<string>
+     */
+    public static function documents(?BatteryDossier $dossier): array
+    {
+        return match (true) {
+            $dossier === null => [],
+            $dossier instanceof MoveDossier => self::MOVE_DOCUMENTS,
+            default => self::DOCUMENTS,
+        };
+    }
+
+    /**
+     * 604 and 605 projects, and interventions of the subcategory COLIBRI in phase 2.
+     */
+    public static function hasWasteReport(Project $project): bool
+    {
+        if (in_array((string) $project->category?->code, self::WASTE_REPORT_CATEGORIES, true)) {
+            return true;
+        }
+
+        return $project->isIntervention()
+            && mb_strtoupper(trim((string) $project->interventionSubcategory?->name)) === 'COLIBRI'
+            && preg_replace('/\s+/', ' ', mb_strtoupper(trim((string) $project->intervention_phase))) === 'PHASE 2';
     }
 
     /**

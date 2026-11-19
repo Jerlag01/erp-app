@@ -26,7 +26,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
 
     case Extra = 'extra';
 
-    /** Battery replacements (604): the waste report (PDF), added after the works; the client sees it. */
+    /** Battery replacements (604) and 605 projects: the waste report (PDF), added after the works; the client sees it (604, battery moves). */
     case WasteReports = 'waste_reports';
 
     /** Battery replacements (604): the measurement report (PDF) made by BAE, added afterwards; the client sees it. */

@@ -22,8 +22,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * "Battery dossiers (604)" in the client portal: the finished battery replacements ("to be invoiced" or
- * later) of the projects the client user sees, each with the COW-code, description, the photos of the
+ * "Battery dossiers" in the client portal: the finished battery replacements (604) and battery moves (605)
+ * ("to be invoiced" or later) of the projects the client user sees, each with the COW-code, description, the photos of the
  * dossier, its PDFs (measurement report, delivery note, visual inspection, invoice request) and the
  * waste report. See BatteryReports.
  */

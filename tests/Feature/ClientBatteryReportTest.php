@@ -18,7 +18,9 @@ use App\Filament\Resources\Projects\RelationManagers\WasteReportsRelationManager
 use App\Models\BatteryDelivery;
 use App\Models\BatteryDossier;
 use App\Models\ClientUser;
+use App\Models\EnersysDossier;
 use App\Models\GpwRequest;
+use App\Models\MoveDossier;
 use App\Models\PlanningItem;
 use App\Models\Project;
 use App\Models\ProjectCategory;
@@ -37,7 +39,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * The client portal's "Battery dossiers" (604 from "to be invoiced"), the waste report zone on the
+ * The client portal's "Battery dossiers" (604 and battery moves from "to be invoiced"), the waste report zone on the
  * project, the project description under the category and the open / closed share per area.
  */
 class ClientBatteryReportTest extends TestCase
@@ -121,6 +123,44 @@ class ClientBatteryReportTest extends TestCase
         $this->client([ClientPortal::PROJECTS, ClientPortal::ALL_PROJECTS]);
         $this->get(ClientBatteryReportResource::getUrl())->assertForbidden();
         $this->get(route('client.battery-report.photo', [$done, 0]))->assertNotFound();
+    }
+
+    #[Test]
+    public function a_finished_battery_move_shows_its_photos_documents_and_waste_report_and_every_605_has_a_waste_report(): void
+    {
+        $move = Project::factory()->inCategory('605')->for($this->site())->create(['status' => ProjectStatus::InvoicingToDo, 'short_description' => 'Batterijen verplaatsen']);
+        $enersys = Project::factory()->inCategory('605')->for($this->site('1-VLA', '15EIN'))->create(['status' => ProjectStatus::InvoicingToDo]);
+        Storage::disk('local')->put('batteries/9/photos/a.jpg', 'jpeg-move');
+        MoveDossier::factory()->create(['project_id' => $move->id, 'photos' => ['batteries/9/photos/a.jpg']]);
+        EnersysDossier::factory()->create(['project_id' => $enersys->id]);
+
+        // Every 605 project gets the waste report tab.
+        $employee = User::factory()->admin()->create();
+        $this->actingAs($employee);
+        Filament::setCurrentPanel('app');
+        $this->assertTrue(WasteReportsRelationManager::canViewForRecord($move, ViewProject::class));
+        $this->assertTrue(WasteReportsRelationManager::canViewForRecord($enersys, ViewProject::class));
+        $this->assertFalse(BaeMeasurementReportsRelationManager::canViewForRecord($move, ViewProject::class));
+        $waste = ProjectFile::store($move, ProjectFileSection::WasteReports, UploadedFile::fake()->create('afval-verplaatsing.pdf', 20, 'application/pdf'), 'afval-verplaatsing.pdf', $employee);
+
+        // The client sees the move (not the other 605 projects) with its documents, but no invoice request.
+        $this->client();
+        Livewire::test(ListClientBatteryReports::class)
+            ->assertCanSeeTableRecords([$move])
+            ->assertCanNotSeeTableRecords([$enersys]);
+        Livewire::test(ViewClientBatteryReport::class, ['record' => $move->getRouteKey()])
+            ->assertSee(__('erp.batteries.documents.measurement'))
+            ->assertSee(__('erp.batteries.documents.inspection'))
+            ->assertDontSee(__('erp.batteries.documents.invoice_request'))
+            ->assertSee('afval-verplaatsing.pdf');
+
+        foreach (['measurement', 'delivery', 'inspection'] as $document) {
+            $this->assertStringStartsWith('%PDF', $this->get(route('client.battery-report.document', [$move, $document]))->assertOk()->getContent());
+        }
+        $this->get(route('client.battery-report.document', [$move, 'invoice_request']))->assertNotFound();
+        $this->assertSame('jpeg-move', $this->get(route('client.battery-report.photo', [$move, 0]))->assertOk()->streamedContent());
+        $this->get(route('client.battery-report.waste', [$move, $waste]))->assertOk();
+        $this->get(route('client.battery-report.document', [$enersys, 'measurement']))->assertNotFound();
     }
 
     #[Test]
