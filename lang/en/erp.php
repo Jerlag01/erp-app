@@ -1067,6 +1067,7 @@ return [
         ],
         'project_file_section' => [
             'btv_control' => 'BTV control',
+            'cable_calculations' => 'Cable calculations',
             'documents' => 'Files',
             'images' => 'Pictures',
             'offers' => 'Offers',
@@ -3920,6 +3921,7 @@ return [
     ],
     'cable_calculator' => [
         'make_for_project' => 'Make a cable calculation',
+        'none_for_project' => 'No cable calculations for this project yet.',
         'of_project' => 'Cable calculations (:count)',
         'title' => 'Cable calculator',
         'singular' => 'cable calculation',

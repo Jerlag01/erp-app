@@ -35,7 +35,7 @@ class ProjectController extends Controller
     /**
      * The upload zones the teams see in the app.
      */
-    public const SECTIONS = [ProjectFileSection::Documents, ProjectFileSection::Schematics, ProjectFileSection::Extra, ProjectFileSection::Images];
+    public const SECTIONS = [ProjectFileSection::Documents, ProjectFileSection::Schematics, ProjectFileSection::Extra, ProjectFileSection::CableCalculations, ProjectFileSection::Images];
 
     public const LINK_MINUTES = 10;
 

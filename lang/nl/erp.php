@@ -1067,6 +1067,7 @@ return [
         ],
         'project_file_section' => [
             'btv_control' => 'BTV-controle',
+            'cable_calculations' => 'Kabelberekeningen',
             'documents' => 'Bestanden',
             'images' => 'Foto\'s',
             'offers' => 'Offertes',
@@ -3921,6 +3922,7 @@ return [
     ],
     'cable_calculator' => [
         'make_for_project' => 'Kabelberekening maken',
+        'none_for_project' => 'Nog geen kabelberekeningen voor dit project.',
         'of_project' => 'Kabelberekeningen (:count)',
         'title' => 'Kabelberekening',
         'singular' => 'kabelberekening',

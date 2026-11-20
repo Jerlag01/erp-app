@@ -187,6 +187,16 @@ class Project extends Model
     }
 
     /**
+     * The PDFs of the project's cable calculations (see CableCalculationDocuments).
+     *
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function cableCalculationFiles(): HasMany
+    {
+        return $this->filesIn(ProjectFileSection::CableCalculations);
+    }
+
+    /**
      * The reports of BTV controls (see BtvControl).
      *
      * @return HasMany<ProjectFile, $this>

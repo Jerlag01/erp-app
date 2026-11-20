@@ -35,6 +35,9 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
     /** The report of a BTV control, uploaded in the BTV controls overview (or here). */
     case BtvControl = 'btv_control';
 
+    /** The PDFs of the project's cable calculations, made and kept up to date by CableCalculationDocuments. */
+    case CableCalculations = 'cable_calculations';
+
     /**
      * Office documents, PDF and text.
      */
@@ -84,6 +87,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
             self::WasteReports => Heroicon::OutlinedTrash,
             self::BaeMeasurementReports => Heroicon::OutlinedChartBar,
             self::BtvControl => Heroicon::OutlinedShieldCheck,
+            self::CableCalculations => Heroicon::OutlinedCalculator,
         };
     }
 
@@ -104,7 +108,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
             self::Images => self::IMAGE_EXTENSIONS,
             self::Plans => self::PLAN_EXTENSIONS,
             self::Schematics, self::Extra => null,
-            self::WasteReports, self::BaeMeasurementReports => ['pdf'],
+            self::WasteReports, self::BaeMeasurementReports, self::CableCalculations => ['pdf'],
             self::BtvControl => ['pdf', 'jpg', 'jpeg', 'png'],
         };
     }

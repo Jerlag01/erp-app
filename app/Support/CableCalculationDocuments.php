@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * The PDF of a cable calculation, and where it is kept for its project: in the project's extra files (a
- * new version on every save) and in the "cable dimensions" of the project's as-built while that is open.
+ * The PDF of a cable calculation, and where it is kept for its project: in the project's "cable
+ * calculations" files (own tab, a new version on every save) and in the "cable dimensions" of the project's as-built while that is open.
  * Moving the calculation to another project, or unlinking it, removes its files from the former project.
  */
 class CableCalculationDocuments
@@ -59,9 +59,14 @@ class CableCalculationDocuments
             $pdf = $this->render($calculation);
             $name = $this->fileName($calculation);
 
-            $path = ProjectFile::directoryFor($project, ProjectFileSection::Extra).'/'.Str::random(8).'-'.$name;
+            // Calculations kept in the extra files before they had their own tab move there.
+            if ($file !== null && $file->section !== ProjectFileSection::CableCalculations->value) {
+                $file->update(['section' => ProjectFileSection::CableCalculations->value]);
+            }
+
+            $path = ProjectFile::directoryFor($project, ProjectFileSection::CableCalculations).'/'.Str::random(8).'-'.$name;
             Storage::disk(ProjectFile::DISK)->put($path, $pdf);
-            $file = ProjectFile::store($project, ProjectFileSection::Extra, $path, $name, $user, $file);
+            $file = ProjectFile::store($project, ProjectFileSection::CableCalculations, $path, $name, $user, $file);
 
             $asbuiltFile = $this->putInAsbuilt($project->asbuilt, $asbuiltFile, $pdf, $name, $user);
         }

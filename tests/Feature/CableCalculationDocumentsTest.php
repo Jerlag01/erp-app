@@ -9,7 +9,7 @@ use App\Enums\ProjectStatus;
 use App\Filament\Resources\CableCalculations\Pages\CreateCableCalculation;
 use App\Filament\Resources\CableCalculations\Pages\EditCableCalculation;
 use App\Filament\Resources\Projects\Pages\EditProject;
-use App\Filament\Resources\Projects\RelationManagers\ExtraFilesRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\CableCalculationFilesRelationManager;
 use App\Models\AsbuiltFile;
 use App\Models\CableCalculation;
 use App\Models\Project;
@@ -66,7 +66,7 @@ class CableCalculationDocumentsTest extends TestCase
     }
 
     #[Test]
-    public function a_saved_calculation_of_a_project_is_kept_in_its_extra_files_and_as_built(): void
+    public function a_saved_calculation_of_a_project_is_kept_in_its_cable_calculations_tab_and_as_built(): void
     {
         $user = $this->user();
         $project = $this->project();
@@ -77,15 +77,17 @@ class CableCalculationDocumentsTest extends TestCase
 
         $calculation->refresh();
         $file = $calculation->projectFile;
-        $this->assertSame([$project->id, ProjectFileSection::Extra->value, 'kabelberekening-nota-02no1.pdf', 1], [$file->project_id, $file->section, $file->name, $file->version]);
+        $this->assertSame([$project->id, ProjectFileSection::CableCalculations->value, 'kabelberekening-nota-02no1.pdf', 1], [$file->project_id, $file->section, $file->name, $file->version]);
         $this->assertStringStartsWith('%PDF', Storage::disk('local')->get($file->latestVersion->path));
+        $this->assertSame([$file->id], $project->cableCalculationFiles()->pluck('id')->all());
+        $this->assertSame(0, $project->extraFiles()->count());
 
         $inAsbuilt = $calculation->asbuiltFile;
         $this->assertSame([$asbuilt->id, AsbuiltCategory::CableDimensions->value, $user->id], [$inAsbuilt->asbuilt_id, $inAsbuilt->category, $inAsbuilt->uploaded_by]);
         $firstPath = $inAsbuilt->path;
         Storage::disk('local')->assertExists($firstPath);
 
-        // Saving again: a new version in the extra files, the as-built's copy replaced.
+        // Saving again: a new version in the cable calculations tab, the as-built's copy replaced.
         Livewire::test(EditCableCalculation::class, ['record' => $calculation->getRouteKey()])->call('save');
         $this->assertSame(2, $file->fresh()->version);
         $this->assertSame(1, AsbuiltFile::query()->where('category', 'cable_dimensions')->count());
@@ -127,13 +129,13 @@ class CableCalculationDocumentsTest extends TestCase
     }
 
     #[Test]
-    public function a_calculation_is_made_from_the_extra_files_of_the_project(): void
+    public function a_calculation_is_made_from_the_cable_calculations_tab_of_the_project(): void
     {
         $this->user();
         $project = $this->project();
         CableCalculation::factory()->withCircuit()->create(['project_id' => $project->id]);
 
-        Livewire::test(ExtraFilesRelationManager::class, ['ownerRecord' => $project, 'pageClass' => EditProject::class])
+        Livewire::test(CableCalculationFilesRelationManager::class, ['ownerRecord' => $project, 'pageClass' => EditProject::class])
             ->assertActionVisible(TestAction::make('makeCableCalculation')->table())
             ->assertActionHasUrl(TestAction::make('makeCableCalculation')->table(), route('filament.app.resources.cable-calculations.create', ['project' => $project->id]))
             ->assertActionVisible(TestAction::make('projectCableCalculations')->table());
@@ -141,5 +143,21 @@ class CableCalculationDocumentsTest extends TestCase
         Livewire::withQueryParams(['project' => $project->id])
             ->test(CreateCableCalculation::class)
             ->assertSet('data.project_id', $project->id);
+    }
+
+    #[Test]
+    public function a_pdf_kept_in_the_extra_files_before_moves_to_the_cable_calculations_tab_on_the_next_save(): void
+    {
+        $this->user();
+        $project = $this->project();
+        $calculation = CableCalculation::factory()->withCircuit()->create(['project_id' => $project->id]);
+        app(CableCalculationDocuments::class)->sync($calculation);
+        $file = $calculation->fresh()->projectFile;
+        $file->update(['section' => ProjectFileSection::Extra->value]);
+
+        app(CableCalculationDocuments::class)->sync($calculation->fresh());
+
+        $this->assertSame([ProjectFileSection::CableCalculations->value, 2], [$file->fresh()->section, $file->fresh()->version]);
+        $this->assertSame(1, ProjectFile::query()->count());
     }
 }

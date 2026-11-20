@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * A cable calculation note: a name, optionally a project, and several circuits, AC or DC each, from a
  * start point to an end point (see CableCalculationCircuit), each with its own result. With a project, its
- * PDF is kept in the project's extra files and as-built (see CableCalculationDocuments).
+ * PDF is kept in the project's cable calculations tab and as-built (see CableCalculationDocuments).
  */
 #[Fillable(['name', 'project_id', 'notes', 'created_by'])]
 class CableCalculation extends Model
@@ -30,7 +30,7 @@ class CableCalculation extends Model
     }
 
     /**
-     * The PDF in the project's extra files.
+     * The PDF in the project's cable calculations tab.
      *
      * @return BelongsTo<ProjectFile, $this>
      */
