@@ -87,6 +87,10 @@ class CloseProject
             foreach ($dossier->availableDocuments() as $document) {
                 $add('batterijen/'.BatteryDocument::filename($dossier, $document), rescue(fn (): string => $this->batteryDocuments->render($dossier, $document), '', false));
             }
+
+            foreach (BatteryDocument::photos($dossier) as $name => $path) {
+                $add('batterijen/fotos/'.$name, (string) Storage::disk($dossier::DISK)->get($path));
+            }
         });
 
         // The battery room (609): its documents and uploads.

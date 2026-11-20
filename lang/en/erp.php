@@ -4296,6 +4296,8 @@ return [
         'no_suppliers' => 'First add a board supplier.',
     ],
     'batteries' => [
+        'download_photos' => 'Download photos (:count)',
+        'photos_zip' => 'photos',
         'supplier' => [
             'singular' => 'supplier',
             'plural' => 'Suppliers',
@@ -4487,7 +4489,7 @@ return [
             'shipping' => 'Shipping note',
             'invoice_request' => 'Invoice request',
             'shipping_move' => 'Shipping note move',
-            'all' => 'All documents (ZIP)',
+            'all' => 'All documents + photos (ZIP)',
         ],
         'pdf' => 'PDF',
         'download' => 'Download :document (PDF)',

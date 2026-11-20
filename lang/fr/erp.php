@@ -4296,6 +4296,8 @@ return [
         'no_suppliers' => 'Ajoutez d\'abord un fournisseur de tableaux.',
     ],
     'batteries' => [
+        'download_photos' => 'Télécharger les photos (:count)',
+        'photos_zip' => 'photos',
         'supplier' => [
             'singular' => 'fournisseur',
             'plural' => 'Fournisseurs',
@@ -4487,7 +4489,7 @@ return [
             'shipping' => 'Note d\'envoi',
             'invoice_request' => 'Demande de facture',
             'shipping_move' => 'Note d\'envoi déplacement',
-            'all' => 'Tous les documents (ZIP)',
+            'all' => 'Tous les documents + photos (ZIP)',
         ],
         'pdf' => 'PDF',
         'download' => 'Télécharger :document (PDF)',

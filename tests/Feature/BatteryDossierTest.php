@@ -24,9 +24,11 @@ use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use ZipArchive;
 
 class BatteryDossierTest extends TestCase
 {
@@ -499,5 +501,40 @@ class BatteryDossierTest extends TestCase
             ->assertHasNoTableActionErrors();
 
         $this->assertSame('PGL1-44H', $model->racks()->sole()->code);
+    }
+
+    #[Test]
+    public function the_zip_holds_the_photos_and_the_photos_download_on_their_own(): void
+    {
+        Storage::disk('local')->put('batteries/1/photos/a.jpg', 'jpg-a');
+        Storage::disk('local')->put('batteries/1/photos/b.png', 'png-b');
+        $project = $this->project();
+        $dossier = BatteryDossier::factory()->create(['project_id' => $project->id, 'photos' => ['batteries/1/photos/a.jpg', 'batteries/1/photos/b.png', 'batteries/1/photos/gone.jpg']]);
+        $prefix = Str::slug($dossier->reference());
+
+        $zip = new ZipArchive;
+        $zip->open(app(BatteryDocument::class)->zip($dossier, ['delivery']));
+        $this->assertSame('jpg-a', $zip->getFromName('fotos/'.$prefix.'-foto-01.jpg'));
+        $this->assertSame('png-b', $zip->getFromName('fotos/'.$prefix.'-foto-02.png'));
+        $this->assertSame(3, $zip->numFiles, 'The delivery note and the two photos still on the disk.');
+        $zip->close();
+
+        $zip->open(app(BatteryDocument::class)->photosZip($dossier));
+        $this->assertSame(2, $zip->numFiles);
+        $zip->close();
+
+        // Only seeing the dossier is needed for the photos; the documents still need the PDF right.
+        $this->actingAs($this->technician(['view']));
+        $this->get(route('batteries.document', [$dossier, 'photos']))->assertOk()->assertDownload(BatteryDocument::photosFilename($dossier));
+        $this->get(route('batteries.document', [$dossier, 'all']))->assertForbidden();
+
+        $dossier->update(['photos' => []]);
+        $this->get(route('batteries.document', [$dossier, 'photos']))->assertNotFound();
+        $dossier->update(['photos' => ['batteries/1/photos/c.jpg']]);
+        Storage::disk('local')->put('batteries/1/photos/c.jpg', 'jpg-c');
+
+        $this->actingAs(User::factory()->withPermissions(['projects' => ['view'], 'batteries' => ['view']])->inTeam()->create())
+            ->get(route('batteries.document', [$dossier, 'photos']))
+            ->assertForbidden();
     }
 }

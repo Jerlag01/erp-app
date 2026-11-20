@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BatteryDossiers\Pages;
 
+use App\Actions\Batteries\BatteryDocument;
 use App\Actions\Batteries\SaveBatteryDossier;
 use App\Actions\Batteries\SaveFloorPlan;
 use App\Filament\Resources\BatteryDossiers\BatteryDossierResource;
@@ -88,6 +89,12 @@ class EditBatteryDossier extends EditRecord
                 ->visible(fn (): bool => PdfAccess::canGenerate(auth()->user(), $model::AREA))
                 ->button()
                 ->color('gray'),
+            Action::make('downloadPhotos')
+                ->label(fn (): string => __('erp.batteries.download_photos', ['count' => count(BatteryDocument::photos($this->record))]))
+                ->icon(Heroicon::OutlinedPhoto)
+                ->color('gray')
+                ->visible(fn (): bool => Gate::allows('view', $this->record) && BatteryDocument::photos($this->record) !== [])
+                ->url(fn (): string => route($model::documentRoute(), [$this->record, 'photos'])),
             Action::make('finish')
                 ->label(__('erp.batteries.finish.button'))
                 ->icon(Heroicon::OutlinedFlag)

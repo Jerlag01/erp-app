@@ -7,6 +7,7 @@ use App\Models\MoveDossier;
 use App\Support\BatteryTemplates;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use ZipArchive;
 
@@ -95,11 +96,12 @@ class BatteryDocument
     }
 
     /**
-     * All documents of the dossier in one ZIP file; returns the path of a temporary file.
+     * All documents of the dossier in one ZIP file, with the photos of the works in "fotos/"; returns
+     * the path of a temporary file.
      *
      * @param  list<string>  $documents
      */
-    public function zip(BatteryDossier $dossier, array $documents): string
+    public function zip(BatteryDossier $dossier, array $documents, bool $withPhotos = true): string
     {
         $path = tempnam(sys_get_temp_dir(), 'battery').'.zip';
         $zip = new ZipArchive;
@@ -109,8 +111,69 @@ class BatteryDocument
             $zip->addFromString(self::filename($dossier, $document), $this->render($dossier, $document));
         }
 
+        if ($withPhotos) {
+            $this->addPhotos($zip, $dossier, 'fotos/');
+        }
+
         $zip->close();
 
         return $path;
+    }
+
+    /**
+     * Only the photos of the works in a ZIP file; returns the path of a temporary file.
+     */
+    public function photosZip(BatteryDossier $dossier): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'battery-photos').'.zip';
+        $zip = new ZipArchive;
+        $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $this->addPhotos($zip, $dossier);
+        $zip->close();
+
+        return $path;
+    }
+
+    /**
+     * The photos still on the disk, named after the dossier in their order: "batterijdossier-…-foto-01.jpg" => path.
+     *
+     * @return array<string, string>
+     */
+    public static function photos(BatteryDossier $dossier): array
+    {
+        $disk = Storage::disk($dossier::DISK);
+        $photos = [];
+        $number = 0;
+
+        foreach (array_values((array) $dossier->photos) as $path) {
+            if (! is_string($path) || ! $disk->exists($path)) {
+                continue;
+            }
+
+            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION)) ?: 'jpg';
+            $photos[Str::slug($dossier->reference()).'-foto-'.str_pad((string) ++$number, 2, '0', STR_PAD_LEFT).'.'.$extension] = $path;
+        }
+
+        return $photos;
+    }
+
+    public static function photosFilename(BatteryDossier $dossier): string
+    {
+        return Str::slug(__('erp.batteries.photos_zip').' '.$dossier->reference()).'.zip';
+    }
+
+    /**
+     * Adds the photos to an open ZIP under the prefix; returns how many.
+     */
+    public function addPhotos(ZipArchive $zip, BatteryDossier $dossier, string $prefix = ''): int
+    {
+        $disk = Storage::disk($dossier::DISK);
+        $photos = self::photos($dossier);
+
+        foreach ($photos as $name => $path) {
+            $zip->addFromString($prefix.$name, (string) $disk->get($path));
+        }
+
+        return count($photos);
     }
 }

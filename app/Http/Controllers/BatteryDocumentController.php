@@ -11,8 +11,8 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * A document of a battery dossier as PDF, or all of them in a ZIP file. The invoice request needs
- * the price rights.
+ * A document of a battery dossier as PDF, all of them (with the photos) in a ZIP file, or only the
+ * photos ("photos"). The invoice request needs the price rights.
  */
 class BatteryDocumentController extends Controller
 {
@@ -27,6 +27,14 @@ class BatteryDocumentController extends Controller
      */
     public function respond(Request $request, BatteryDossier $dossier, string $document, BatteryDocument $documents): Response
     {
+        // The photos are not a generated document: seeing the dossier is enough.
+        if ($document === 'photos') {
+            abort_unless(Gate::allows('view', $dossier), 403);
+            abort_if(BatteryDocument::photos($dossier) === [], 404);
+
+            return response()->download($documents->photosZip($dossier), BatteryDocument::photosFilename($dossier))->deleteFileAfterSend();
+        }
+
         abort_unless(Gate::allows('view', $dossier) && PdfAccess::canGenerate($request->user(), $dossier::AREA), 403);
 
         $available = array_flip($dossier->availableDocuments());

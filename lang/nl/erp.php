@@ -4297,6 +4297,8 @@ return [
         'no_suppliers' => 'Voeg eerst een bordleverancier toe.',
     ],
     'batteries' => [
+        'download_photos' => 'Foto\'s downloaden (:count)',
+        'photos_zip' => 'fotos',
         'supplier' => [
             'singular' => 'leverancier',
             'plural' => 'Leveranciers',
@@ -4488,7 +4490,7 @@ return [
             'shipping' => 'Verzendnota',
             'invoice_request' => 'Factuuraanvraag',
             'shipping_move' => 'Verzendnota verplaatsing',
-            'all' => 'Alle documenten (ZIP)',
+            'all' => 'Alle documenten + foto\'s (ZIP)',
         ],
         'pdf' => 'PDF',
         'download' => ':document downloaden (PDF)',
