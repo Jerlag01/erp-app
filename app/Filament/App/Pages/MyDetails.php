@@ -2,12 +2,13 @@
 
 namespace App\Filament\App\Pages;
 
-use App\Enums\CertificateType;
 use App\Enums\NavigationGroup;
 use App\Enums\RequestStatus;
 use App\Filament\Admin\Resources\EmployeeCertificateRequests\EmployeeCertificateRequestResource;
 use App\Filament\Admin\Resources\EmployeeChangeRequests\EmployeeChangeRequestResource;
+use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelationManager;
 use App\Filament\Admin\Resources\Employees\Schemas\EmployeeForm;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\EmployeeChangeRequest;
 use App\Models\User;
@@ -187,7 +188,7 @@ class MyDetails extends Page implements HasSchemas
 
     public function addCertificateAction(): Action
     {
-        $type = fn (Get $get): ?CertificateType => $get('type') instanceof CertificateType ? $get('type') : CertificateType::tryFrom((string) $get('type'));
+        $type = fn (Get $get): ?CertificateType => CertificateType::forCode((string) $get('type'));
 
         return Action::make('addCertificate')
             ->label(__('erp.my_details.add_certificate'))
@@ -196,7 +197,9 @@ class MyDetails extends Page implements HasSchemas
             ->schema([
                 Select::make('type')
                     ->label(__('erp.employees.certificate'))
-                    ->options(CertificateType::class)
+                    ->options(fn (): array => CertificateType::options())
+                    ->in(fn (): array => array_keys(CertificateType::options()))
+                    ->searchable()
                     ->required()
                     ->live(),
                 CheckboxList::make('categories')
@@ -204,16 +207,16 @@ class MyDetails extends Page implements HasSchemas
                     ->options(array_combine(CertificateType::DRIVING_LICENCE_CATEGORIES, CertificateType::DRIVING_LICENCE_CATEGORIES))
                     ->columns(['default' => 4, 'md' => 8])
                     ->in(CertificateType::DRIVING_LICENCE_CATEGORIES)
-                    ->visible(fn (Get $get): bool => $type($get) === CertificateType::DrivingLicence)
-                    ->required(fn (Get $get): bool => $type($get) === CertificateType::DrivingLicence),
-                DatePicker::make('obtained_on')->label(__('erp.employees.obtained_on'))->native(false)->displayFormat('d/m/Y')->maxDate(today()),
-                DatePicker::make('expires_on')
-                    ->label(__('erp.employees.expires_on'))
-                    ->helperText(__('erp.employees.expires_on_help'))
+                    ->visible(fn (Get $get): bool => (bool) $type($get)?->isDrivingLicence())
+                    ->required(fn (Get $get): bool => (bool) $type($get)?->isDrivingLicence()),
+                DatePicker::make('obtained_on')
+                    ->label(__('erp.employees.obtained_on'))
                     ->native(false)
                     ->displayFormat('d/m/Y')
-                    ->afterOrEqual('obtained_on')
-                    ->visible(fn (Get $get): bool => $type($get)?->canExpire() ?? true),
+                    ->maxDate(today())
+                    ->live()
+                    ->required(fn (Get $get): bool => (bool) $type($get)?->canExpire())
+                    ->helperText(fn (Get $get): ?string => CertificatesRelationManager::expiryHint($type($get), $get('obtained_on'))),
                 FileUpload::make('document')
                     ->label(__('erp.employees.certificate_pdf'))
                     ->disk(Employee::DISK)
@@ -223,9 +226,9 @@ class MyDetails extends Page implements HasSchemas
                     ->maxSize(20480)
                     ->storeFileNamesIn('document_name'),
                 TextInput::make('notes')
-                    ->label(fn (Get $get): string => $type($get) === CertificateType::SchoolDegree ? __('erp.employees.degree') : __('erp.fields.notes'))
-                    ->placeholder(fn (Get $get): ?string => $type($get) === CertificateType::SchoolDegree ? __('erp.employees.degree_placeholder') : null)
-                    ->required(fn (Get $get): bool => $type($get) === CertificateType::SchoolDegree)
+                    ->label(fn (Get $get): string => (bool) $type($get)?->isSchoolDegree() ? __('erp.employees.degree') : __('erp.fields.notes'))
+                    ->placeholder(fn (Get $get): ?string => (bool) $type($get)?->isSchoolDegree() ? __('erp.employees.degree_placeholder') : null)
+                    ->required(fn (Get $get): bool => (bool) $type($get)?->isSchoolDegree())
                     ->maxLength(255),
             ])
             ->action(function (array $data): void {

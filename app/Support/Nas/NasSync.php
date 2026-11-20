@@ -152,7 +152,7 @@ class NasSync
             return;
         }
 
-        $type = $certificate->type?->getLabel() ?? (string) $certificate->getRawOriginal('type');
+        $type = $certificate->certificateType()?->getLabel() ?? (string) $certificate->type;
         $this->put([self::EMPLOYEES, $certificate->employee->fullName(), 'Certificaten', trim($type.' - '.($certificate->document_name ?: basename($certificate->document)))],
             ['disk' => Employee::DISK, 'path' => $certificate->document]);
     }

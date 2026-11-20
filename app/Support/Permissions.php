@@ -129,7 +129,7 @@ class Permissions
         // Safety: the incident reports of everyone (reporting your own needs no permission).
         'incidents' => ['module' => Modules::INCIDENTS, 'abilities' => ['view', 'update', 'change_incident_type', 'delete', 'generate_pdf']],
         // Training & medical check-up overview: the certificates and the medical check-ups of the employees.
-        'certificates' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete']],
+        'certificates' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete', 'types']],
         'medical_checks' => ['module' => Modules::EMPLOYEES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'battery_master_data' => ['module' => Modules::BATTERIES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'offers' => ['module' => Modules::OFFERS, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf', 'view_prices']],

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Employees\RelationManagers;
 
-use App\Enums\CertificateType;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\EmployeeCertificate;
 use Filament\Actions\Action;
@@ -22,6 +22,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Certificates of an employee (BA4/BA5, VCA, prevention advisor, driving licence, …), each with
@@ -56,18 +57,37 @@ class CertificatesRelationManager extends RelationManager
         return false;
     }
 
+    /**
+     * Under the date obtained: "Vervalt na 5 jaar: 12/03/2031", or that the type never expires.
+     */
+    public static function expiryHint(?CertificateType $type, mixed $obtainedOn): ?string
+    {
+        if ($type === null) {
+            return null;
+        }
+
+        if (! $type->canExpire()) {
+            return __('erp.certificate_types.never_expires_hint');
+        }
+
+        $expiry = filled($obtainedOn) ? $type->expiryFor(Carbon::parse($obtainedOn)) : null;
+
+        return __('erp.certificate_types.expires_after', ['period' => $type->validityLabel()]).($expiry ? ': '.$expiry->format('d/m/Y') : '');
+    }
+
     public function form(Schema $schema): Schema
     {
-        $type = fn (Get $get): ?CertificateType => $get('type') instanceof CertificateType ? $get('type') : CertificateType::tryFrom((string) $get('type'));
-        $isDrivingLicence = fn (Get $get): bool => $type($get) === CertificateType::DrivingLicence;
-        $isSchoolDegree = fn (Get $get): bool => $type($get) === CertificateType::SchoolDegree;
+        $type = fn (Get $get): ?CertificateType => CertificateType::forCode((string) $get('type'));
+        $isDrivingLicence = fn (Get $get): bool => (bool) $type($get)?->isDrivingLicence();
+        $isSchoolDegree = fn (Get $get): bool => (bool) $type($get)?->isSchoolDegree();
 
         return $schema
             ->columns(2)
             ->components([
                 Select::make('type')
                     ->label(__('erp.employees.certificate'))
-                    ->options(CertificateType::class)
+                    ->options(fn (?EmployeeCertificate $record): array => CertificateType::options($record?->type))
+                    ->searchable()
                     ->required()
                     ->live()
                     ->unique(
@@ -90,14 +110,11 @@ class CertificatesRelationManager extends RelationManager
                     ->label(__('erp.employees.obtained_on'))
                     ->native(false)
                     ->displayFormat('d/m/Y')
-                    ->maxDate(today()),
-                DatePicker::make('expires_on')
-                    ->label(__('erp.employees.expires_on'))
-                    ->helperText(__('erp.employees.expires_on_help'))
-                    ->native(false)
-                    ->displayFormat('d/m/Y')
-                    ->afterOrEqual('obtained_on')
-                    ->visible(fn (Get $get): bool => $type($get)?->canExpire() ?? true),
+                    ->maxDate(today())
+                    ->live()
+                    // The expiry date follows from the type's validity: the date obtained is needed for it.
+                    ->required(fn (Get $get): bool => (bool) $type($get)?->canExpire())
+                    ->helperText(fn (Get $get): ?string => self::expiryHint($type($get), $get('obtained_on'))),
                 FileUpload::make('document')
                     ->label(__('erp.employees.certificate_pdf'))
                     ->disk(Employee::DISK)

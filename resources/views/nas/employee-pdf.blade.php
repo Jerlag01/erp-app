@@ -82,7 +82,7 @@
         <table>
             <tr><th>{{ __('erp.fields.type') }}</th><th>{{ __('erp.employees.obtained_on') }}</th><th>{{ __('erp.employees.expires_on') }}</th></tr>
             @foreach ($e->certificates as $certificate)
-                <tr><td>{{ $enum($certificate->type) }}</td><td>{{ $date($certificate->obtained_on) }}</td><td>{{ $date($certificate->expires_on) ?? '—' }}</td></tr>
+                <tr><td>{{ $certificate->label() }}</td><td>{{ $date($certificate->obtained_on) }}</td><td>{{ $date($certificate->expires_on) ?? '—' }}</td></tr>
             @endforeach
         </table>
     @endif

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\CertificateType;
 use App\Enums\DriverLicenseCategory;
 use App\Enums\MedicalResult;
 use App\Filament\Admin\Resources\Employees\Pages\CreateEmployee;
@@ -12,6 +11,7 @@ use App\Filament\Admin\Resources\Employees\RelationManagers\CertificatesRelation
 use App\Filament\Admin\Resources\Employees\RelationManagers\MedicalChecksRelationManager;
 use App\Filament\Admin\Resources\Users\Pages\CreateUser;
 use App\Filament\Admin\Resources\Users\Pages\ListUsers;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Team;
@@ -319,29 +319,41 @@ class EmployeeTest extends TestCase
     }
 
     #[Test]
-    public function certificates_have_an_optional_expiry_date_and_a_pdf(): void
+    public function certificates_get_their_expiry_date_from_the_validity_of_their_type_and_a_pdf(): void
     {
         Storage::fake('local');
         $this->admin();
         $employee = Employee::factory()->create();
         $manager = fn () => Livewire::test(CertificatesRelationManager::class, ['ownerRecord' => $employee, 'pageClass' => ViewEmployee::class]);
 
+        CertificateType::forCode('vca')->update(['validity_months' => 12]);
+
+        // A type that expires needs the date obtained: the expiry date follows from it.
+        $manager()->callAction(TestAction::make('create')->table(), ['type' => 'vca'])
+            ->assertHasFormErrors(['obtained_on' => 'required']);
+
         $manager()->callAction(TestAction::make('create')->table(), [
-            'type' => CertificateType::Vca->value,
-            'expires_on' => today()->addDays(20)->toDateString(),
+            'type' => 'vca',
+            'obtained_on' => today()->subYear()->addDays(20)->toDateString(),
             'document' => UploadedFile::fake()->create('vca.pdf', 30, 'application/pdf'),
         ])->assertHasNoFormErrors();
 
         $manager()->callAction(TestAction::make('create')->table(), [
-            'type' => CertificateType::DrivingLicence->value,
+            'type' => 'driving_licence',
             'categories' => ['B', 'BE', 'C'],
         ])->assertHasNoFormErrors();
 
-        $manager()->callAction(TestAction::make('create')->table(), ['type' => CertificateType::Vca->value])
+        $manager()->callAction(TestAction::make('create')->table(), ['type' => 'vca'])
             ->assertHasFormErrors(['type' => 'unique']);
 
         $vca = $employee->certificates()->where('type', 'vca')->sole();
+        $this->assertSame(today()->addDays(20)->toDateString(), $vca->expires_on->toDateString());
         $this->assertTrue($vca->expiresSoon());
+
+        // A new validity recalculates the certificates of the type; without one they never expire.
+        CertificateType::forCode('vca')->update(['validity_months' => 60]);
+        $this->assertSame(today()->subYear()->addDays(20)->addYears(5)->toDateString(), $vca->fresh()->expires_on->toDateString());
+        CertificateType::forCode('vca')->update(['validity_months' => 24]);
         $this->assertSame('vca.pdf', $vca->document_name);
         $licence = $employee->certificates()->where('type', 'driving_licence')->sole();
         $this->assertNull($licence->expires_on);
@@ -423,8 +435,9 @@ class EmployeeTest extends TestCase
 
         Livewire::test(CertificatesRelationManager::class, ['ownerRecord' => $employee, 'pageClass' => ViewEmployee::class])
             ->mountAction(TestAction::make('create')->table())
-            ->fillForm(['type' => CertificateType::SchoolDegree->value])
-            ->assertFormFieldHidden('expires_on')
+            ->fillForm(['type' => 'school_degree'])
+            ->assertFormFieldDoesNotExist('expires_on')
+            ->assertFormFieldIsEnabled('obtained_on')
             ->fillForm(['notes' => null])
             ->callMountedAction()
             ->assertHasFormErrors(['notes' => 'required'])
@@ -433,7 +446,7 @@ class EmployeeTest extends TestCase
             ->assertHasNoFormErrors();
 
         $degree = $employee->certificates()->sole();
-        $this->assertSame(CertificateType::SchoolDegree, $degree->type);
+        $this->assertSame('school_degree', $degree->type);
         $this->assertSame('Schooldiploma: Bachelor elektromechanica', $degree->label());
 
         $degree->update(['expires_on' => today()]);

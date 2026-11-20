@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\CertificateType;
 use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
 use App\Filament\Admin\Pages\TrainingMatrix;
@@ -13,6 +12,7 @@ use App\Filament\Admin\Resources\Incidents\Pages\ViewIncident;
 use App\Filament\App\Pages\ReportIncident;
 use App\Filament\App\Resources\EmployeeTrainings\EmployeeTrainingResource;
 use App\Filament\App\Resources\EmployeeTrainings\Pages\ViewEmployeeTraining;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\EmployeeMedicalCheck;
 use App\Models\Incident;
@@ -59,7 +59,7 @@ class SafetyAndTrainingPermissionsTest extends TestCase
         $roles = Permissions::forRoles();
 
         $this->assertSame(['view', 'update', 'change_incident_type', 'delete', 'generate_pdf'], $roles['incidents']);
-        $this->assertSame(['view', 'create', 'update', 'delete'], $roles['certificates']);
+        $this->assertSame(['view', 'create', 'update', 'delete', 'types'], $roles['certificates']);
         $this->assertSame(['view', 'create', 'update', 'delete'], $roles['medical_checks']);
         $this->assertContains('create', $roles['toolbox']);
     }
@@ -119,7 +119,8 @@ class SafetyAndTrainingPermissionsTest extends TestCase
     public function the_training_overview_follows_the_certificate_and_medical_permissions(): void
     {
         $employee = Employee::factory()->for(User::factory())->create(['first_name' => 'Jeroen', 'last_name' => 'Lagaet']);
-        $employee->certificates()->create(['type' => CertificateType::Vca, 'expires_on' => today()->addYear()]);
+        CertificateType::forCode('vca')->update(['validity_months' => 12]);
+        $employee->certificates()->create(['type' => 'vca', 'obtained_on' => today()]);
         EmployeeMedicalCheck::query()->create(['employee_id' => $employee->id, 'checked_on' => today()->subMonth(), 'result' => 'fit']);
         Filament::setCurrentPanel('app');
 

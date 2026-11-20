@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use App\Enums\CertificateType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * A certificate an employee holds (BA4, VCA, driving licence, …) with an optional expiry date
- * (empty = does not expire) and a PDF of the certificate on the private disk.
+ * A certificate an employee holds (BA4, VCA, driving licence, …) with its expiry date, calculated
+ * from the date obtained and the validity of its type (none = does not expire), and a PDF of the certificate on the private disk.
  */
 #[Fillable(['employee_id', 'type', 'categories', 'obtained_on', 'expires_on', 'document', 'document_name', 'notes'])]
 class EmployeeCertificate extends Model
@@ -46,13 +45,22 @@ class EmployeeCertificate extends Model
         };
     }
 
+    /**
+     * The type (managed list), by its code.
+     */
+    public function certificateType(): ?CertificateType
+    {
+        return CertificateType::forCode($this->type);
+    }
+
     public function label(): string
     {
-        $label = $this->type->getLabel();
+        $type = $this->certificateType();
+        $label = $type?->getLabel() ?? (string) $this->type;
 
         return match (true) {
-            $this->type === CertificateType::DrivingLicence && filled($this->categories) => $label.' '.implode(', ', $this->categories),
-            $this->type === CertificateType::SchoolDegree && filled($this->notes) => $label.': '.$this->notes,
+            (bool) $type?->isDrivingLicence() && filled($this->categories) => $label.' '.implode(', ', $this->categories),
+            (bool) $type?->isSchoolDegree() && filled($this->notes) => $label.': '.$this->notes,
             default => $label,
         };
     }
@@ -60,8 +68,9 @@ class EmployeeCertificate extends Model
     protected static function booted(): void
     {
         static::saving(function (self $certificate): void {
-            if ($certificate->type && ! $certificate->type->canExpire()) {
-                $certificate->expires_on = null;
+            // The expiry date follows from the type's validity and the date obtained (none: never expires).
+            if ($type = $certificate->certificateType()) {
+                $certificate->expires_on = $type->expiryFor($certificate->obtained_on);
             }
         });
 
@@ -84,7 +93,6 @@ class EmployeeCertificate extends Model
     protected function casts(): array
     {
         return [
-            'type' => CertificateType::class,
             'categories' => 'array',
             'obtained_on' => 'date',
             'expires_on' => 'date',

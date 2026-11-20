@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\CertificateType;
 use App\Enums\RequestStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -49,13 +48,22 @@ class EmployeeCertificateRequest extends Model
         return $this->status === RequestStatus::Pending;
     }
 
+    /**
+     * The type (managed list), by its code.
+     */
+    public function certificateType(): ?CertificateType
+    {
+        return CertificateType::forCode($this->type);
+    }
+
     public function label(): string
     {
-        $label = $this->type->getLabel();
+        $type = $this->certificateType();
+        $label = $type?->getLabel() ?? (string) $this->type;
 
         return match (true) {
-            $this->type === CertificateType::DrivingLicence && filled($this->categories) => $label.' '.implode(', ', $this->categories),
-            $this->type === CertificateType::SchoolDegree && filled($this->notes) => $label.': '.$this->notes,
+            (bool) $type?->isDrivingLicence() && filled($this->categories) => $label.' '.implode(', ', $this->categories),
+            (bool) $type?->isSchoolDegree() && filled($this->notes) => $label.': '.$this->notes,
             default => $label,
         };
     }
@@ -70,7 +78,6 @@ class EmployeeCertificateRequest extends Model
             $certificate->fill([
                 'categories' => $this->categories,
                 'obtained_on' => $this->obtained_on,
-                'expires_on' => $this->type->canExpire() ? $this->expires_on : null,
                 'notes' => $this->notes,
                 ...(filled($this->document) ? ['document' => $this->document, 'document_name' => $this->document_name] : []),
             ])->save();
@@ -103,6 +110,13 @@ class EmployeeCertificateRequest extends Model
 
     protected static function booted(): void
     {
+        // Shown to whoever approves it: the expiry date that will follow from the type's validity.
+        static::saving(function (self $request): void {
+            if ($type = $request->certificateType()) {
+                $request->expires_on = $type->expiryFor($request->obtained_on);
+            }
+        });
+
         // A withdrawn (deleted) pending request takes its PDF along; an approved one handed it to the certificate.
         static::deleted(function (self $request): void {
             if (filled($request->document) && ! $request->employee_certificate_id) {
@@ -117,7 +131,6 @@ class EmployeeCertificateRequest extends Model
     protected function casts(): array
     {
         return [
-            'type' => CertificateType::class,
             'categories' => 'array',
             'obtained_on' => 'date',
             'expires_on' => 'date',

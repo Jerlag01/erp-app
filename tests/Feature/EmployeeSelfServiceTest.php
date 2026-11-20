@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Enums\CertificateType;
 use App\Enums\RequestStatus;
 use App\Filament\Admin\Resources\EmployeeCertificateRequests\Pages\ManageEmployeeCertificateRequests;
 use App\Filament\Admin\Resources\EmployeeChangeRequests\Pages\ManageEmployeeChangeRequests;
 use App\Filament\App\Pages\MyDetails;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\EmployeeCertificateRequest;
 use App\Models\EmployeeChangeRequest;
@@ -119,22 +119,23 @@ class EmployeeSelfServiceTest extends TestCase
     #[Test]
     public function employees_add_their_own_certificates_for_approval(): void
     {
-        $this->employee->certificates()->create(['type' => CertificateType::Vca, 'expires_on' => '2026-01-01']);
+        CertificateType::forCode('vca')->update(['validity_months' => 120]);
+        $this->employee->certificates()->create(['type' => 'vca', 'obtained_on' => '2016-01-01']);
 
         $this->asEmployee();
         Livewire::test(MyDetails::class)
             ->callAction('addCertificate', [
-                'type' => CertificateType::Vca->value,
+                'type' => 'vca',
                 'obtained_on' => '2026-09-01',
-                'expires_on' => '2036-09-01',
                 'document' => UploadedFile::fake()->create('vca-2026.pdf', 30, 'application/pdf'),
             ])
             ->assertHasNoActionErrors()
-            ->callAction('addCertificate', ['type' => CertificateType::SchoolDegree->value, 'notes' => 'Bachelor elektromechanica'])
+            ->callAction('addCertificate', ['type' => 'school_degree', 'notes' => 'Bachelor elektromechanica'])
             ->assertHasNoActionErrors();
 
         $this->assertSame('2026-01-01', $this->employee->certificates()->sole()->expires_on->toDateString(), 'Nothing changes before approval.');
         $vca = EmployeeCertificateRequest::query()->where('type', 'vca')->sole();
+        $this->assertSame('2036-09-01', $vca->expires_on->toDateString(), 'Shown to the approver, from the validity of 10 years.');
         Storage::disk('local')->assertExists($vca->document);
         $this->get('/my-details')->assertSee(__('erp.enums.request_status.pending'));
 

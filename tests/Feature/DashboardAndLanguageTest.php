@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Enums\CertificateType;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\ControlsDue;
 use App\Filament\Widgets\DashboardCountersWidget;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\EmployeeMedicalCheck;
 use App\Models\User;
@@ -45,12 +45,16 @@ class DashboardAndLanguageTest extends TestCase
         $this->travelTo('2026-10-14');
         $user = User::factory()->create(['job_title' => 'Elektrieker']);
         $employee = Employee::factory()->for($user)->create(['first_name' => 'Jeroen', 'last_name' => 'Lagaet', 'is_mentor' => true]);
+        foreach (['vca_vol' => 120, 'nuclear' => 12, 'proximus' => 12] as $code => $months) {
+            CertificateType::forCode($code)->update(['validity_months' => $months]);
+        }
+
         $employee->certificates()->createMany([
-            ['type' => CertificateType::VcaVol, 'expires_on' => '2034-01-25'],
-            ['type' => CertificateType::Nuclear, 'expires_on' => '2026-02-18'],
-            ['type' => CertificateType::Proximus, 'expires_on' => '2026-12-01'],
-            ['type' => CertificateType::Ba4, 'obtained_on' => '2024-11-19'],
-            ['type' => CertificateType::SchoolDegree, 'notes' => 'Bachelor'],
+            ['type' => 'vca_vol', 'obtained_on' => '2024-01-25'],
+            ['type' => 'nuclear', 'obtained_on' => '2025-02-18'],
+            ['type' => 'proximus', 'obtained_on' => '2025-12-01'],
+            ['type' => 'ba4', 'obtained_on' => '2024-11-19'],
+            ['type' => 'school_degree', 'notes' => 'Bachelor'],
         ]);
         EmployeeMedicalCheck::query()->create(['employee_id' => $employee->id, 'checked_on' => '2026-01-10', 'result' => 'fit']);
         Employee::factory()->create(['first_name' => 'Andy', 'last_name' => 'Thys']);

@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Enums\CertificateType;
+use App\Models\CertificateType;
 use App\Models\Employee;
 use App\Models\EmployeeCertificate;
 use Carbon\CarbonInterface;
@@ -16,21 +16,6 @@ use Illuminate\Support\Collection;
 class TrainingMatrix
 {
     public const SOON_MONTHS = 3;
-
-    /**
-     * The columns in the order of the Excel; the other certificate types follow when anybody has one.
-     */
-    public const COLUMNS = [
-        CertificateType::VcaVol, CertificateType::Vca, CertificateType::PreventionAdvisor3, CertificateType::Nuclear,
-        CertificateType::Proximus, CertificateType::ChargingStations, CertificateType::Ba4, CertificateType::Ba5,
-        CertificateType::FirstAidFire, CertificateType::FirstAid, CertificateType::ScissorLift, CertificateType::AerialWorkPlatform,
-        CertificateType::Forklift, CertificateType::Ladders, CertificateType::WorkAtHeightModule1, CertificateType::WorkAtHeightModule2, CertificateType::LoaderCrane, CertificateType::DriverCode95,
-    ];
-
-    /**
-     * Never shown in the overview.
-     */
-    public const LEFT_OUT = [CertificateType::SchoolDegree];
 
     /**
      * @param  bool  $certificates  with the certificate columns
@@ -59,33 +44,26 @@ class TrainingMatrix
     }
 
     /**
+     * The certificate types set to "always" in their order, then the ones set to "only when somebody has
+     * it" that an employee in service holds (see CertificateType), then the medical check-up.
+     *
      * @param  Collection<int, Employee>  $employees
      * @return list<array{key: string, label: string, until: bool}>
      */
     protected function columns(Collection $employees): array
     {
-        $held = $employees->flatMap(fn (Employee $employee) => $employee->certificates->pluck('type'))->unique(fn (CertificateType $type): string => $type->value);
-        $extra = array_filter(CertificateType::cases(), fn (CertificateType $type): bool => ! in_array($type, self::COLUMNS, true)
-            && ! in_array($type, self::LEFT_OUT, true)
-            && $held->contains($type));
+        $held = $employees->flatMap(fn (Employee $employee) => $employee->certificates->pluck('type'))->unique()->flip();
 
-        $columns = array_map(fn (CertificateType $type): array => [
-            'key' => $type->value,
-            'label' => __('erp.training_matrix.columns.'.$type->value) !== 'erp.training_matrix.columns.'.$type->value ? __('erp.training_matrix.columns.'.$type->value) : $type->getLabel(),
-            'until' => self::showsValidity($type),
-        ], [...self::COLUMNS, ...array_values($extra)]);
+        $columns = collect(CertificateType::allByCode())
+            ->filter(fn (CertificateType $type): bool => $type->overview === CertificateType::OVERVIEW_ALWAYS
+                || ($type->overview === CertificateType::OVERVIEW_HELD && $held->has($type->code)))
+            ->map(fn (CertificateType $type): array => ['key' => $type->code, 'label' => $type->shortLabel(), 'until' => $type->shows_validity])
+            ->values()
+            ->all();
 
         $columns[] = ['key' => 'medical', 'label' => __('erp.training_matrix.columns.medical'), 'until' => true];
 
         return $columns;
-    }
-
-    /**
-     * Columns with a validity ("geldig tot") or the date obtained ("vanaf").
-     */
-    public static function showsValidity(CertificateType $type): bool
-    {
-        return ! in_array($type, [CertificateType::ChargingStations, CertificateType::Ba4, CertificateType::Ba5, CertificateType::FirstAidFire, CertificateType::LoaderCrane, CertificateType::DrivingLicence], true);
     }
 
     /**
@@ -94,7 +72,7 @@ class TrainingMatrix
      */
     protected function row(Employee $employee, array $columns): array
     {
-        $certificates = $employee->certificates->keyBy(fn (EmployeeCertificate $certificate): string => $certificate->type->value);
+        $certificates = $employee->certificates->keyBy(fn (EmployeeCertificate $certificate): string => (string) $certificate->type);
         $cells = [];
 
         foreach ($columns as $column) {

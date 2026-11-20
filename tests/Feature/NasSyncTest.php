@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\AbsenceType;
 use App\Enums\AsbuiltCategory;
-use App\Enums\CertificateType;
 use App\Enums\ProjectFileSection;
 use App\Filament\Admin\Resources\NasTargets\NasTargetResource;
 use App\Filament\Admin\Resources\NasTargets\Pages\ManageNasTargets;
@@ -147,7 +146,7 @@ class NasSyncTest extends TestCase
             'id_card_files' => ['employees/id-cards/id.jpg'], 'id_card_file_names' => ['employees/id-cards/id.jpg' => 'identiteitskaart.jpg'],
         ]);
         Storage::disk('local')->put('employees/certificates/vca.pdf', 'vca');
-        EmployeeCertificate::query()->create(['employee_id' => $employee->id, 'type' => CertificateType::cases()[0], 'obtained_on' => '2025-01-10', 'document' => 'employees/certificates/vca.pdf', 'document_name' => 'vca.pdf']);
+        EmployeeCertificate::query()->create(['employee_id' => $employee->id, 'type' => 'vca', 'obtained_on' => '2025-01-10', 'document' => 'employees/certificates/vca.pdf', 'document_name' => 'vca.pdf']);
 
         $folder = '/ERP/Personeel/Eva Peeters';
         $this->assertSame('rijbewijs', $this->uploaded("{$folder}/Rijbewijs/rijbewijs.pdf")['contents']);

@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Enums\NavigationGroup;
+use App\Filament\Admin\Resources\CertificateTypes\CertificateTypeResource;
 use App\Filament\Admin\Resources\Employees\EmployeeResource;
 use App\Filament\App\Resources\EmployeeTrainings\EmployeeTrainingResource;
 use App\Models\Employee;
@@ -10,6 +11,7 @@ use App\Models\EmployeeCertificate;
 use App\Models\EmployeeMedicalCheck;
 use App\Support\TrainingMatrix as Matrix;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -59,6 +61,21 @@ class TrainingMatrix extends Page
     public function getMaxContentWidth(): Width
     {
         return Width::Full;
+    }
+
+    /**
+     * "Attesttypes": add and manage the kinds of certificates (with "certificates.types").
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('certificateTypes')
+                ->label(__('erp.certificate_types.manage'))
+                ->icon(Heroicon::OutlinedAcademicCap)
+                ->color('gray')
+                ->visible(fn (): bool => CertificateTypeResource::canViewAny())
+                ->url(fn (): string => CertificateTypeResource::getUrl('index')),
+        ];
     }
 
     /**

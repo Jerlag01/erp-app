@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\CertificateType;
 use App\Models\MobileKey;
 use App\Models\User;
 use App\Support\Modules;
@@ -11,6 +12,14 @@ use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The certificate types are cached per request; every test starts from its own database.
+        CertificateType::flushCache();
+    }
+
     /**
      * Refuse to run against anything but a test database: RefreshDatabase wipes it.
      */
