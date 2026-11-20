@@ -20,9 +20,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * One item in an employee's planning: a timeslot on a day for an open project, a warehouse job
  * (description and task list) or something else.
  */
-#[Fillable(['user_id', 'date', 'start_time', 'end_time', 'kind', 'project_id', 'work_site_id', 'title', 'description', 'tasks', 'notes', 'created_by', 'updated_by'])]
+#[Fillable(['user_id', 'date', 'start_time', 'end_time', 'kind', 'is_draft', 'confirmed_at', 'confirmed_by', 'project_id', 'work_site_id', 'title', 'description', 'tasks', 'notes', 'created_by', 'updated_by'])]
 class PlanningItem extends Model
 {
+    /** The global scope that hides drafts. */
+    public const CONFIRMED_SCOPE = 'confirmed';
+
     /** @use HasFactory<PlanningItemFactory> */
     use HasFactory;
 
@@ -159,6 +162,36 @@ class PlanningItem extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Who confirmed the draft (pushed it to the real planning).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function confirmer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    /**
+     * Confirmed items and drafts together (the planning page of those who plan).
+     *
+     * @return Builder<PlanningItem>
+     */
+    public static function withDrafts(): Builder
+    {
+        return static::query()->withoutGlobalScope(self::CONFIRMED_SCOPE);
+    }
+
+    /**
+     * Only the drafts.
+     *
+     * @return Builder<PlanningItem>
+     */
+    public static function drafts(): Builder
+    {
+        return static::withDrafts()->where('planning_items.is_draft', true);
     }
 
     /**
@@ -315,28 +348,43 @@ class PlanningItem extends Model
 
     protected static function booted(): void
     {
-        // Mirrored in the employee's Outlook calendar, after the response (see OutlookCalendar).
-        static::created(fn (self $item) => defer(fn () => app(OutlookCalendar::class)->sync($item->fresh() ?? $item)));
+        // Drafts exist only on the planning page of those who plan: everything else (mobile app,
+        // timesheets, GPW, dashboards, client portal, Outlook) sees the confirmed planning only.
+        static::addGlobalScope(self::CONFIRMED_SCOPE, fn (Builder $query) => $query->where('planning_items.is_draft', false));
+
+        // Mirrored in the employee's Outlook calendar, after the response (see OutlookCalendar); drafts are not.
+        static::created(function (self $item): void {
+            if (! $item->is_draft) {
+                defer(fn () => app(OutlookCalendar::class)->sync($item->fresh() ?? $item));
+            }
+        });
         static::updated(function (self $item): void {
-            if ($item->wasChanged(['user_id', 'date', 'start_time', 'end_time', 'kind', 'project_id', 'title', 'description', 'tasks', 'notes'])) {
+            if (! $item->is_draft && $item->wasChanged(['is_draft', 'user_id', 'date', 'start_time', 'end_time', 'kind', 'project_id', 'title', 'description', 'tasks', 'notes'])) {
                 defer(fn () => app(OutlookCalendar::class)->sync($item->fresh() ?? $item));
             }
         });
         static::deleted(function (self $item): void {
             [$mailbox, $event] = [$item->outlook_mailbox, $item->outlook_event_id];
-            defer(fn () => app(OutlookCalendar::class)->remove($mailbox, $event));
+
+            if (filled($event)) {
+                defer(fn () => app(OutlookCalendar::class)->remove($mailbox, $event));
+            }
         });
 
-        // The GPW requests of the project follow its planning (planned, in progress; see SyncGpwStatus).
+        // The GPW requests of the project follow its (confirmed) planning (planned, in progress; see SyncGpwStatus).
         static::saved(function (self $item): void {
-            if ($item->wasRecentlyCreated || $item->wasChanged(['project_id', 'date', 'kind'])) {
+            if ($item->is_draft) {
+                return;
+            }
+
+            if ($item->wasRecentlyCreated || $item->wasChanged(['is_draft', 'project_id', 'date', 'kind'])) {
                 foreach (array_unique(array_filter([$item->project_id, $item->getOriginal('project_id')])) as $projectId) {
                     app(SyncGpwStatus::class)->forProject((int) $projectId);
                 }
             }
         });
         static::deleted(function (self $item): void {
-            if ($item->project_id !== null) {
+            if ($item->project_id !== null && ! $item->is_draft) {
                 app(SyncGpwStatus::class)->forProject($item->project_id);
             }
         });
@@ -361,6 +409,8 @@ class PlanningItem extends Model
             'date' => 'date',
             'kind' => PlanningKind::class,
             'tasks' => 'array',
+            'is_draft' => 'boolean',
+            'confirmed_at' => 'datetime',
         ];
     }
 }

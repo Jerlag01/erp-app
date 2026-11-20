@@ -10,6 +10,7 @@ use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\BaeMeasurementReportsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\BatteryDeliveriesRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\BtvControlFilesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DeliveryFollowUpsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
@@ -108,6 +109,7 @@ class ProjectResource extends Resource
             ExtraFilesRelationManager::class,
             BaeMeasurementReportsRelationManager::class,
             WasteReportsRelationManager::class,
+            BtvControlFilesRelationManager::class,
             OffersRelationManager::class,
             InvoicesRelationManager::class,
         ];

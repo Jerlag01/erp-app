@@ -30,6 +30,7 @@ return [
         'battery_rooms' => 'Batterijlokalen',
     ],
     'resources' => [
+        'btv_control' => ['singular' => 'BTV-controle', 'plural' => 'BTV-controles'],
         'bank_account' => [
             'singular' => 'bankrekening',
             'plural' => 'Bankrekeningen',
@@ -489,6 +490,7 @@ return [
     ],
     'permissions' => [
         'areas' => [
+            'btv_controls' => 'BTV-controles',
             'banking' => 'Bank (rekeningen lezen, betalingen controleren)',
             'accounting_export' => 'Export naar de boekhouder',
             'announcements' => 'Mededelingen',
@@ -548,6 +550,7 @@ return [
             'routers' => '4G-routers',
         ],
         'abilities' => [
+            'confirm' => 'Concepten bevestigen en direct in de planning plannen',
             'match' => 'Koppelen aan facturen',
             'import' => 'Inlezen / importeren',
             'export' => 'Lijst met prijzen exporteren (Excel)',
@@ -1062,6 +1065,7 @@ return [
             'closed' => 'Afgesloten',
         ],
         'project_file_section' => [
+            'btv_control' => 'BTV-controle',
             'documents' => 'Bestanden',
             'images' => 'Foto\'s',
             'offers' => 'Offertes',
@@ -2256,6 +2260,28 @@ return [
         'reset_done' => 'Standaardtekst hersteld',
         'preview' => 'Voorbeeld',
     ],
+    'btv' => [
+        'open_badge' => 'BTV-controles zonder verslag',
+        'requested_on' => 'Aangevraagd op',
+        'confirmed_on' => 'Bevestigd door BTV op',
+        'confirmed_on_help' => 'De datum die BTV bevestigde voor de controle.',
+        'report' => 'Verslag',
+        'report_help' => 'Komt bij de bestanden van het project onder "BTV-controle" (PDF of foto).',
+        'report_replace' => 'Een nieuw bestand wordt een nieuwe versie van het huidige verslag.',
+        'upload_report' => 'Verslag uploaden',
+        'report_saved' => 'Verslag opgeslagen bij het project',
+        'delete_help' => 'Het verslag blijft bij de bestanden van het project.',
+        'statuses' => [
+            'requested' => 'Aangevraagd',
+            'confirmed' => 'Bevestigd',
+            'reported' => 'Verslag ontvangen',
+        ],
+        'tabs' => [
+            'open' => 'Open',
+            'reported' => 'Met verslag',
+            'all' => 'Alle',
+        ],
+    ],
     'banking' => [
         'paid_by' => 'Betaald via de bank: :movements',
         'other_bank' => 'Andere bank',
@@ -2698,6 +2724,21 @@ return [
         ],
     ],
     'planning' => [
+        'drafts_created' => '{1} Als concept ingepland (nog niet naar de medewerker)|[2,*] :count items als concept ingepland (nog niet naar de medewerkers)',
+        'save_and_confirm' => 'Opslaan en bevestigen',
+        'confirm' => 'Bevestigen',
+        'confirm_drafts' => 'Concepten bevestigen',
+        'confirm_drafts_help' => 'De gekozen concepten gaan naar de echte planning: de medewerkers zien ze in de app, krijgen een melding (en mail indien aangevinkt) en ze komen in Outlook.',
+        'drafts' => 'Concepten in deze periode',
+        'confirmed' => '{0} Niets bevestigd|{1} 1 item bevestigd en verstuurd|[2,*] :count items bevestigd en verstuurd',
+        'confirm_skipped' => 'Niet bevestigd (de dag is intussen afgesloten):',
+        'as_draft' => 'Als concept inplannen',
+        'as_draft_help' => 'Aan: tijdelijke planning, niet zichtbaar voor de medewerker en zonder melding of mail; later bevestigen. Uit: meteen in de echte planning.',
+        'draft_notice' => 'Concept: de medewerker ziet dit nog niet en krijgt geen melding of mail. Iemand met het recht "Concepten bevestigen" zet het in de echte planning.',
+        'draft_notice_edit' => 'Dit is een concept: wijzigingen worden niet gemeld aan de medewerker.',
+        'draft_badge' => 'Concept',
+        'show_drafts' => 'Concepten',
+        'show_drafts_help' => 'Toon of verberg de conceptplanning (alleen zichtbaar voor wie plant).',
         'outlook' => [
             'section' => 'Outlook-agenda (Microsoft 365)',
             'help' => 'Elk planningsitem komt ook in de Outlook-agenda van de werknemer (de mailbox van zijn e-mailadres in het platform), en wordt daar mee gewijzigd en verwijderd. Nodig: een app-registratie in Microsoft Entra ID met de toepassingsmachtiging "Calendars.ReadWrite" (met toestemming van de beheerder). Ook afwezigheden (ziekte, overuren als verlof, familiaal en onbetaald verlof, gewettigd afwezig), feestdagen, inhaalrustdagen en opleidingen komen erin.',
@@ -2773,6 +2814,8 @@ return [
         'shared_with_me' => 'Met jou gedeeld: :names',
         'share_saved' => 'Delen opgeslagen',
         'errors' => [
+            'confirmed_locked' => 'Dit item staat in de bevestigde planning: alleen wie concepten mag bevestigen kan het wijzigen of verwijderen.',
+            'cannot_confirm' => 'Je mag geen concepten bevestigen.',
             'no_employee' => 'Kies minstens één actieve werknemer.',
             'blocked' => 'Deze dag is geblokkeerd: :reason.',
             'clash' => 'al ingepland in dit tijdslot',

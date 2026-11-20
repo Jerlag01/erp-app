@@ -20,6 +20,11 @@ class PlanningItemPolicy
 
     public function view(User $user, PlanningItem $item): bool
     {
+        // A draft is only for those who plan, never for the employee.
+        if ($item->is_draft && ! $this->planning->seesDrafts($user)) {
+            return false;
+        }
+
         return $this->planning->enabled() && (
             $this->planning->canSeePlanningOf($user, $item->user)
             || ($item->project !== null && $item->project->isLedBy($user))
@@ -40,6 +45,11 @@ class PlanningItemPolicy
     public function delete(User $user, PlanningItem $item): bool
     {
         return $this->planning->canManage($user, $item);
+    }
+
+    public function confirm(User $user, PlanningItem $item): bool
+    {
+        return $this->planning->canConfirmItem($user, $item);
     }
 
     public function tickTasks(User $user, PlanningItem $item): bool

@@ -73,6 +73,6 @@ class ProjectWorkdays
     public static function over(Builder $query): void
     {
         $query->whereNotNull('estimated_workdays')
-            ->whereRaw('(select count(distinct planning_items.date) from planning_items where planning_items.project_id = projects.id and planning_items.date <= ?) > projects.estimated_workdays', [today()->toDateString()]);
+            ->whereRaw('(select count(distinct planning_items.date) from planning_items where planning_items.project_id = projects.id and planning_items.is_draft = 0 and planning_items.date <= ?) > projects.estimated_workdays', [today()->toDateString()]);
     }
 }

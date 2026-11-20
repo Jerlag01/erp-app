@@ -32,6 +32,9 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
     /** Battery replacements (604): the measurement report (PDF) made by BAE, added afterwards; the client sees it. */
     case BaeMeasurementReports = 'bae_measurements';
 
+    /** The report of a BTV control, uploaded in the BTV controls overview (or here). */
+    case BtvControl = 'btv_control';
+
     /**
      * Office documents, PDF and text.
      */
@@ -80,6 +83,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
             self::Extra => Heroicon::OutlinedFolderPlus,
             self::WasteReports => Heroicon::OutlinedTrash,
             self::BaeMeasurementReports => Heroicon::OutlinedChartBar,
+            self::BtvControl => Heroicon::OutlinedShieldCheck,
         };
     }
 
@@ -101,6 +105,7 @@ enum ProjectFileSection: string implements HasIcon, HasLabel
             self::Plans => self::PLAN_EXTENSIONS,
             self::Schematics, self::Extra => null,
             self::WasteReports, self::BaeMeasurementReports => ['pdf'],
+            self::BtvControl => ['pdf', 'jpg', 'jpeg', 'png'],
         };
     }
 

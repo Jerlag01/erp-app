@@ -44,6 +44,11 @@
         .erp-plan-chip { --kind: #2a78d6; display: flex; flex-direction: column; gap: .0625rem; padding: .25rem .375rem .25rem .5rem; border-radius: .375rem; border-left: 3px solid var(--kind); background: color-mix(in srgb, var(--kind) 12%, transparent); font-size: .71875rem; line-height: 1.05rem; min-width: 0; }
         .dark .erp-plan-chip { background: color-mix(in srgb, var(--kind) 22%, transparent); }
         .erp-plan-chip.has-conflict { outline: 2px solid #dc2626; outline-offset: -1px; }
+        /* Draft planning: dashed and lighter, with a label; never seen by the employee. */
+        .erp-plan-chip.is-draft { border: 1px dashed var(--kind); border-left: 3px dashed var(--kind); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--kind) 9%, transparent) 0 6px, transparent 6px 12px); }
+        .erp-plan-draft { font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; padding: 0 .3rem; border-radius: .25rem; border: 1px dashed currentColor; color: var(--plan-muted); }
+        .erp-plan-confirm { color: #16a34a; }
+        .erp-plan-drafts-toggle.is-active { border-style: dashed; }
         .erp-plan-chip-top { display: flex; align-items: center; gap: .25rem; }
         .erp-plan-time { font-family: var(--erp-mono); font-size: .6875rem; color: var(--plan-muted); white-space: nowrap; }
         .erp-plan-topic { font-weight: 700; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; background: none; padding: 0; color: inherit; }
@@ -110,6 +115,13 @@
             <div wire:loading.delay style="font-size: .8125rem; color: var(--plan-muted);">{{ __('erp.calendar.loading') }}</div>
 
             <div class="erp-plan-filters">
+                @if ($seesDrafts)
+                    <div class="erp-plan-seg">
+                        <button type="button" wire:click="toggleDrafts" @class(['erp-plan-drafts-toggle', 'is-active' => $showDrafts]) aria-pressed="{{ $showDrafts ? 'true' : 'false' }}" title="{{ __('erp.planning.show_drafts_help') }}">
+                            {{ __('erp.planning.show_drafts') }}@if ($showDrafts && $draftCount) ({{ $draftCount }})@endif
+                        </button>
+                    </div>
+                @endif
                 @if (count($teams) > 1)
                     <select wire:model.live="team" class="erp-plan-select" aria-label="{{ __('erp.resources.team.singular') }}">
                         <option value="">{{ __('erp.calendar.all_teams') }}</option>
@@ -239,6 +251,9 @@
                                             </td>
                                             <td>
                                                 <span class="erp-plan-kind"><i style="background: {{ $entry['color'] }};"></i>{{ $item->kind->getLabel() }}</span>
+                                                @if ($entry['isDraft'])
+                                                    <span class="erp-plan-draft">{{ __('erp.planning.draft_badge') }}</span>
+                                                @endif
                                             </td>
                                             <td style="width: 100%;">
                                                 @if ($entry['url'])

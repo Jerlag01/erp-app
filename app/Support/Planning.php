@@ -28,6 +28,10 @@ use Illuminate\Support\Facades\DB;
  * their projects.
  * Planning: administrators and "planning.plan" plan open projects and warehouse jobs; project
  * leaders plan their own open projects. Anything else needs "planning.other".
+ * Drafts: whoever plans works in a draft planning first; drafts are not sent to the employee (no
+ * app, push, mail or Outlook) and only show on the planning page of those who plan. Administrators
+ * and "planning.confirm" confirm drafts (they then go to the employee) and are the only ones who
+ * plan directly in, change or remove items of the confirmed planning.
  * Blocked: days with approved vacation, an absence (medical, overtime as leave, family leave) or a training.
  * Trainings are planned by administrators and "planning.trainings".
  */
@@ -70,6 +74,22 @@ class Planning
     public function isPlanner(User $user): bool
     {
         return $user->isAdmin() || $user->hasPermission('planning.plan');
+    }
+
+    /**
+     * Confirms drafts and plans directly in the real planning (overruling the draft step).
+     */
+    public function canConfirm(User $user): bool
+    {
+        return $this->enabled() && $user->is_active && ($user->isAdmin() || $user->hasPermission('planning.confirm'));
+    }
+
+    /**
+     * Whether the user works with drafts at all (sees them on the planning page).
+     */
+    public function seesDrafts(User $user): bool
+    {
+        return $this->canPlan($user) || $this->canConfirm($user);
     }
 
     public function canPlanTrainings(User $user): bool
@@ -126,7 +146,7 @@ class Planning
 
     /**
      * Changing or removing an item: planners always, project leaders for items on their projects,
-     * "planning.other" for the other items.
+     * "planning.other" for the other items. A confirmed item only by those who may confirm.
      */
     public function canManage(User $user, PlanningItem $item): bool
     {
@@ -134,8 +154,12 @@ class Planning
             return false;
         }
 
+        if (! $item->is_draft && ! $this->canConfirm($user)) {
+            return false;
+        }
+
         return match (true) {
-            $this->isPlanner($user) => true,
+            $this->isPlanner($user), $this->canConfirm($user) && $item->kind !== PlanningKind::Other => true,
             $item->kind === PlanningKind::Project => $item->project !== null && $item->project->isLedBy($user),
             $item->kind === PlanningKind::Other => $this->canPlanOther($user),
             default => false,
@@ -143,11 +167,19 @@ class Planning
     }
 
     /**
-     * The employee ticks off tasks of their own items; planners may too.
+     * Pushing a draft to the real planning.
+     */
+    public function canConfirmItem(User $user, PlanningItem $item): bool
+    {
+        return $item->is_draft && $this->canConfirm($user) && $this->canManage($user, $item);
+    }
+
+    /**
+     * The employee ticks off tasks of their own (confirmed) items; planners may too.
      */
     public function canTickTasks(User $user, PlanningItem $item): bool
     {
-        return $this->enabled() && ($item->user_id === $user->id || $this->canManage($user, $item));
+        return $this->enabled() && (($item->user_id === $user->id && ! $item->is_draft) || $this->canManage($user, $item));
     }
 
     /**

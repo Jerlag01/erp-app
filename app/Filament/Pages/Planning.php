@@ -17,6 +17,7 @@ use BackedEnum;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -43,7 +44,8 @@ use UnitEnum;
 
 /**
  * Everyone's own planning calendar: items in timeslots per day, as a week (one row per person),
- * a month or a simple list. Rights and blocked days: see App\Support\Planning.
+ * a month or a simple list. Those who plan also see the draft planning (dashed) and, with
+ * "planning.confirm", confirm it. Rights and blocked days: see App\Support\Planning.
  */
 class Planning extends Page
 {
@@ -74,6 +76,10 @@ class Planning extends Page
 
     #[Url]
     public ?int $person = null;
+
+    /** Show the draft planning too (only for those who plan). */
+    #[Url]
+    public bool $drafts = true;
 
     public static function canAccess(): bool
     {
@@ -132,6 +138,11 @@ class Planning extends Page
         $this->display = $display === 'list' ? 'list' : 'calendar';
     }
 
+    public function toggleDrafts(): void
+    {
+        $this->drafts = ! $this->drafts;
+    }
+
     public function setPeriod(string $period): void
     {
         $this->period = $period === 'month' ? 'month' : 'week';
@@ -152,7 +163,7 @@ class Planning extends Page
      */
     public function toggleTask(int $itemId, int $index): void
     {
-        $item = PlanningItem::query()->findOrFail($itemId);
+        $item = PlanningItem::withDrafts()->findOrFail($itemId);
         abort_unless(auth()->user()->can('tickTasks', $item), 403);
 
         $tasks = $item->taskList();
@@ -204,7 +215,9 @@ class Planning extends Page
             : [$from, $until];
 
         $people = $this->people();
-        $items = PlanningItem::query()
+        $showDrafts = $this->showsDrafts();
+        $items = PlanningItem::withDrafts()
+            ->when(! $showDrafts, fn (Builder $query) => $query->where('is_draft', false))
             ->visibleTo($viewer)
             ->between($gridFrom, $gridUntil)
             ->when($this->person || $this->team, fn (Builder $query) => $query->whereIn('user_id', $people->keys()))
@@ -236,6 +249,9 @@ class Planning extends Page
             'closed' => $closed,
             'holidays' => $holidays,
             'canPlan' => $this->rules()->canPlan($viewer),
+            'seesDrafts' => $this->rules()->seesDrafts($viewer),
+            'showDrafts' => $showDrafts,
+            'draftCount' => $items->where('is_draft', true)->count(),
             'teams' => $this->teamOptions(),
             'persons' => $this->personOptions(),
             'colors' => $people->mapWithKeys(fn (User $user): array => [$user->id => app(VacationCalendar::class)->colorFor($user->id)]),
@@ -248,7 +264,7 @@ class Planning extends Page
      * What the views need per item.
      *
      * @param  array<int, array<string, string>>  $blocked
-     * @return array{item: PlanningItem, url: ?string, canManage: bool, canTick: bool, conflict: ?string, color: string}
+     * @return array{item: PlanningItem, url: ?string, canManage: bool, canTick: bool, canConfirm: bool, isDraft: bool, conflict: ?string, color: string}
      */
     protected function entry(PlanningItem $item, User $viewer, array $blocked): array
     {
@@ -260,6 +276,8 @@ class Planning extends Page
                 : null,
             'canManage' => $this->rules()->canManage($viewer, $item),
             'canTick' => $this->rules()->canTickTasks($viewer, $item),
+            'canConfirm' => $this->rules()->canConfirmItem($viewer, $item),
+            'isDraft' => (bool) $item->is_draft,
             // An absence or vacation that was added after the item was planned.
             'conflict' => $blocked[$item->user_id][$item->date->toDateString()] ?? null,
             'color' => $item->kind->hex(),
@@ -315,6 +333,7 @@ class Planning extends Page
     {
         return [
             $this->shareAction(),
+            $this->confirmDraftsAction(),
             $this->createItemAction(),
         ];
     }
@@ -332,6 +351,7 @@ class Planning extends Page
                 'date' => $arguments['date'] ?? $this->date,
                 'kind' => $this->rules()->kindsFor($this->user())[0]->value ?? null,
                 ...$this->firstSlot(),
+                'as_draft' => true,
                 'notify_mail' => (bool) settings()->get('planning.mail_default', true),
             ])
             ->schema(fn (): array => $this->itemForm(null))
@@ -341,8 +361,9 @@ class Planning extends Page
                 $saver = app(SavePlanningItems::class);
                 $result = $this->withFormErrors(fn (): array => $saver->create($data, $this->user()));
 
+                $asDraft = ($result['created'][0] ?? null)?->is_draft;
                 $notification = Notification::make()
-                    ->title(trans_choice('erp.planning.created', count($result['created']), ['count' => count($result['created'])]))
+                    ->title(trans_choice($asDraft ? 'erp.planning.drafts_created' : 'erp.planning.created', count($result['created']), ['count' => count($result['created'])]))
                     ->success();
 
                 if ($result['skipped'] !== []) {
@@ -378,12 +399,15 @@ class Planning extends Page
                 ];
             })
             ->schema(fn (array $arguments): array => $this->itemForm($this->itemFrom($arguments, 'update')))
-            ->extraModalFooterActions(fn (Action $action): array => [
+            ->extraModalFooterActions(fn (Action $action, array $arguments): array => array_values(array_filter([
+                $this->rules()->canConfirmItem($this->user(), $this->itemFrom($arguments, 'update'))
+                    ? $action->makeModalSubmitAction('saveAndConfirm', ['confirm' => true])->label(__('erp.planning.save_and_confirm'))->color('success')
+                    : null,
                 $action->makeModalSubmitAction('deleteInstead', ['delete' => true])
                     ->label(__('erp.actions.delete'))
                     ->color('danger')
                     ->requiresConfirmation(),
-            ])
+            ])))
             ->action(function (array $data, array $arguments): void {
                 $item = $this->itemFrom($arguments, 'update');
                 $saver = app(SavePlanningItems::class);
@@ -392,8 +416,13 @@ class Planning extends Page
                     $saver->delete($item, $this->user(), (bool) ($data['notify_mail'] ?? false));
                     Notification::make()->title(__('erp.planning.deleted'))->success()->send();
                 } else {
-                    $this->withFormErrors(fn (): PlanningItem => $saver->update($item, $data, $this->user()));
-                    Notification::make()->title(__('erp.planning.saved'))->success()->send();
+                    $item = $this->withFormErrors(fn (): PlanningItem => $saver->update($item, $data, $this->user()));
+
+                    if ($arguments['confirm'] ?? false) {
+                        $this->confirmItems([$item->fresh()], (bool) ($data['notify_mail'] ?? false));
+                    } else {
+                        Notification::make()->title(__('erp.planning.saved'))->success()->send();
+                    }
                 }
 
                 $this->mailFailedNotice($saver);
@@ -412,11 +441,101 @@ class Planning extends Page
                 ($url = $this->entry($item = $this->itemFrom($arguments, 'view'), $this->user(), [])['url'])
                     ? Action::make('openProject')->label(__('erp.planning.open_project'))->icon(Heroicon::OutlinedArrowTopRightOnSquare)->url($url)
                     : null,
+                $this->rules()->canConfirmItem($this->user(), $item)
+                    ? Action::make('confirmFromView')->label(__('erp.planning.confirm'))->color('success')->icon(Heroicon::OutlinedCheckCircle)
+                        ->cancelParentActions()
+                        ->action(fn () => $this->confirmItems([$item], (bool) settings()->get('planning.mail_default', true)))
+                    : null,
                 $this->rules()->canManage($this->user(), $item)
                     ? Action::make('editFromView')->label(__('erp.actions.edit'))->color('gray')->icon(Heroicon::OutlinedPencilSquare)
                         ->action(fn () => $this->replaceMountedAction('editItem', ['item' => $item->id]))
                     : null,
             ])));
+    }
+
+    /**
+     * Confirms the drafts in the period on screen (with the person / team filter): they go to the
+     * real planning and to the employees.
+     */
+    public function confirmDraftsAction(): Action
+    {
+        return Action::make('confirmDrafts')
+            ->label(fn (): string => __('erp.planning.confirm_drafts'))
+            ->icon(Heroicon::OutlinedCheckCircle)
+            ->color('success')
+            ->visible(fn (): bool => $this->rules()->canConfirm($this->user()) && $this->confirmableDrafts()->isNotEmpty())
+            ->modalHeading(__('erp.planning.confirm_drafts'))
+            ->modalDescription(__('erp.planning.confirm_drafts_help'))
+            ->modalWidth(Width::TwoExtraLarge)
+            ->fillForm(fn (): array => [
+                'items' => $this->confirmableDrafts()->pluck('id')->all(),
+                'notify_mail' => (bool) settings()->get('planning.mail_default', true),
+            ])
+            ->schema([
+                CheckboxList::make('items')
+                    ->label(__('erp.planning.drafts'))
+                    ->options(fn (): array => $this->confirmableDrafts()->mapWithKeys(fn (PlanningItem $item): array => [
+                        $item->id => $item->date->format('d/m').' · '.$item->timeRange().' · '.$item->user->name.' · '.$item->topic(),
+                    ])->all())
+                    ->bulkToggleable()
+                    ->required(),
+                Toggle::make('notify_mail')
+                    ->label(__('erp.planning.notify_mail'))
+                    ->helperText(fn (): string => __('erp.planning.notify_mail_help', ['addresses' => implode(', ', $this->rules()->notifyAddresses()) ?: '—'])),
+            ])
+            ->action(function (array $data): void {
+                abort_unless($this->rules()->canConfirm($this->user()), 403);
+
+                $chosen = array_map('intval', (array) ($data['items'] ?? []));
+                $this->confirmItems($this->confirmableDrafts()->filter(fn (PlanningItem $item): bool => in_array($item->id, $chosen, true))->all(), (bool) ($data['notify_mail'] ?? false));
+            });
+    }
+
+    /**
+     * The drafts in the period on screen that the user may confirm.
+     *
+     * @return Collection<int, PlanningItem>
+     */
+    protected function confirmableDrafts(): Collection
+    {
+        [$from, $until] = $this->range();
+        $people = $this->person || $this->team ? $this->people()->keys()->all() : null;
+
+        return PlanningItem::drafts()
+            ->visibleTo($this->user())
+            ->between($from, $until)
+            ->when($people !== null, fn (Builder $query) => $query->whereIn('user_id', $people))
+            ->with(['user', 'project.category', 'project.leaders'])
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get()
+            ->filter(fn (PlanningItem $item): bool => $this->rules()->canConfirmItem($this->user(), $item))
+            ->values();
+    }
+
+    /**
+     * @param  iterable<PlanningItem>  $items
+     */
+    protected function confirmItems(iterable $items, bool $mail): void
+    {
+        $saver = app(SavePlanningItems::class);
+        $result = $saver->confirm($items, $this->user(), $mail);
+
+        $notification = Notification::make()
+            ->title(trans_choice('erp.planning.confirmed', count($result['confirmed']), ['count' => count($result['confirmed'])]))
+            ->success();
+
+        if ($result['skipped'] !== []) {
+            $notification->warning()->body(new HtmlString(e(__('erp.planning.confirm_skipped')).'<br>'.collect($result['skipped'])->take(10)->map(fn (string $line): string => e($line))->implode('<br>')))->persistent();
+        }
+
+        $notification->send();
+        $this->mailFailedNotice($saver);
+    }
+
+    protected function showsDrafts(): bool
+    {
+        return $this->drafts && $this->rules()->seesDrafts($this->user());
     }
 
     public function shareAction(): Action
@@ -544,7 +663,16 @@ class Planning extends Page
                 ->defaultItems(fn (Get $get): int => $get('kind') === PlanningKind::Warehouse->value ? 1 : 0)
                 ->visible($isKind(PlanningKind::Warehouse, PlanningKind::Other)),
             Textarea::make('notes')->label(__('erp.fields.notes'))->rows(2)->maxLength(2000),
+            // New items: a draft unless who may confirm plans directly in the real planning.
+            Toggle::make('as_draft')
+                ->label(__('erp.planning.as_draft'))
+                ->helperText(__('erp.planning.as_draft_help'))
+                ->visible($item === null && $this->rules()->canConfirm($viewer))
+                ->live(),
+            Text::make(fn (): string => $item?->is_draft ? __('erp.planning.draft_notice_edit') : __('erp.planning.draft_notice'))
+                ->visible(($item === null && ! $this->rules()->canConfirm($viewer)) || (bool) $item?->is_draft),
             Toggle::make('notify_mail')
+                ->visible(fn (Get $get): bool => $item === null ? ($this->rules()->canConfirm($viewer) && ! $get('as_draft')) : ! $item->is_draft || $this->rules()->canConfirm($viewer))
                 ->label(__('erp.planning.notify_mail'))
                 ->helperText(fn (): string => __('erp.planning.notify_mail_help', ['addresses' => implode(', ', $this->rules()->notifyAddresses()) ?: '—'])),
         ];
@@ -557,6 +685,7 @@ class Planning extends Page
     {
         $canTick = $this->rules()->canTickTasks($this->user(), $item);
         $lines = array_filter([
+            $item->is_draft ? __('erp.planning.draft_badge').' — '.__('erp.planning.draft_notice') : null,
             __('erp.planning.employee').': '.$item->user->name,
             $item->date->locale(app()->getLocale())->translatedFormat('l d/m/Y').' · '.$item->timeRange(),
             $item->kind->getLabel().($item->subtitle() ? ' · '.$item->subtitle() : ''),
@@ -597,7 +726,7 @@ class Planning extends Page
      */
     protected function itemFrom(array $arguments, string $ability): PlanningItem
     {
-        $item = PlanningItem::query()->with(['user', 'workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder'])->findOrFail((int) ($arguments['item'] ?? 0));
+        $item = PlanningItem::withDrafts()->with(['user', 'workSite', 'project.category', 'project.batteryDossier', 'project.baeOrder'])->findOrFail((int) ($arguments['item'] ?? 0));
         abort_unless($this->user()->can($ability, $item), 403);
 
         return $item;

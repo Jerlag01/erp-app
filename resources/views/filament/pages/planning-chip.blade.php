@@ -1,11 +1,17 @@
 {{-- One planning item in the calendar. A project opens the project; other items open their details. --}}
 @php($item = $entry['item'])
 @php($tasks = $item->taskList())
-<div @class(['erp-plan-chip', 'has-conflict' => $entry['conflict']]) style="--kind: {{ $entry['color'] }};" data-item="{{ $item->id }}"
+<div @class(['erp-plan-chip', 'has-conflict' => $entry['conflict'], 'is-draft' => $entry['isDraft']]) style="--kind: {{ $entry['color'] }};" data-item="{{ $item->id }}"
     title="{{ $item->user->name }} · {{ $item->timeRange() }} · {{ $item->kind->getLabel() }}">
     <div class="erp-plan-chip-top">
         <span class="erp-plan-time">{{ $item->timeRange() }}</span>
         <span class="erp-plan-icons">
+            @if ($entry['isDraft'])
+                <span class="erp-plan-draft" title="{{ __('erp.planning.draft_notice') }}">{{ __('erp.planning.draft_badge') }}</span>
+            @endif
+            @if ($entry['canConfirm'])
+                <button type="button" class="erp-plan-icon erp-plan-confirm" wire:click="mountAction('viewItem', @js(['item' => $item->id]))" title="{{ __('erp.planning.confirm') }}" aria-label="{{ __('erp.planning.confirm') }}"><x-filament::icon icon="heroicon-m-check-circle" /></button>
+            @endif
             @if ($entry['conflict'])
                 <span class="erp-plan-warn" title="{{ __('erp.planning.conflict', ['reason' => $entry['conflict']]) }}"><x-filament::icon icon="heroicon-m-exclamation-triangle" /></span>
             @endif

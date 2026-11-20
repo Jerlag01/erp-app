@@ -30,6 +30,7 @@ return [
         'battery_rooms' => 'Locaux batteries',
     ],
     'resources' => [
+        'btv_control' => ['singular' => 'contrôle BTV', 'plural' => 'Contrôles BTV'],
         'bank_account' => [
             'singular' => 'compte bancaire',
             'plural' => 'Comptes bancaires',
@@ -489,6 +490,7 @@ return [
     ],
     'permissions' => [
         'areas' => [
+            'btv_controls' => 'Contrôles BTV',
             'banking' => 'Banque (lire les comptes, contrôler les paiements)',
             'accounting_export' => 'Export vers le comptable',
             'announcements' => 'Annonces',
@@ -548,6 +550,7 @@ return [
             'routers' => 'Routeurs 4G',
         ],
         'abilities' => [
+            'confirm' => 'Confirmer les brouillons et planifier directement',
             'match' => 'Lier aux factures',
             'import' => 'Lire / importer',
             'export' => 'Exporter la liste avec les prix (Excel)',
@@ -1062,6 +1065,7 @@ return [
             'closed' => 'Clôturé',
         ],
         'project_file_section' => [
+            'btv_control' => 'Contrôle BTV',
             'documents' => 'Fichiers',
             'images' => 'Photos',
             'offers' => 'Offres',
@@ -2256,6 +2260,28 @@ return [
         'reset_done' => 'Texte standard rétabli',
         'preview' => 'Aperçu',
     ],
+    'btv' => [
+        'open_badge' => 'Contrôles BTV sans rapport',
+        'requested_on' => 'Demandé le',
+        'confirmed_on' => 'Confirmé par BTV pour le',
+        'confirmed_on_help' => 'La date confirmée par BTV pour le contrôle.',
+        'report' => 'Rapport',
+        'report_help' => 'Ajouté aux fichiers du projet sous « Contrôle BTV » (PDF ou photo).',
+        'report_replace' => 'Un nouveau fichier devient une nouvelle version du rapport actuel.',
+        'upload_report' => 'Téléverser le rapport',
+        'report_saved' => 'Rapport enregistré dans le projet',
+        'delete_help' => 'Le rapport reste dans les fichiers du projet.',
+        'statuses' => [
+            'requested' => 'Demandé',
+            'confirmed' => 'Confirmé',
+            'reported' => 'Rapport reçu',
+        ],
+        'tabs' => [
+            'open' => 'Ouverts',
+            'reported' => 'Avec rapport',
+            'all' => 'Tous',
+        ],
+    ],
     'banking' => [
         'paid_by' => 'Payé par la banque : :movements',
         'other_bank' => 'Autre banque',
@@ -2698,6 +2724,21 @@ return [
         ],
     ],
     'planning' => [
+        'drafts_created' => '{1} Planifié en brouillon (pas encore envoyé à l\'employé)|[2,*] :count éléments planifiés en brouillon (pas encore envoyés aux employés)',
+        'save_and_confirm' => 'Enregistrer et confirmer',
+        'confirm' => 'Confirmer',
+        'confirm_drafts' => 'Confirmer les brouillons',
+        'confirm_drafts_help' => 'Les brouillons choisis passent dans le vrai planning : les employés les voient dans l\'app, reçoivent une notification (et un e-mail si coché) et ils arrivent dans Outlook.',
+        'drafts' => 'Brouillons de cette période',
+        'confirmed' => '{0} Rien confirmé|{1} 1 élément confirmé et envoyé|[2,*] :count éléments confirmés et envoyés',
+        'confirm_skipped' => 'Non confirmés (le jour est entre-temps fermé) :',
+        'as_draft' => 'Planifier en brouillon',
+        'as_draft_help' => 'Activé : planning provisoire, invisible pour l\'employé, sans notification ni e-mail ; à confirmer plus tard. Désactivé : directement dans le vrai planning.',
+        'draft_notice' => 'Brouillon : l\'employé ne le voit pas encore et ne reçoit ni notification ni e-mail. Une personne ayant le droit « Confirmer les brouillons » le met dans le vrai planning.',
+        'draft_notice_edit' => 'Ceci est un brouillon : les modifications ne sont pas signalées à l\'employé.',
+        'draft_badge' => 'Brouillon',
+        'show_drafts' => 'Brouillons',
+        'show_drafts_help' => 'Afficher ou masquer le planning provisoire (visible uniquement par ceux qui planifient).',
         'outlook' => [
             'section' => 'Agenda Outlook (Microsoft 365)',
             'help' => 'Chaque élément du planning est aussi ajouté à l\'agenda Outlook de l\'employé (la boîte mail de son adresse e-mail dans la plateforme), et y est modifié et supprimé en même temps. Requis : un enregistrement d\'application dans Microsoft Entra ID avec l\'autorisation d\'application « Calendars.ReadWrite » (avec consentement administrateur). Les absences (maladie, heures supplémentaires en congé, congé familial et sans solde, absence justifiée), les jours fériés, les jours de repos compensatoire et les formations y sont aussi ajoutés.',
@@ -2773,6 +2814,8 @@ return [
         'shared_with_me' => 'Partagé avec vous : :names',
         'share_saved' => 'Partage enregistré',
         'errors' => [
+            'confirmed_locked' => 'Cet élément est dans le planning confirmé : seuls ceux qui peuvent confirmer les brouillons peuvent le modifier ou le supprimer.',
+            'cannot_confirm' => 'Vous ne pouvez pas confirmer de brouillons.',
             'no_employee' => 'Choisissez au moins un employé actif.',
             'blocked' => 'Ce jour est bloqué : :reason.',
             'clash' => 'déjà planifié sur cette plage',

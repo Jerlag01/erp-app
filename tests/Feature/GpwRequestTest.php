@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Gpw\DecideGpw;
 use App\Actions\Gpw\PlanGpw;
 use App\Actions\Gpw\RequestGpw;
+use App\Actions\Planning\SavePlanningItems;
 use App\Actions\Projects\CloseProject;
 use App\Enums\GpwStatus;
 use App\Enums\MailTemplateKey;
@@ -242,6 +243,13 @@ class GpwRequestTest extends TestCase
         $result = app(PlanGpw::class)->handle($gpw->fresh(), $requester, [...$data, 'date' => $gpw->starts_on->toDateString(), 'until' => $gpw->ends_on->toDateString()]);
 
         $this->assertCount(6, $result['created']);
+
+        // Without "planning.confirm" it is a draft: nothing is planned until someone confirms it.
+        $this->assertSame(0, PlanningItem::count());
+        $this->assertSame(GpwStatus::Approved, $gpw->fresh()->status);
+        $confirmer = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
+        $this->assertCount(6, app(SavePlanningItems::class)->confirm(PlanningItem::drafts()->get(), $confirmer)['confirmed']);
+
         $this->assertEqualsCanonicalizing($members->pluck('id')->all(), PlanningItem::query()->distinct()->pluck('user_id')->all());
         $this->assertSame(GpwStatus::Planned, $gpw->fresh()->status);
         $this->assertSame(ProjectStatus::Planned, $project->fresh()->status);

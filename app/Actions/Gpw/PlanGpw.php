@@ -16,7 +16,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * Plans an approved GPW request: the members of a team are put in the planning for the project, on
  * days within the approved period only. The request and the project become "planned", which the
- * client also sees in the client portal.
+ * client also sees in the client portal. Made as a draft (without "planning.confirm") it only
+ * becomes planned when the draft is confirmed.
  */
 class PlanGpw
 {
@@ -52,6 +53,13 @@ class PlanGpw
             'date' => $from->toDateString(),
             'until' => $until->toDateString(),
         ], $actor, $request);
+
+        // A draft is not planned yet: the request follows once the draft is confirmed (SyncGpwStatus).
+        if (collect($result['created'])->every(fn (PlanningItem $item): bool => $item->is_draft)) {
+            $request->update(['team_id' => $team->id]);
+
+            return $result;
+        }
 
         $request->update(['status' => GpwStatus::Planned, 'team_id' => $team->id, 'planned_at' => now(), 'planned_by' => $actor->id]);
 

@@ -38,4 +38,12 @@ class PlanningItemFactory extends Factory
             'tasks' => null,
         ]);
     }
+
+    /**
+     * Not confirmed yet (only on the planning page of those who plan).
+     */
+    public function draft(): static
+    {
+        return $this->state(['is_draft' => true]);
+    }
 }

@@ -186,6 +186,24 @@ class Project extends Model
     }
 
     /**
+     * The reports of BTV controls (see BtvControl).
+     *
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function btvControlFiles(): HasMany
+    {
+        return $this->filesIn(ProjectFileSection::BtvControl);
+    }
+
+    /**
+     * @return HasMany<BtvControl, $this>
+     */
+    public function btvControls(): HasMany
+    {
+        return $this->hasMany(BtvControl::class)->latest('requested_on');
+    }
+
+    /**
      * @return HasMany<ProjectPart, $this>
      */
     public function parts(): HasMany

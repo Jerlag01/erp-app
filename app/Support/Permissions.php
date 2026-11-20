@@ -26,6 +26,8 @@ namespace App\Support;
  * "planning.plan" fills in everyone's planning (open projects and warehouse jobs) and so also sees
  * everyone's; "planning.view_all" only sees everyone's; "planning.other" adds items that are not a
  * project or warehouse job. Project leaders plan their own open projects without any of these.
+ * Everything planned starts as a draft (not sent to the employee); "planning.confirm" confirms drafts
+ * and is the only right that plans directly in, changes or removes the confirmed planning.
  * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
  * and edits prices and the invoice request; "batteries.input" sees and fills in the Input tab (the others get
  * a short overview of the project instead); "batteries.edit_finished" changes (and reopens) dossiers the
@@ -99,6 +101,7 @@ class Permissions
         'work_site_master_data' => ['module' => Modules::WORK_SITES, 'abilities' => ['view', 'create', 'update', 'delete']],
         'projects' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'files', 'parts', 'generate_pdf', 'download_pdf', 'copy', 'gpw', 'gpw_delete', 'intervention_po', 'all_teams']],
         'project_finance' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'manage']],
+        'btv_controls' => ['module' => Modules::PROJECTS, 'abilities' => ['view', 'create', 'update', 'delete', 'all_teams']],
         'knowledge_base' => ['module' => Modules::KNOWLEDGE_BASE, 'abilities' => ['create', 'update', 'delete', 'download_pdf']],
         'waste' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete', 'generate_pdf']],
         'waste_master_data' => ['module' => Modules::WASTE, 'abilities' => ['view', 'create', 'update', 'delete']],
@@ -110,7 +113,7 @@ class Permissions
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
         'banking' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'match', 'import', 'manage']],
         'accounting_export' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'send']],
-        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'other', 'trainings']],
+        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'confirm', 'other', 'trainings']],
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf', 'verify_interim']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],

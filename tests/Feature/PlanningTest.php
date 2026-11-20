@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Planning\SavePlanningItems;
 use App\Enums\AbsenceType;
 use App\Enums\MailTemplateKey;
 use App\Enums\PlanningKind;
@@ -26,6 +27,7 @@ use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -55,6 +57,8 @@ class PlanningTest extends TestCase
             'kind' => 'project',
             'project_id' => $project->id,
             'notify_mail' => true,
+            // Who may confirm plans directly in the real planning (the others always make a draft).
+            'as_draft' => false,
             ...$overrides,
         ];
     }
@@ -63,7 +67,7 @@ class PlanningTest extends TestCase
     public function a_planner_plans_an_open_project_and_the_employee_is_notified(): void
     {
         settings()->save('planning', [...settings('planning'), 'notify_emails' => ['office@example.com']]);
-        $planner = User::factory()->withPermissions(['planning' => ['plan']])->inTeam()->create();
+        $planner = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
         $employee = User::factory()->inTeam()->create();
         $project = Project::factory()->create(['status' => ProjectStatus::InProgress]);
         $this->actingAs($planner);
@@ -83,6 +87,87 @@ class PlanningTest extends TestCase
             && $mail->hasTo($employee->email)
             && $mail->hasCc('office@example.com')
             && str_contains($mail->rendered['html'], $project->reference));
+    }
+
+    #[Test]
+    public function a_planner_without_the_confirm_right_makes_a_silent_draft_that_a_confirmer_pushes_to_the_employee(): void
+    {
+        $planner = User::factory()->withPermissions(['planning' => ['plan']])->inTeam()->create();
+        $employee = User::factory()->inTeam()->create();
+        $project = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        $this->actingAs($planner);
+
+        // "Directly" is not offered and ignored: it is a draft.
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['until' => '2026-10-13']))
+            ->assertHasNoActionErrors();
+
+        $drafts = PlanningItem::drafts()->get();
+        $this->assertCount(2, $drafts);
+        $this->assertSame(0, PlanningItem::count());
+        $this->assertSame(0, $employee->notifications()->count());
+        Mail::assertNothingSent();
+
+        // The planner sees the drafts (dashed); the employee does not, nor in the app.
+        Livewire::withQueryParams(['date' => '2026-10-12'])->test(Planning::class)->assertSee(__('erp.planning.draft_badge'))->assertActionHidden('confirmDrafts');
+        $this->actingAs($employee);
+        Livewire::withQueryParams(['date' => '2026-10-12'])->test(Planning::class)->assertDontSee($project->reference);
+        $this->assertFalse($employee->can('view', $drafts->first()));
+
+        // Changing a draft is silent; a confirmed item can't be changed by the planner.
+        $this->actingAs($planner);
+        app(SavePlanningItems::class)->update($drafts->first(), ['kind' => 'project', 'project_id' => $project->id, 'start_time' => '08:00', 'end_time' => '16:00'], $planner);
+        $this->assertSame(0, $employee->notifications()->count());
+
+        // The confirmer confirms the drafts of the week: now the employee gets them.
+        $confirmer = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
+        $this->actingAs($confirmer);
+        Livewire::withQueryParams(['date' => '2026-10-12'])->test(Planning::class)
+            ->assertActionVisible('confirmDrafts')
+            ->callAction('confirmDrafts', ['items' => $drafts->pluck('id')->all(), 'notify_mail' => true])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(2, PlanningItem::count());
+        $this->assertSame(0, PlanningItem::drafts()->count());
+        $this->assertSame($confirmer->id, PlanningItem::query()->first()->confirmed_by);
+        $this->assertSame(1, $employee->notifications()->count());
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => $mail->key === MailTemplateKey::PlanningCreated && $mail->hasTo($employee->email));
+
+        $this->actingAs($planner);
+        $this->assertFalse($planner->can('update', PlanningItem::query()->first()));
+        $this->expectException(ValidationException::class);
+        app(SavePlanningItems::class)->delete(PlanningItem::query()->first(), $planner, false);
+    }
+
+    #[Test]
+    public function who_may_confirm_chooses_between_a_draft_and_planning_directly(): void
+    {
+        $confirmer = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
+        $employee = User::factory()->inTeam()->create();
+        $project = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        $this->actingAs($confirmer);
+
+        Livewire::test(Planning::class)
+            ->mountAction('createItem')
+            ->assertSchemaStateSet(['as_draft' => true])
+            ->assertFormFieldVisible('as_draft');
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['as_draft' => true]))
+            ->assertHasNoActionErrors();
+        $draft = PlanningItem::drafts()->sole();
+
+        // A day closed meanwhile (sickness) keeps the draft back.
+        Absence::factory()->for($employee)->create(['start_date' => '2026-10-12', 'end_date' => '2026-10-12']);
+        $result = app(SavePlanningItems::class)->confirm([$draft], $confirmer);
+        $this->assertSame([], $result['confirmed']);
+        $this->assertCount(1, $result['skipped']);
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $this->projectItem($employee, $project, ['date' => '2026-10-13', 'as_draft' => false]))
+            ->assertHasNoActionErrors();
+        $this->assertSame(1, PlanningItem::query()->whereDate('date', '2026-10-13')->count());
+        $this->assertSame(1, $employee->notifications()->count());
     }
 
     #[Test]
@@ -203,7 +288,9 @@ class PlanningTest extends TestCase
             ->callAction('createItem', $this->projectItem($employee, $own, ['kind' => 'warehouse', 'description' => 'Sort', 'tasks' => [['text' => 'Sort cables']], 'date' => '2026-10-13']))
             ->assertHasActionErrors(['kind']);
 
-        $this->assertSame(1, PlanningItem::count());
+        // A leader without "planning.confirm" makes a draft.
+        $this->assertSame(0, PlanningItem::count());
+        $this->assertSame(1, PlanningItem::drafts()->count());
 
         $this->actingAs($employee);
         Livewire::test(Planning::class)->assertActionHidden('createItem');
@@ -264,7 +351,7 @@ class PlanningTest extends TestCase
     #[Test]
     public function a_warehouse_job_needs_a_description_and_tasks_that_the_employee_ticks_off(): void
     {
-        $planner = User::factory()->withPermissions(['planning' => ['plan']])->inTeam()->create();
+        $planner = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
         $employee = User::factory()->create();
         $this->actingAs($planner);
 
@@ -273,7 +360,7 @@ class PlanningTest extends TestCase
             ->assertHasActionErrors(['description']);
 
         Livewire::test(Planning::class)
-            ->callAction('createItem', ['user_ids' => [$employee->id], 'date' => '2026-10-12', 'start_time' => '07:30', 'end_time' => '12:00', 'kind' => 'warehouse', 'description' => 'Prepare the order for 604-001', 'tasks' => [['text' => 'Pick cables'], ['text' => 'Label boxes']]])
+            ->callAction('createItem', ['user_ids' => [$employee->id], 'date' => '2026-10-12', 'start_time' => '07:30', 'end_time' => '12:00', 'kind' => 'warehouse', 'description' => 'Prepare the order for 604-001', 'tasks' => [['text' => 'Pick cables'], ['text' => 'Label boxes']], 'as_draft' => false])
             ->assertHasNoActionErrors();
 
         $item = PlanningItem::sole();

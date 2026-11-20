@@ -15,7 +15,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * Adds, changes and removes planning items, enforcing who may plan what, open projects only,
  * no items on blocked days (vacation, absences) and no overlapping timeslots for one person.
- * Every change is notified to the employee (see NotifyPlanningChange).
+ * Items start as drafts unless the actor may confirm ("planning.confirm") and plans directly.
+ * Drafts are never notified; a confirmed item and every change to it is (see NotifyPlanningChange).
  */
 class SavePlanningItems
 {
@@ -49,8 +50,10 @@ class SavePlanningItems
         $days = $this->days($data);
         $created = [];
         $skipped = [];
+        // Only who may confirm plans directly in the real planning; they choose (as_draft), the others always make drafts.
+        $draft = ! $this->planning->canConfirm($actor) || (bool) ($data['as_draft'] ?? false);
 
-        DB::transaction(function () use ($employees, $days, $attributes, $actor, &$created, &$skipped): void {
+        DB::transaction(function () use ($employees, $days, $attributes, $actor, $draft, &$created, &$skipped): void {
             foreach ($employees as $employee) {
                 foreach ($days as $day) {
                     if ($reason = $this->planning->blockedReason($employee, $day, $actor)) {
@@ -61,6 +64,9 @@ class SavePlanningItems
 
                     $created[] = PlanningItem::query()->create([
                         ...$attributes,
+                        'is_draft' => $draft,
+                        'confirmed_at' => $draft ? null : now(),
+                        'confirmed_by' => $draft ? null : $actor->id,
                         'user_id' => $employee->id,
                         'date' => $day->toDateString(),
                         'created_by' => $actor->id,
@@ -76,6 +82,10 @@ class SavePlanningItems
 
         $this->mailFailed = false;
 
+        if ($draft) {
+            return ['created' => $created, 'skipped' => $skipped];
+        }
+
         foreach (collect($created)->groupBy('user_id') as $items) {
             $items = $items->each->load('project', 'user')->values()->all();
             $this->mailFailed = ! $this->notifier->handle($items[0]->user, NotifyPlanningChange::CREATED, $items, $actor, (bool) ($data['notify_mail'] ?? false)) || $this->mailFailed;
@@ -89,6 +99,10 @@ class SavePlanningItems
      */
     public function update(PlanningItem $item, array $data, User $actor): PlanningItem
     {
+        if (! $item->is_draft && ! $this->planning->canConfirm($actor)) {
+            throw ValidationException::withMessages(['date' => __('erp.planning.errors.confirmed_locked')]);
+        }
+
         $item->loadMissing('project', 'user');
         $before = clone $item;
         $attributes = $this->attributes($data, $actor, $item);
@@ -110,6 +124,12 @@ class SavePlanningItems
         $item->save();
         $item->load('project', 'user');
         $mail = (bool) ($data['notify_mail'] ?? false);
+        $this->mailFailed = false;
+
+        // A draft is changed silently.
+        if ($item->is_draft) {
+            return $item;
+        }
 
         // Moved to someone else: removed from the old planning, added to the new one.
         if ($item->wasChanged('user_id')) {
@@ -124,10 +144,63 @@ class SavePlanningItems
 
     public function delete(PlanningItem $item, User $actor, bool $mail): void
     {
+        if (! $item->is_draft && ! $this->planning->canConfirm($actor)) {
+            throw ValidationException::withMessages(['date' => __('erp.planning.errors.confirmed_locked')]);
+        }
+
         $item->loadMissing('project', 'user');
         $item->delete();
+        $this->mailFailed = false;
 
-        $this->mailFailed = ! $this->notifier->handle($item->user, NotifyPlanningChange::DELETED, [$item], $actor, $mail);
+        if (! $item->is_draft) {
+            $this->mailFailed = ! $this->notifier->handle($item->user, NotifyPlanningChange::DELETED, [$item], $actor, $mail);
+        }
+    }
+
+    /**
+     * Pushes drafts to the real planning: they are sent to the employees (app, push, optional mail,
+     * Outlook) like newly planned items. Drafts on a day that has meanwhile closed (sickness, family
+     * leave) stay drafts and are reported.
+     *
+     * @param  iterable<PlanningItem>  $drafts
+     * @return array{confirmed: list<PlanningItem>, skipped: list<string>}
+     */
+    public function confirm(iterable $drafts, User $actor, bool $mail = false): array
+    {
+        if (! $this->planning->canConfirm($actor)) {
+            throw ValidationException::withMessages(['items' => __('erp.planning.errors.cannot_confirm')]);
+        }
+
+        $confirmed = [];
+        $skipped = [];
+
+        DB::transaction(function () use ($drafts, $actor, &$confirmed, &$skipped): void {
+            foreach ($drafts as $item) {
+                $item->loadMissing('user', 'project');
+
+                if (! $item->is_draft || ! $this->planning->canConfirmItem($actor, $item)) {
+                    continue;
+                }
+
+                if ($reason = $this->planning->blockedReason($item->user, $item->date, $actor)) {
+                    $skipped[] = "{$item->user->name} · {$item->date->format('d/m/Y')}: {$reason}";
+
+                    continue;
+                }
+
+                $item->forceFill(['is_draft' => false, 'confirmed_at' => now(), 'confirmed_by' => $actor->id, 'updated_by' => $actor->id])->save();
+                $confirmed[] = $item;
+            }
+        });
+
+        $this->mailFailed = false;
+
+        foreach (collect($confirmed)->groupBy('user_id') as $items) {
+            $items = $items->sortBy(fn (PlanningItem $item): string => $item->date->toDateString().$item->start_time)->values()->all();
+            $this->mailFailed = ! $this->notifier->handle($items[0]->user, NotifyPlanningChange::CREATED, $items, $actor, $mail) || $this->mailFailed;
+        }
+
+        return ['confirmed' => $confirmed, 'skipped' => $skipped];
     }
 
     /**

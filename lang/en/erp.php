@@ -30,6 +30,7 @@ return [
         'battery_rooms' => 'Battery rooms',
     ],
     'resources' => [
+        'btv_control' => ['singular' => 'BTV control', 'plural' => 'BTV controls'],
         'bank_account' => [
             'singular' => 'bank account',
             'plural' => 'Bank accounts',
@@ -489,6 +490,7 @@ return [
     ],
     'permissions' => [
         'areas' => [
+            'btv_controls' => 'BTV controls',
             'banking' => 'Bank (read accounts, check payments)',
             'accounting_export' => 'Export to the accountant',
             'announcements' => 'Announcements',
@@ -548,6 +550,7 @@ return [
             'routers' => '4G routers',
         ],
         'abilities' => [
+            'confirm' => 'Confirm drafts and plan directly',
             'match' => 'Link to invoices',
             'import' => 'Read / import',
             'export' => 'Export the list with prices (Excel)',
@@ -1062,6 +1065,7 @@ return [
             'closed' => 'Closed',
         ],
         'project_file_section' => [
+            'btv_control' => 'BTV control',
             'documents' => 'Files',
             'images' => 'Pictures',
             'offers' => 'Offers',
@@ -2256,6 +2260,28 @@ return [
         'reset_done' => 'Standard text restored',
         'preview' => 'Preview',
     ],
+    'btv' => [
+        'open_badge' => 'BTV controls without a report',
+        'requested_on' => 'Requested on',
+        'confirmed_on' => 'Confirmed by BTV for',
+        'confirmed_on_help' => 'The date BTV confirmed for the control.',
+        'report' => 'Report',
+        'report_help' => 'Added to the project files under "BTV control" (PDF or photo).',
+        'report_replace' => 'A new file becomes a new version of the current report.',
+        'upload_report' => 'Upload report',
+        'report_saved' => 'Report saved with the project',
+        'delete_help' => 'The report stays in the project files.',
+        'statuses' => [
+            'requested' => 'Requested',
+            'confirmed' => 'Confirmed',
+            'reported' => 'Report received',
+        ],
+        'tabs' => [
+            'open' => 'Open',
+            'reported' => 'With report',
+            'all' => 'All',
+        ],
+    ],
     'banking' => [
         'paid_by' => 'Paid through the bank: :movements',
         'other_bank' => 'Other bank',
@@ -2698,6 +2724,21 @@ return [
         ],
     ],
     'planning' => [
+        'drafts_created' => '{1} Planned as a draft (not sent to the employee yet)|[2,*] :count items planned as drafts (not sent to the employees yet)',
+        'save_and_confirm' => 'Save and confirm',
+        'confirm' => 'Confirm',
+        'confirm_drafts' => 'Confirm drafts',
+        'confirm_drafts_help' => 'The chosen drafts go to the real planning: the employees see them in the app, get a notification (and an e-mail if ticked) and they appear in Outlook.',
+        'drafts' => 'Drafts in this period',
+        'confirmed' => '{0} Nothing confirmed|{1} 1 item confirmed and sent|[2,*] :count items confirmed and sent',
+        'confirm_skipped' => 'Not confirmed (the day has been closed meanwhile):',
+        'as_draft' => 'Plan as a draft',
+        'as_draft_help' => 'On: temporary planning, not visible to the employee and without notification or e-mail; confirm later. Off: straight into the real planning.',
+        'draft_notice' => 'Draft: the employee does not see this yet and gets no notification or e-mail. Someone with the right "Confirm drafts" puts it in the real planning.',
+        'draft_notice_edit' => 'This is a draft: changes are not notified to the employee.',
+        'draft_badge' => 'Draft',
+        'show_drafts' => 'Drafts',
+        'show_drafts_help' => 'Show or hide the draft planning (only visible to those who plan).',
         'outlook' => [
             'section' => 'Outlook calendar (Microsoft 365)',
             'help' => 'Every planning item is also put in the employee\'s Outlook calendar (the mailbox of their e-mail address in the platform), and changed and removed there along with it. Needed: an app registration in Microsoft Entra ID with the application permission "Calendars.ReadWrite" (with admin consent). Absences (sickness, overtime as leave, family and unpaid leave, justified absence), public holidays, IR days and trainings are added too.',
@@ -2773,6 +2814,8 @@ return [
         'shared_with_me' => 'Shared with you: :names',
         'share_saved' => 'Sharing saved',
         'errors' => [
+            'confirmed_locked' => 'This item is in the confirmed planning: only those who may confirm drafts can change or remove it.',
+            'cannot_confirm' => 'You may not confirm drafts.',
             'no_employee' => 'Choose at least one active employee.',
             'blocked' => 'This day is blocked: :reason.',
             'clash' => 'already planned in this timeslot',
