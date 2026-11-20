@@ -13,6 +13,7 @@ use App\Mail\SystemMail;
 use App\Models\Absence;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\GpwRequest;
 use App\Models\Holiday;
 use App\Models\InterventionReport;
 use App\Models\MoveDossier;
@@ -49,6 +50,11 @@ class PlanningTest extends TestCase
      */
     protected function projectItem(User $employee, Project $project, array $overrides = []): array
     {
+        // "No GPW = no planning": these projects have their GPW approved.
+        if ($project->needsGpwForPlanning()) {
+            GpwRequest::factory()->approved()->for($project)->create();
+        }
+
         return [
             'user_ids' => [$employee->id],
             'date' => '2026-10-12',
@@ -499,5 +505,102 @@ class PlanningTest extends TestCase
 
         // Other projects have no battery line.
         $this->assertNull(PlanningItem::factory()->forProject(Project::factory()->inCategory('600')->create())->create()->batteries());
+    }
+
+    #[Test]
+    public function each_planning_of_a_project_without_an_approved_gpw_needs_a_reason_and_is_logged(): void
+    {
+        $planner = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
+        $employee = User::factory()->inTeam()->create();
+        $project = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        GpwRequest::factory()->for($project)->create();
+        $data = [...$this->projectItem($employee, Project::factory()->create()), 'project_id' => $project->id];
+        $this->actingAs($planner);
+
+        $this->assertTrue($project->needsGpwForPlanning());
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', $data)
+            ->assertHasActionErrors(['gpw_bypass_reason' => 'required']);
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', [...$data, 'gpw_bypass_reason' => 'te kort'])
+            ->assertHasActionErrors(['gpw_bypass_reason']);
+
+        $this->assertSame(0, PlanningItem::withDrafts()->count());
+        $this->assertSame(0, $project->gpwBypasses()->count());
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', [...$data, 'gpw_bypass_reason' => 'Dringende herstelling, klant belde zelf'])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(1, PlanningItem::query()->where('project_id', $project->id)->count());
+        $bypass = $project->gpwBypasses()->sole();
+        $this->assertSame($planner->id, $bypass->user_id);
+        $this->assertSame('Dringende herstelling, klant belde zelf', $bypass->reason);
+        $this->assertSame('12/10/2026 · '.$employee->name.' (1)', $bypass->planned);
+
+        // A bypass unlocks nothing: the next planning asks for a reason again and is logged again.
+        $this->assertTrue($project->refresh()->needsGpwForPlanning());
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', [...$data, 'date' => '2026-10-13'])
+            ->assertHasActionErrors(['gpw_bypass_reason' => 'required']);
+
+        Livewire::test(Planning::class)
+            ->callAction('createItem', [...$data, 'date' => '2026-10-13', 'gpw_bypass_reason' => 'Vervolg van de dringende herstelling'])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(2, $project->gpwBypasses()->count());
+        $this->assertSame('Vervolg van de dringende herstelling', $project->gpwBypasses()->first()->reason);
+    }
+
+    #[Test]
+    public function the_bypass_right_plans_without_a_reason_and_interventions_and_approved_gpws_need_none(): void
+    {
+        $bypasser = User::factory()->withPermissions(['planning' => ['plan', 'confirm', 'bypass_gpw']])->inTeam()->create();
+        $planner = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
+        $employee = User::factory()->inTeam()->create();
+        $project = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        $intervention = Project::factory()->inCategory('600')->create(['status' => ProjectStatus::InProgress]);
+        $approved = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        GpwRequest::factory()->approved()->for($approved)->create();
+        $base = $this->projectItem($employee, Project::factory()->create());
+        $saver = app(SavePlanningItems::class);
+
+        $saver->create([...$base, 'project_id' => $project->id], $bypasser);
+        $this->assertNull($project->gpwBypasses()->sole()->reason);
+        $this->assertSame($bypasser->id, $project->gpwBypasses()->sole()->user_id);
+
+        // Without a reason, but still logged every time.
+        $saver->create([...$base, 'project_id' => $project->id, 'date' => '2026-10-15'], $bypasser);
+        $this->assertSame(2, $project->gpwBypasses()->count());
+
+        $saver->create([...$base, 'project_id' => $intervention->id, 'date' => '2026-10-13'], $planner);
+        $saver->create([...$base, 'project_id' => $approved->id, 'date' => '2026-10-14'], $planner);
+        $this->assertSame(0, $intervention->gpwBypasses()->count() + $approved->gpwBypasses()->count());
+        $this->assertSame(4, PlanningItem::query()->count());
+    }
+
+    #[Test]
+    public function moving_an_item_to_a_project_without_gpw_needs_a_reason_too(): void
+    {
+        $planner = User::factory()->withPermissions(['planning' => ['plan', 'confirm']])->inTeam()->create();
+        $employee = User::factory()->inTeam()->create();
+        $item = PlanningItem::factory()->forProject(Project::factory()->create(['status' => ProjectStatus::InProgress]))->for($employee)->create(['date' => '2026-10-12']);
+        $other = Project::factory()->create(['status' => ProjectStatus::InProgress]);
+        $saver = app(SavePlanningItems::class);
+        $data = ['kind' => 'project', 'project_id' => $other->id, 'user_id' => $employee->id, 'date' => '2026-10-12', 'start_time' => '07:30', 'end_time' => '16:00'];
+
+        try {
+            $saver->update($item, $data, $planner);
+            $this->fail('A project without GPW was planned.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('gpw_bypass_reason', $exception->errors());
+        }
+
+        $saver->update($item->refresh(), [...$data, 'gpw_bypass_reason' => 'Ploeg was al ter plaatse'], $planner);
+        $this->assertSame($other->id, $item->refresh()->project_id);
+        $this->assertSame('Ploeg was al ter plaatse', $other->gpwBypasses()->sole()->reason);
     }
 }

@@ -15,6 +15,7 @@ use App\Filament\Resources\Projects\RelationManagers\ChargingStationsRelationMan
 use App\Filament\Resources\Projects\RelationManagers\DeliveryFollowUpsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ExtraFilesRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\GpwBypassesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\GpwRequestsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\InvoicesRelationManager;
@@ -98,6 +99,7 @@ class ProjectResource extends Resource
     {
         return [
             GpwRequestsRelationManager::class,
+            GpwBypassesRelationManager::class,
             PartsRelationManager::class,
             ChargingStationsRelationManager::class,
             BatteryDeliveriesRelationManager::class,

@@ -5,6 +5,7 @@ namespace App\Actions\Planning;
 use App\Enums\PlanningKind;
 use App\Models\GpwRequest;
 use App\Models\PlanningItem;
+use App\Models\Project;
 use App\Models\User;
 use App\Support\Planning;
 use Carbon\CarbonImmutable;
@@ -17,6 +18,8 @@ use Illuminate\Validation\ValidationException;
  * no items on blocked days (vacation, absences) and no overlapping timeslots for one person.
  * Items start as drafts unless the actor may confirm ("planning.confirm") and plans directly.
  * Drafts are never notified; a confirmed item and every change to it is (see NotifyPlanningChange).
+ * "No GPW = no planning": each planning of a project (not an intervention) without an approved GPW request
+ * needs a reason ("gpw_bypass_reason"; not needed with "planning.bypass_gpw") and is logged on the project.
  */
 class SavePlanningItems
 {
@@ -27,6 +30,16 @@ class SavePlanningItems
 
     /** Whether the last call could send all its e-mails. */
     public bool $mailFailed = false;
+
+    /** Shortest reason accepted for planning without an approved GPW request. */
+    public const MIN_BYPASS_REASON = 10;
+
+    /**
+     * The project this call plans without an approved GPW request (logged once the items are saved).
+     *
+     * @var array{project: Project, reason: string|null}|null
+     */
+    protected ?array $gpwBypass = null;
 
     public function __construct(protected Planning $planning, protected NotifyPlanningChange $notifier) {}
 
@@ -73,6 +86,10 @@ class SavePlanningItems
                         'updated_by' => $actor->id,
                     ]);
                 }
+            }
+
+            if ($created !== []) {
+                $this->logGpwBypass($actor, $created);
             }
         });
 
@@ -121,7 +138,10 @@ class SavePlanningItems
             return $item;
         }
 
-        $item->save();
+        DB::transaction(function () use ($item, $actor): void {
+            $item->save();
+            $this->logGpwBypass($actor, [$item]);
+        });
         $item->load('project', 'user');
         $mail = (bool) ($data['notify_mail'] ?? false);
         $this->mailFailed = false;
@@ -211,6 +231,7 @@ class SavePlanningItems
      */
     protected function attributes(array $data, User $actor, ?PlanningItem $item = null, ?GpwRequest $gpw = null): array
     {
+        $this->gpwBypass = null;
         $kind = PlanningKind::tryFrom((string) ($data['kind'] ?? '')) ?? throw ValidationException::withMessages(['kind' => __('validation.required', ['attribute' => __('erp.planning.kind')])]);
         $viaGpw = $gpw !== null && $kind === PlanningKind::Project && $gpw->project_id === (int) ($data['project_id'] ?? 0) && $gpw->canBePlannedBy($actor);
 
@@ -234,6 +255,10 @@ class SavePlanningItems
 
             if (! $unchanged && ! $viaGpw && ! $this->planning->plannableProjects($actor)->whereKey($projectId)->exists()) {
                 throw ValidationException::withMessages(['project_id' => __('erp.planning.errors.project_not_open')]);
+            }
+
+            if (! $unchanged) {
+                $this->checkGpw(Project::query()->with('category')->findOrFail($projectId), $data, $actor);
             }
         }
 
@@ -262,6 +287,48 @@ class SavePlanningItems
             'start_time' => $start,
             'end_time' => $end,
         ];
+    }
+
+    /**
+     * "No GPW = no planning": throws unless the project has an approved GPW request, is an
+     * intervention or was in the planning before; otherwise remembers the bypass to log.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function checkGpw(Project $project, array $data, User $actor): void
+    {
+        $this->gpwBypass = null;
+
+        if (! $project->needsGpwForPlanning()) {
+            return;
+        }
+
+        $reason = trim((string) ($data['gpw_bypass_reason'] ?? ''));
+
+        if (mb_strlen($reason) < self::MIN_BYPASS_REASON && ! $this->planning->canBypassGpw($actor)) {
+            throw ValidationException::withMessages(['gpw_bypass_reason' => __('erp.planning.errors.gpw_required', ['min' => self::MIN_BYPASS_REASON])]);
+        }
+
+        $this->gpwBypass = ['project' => $project, 'reason' => $reason !== '' ? $reason : null];
+    }
+
+    /**
+     * @param  list<PlanningItem>  $items  what was planned, kept in the log as "12/10/2026 – 14/10/2026 · Jan, Piet (6)"
+     */
+    protected function logGpwBypass(User $actor, array $items): void
+    {
+        if ($this->gpwBypass === null) {
+            return;
+        }
+
+        $items = collect($items);
+        $dates = $items->map(fn (PlanningItem $item): string => CarbonImmutable::parse($item->date)->toDateString())->sort()->values();
+        $names = User::query()->whereKey($items->pluck('user_id')->unique())->orderBy('name')->pluck('name');
+        $planned = GpwRequest::formatPeriod(CarbonImmutable::parse($dates->first()), CarbonImmutable::parse($dates->last()))
+            .' · '.$names->implode(', ').' ('.$items->count().')';
+
+        $this->gpwBypass['project']->bypassGpw($actor, $this->gpwBypass['reason'], $planned);
+        $this->gpwBypass = null;
     }
 
     /**

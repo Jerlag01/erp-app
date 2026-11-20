@@ -77,6 +77,14 @@ class Planning
     }
 
     /**
+     * Plans a project without an approved GPW request and without giving a reason (still logged).
+     */
+    public function canBypassGpw(User $user): bool
+    {
+        return $user->is_active && ($user->isAdmin() || $user->hasPermission('planning.bypass_gpw'));
+    }
+
+    /**
      * Confirms drafts and plans directly in the real planning (overruling the draft step).
      */
     public function canConfirm(User $user): bool

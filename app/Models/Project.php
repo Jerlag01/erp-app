@@ -6,6 +6,7 @@ use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Batteries\CreateBatteryRoomDossier;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CreateFollowUpProject;
+use App\Enums\GpwStatus;
 use App\Enums\InterventionReportStatus;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
@@ -391,6 +392,40 @@ class Project extends Model
     }
 
     /**
+     * Every planning of this project without an approved GPW request, newest first.
+     *
+     * @return HasMany<ProjectGpwBypass, $this>
+     */
+    public function gpwBypasses(): HasMany
+    {
+        return $this->hasMany(ProjectGpwBypass::class)->latest('id');
+    }
+
+    /** GPW statuses that allow planning: approved by the client, and everything after. */
+    public const GPW_PLANNABLE = [GpwStatus::Approved, GpwStatus::Planned, GpwStatus::InProgress, GpwStatus::Executed];
+
+    /**
+     * "No GPW = no planning": true while this project has no approved GPW request, so every planning
+     * needs a reason and is logged. Interventions and projects already in the planning before the rule
+     * (planning_unlocked_at) never do.
+     */
+    public function needsGpwForPlanning(): bool
+    {
+        return ! $this->isIntervention()
+            && $this->planning_unlocked_at === null
+            && ! $this->gpwRequests()->whereIn('status', self::GPW_PLANNABLE)->exists();
+    }
+
+    /**
+     * Logs one planning of this project without an approved GPW request. It unlocks nothing: the next
+     * planning needs a reason again.
+     */
+    public function bypassGpw(?User $user, ?string $reason, ?string $planned = null): ProjectGpwBypass
+    {
+        return $this->gpwBypasses()->create(['user_id' => $user?->id, 'reason' => filled($reason) ? trim($reason) : null, 'planned' => $planned]);
+    }
+
+    /**
      * @return HasMany<PlanningItem, $this>
      */
     public function planningItems(): HasMany
@@ -621,6 +656,7 @@ class Project extends Model
     protected function casts(): array
     {
         return [
+            'planning_unlocked_at' => 'datetime',
             'number' => 'integer',
             'status' => ProjectStatus::class,
             'location_type' => SiteLocationType::class,

@@ -28,6 +28,8 @@ namespace App\Support;
  * project or warehouse job. Project leaders plan their own open projects without any of these.
  * Everything planned starts as a draft (not sent to the employee); "planning.confirm" confirms drafts
  * and is the only right that plans directly in, changes or removes the confirmed planning.
+ * "No GPW = no planning": a project (not an intervention) needs an approved GPW request first; anyone who
+ * plans may bypass that with a reason (logged on the project), "planning.bypass_gpw" without one.
  * "batteries" covers the battery dossiers of the 604 projects the user can see; "batteries.prices" shows
  * and edits prices and the invoice request; "batteries.input" sees and fills in the Input tab (the others get
  * a short overview of the project instead); "batteries.edit_finished" changes (and reopens) dossiers the
@@ -113,7 +115,7 @@ class Permissions
         'finance_master_data' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'update', 'delete']],
         'banking' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'match', 'import', 'manage']],
         'accounting_export' => ['module' => Modules::FINANCE, 'abilities' => ['view', 'create', 'send']],
-        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'confirm', 'other', 'trainings']],
+        'planning' => ['module' => Modules::PLANNING, 'abilities' => ['view_all', 'plan', 'confirm', 'bypass_gpw', 'other', 'trainings']],
         'timesheets' => ['module' => Modules::TIMESHEETS, 'abilities' => ['see_all', 'edit_all', 'send', 'generate_pdf', 'verify_interim']],
         'charging' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],
         'routers' => ['module' => Modules::CHARGING, 'abilities' => ['view', 'create', 'update', 'delete', 'secrets', 'generate_pdf']],

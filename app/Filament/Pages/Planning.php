@@ -579,6 +579,10 @@ class Planning extends Page
 
         $slots = $this->rules()->slots();
         $isKind = fn (PlanningKind ...$options): \Closure => fn (Get $get): bool => in_array(PlanningKind::tryFrom((string) $get('kind')), $options, true);
+        $needsGpw = fn (Get $get): bool => $get('kind') === PlanningKind::Project->value
+            && (int) $get('project_id') > 0
+            && (int) $get('project_id') !== $item?->project_id
+            && (bool) Project::query()->with('category')->find((int) $get('project_id'))?->needsGpwForPlanning();
 
         return [
             $item === null
@@ -636,6 +640,18 @@ class Planning extends Page
                 ->live()
                 // A battery move goes to its destination unless the origin is chosen; an intervention on several COW codes to the first still to close.
                 ->afterStateUpdated(fn (mixed $state, Set $set) => $set('work_site_id', PlanningItem::defaultSiteId((int) $state))),
+            // "No GPW = no planning": a project without an approved GPW request needs a reason (logged on the project).
+            Text::make(fn (): string => $this->rules()->canBypassGpw($viewer) ? __('erp.planning.gpw_missing_bypass') : __('erp.planning.gpw_missing'))
+                ->color('danger')
+                ->visible($needsGpw),
+            Textarea::make('gpw_bypass_reason')
+                ->label(__('erp.planning.gpw_bypass_reason'))
+                ->helperText(__('erp.planning.gpw_bypass_reason_help', ['min' => SavePlanningItems::MIN_BYPASS_REASON]))
+                ->rows(2)
+                ->maxLength(2000)
+                ->minLength(fn (): ?int => $this->rules()->canBypassGpw($viewer) ? null : SavePlanningItems::MIN_BYPASS_REASON)
+                ->required(fn (Get $get): bool => $needsGpw($get) && ! $this->rules()->canBypassGpw($viewer))
+                ->visible($needsGpw),
             Select::make('work_site_id')
                 ->label(__('erp.planning.move_site'))
                 ->helperText(__('erp.planning.move_site_help'))
@@ -714,10 +730,12 @@ class Planning extends Page
         return $this->rules()->plannableProjects($this->user())
             ->when($item?->project_id, fn (Builder $query, int $id) => $query->orWhere('projects.id', $id))
             ->with('category')
+            ->withExists(['gpwRequests as has_plannable_gpw' => fn (Builder $query) => $query->whereIn('status', Project::GPW_PLANNABLE)])
             ->orderByDesc('id')
             ->limit(500)
             ->get()
-            ->mapWithKeys(fn (Project $project): array => [$project->id => trim($project->reference.' '.($project->subtitle() ? '— '.$project->subtitle() : ''))])
+            ->mapWithKeys(fn (Project $project): array => [$project->id => trim($project->reference.' '.($project->subtitle() ? '— '.$project->subtitle() : ''))
+                .(! $project->has_plannable_gpw && ! $project->isIntervention() && $project->planning_unlocked_at === null ? ' · '.__('erp.planning.no_gpw') : '')])
             ->all();
     }
 
