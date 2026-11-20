@@ -3381,6 +3381,7 @@ return [
         ],
         'page' => [
             'deciding_as' => 'Vous décidez au nom de :name.',
+            'blocks_execution' => 'Tant que vous ne l\'approuvez pas, le projet ne peut pas être exécuté chez nous.',
             'internal_only' => 'Attention : votre décision n\'est pas transmise automatiquement à votre propre système. Elle sert uniquement en interne, pour le suivi de nos projets.',
             'reject_reason' => 'Pourquoi refusez-vous la demande ? (obligatoire)',
             'link_used' => 'Ce lien ne fonctionne plus',

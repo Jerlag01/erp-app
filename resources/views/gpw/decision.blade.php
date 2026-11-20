@@ -36,6 +36,7 @@
         .error { color: var(--no); font-size: .9rem; }
         .muted { color: var(--muted); font-size: .9rem; }
         .sites { margin: 0; padding-left: 1.1rem; }
+        .warning { margin: 0 0 1.25rem; padding: .85rem 1rem; border: 1px solid var(--no); border-left-width: 4px; border-radius: .5rem; background: color-mix(in srgb, var(--no) 10%, transparent); color: var(--no); font-weight: 700; }
         .internal { margin: 1rem 0 0; padding: .75rem 1rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: .5rem; }
     </style>
 </head>
@@ -84,6 +85,7 @@
             {{-- Opening a link never decides anything: the request is approved or refused only with these buttons. --}}
             <form method="post" @if ($action) action="{{ $action }}" @endif>
                 @csrf
+                <p class="warning" role="alert">{{ __('erp.gpw.page.blocks_execution') }}</p>
                 @if (filled($decider ?? null))
                     <p>{{ __('erp.gpw.page.deciding_as', ['name' => $decider]) }}</p>
                 @endif

@@ -120,6 +120,7 @@ class ClientGpwRequestResource extends ClientResource
                     ->color('success')
                     ->visible(fn (GpwRequest $record): bool => $record->isPending())
                     ->modalHeading(fn (GpwRequest $record): string => __('erp.gpw.approve_heading', ['project' => $record->project?->reference, 'period' => $record->period()]))
+                    ->modalDescription(__('erp.gpw.page.blocks_execution'))
                     ->schema([Textarea::make('note')->label(__('erp.gpw.page.note'))->rows(3)->maxLength(2000)])
                     ->action(fn (GpwRequest $record, array $data, DecideGpw $decide) => $decide->approve($record, ClientPortal::user()->name, ClientPortal::user(), $data['note'] ?? null))
                     ->successNotificationTitle(__('erp.gpw.approved')),

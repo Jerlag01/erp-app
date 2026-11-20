@@ -527,11 +527,12 @@ class GpwRequestTest extends TestCase
         $page = $this->get($links['marc@proximus.example']['approve'])->assertOk()
             ->assertSee('name="decision" value="approve"', escape: false)->assertSee('name="decision" value="reject"', escape: false)
             ->assertDontSee('.submit()', escape: false)->assertSee('Marc Peeters')
-            ->assertSee('<strong>'.e(__('erp.gpw.page.internal_only', [], 'nl')).'</strong>', escape: false);
+            ->assertSee('<strong>'.e(__('erp.gpw.page.internal_only', [], 'nl')).'</strong>', escape: false)
+            ->assertSee('<p class="warning" role="alert">Zo lang dat u deze niet goedkeurt, kan het project bij ons niet in uitvoering gaan.</p>', escape: false);
         $this->get($links['marc@proximus.example']['reject'])->assertOk()->assertSee('name="decision" value="approve"', escape: false);
         $token = substr(parse_url($links['marc@proximus.example']['approve'], PHP_URL_PATH), strlen('/gpw/key/'), 48);
         $this->assertSame(GpwStatus::Pending, $gpw->fresh()->status, 'Opening the links alone decides nothing.');
-        $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk()->assertSee(GpwStatus::Approved->getLabel());
+        $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk()->assertSee(GpwStatus::Approved->getLabel())->assertDontSee(__('erp.gpw.page.blocks_execution', [], 'nl'));
 
         $gpw->refresh();
         $this->assertSame([GpwStatus::Approved, 'Marc Peeters'], [$gpw->status, $gpw->decided_by_name]);
