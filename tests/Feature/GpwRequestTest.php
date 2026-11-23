@@ -829,4 +829,51 @@ class GpwRequestTest extends TestCase
         $this->expectException(ValidationException::class);
         $this->gpw($project, $this->requester($project));
     }
+
+    #[Test]
+    public function several_projects_are_asked_in_one_mail_each_with_its_own_period_and_decided_together(): void
+    {
+        $project = $this->project();
+        $requester = $this->requester($project);
+        $second = Project::factory()->inCategory('610')->for(WorkSite::factory()->create(['cow_code' => '03ABC']))->create(['status' => ProjectStatus::ToBeExecuted]);
+        $second->teams()->attach($requester->teams()->first());
+        $forbidden = Project::factory()->inCategory('610')->for(WorkSite::factory()->create(['cow_code' => '04XYZ']))->create(['status' => ProjectStatus::ToBeExecuted]);
+        $later = today()->addWeeks(3);
+
+        // Only projects the requester may ask a GPW for, each once.
+        foreach ([$forbidden->id, $project->id] as $id) {
+            try {
+                $this->gpw($project, $requester, ['extra_projects' => [['project_id' => $id, 'starts_on' => $later->toDateString(), 'ends_on' => $later->toDateString()]]]);
+                $this->fail('This project can not be added.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('extra_projects.0.project_id', $exception->errors());
+            }
+        }
+
+        $this->assertSame(0, GpwRequest::query()->count());
+        $this->assertArrayHasKey($second->id, RequestGpw::extraProjectOptions($project, $requester));
+        $this->assertArrayNotHasKey($forbidden->id, RequestGpw::extraProjectOptions($project, $requester));
+
+        $gpw = $this->gpw($project, $requester, ['extra_projects' => [['project_id' => $second->id, 'starts_on' => $later->toDateString(), 'ends_on' => $later->copy()->addDay()->toDateString()]]]);
+
+        // Two requests, each with its own period, in one batch and ONE mail.
+        $extra = GpwRequest::query()->where('project_id', $second->id)->sole();
+        $this->assertNotNull($gpw->batch_id);
+        $this->assertSame($gpw->batch_id, $extra->batch_id);
+        $this->assertSame([$later->toDateString(), $later->copy()->addDay()->toDateString()], [$extra->starts_on->toDateString(), $extra->ends_on->toDateString()]);
+        Mail::assertSent(SystemMail::class, 1);
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => str_contains($mail->rendered['html'], $project->reference) && str_contains($mail->rendered['html'], $second->reference)
+            && str_contains($mail->rendered['html'], $extra->period()) && str_contains($mail->rendered['html'], '03ABC'));
+        $this->assertNotNull($extra->mailed_at);
+
+        // The page shows both; one approval from the mail covers both.
+        $link = $this->directLinks()['sophie@proximus.example']['approve'];
+        $this->get($link)->assertOk()->assertSee($project->reference)->assertSee($second->reference)->assertSee($extra->period());
+        $token = substr(parse_url($link, PHP_URL_PATH), strlen('/gpw/key/'), 48);
+        $this->post(route('gpw.key.decide', $token), ['decision' => 'approve'])->assertOk();
+
+        $this->assertSame([GpwStatus::Approved, GpwStatus::Approved], [$gpw->fresh()->status, $extra->fresh()->status]);
+        $this->assertSame('Sophie Dubois', $extra->fresh()->decided_by_name);
+        $this->get($link)->assertRedirect(ClientPortal::loginUrl());
+    }
 }

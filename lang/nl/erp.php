@@ -3324,6 +3324,18 @@ return [
         'download_menu' => 'Mobiele app downloaden',
     ],
     'gpw' => [
+        'batch' => [
+            'extra_projects' => 'Andere projecten in dezelfde aanvraag',
+            'extra_projects_help' => 'Vraag in één mail ook een GPW aan voor andere projecten, elk met een eigen periode. Zo krijgt de klant één mail in plaats van één per project.',
+            'add_project' => 'Project toevoegen',
+            'page_title' => 'GPW-aanvraag voor :count projecten',
+            'page_help' => 'Elk project heeft zijn eigen periode.',
+            'decides_all' => 'Uw beslissing geldt voor de :count projecten die nog op een beslissing wachten. Per project beslissen kan in de Global overview for Client.',
+            'sent_body' => 'Samen verstuurd voor: :projects',
+            'errors' => [
+                'project' => 'Kies een ander project waarvoor u een GPW mag aanvragen, elk project één keer.',
+            ],
+        ],
         'bypass_log' => 'GPW-bypass',
         'bypass_by' => 'Gepland door',
         'bypass_planned' => 'Gepland',

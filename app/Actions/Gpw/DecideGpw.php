@@ -36,6 +36,26 @@ class DecideGpw
         return $this->decide($request, GpwStatus::Rejected, $decidedBy, $clientUser, $note);
     }
 
+    /**
+     * From the mail: the decision covers every project of that mail still waiting (several projects asked
+     * together); returns how many were decided.
+     */
+    public function decideMail(GpwRequest $request, bool $approve, string $decidedBy, ?string $note = null): int
+    {
+        $decided = 0;
+
+        foreach ($request->pendingBatch() as $item) {
+            try {
+                $approve ? $this->approve($item, $decidedBy, note: $note) : $this->reject($item, $decidedBy, note: $note);
+                $decided++;
+            } catch (ValidationException) {
+                // Decided in the meantime (e.g. in the client portal).
+            }
+        }
+
+        return $decided;
+    }
+
     protected function decide(GpwRequest $request, GpwStatus $status, string $decidedBy, ?ClientUser $clientUser, ?string $note): GpwRequest
     {
         DB::transaction(function () use ($request, $status, $decidedBy, $clientUser, $note): void {

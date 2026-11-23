@@ -260,7 +260,8 @@ class InterventionController extends Controller
         return [
             ...collect($keys)->mapWithKeys(fn (string $key): array => [$key => __("erp.interventions.{$key}")])->all(),
             'what' => __('erp.interventions.sections.what'),
-            'cells' => __('erp.interventions.cells'),
+            // The battery cell replacement texts, flat: cells_title, cells_replaced_count, …
+            ...collect((array) __('erp.interventions.cells'))->except('errors')->mapWithKeys(fn (mixed $text, string $key): array => ['cells_'.$key => (string) $text])->all(),
             'boards_remarks' => __('erp.interventions.sections.boards_remarks'),
             'device_F' => __('erp.interventions.devices.F'),
             'device_Q' => __('erp.interventions.devices.Q'),

@@ -5,6 +5,10 @@
 --}}
 @php
     $project = $gpw->project;
+    // Several projects asked in one mail: all of them on this page, one decision for those still waiting.
+    $batch = $gpw->batch();
+    $several = $batch->count() > 1;
+    $pending = $batch->contains(fn ($item) => $item->isPending());
     $mode ??= null;
     $action ??= null;
 @endphp
@@ -14,7 +18,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>{{ __('erp.gpw.page.title', ['project' => $project?->reference]) }}</title>
+    <title>{{ $several ? __('erp.gpw.batch.page_title', ['count' => $batch->count()]) : __('erp.gpw.page.title', ['project' => $project?->reference]) }}</title>
     <style>
         :root { --text: #0f172a; --muted: #64748b; --line: #e2e8f0; --accent: #002b45; --bg: #f8fafc; --card: #ffffff; --ok: #15803d; --no: #b91c1c; }
         @media (prefers-color-scheme: dark) { :root { --text: #e2e8f0; --muted: #94a3b8; --line: #334155; --accent: #93c5fd; --bg: #0f172a; --card: #111827; --ok: #4ade80; --no: #f87171; } }
@@ -36,6 +40,8 @@
         .error { color: var(--no); font-size: .9rem; }
         .muted { color: var(--muted); font-size: .9rem; }
         .sites { margin: 0; padding-left: 1.1rem; }
+        .projects { margin: 0 0 1.25rem; padding-left: 1.1rem; } .projects li { margin-bottom: .6rem; }
+        .status-inline { font-weight: 600; } .status-inline.approved, .status-inline.planned, .status-inline.in_progress, .status-inline.executed { color: var(--ok); } .status-inline.rejected { color: var(--no); }
         .warning { margin: 0 0 1.25rem; padding: .85rem 1rem; border: 1px solid var(--no); border-left-width: 4px; border-radius: .5rem; background: color-mix(in srgb, var(--no) 10%, transparent); color: var(--no); font-weight: 700; }
         .internal { margin: 1rem 0 0; padding: .75rem 1rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: .5rem; }
     </style>
@@ -51,8 +57,26 @@
     </header>
 
     <article>
-        <h1>{{ __('erp.gpw.page.title', ['project' => $project?->reference]) }}</h1>
+        <h1>{{ $several ? __('erp.gpw.batch.page_title', ['count' => $batch->count()]) : __('erp.gpw.page.title', ['project' => $project?->reference]) }}</h1>
+        @if ($several)
+            {{-- Each project with its COW code(s), address and own period; decided ones show their outcome. --}}
+            <p class="muted">{{ __('erp.gpw.batch.page_help') }}</p>
+            <ul class="projects">
+                @foreach ($batch as $item)
+                    <li>
+                        <strong>{{ $item->project?->reference }}</strong> · {{ $item->cowCodes() ?? '—' }}
+                        <br><span class="period">{{ $item->period() }}</span>
+                        @if ($address = $item->project?->addressLine() ?? $item->project?->workSite?->addressLine())<br><span class="muted">{{ $address }}</span>@endif
+                        @if (filled($item->project?->short_description))<br><span class="muted">{{ $item->project->short_description }}</span>@endif
+                        @unless ($item->isPending())<br><span class="status-inline {{ $item->status->value }}">{{ $item->status->getLabel() }}@if ($item->decided_by_name) · {{ $item->decided_by_name }}@endif</span>@endunless
+                    </li>
+                @endforeach
+            </ul>
+        @endif
         <dl>
+            @if ($several)
+                {{-- The projects are listed above. --}}
+            @else
             <dt>{{ __('erp.gpw.page.period') }}</dt><dd class="period">{{ $gpw->sites->count() > 1 ? $gpw->overallPeriod() : $gpw->period() }}</dd>
             @if ($gpw->sites->count() > 1)
                 {{-- One request for several COW codes, each with its own period; one decision covers them all. --}}
@@ -71,6 +95,7 @@
             @if (filled($project?->short_description))
                 <dt>{{ __('erp.client_portal.description') }}</dt><dd>{{ $project->short_description }}</dd>
             @endif
+            @endif
             @if (filled($gpw->remarks))
                 <dt>{{ __('erp.gpw.remarks') }}</dt><dd style="white-space: pre-line">{{ $gpw->remarks }}</dd>
             @endif
@@ -81,11 +106,14 @@
             <dt>{{ __('erp.gpw.contact_person') }}</dt><dd>{{ $contactPerson?->name ?? settings()->siteName() }}@if ($contactPerson)<br><span class="muted">{{ collect([$contactPerson->email, $contactPerson->phone])->filter()->implode(' · ') }}</span>@endif</dd>
         </dl>
 
-        @if ($gpw->isPending())
+        @if ($pending)
             {{-- Opening a link never decides anything: the request is approved or refused only with these buttons. --}}
             <form method="post" @if ($action) action="{{ $action }}" @endif>
                 @csrf
                 <p class="warning" role="alert">{{ __('erp.gpw.page.blocks_execution') }}</p>
+                @if ($several)
+                    <p><strong>{{ __('erp.gpw.batch.decides_all', ['count' => $batch->filter(fn ($item) => $item->isPending())->count()]) }}</strong></p>
+                @endif
                 @if (filled($decider ?? null))
                     <p>{{ __('erp.gpw.page.deciding_as', ['name' => $decider]) }}</p>
                 @endif
@@ -100,7 +128,7 @@
                 </div>
                 <p class="muted">{{ __('erp.gpw.page.reject_help') }}</p>
             </form>
-        @else
+        @elseif (! $several)
             <p class="status {{ $gpw->status->value }}">
                 {{ $gpw->status->getLabel() }}@if ($gpw->decided_at) · {{ $gpw->decided_at->format('d/m/Y H:i') }}@endif
                 @if ($gpw->decided_by_name) · {{ $gpw->decided_by_name }}@endif

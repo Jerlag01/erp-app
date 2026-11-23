@@ -9,7 +9,6 @@ use Filament\Notifications\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -44,16 +43,11 @@ class GpwKeyController
             'note' => ['nullable', 'string', 'max:2000', 'required_if:decision,reject'],
         ]);
 
-        try {
-            $data['decision'] === 'approve'
-                ? $decide->approve($key->gpwRequest, $key->name, note: $data['note'] ?? null)
-                : $decide->reject($key->gpwRequest, $key->name, note: $data['note'] ?? null);
-        } catch (ValidationException) {
-            // Decided in the meantime by someone else: the page shows the outcome.
-        }
+        // Every project of the mail still waiting (decided in the meantime: the page shows the outcome).
+        $decide->decideMail($key->gpwRequest, $data['decision'] === 'approve', $key->name, $data['note'] ?? null);
 
-        // Decided: every key of this request is done.
-        GpwRequestKey::query()->where('gpw_request_id', $key->gpw_request_id)->whereNull('used_at')->update(['used_at' => now()]);
+        // Decided: every key of this mail is done.
+        GpwRequestKey::query()->whereIn('gpw_request_id', $key->gpwRequest->batch()->pluck('id')->all())->whereNull('used_at')->update(['used_at' => now()]);
 
         return view('gpw.decision', ['gpw' => $key->gpwRequest->fresh(['project.workSite', 'requester']), 'mode' => null]);
     }

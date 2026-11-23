@@ -30,10 +30,11 @@ class GpwRequestKey extends Model
      *
      * @return array{0: string, 1: self}
      */
-    public static function issue(GpwRequest $request, string $email, string $name, string $locale, ?int $contactId): array
+    public static function issue(GpwRequest $request, string $email, string $name, string $locale, ?int $contactId, ?string $until = null): array
     {
         $token = Str::random(48);
-        $expires = CarbonImmutable::parse($request->ends_on)->endOfDay();
+        // Several projects in one mail: until the end of the last period.
+        $expires = CarbonImmutable::parse($until ?? $request->ends_on)->endOfDay();
 
         $key = self::query()->create([
             'gpw_request_id' => $request->id,
@@ -60,7 +61,8 @@ class GpwRequestKey extends Model
     {
         $key = strlen($token) === 48 ? self::query()->with('gpwRequest.project.workSite', 'gpwRequest.requester')->where('token_hash', self::hash($token))->first() : null;
 
-        return $key !== null && $key->used_at === null && $key->revoked_at === null && $key->expires_at->isFuture() && $key->gpwRequest?->isPending() ? $key : null;
+        // Several projects in one mail: usable while one of them is still waiting.
+        return $key !== null && $key->used_at === null && $key->revoked_at === null && $key->expires_at->isFuture() && $key->gpwRequest !== null && $key->gpwRequest->pendingBatch()->isNotEmpty() ? $key : null;
     }
 
     /**

@@ -41,6 +41,7 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -395,6 +396,26 @@ class ViewProject extends ViewRecord
                         ->required(),
                     // Several COW codes (intervention, battery move): all in one request, in one period or each in its own.
                     ...GpwSites::schema($record),
+                    // Other projects in the same mail (each with its own period), so the client gets one mail instead of one per project.
+                    Repeater::make('extra_projects')
+                        ->label(__('erp.gpw.batch.extra_projects'))
+                        ->helperText(__('erp.gpw.batch.extra_projects_help'))
+                        ->defaultItems(0)
+                        ->addActionLabel(__('erp.gpw.batch.add_project'))
+                        ->columns(['default' => 1, 'md' => 5])
+                        ->schema([
+                            Select::make('project_id')
+                                ->label(ucfirst(__('erp.resources.project.singular')))
+                                ->searchable()
+                                ->options(fn (): array => RequestGpw::extraProjectOptions($record, auth()->user()))
+                                ->getSearchResultsUsing(fn (string $search): array => RequestGpw::extraProjectOptions($record, auth()->user(), $search))
+                                ->getOptionLabelUsing(fn (mixed $value): ?string => Project::query()->find($value)?->reference)
+                                ->required()
+                                ->distinct()
+                                ->columnSpan(['md' => 3]),
+                            DatePicker::make('starts_on')->label(__('erp.gpw.starts_on'))->native(false)->displayFormat('d/m/Y')->minDate(today())->required(),
+                            DatePicker::make('ends_on')->label(__('erp.gpw.ends_on'))->native(false)->displayFormat('d/m/Y')->afterOrEqual('starts_on')->required(),
+                        ]),
                     Textarea::make('remarks')->label(__('erp.gpw.remarks'))->helperText(__('erp.gpw.remarks_help'))->rows(4)->maxLength(2000),
                 ])
                 ->action(function (Project $record, array $data, RequestGpw $requests): void {
@@ -402,7 +423,9 @@ class ViewProject extends ViewRecord
 
                     $requests->mailFailed
                         ? Notification::make()->title(__('erp.gpw.mail_failed'))->body(__('erp.gpw.mail_failed_body'))->warning()->persistent()->send()
-                        : Notification::make()->title(__('erp.gpw.sent', ['email' => $gpw->contact_email]))->success()->send();
+                        : Notification::make()->title(__('erp.gpw.sent', ['email' => $gpw->contact_email]))
+                            ->body($gpw->isBatched() ? __('erp.gpw.batch.sent_body', ['projects' => $gpw->batch()->map(fn ($item): string => $item->project->reference)->implode(', ')]) : null)
+                            ->success()->send();
                 }),
             GpwRequestResource::manualAction(fn (): Project => $this->getRecord()),
             Action::make('changeStatus')

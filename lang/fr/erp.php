@@ -3324,6 +3324,18 @@ return [
         'download_menu' => 'Télécharger l\'application mobile',
     ],
     'gpw' => [
+        'batch' => [
+            'extra_projects' => 'Autres projets dans la même demande',
+            'extra_projects_help' => 'Demandez aussi un GPW pour d\'autres projets dans un seul e-mail, chacun avec sa propre période. Le client reçoit ainsi un seul e-mail au lieu d\'un par projet.',
+            'add_project' => 'Ajouter un projet',
+            'page_title' => 'Demande de GPW pour :count projets',
+            'page_help' => 'Chaque projet a sa propre période.',
+            'decides_all' => 'Votre décision vaut pour les :count projets encore en attente. Décider par projet est possible dans le Global overview for Client.',
+            'sent_body' => 'Envoyé ensemble pour : :projects',
+            'errors' => [
+                'project' => 'Choisissez un autre projet pour lequel vous pouvez demander un GPW, chaque projet une fois.',
+            ],
+        ],
         'bypass_log' => 'Contournement GPW',
         'bypass_by' => 'Planifié par',
         'bypass_planned' => 'Planifié',

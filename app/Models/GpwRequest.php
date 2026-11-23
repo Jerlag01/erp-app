@@ -17,10 +17,12 @@ use Illuminate\Support\Collection;
  * remarks. The client approves or refuses it (mail link or client portal); once approved, the
  * requester plans a team in that period. A request can cover several COW codes of the project (an
  * intervention's COW codes, a battery move's origin and destination), each with its own period
- * (GpwRequestSite); starts_on/ends_on then span all of them, and one approval covers them all.
+ * (GpwRequestSite); starts_on/ends_on then span all of them, and one approval covers them all. Several
+ * projects can be asked in one go (so the client gets one mail): each keeps its own request and period,
+ * they share a batch_id, are mailed once and decided together from that mail (separately in the portal).
  */
 #[Fillable([
-    'project_id', 'requested_by', 'contact_user_id', 'work_site_contact_id', 'contact_ids', 'employee_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
+    'project_id', 'batch_id', 'requested_by', 'contact_user_id', 'work_site_contact_id', 'contact_ids', 'employee_ids', 'contact_name', 'contact_email', 'locale', 'starts_on', 'ends_on', 'remarks',
     'status', 'source', 'mailed_at', 'decided_at', 'decided_by_client_user_id', 'decided_by_name', 'decision_note', 'team_id', 'planned_at', 'planned_by',
     'status_locked_at', 'status_locked_by',
 ])]
@@ -123,6 +125,36 @@ class GpwRequest extends Model
     public function sites(): HasMany
     {
         return $this->hasMany(GpwRequestSite::class)->orderBy('starts_on')->orderBy('id');
+    }
+
+    /**
+     * The requests asked in the same mail (this one included), the first asked first; just this one
+     * when it was asked alone.
+     *
+     * @return Collection<int, GpwRequest>
+     */
+    public function batch(): Collection
+    {
+        if ($this->batch_id === null) {
+            return collect([$this]);
+        }
+
+        return self::query()->where('batch_id', $this->batch_id)->with(['project.workSite', 'sites.workSite'])->orderBy('id')->get()->toBase();
+    }
+
+    /**
+     * The requests of the mail still waiting for the client.
+     *
+     * @return Collection<int, GpwRequest>
+     */
+    public function pendingBatch(): Collection
+    {
+        return $this->batch()->filter(fn (GpwRequest $request): bool => $request->isPending())->values();
+    }
+
+    public function isBatched(): bool
+    {
+        return $this->batch_id !== null;
     }
 
     public const SOURCE_MAIL = 'mail';

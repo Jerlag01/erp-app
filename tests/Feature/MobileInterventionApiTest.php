@@ -125,4 +125,36 @@ class MobileInterventionApiTest extends TestCase
         $this->assertSame(['02GAM', '02NO1'], InterventionReport::query()->orderBy('id')->pluck('cow_code')->all());
         $this->assertSame(ProjectStatus::Executed, $project->fresh()->status);
     }
+
+    #[Test]
+    public function a_battery_cell_replacement_is_closed_in_the_app_with_its_measurements(): void
+    {
+        $team = Team::factory()->create();
+        $employee = User::factory()->withPermissions(['projects' => ['view']])->inTeam($team)->create();
+        $auth = $this->mobileAuth($employee);
+        $project = $this->intervention($team);
+        $cells = InterventionCategory::factory()->create(['kind' => 'category', 'name' => 'CELVERVANGING', 'measures_cells' => true]);
+        $base = ['categories' => [$cells->id], 'work_site_id' => $project->work_site_id, 'room' => 'Batterijlokaal', 'hours_worked' => 4];
+
+        // The app is told which category asks the measurement, with flat texts and an empty full battery.
+        $response = $this->getJson("/api/v1/interventions/{$project->id}", $auth)->assertOk()
+            ->assertJsonPath('data.labels.cells_title', __('erp.interventions.cells.title'))
+            ->assertJsonCount(24, 'data.values.full_cells');
+        $this->assertTrue(collect($response->json('data.options.categories'))->firstWhere('value', $cells->id)['measures_cells']);
+
+        $this->postJson("/api/v1/interventions/{$project->id}/close", $base, $auth)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['replaced_count']);
+
+        $this->postJson("/api/v1/interventions/{$project->id}/close", [
+            ...$base,
+            'replaced_count' => 1,
+            'replaced_cells' => [['cell' => '5', 'voltage' => '2.24', 'density' => null]],
+            'full_cells' => array_fill(0, 24, '2.23'),
+        ], $auth)->assertOk();
+
+        $measurement = InterventionReport::sole()->cellMeasurement();
+        $this->assertSame([['cell' => 5, 'voltage' => 2.24, 'density' => null]], $measurement['replaced']);
+        $this->assertSame(53.52, $measurement['total_voltage']);
+    }
 }

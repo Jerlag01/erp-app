@@ -7,7 +7,6 @@ use App\Models\GpwRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -33,13 +32,8 @@ class GpwDecisionController
             'note' => ['nullable', 'string', 'max:2000', 'required_if:decision,reject'],
         ]);
 
-        try {
-            $data['decision'] === 'approve'
-                ? $decide->approve($gpwRequest, $gpwRequest->contact_name, note: $data['note'] ?? null)
-                : $decide->reject($gpwRequest, $gpwRequest->contact_name, note: $data['note'] ?? null);
-        } catch (ValidationException) {
-            // Decided in the meantime (e.g. in the client portal): the page shows the outcome.
-        }
+        // Every project of the mail still waiting (decided in the meantime, e.g. in the client portal: the page shows the outcome).
+        $decide->decideMail($gpwRequest, $data['decision'] === 'approve', $gpwRequest->contact_name, $data['note'] ?? null);
 
         return redirect()->to($request->fullUrl());
     }
