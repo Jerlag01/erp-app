@@ -10,7 +10,9 @@ use App\Support\VatCodes;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -51,7 +53,23 @@ class AppServiceProvider extends ServiceProvider
         // The app's test notification: its own counter per phone, so the app's other requests (which
         // count for the API's general limit) do not use it up.
         // The mobile app: a limit per signed-in employee (never shared with colleagues on the same IP address).
-        RateLimiter::for('mobile', fn (Request $request): Limit => Limit::perMinute(240)->by('mobile|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+        // Reaching it is logged (employee, phone, request) once a minute per phone, to find an app that loops.
+        RateLimiter::for('mobile', fn (Request $request): Limit => Limit::perMinute(240)
+            ->by('mobile|'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
+            ->response(function (Request $request, array $headers) {
+                $key = $request->attributes->get('mobile_key');
+
+                if (Cache::add('mobile-limit-logged|'.($key?->id ?? $request->ip()), true, 60)) {
+                    Log::warning('Mobile API limit reached', [
+                        'user' => $request->user()?->getAuthIdentifier(),
+                        'device' => $key?->device_name,
+                        'path' => $request->path(),
+                        'ip' => $request->ip(),
+                    ]);
+                }
+
+                return response()->json(['message' => __('erp.mobile.errors.too_many_requests')], 429, $headers);
+            }));
 
         // Signing in: per e-mail address (so wrong passwords for one account stop there), and a wider net per IP
         // address, which many phones can share on a mobile network.

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -27,8 +28,13 @@ class MobileRateLimitTest extends TestCase
             $this->getJson('/api/v1/me', $busy)->assertOk();
         }
 
+        // The employee reads why, in their language; the phone is logged once to find an app that loops.
+        Log::spy();
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/v1/me', $busy)->assertTooManyRequests()->assertJsonPath('message', __('erp.mobile.errors.too_many_requests'));
         $this->app['auth']->forgetGuards();
         $this->getJson('/api/v1/me', $busy)->assertTooManyRequests();
+        Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context): bool => $message === 'Mobile API limit reached' && $context['path'] === 'api/v1/me');
 
         // Same IP address, another employee: not affected.
         $this->app['auth']->forgetGuards();

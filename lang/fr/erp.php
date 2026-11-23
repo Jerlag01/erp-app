@@ -5124,6 +5124,7 @@ return [
         'revoked' => 'Accès révoqué',
         'logged_out' => 'Déconnecté.',
         'errors' => [
+            'too_many_requests' => 'Trop de demandes en peu de temps. Attendez une minute et réessayez.',
             'intervention_closed' => 'Cette intervention est déjà clôturée.',
             'period' => 'Demandez au maximum 42 jours à la fois.',
             'already_signed' => 'Ce document est déjà signé.',

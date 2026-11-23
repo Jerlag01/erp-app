@@ -5124,6 +5124,7 @@ return [
         'revoked' => 'Access revoked',
         'logged_out' => 'Signed out.',
         'errors' => [
+            'too_many_requests' => 'Too many requests in a short time. Wait a minute and try again.',
             'intervention_closed' => 'This intervention has already been closed.',
             'period' => 'Ask for at most 42 days at once.',
             'already_signed' => 'This document has already been signed.',

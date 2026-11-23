@@ -5125,6 +5125,7 @@ return [
         'revoked' => 'Toegang ingetrokken',
         'logged_out' => 'Afgemeld.',
         'errors' => [
+            'too_many_requests' => 'Te veel aanvragen op korte tijd. Wacht een minuut en probeer opnieuw.',
             'intervention_closed' => 'Deze interventie is al afgesloten.',
             'period' => 'Vraag hoogstens 42 dagen tegelijk op.',
             'already_signed' => 'Dit document is al ondertekend.',
