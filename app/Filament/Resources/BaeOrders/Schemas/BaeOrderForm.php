@@ -11,9 +11,11 @@ use App\Models\BatteryModel;
 use App\Models\BatterySupplier;
 use App\Models\Project;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
@@ -38,13 +40,32 @@ class BaeOrderForm
         return $schema
             ->columns(1)
             ->components([
-                // A new order only asks for its project; the rest comes from Settings > Batteries (and its dossier).
+                // A new order only asks for its project (or, without one, its subject); the rest comes from Settings > Batteries.
+                ToggleButtons::make('standalone')
+                    ->label(__('erp.batteries.bae_order.fields.kind'))
+                    ->options([
+                        '0' => __('erp.batteries.bae_order.kinds.project'),
+                        '1' => __('erp.batteries.bae_order.kinds.standalone'),
+                    ])
+                    ->helperText(__('erp.batteries.bae_order.kinds.help'))
+                    ->default('0')
+                    ->inline()
+                    ->live()
+                    ->dehydrated()
+                    ->visibleOn('create'),
                 Select::make('project_id')
                     ->label(__('erp.batteries.bae_order.fields.project'))
                     ->options(fn (): array => self::projectOptions())
                     ->searchable()
-                    ->required()
-                    ->visibleOn('create'),
+                    ->required(fn (Get $get): bool => ! self::isStandalone($get))
+                    ->visible(fn (Get $get, string $operation): bool => $operation === 'create' && ! self::isStandalone($get)),
+                TextInput::make('subject')
+                    ->label(__('erp.batteries.bae_order.fields.subject'))
+                    ->helperText(__('erp.batteries.bae_order.fields.subject_help'))
+                    ->maxLength(150)
+                    ->required(fn (Get $get, string $operation): bool => $operation === 'create' && self::isStandalone($get))
+                    ->visible(fn (Get $get, string $operation, ?BaeOrder $record): bool => $operation === 'create' ? self::isStandalone($get) : (bool) $record?->isStandalone())
+                    ->live(onBlur: true),
                 Section::make(__('erp.batteries.bae_order.sections.order'))
                     ->columns(4)
                     ->hiddenOn('create')
@@ -68,9 +89,29 @@ class BaeOrderForm
                                 ->all())
                             ->columnSpan(2),
                     ]),
+                Section::make(__('erp.batteries.bae_order.sections.items'))
+                    ->description(__('erp.batteries.bae_order.sections.items_help'))
+                    ->visible(fn (string $operation, ?BaeOrder $record): bool => $operation !== 'create' && (bool) $record?->isStandalone())
+                    ->schema([
+                        Repeater::make('items')
+                            ->hiddenLabel()
+                            ->columns(['default' => 1, 'md' => 12])
+                            ->schema([
+                                TextInput::make('code')->label(__('erp.batteries.bae_order.fields.code'))->maxLength(60)->columnSpan(['md' => 2])->live(onBlur: true),
+                                TextInput::make('description')->label(__('erp.batteries.bae_order.fields.description'))->required()->maxLength(255)->columnSpan(['md' => 6])->live(onBlur: true),
+                                TextInput::make('quantity')->label(__('erp.batteries.bae_order.fields.quantity'))->numeric()->minValue(0)->step('any')->required()->default(1)->columnSpan(['md' => 2])->live(onBlur: true),
+                                TextInput::make('unit_price')->label(__('erp.batteries.bae_order.fields.unit_price'))->numeric()->minValue(0)->step('any')->prefix('€')->columnSpan(['md' => 2])->live(onBlur: true),
+                            ])
+                            ->addActionLabel(__('erp.batteries.bae_order.add_item'))
+                            ->minItems(1)
+                            ->maxItems(BaeOrder::MAX_ITEMS)
+                            ->defaultItems(1)
+                            ->reorderable()
+                            ->live(),
+                    ]),
                 Section::make(__('erp.batteries.bae_order.sections.batteries'))
                     ->columns(4)
-                    ->hiddenOn('create')
+                    ->visible(fn (string $operation, ?BaeOrder $record): bool => $operation !== 'create' && ! $record?->isStandalone())
                     ->schema([
                         Select::make('battery_model_id')
                             ->label(__('erp.batteries.bae_order.fields.battery_model'))
@@ -111,7 +152,7 @@ class BaeOrderForm
                     ]),
                 Section::make(__('erp.batteries.bae_order.sections.lines'))
                     ->description(__('erp.batteries.bae_order.sections.lines_help'))
-                    ->hiddenOn('create')
+                    ->visible(fn (string $operation, ?BaeOrder $record): bool => $operation !== 'create' && ! $record?->isStandalone())
                     ->schema([
                         Grid::make(['default' => 1, 'md' => 6])->schema([
                             Text::make(__('erp.batteries.bae_order.fields.line'))->weight(FontWeight::Bold)->columnSpan(2),
@@ -158,6 +199,11 @@ class BaeOrderForm
             ]);
     }
 
+    public static function isStandalone(Get $get): bool
+    {
+        return in_array($get('standalone'), [true, 1, '1'], true);
+    }
+
     /**
      * The type or mounting changed: the BAE price per cell, the type and the lines of the catalogue.
      */
@@ -187,7 +233,11 @@ class BaeOrderForm
             'volts_per_cell' => is_numeric($get('volts_per_cell')) ? $get('volts_per_cell') : 0,
             'cell_price' => is_numeric($get('cell_price')) ? $get('cell_price') : 0,
             'lines' => (array) $get('lines'),
+            'subject' => $get('subject'),
+            'items' => array_values((array) $get('items')),
         ]);
+        $order->project_id = $record?->project_id;
+        $order->sequence = $record?->sequence;
         $order->setRelation('project', $record?->project);
         $order->setRelation('batteryModel', $order->battery_model_id ? BatteryModel::query()->find($order->battery_model_id) : null);
 

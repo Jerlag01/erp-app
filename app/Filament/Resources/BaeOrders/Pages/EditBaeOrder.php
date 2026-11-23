@@ -38,12 +38,12 @@ class EditBaeOrder extends EditRecord
 
     public function getTitle(): string
     {
-        return __('erp.batteries.bae_order.singular').' '.$this->record->project?->reference;
+        return __('erp.batteries.bae_order.singular').' '.($this->record->project?->reference ?? $this->record->dossierNumber());
     }
 
     public function getSubheading(): ?string
     {
-        return $this->record->cowLine();
+        return $this->record->isStandalone() ? $this->record->subject() : $this->record->cowLine();
     }
 
     protected function getHeaderActions(): array
@@ -108,7 +108,7 @@ class EditBaeOrder extends EditRecord
                 Action::make('fromDossier')
                     ->label(__('erp.batteries.bae_order.from_dossier'))
                     ->icon(Heroicon::OutlinedBattery100)
-                    ->visible(fn (): bool => $this->dossier() !== null)
+                    ->visible(fn (): bool => ! $this->record->isStandalone() && $this->dossier() !== null)
                     ->requiresConfirmation()
                     ->modalDescription(__('erp.batteries.bae_order.from_dossier_help'))
                     ->action(function (): void {
@@ -118,6 +118,7 @@ class EditBaeOrder extends EditRecord
                 Action::make('refillLines')
                     ->label(__('erp.batteries.bae_order.refill_lines'))
                     ->icon(Heroicon::OutlinedArrowPath)
+                    ->visible(fn (): bool => ! $this->record->isStandalone())
                     ->requiresConfirmation()
                     ->modalDescription(__('erp.batteries.bae_order.refill_lines_help'))
                     ->action(fn () => $this->fillWith(CreateBaeOrder::fromCatalogue(
@@ -203,11 +204,19 @@ class EditBaeOrder extends EditRecord
 
     protected function dossier(): ?BatteryDossier
     {
+        if ($this->record->project_id === null) {
+            return null;
+        }
+
         return BatteryDossier::query()->where('project_id', $this->record->project_id)->latest('id')->first();
     }
 
     protected function delivery(): ?BatteryDelivery
     {
+        if ($this->record->project_id === null) {
+            return null;
+        }
+
         return BatteryDelivery::query()->where('project_id', $this->record->project_id)->latest('id')->first();
     }
 }

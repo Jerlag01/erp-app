@@ -23,7 +23,8 @@ class BaeOrderPolicy extends AreaPolicy
 
     public function view(User $user, Model $order): bool
     {
-        return $this->viewAny($user) && $order->project->isVisibleTo($user);
+        // An order without a project (extra cables…): everyone with the BAE order right.
+        return $this->viewAny($user) && ($order->project === null || $order->project->isVisibleTo($user));
     }
 
     public function create(User $user): bool

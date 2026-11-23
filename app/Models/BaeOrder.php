@@ -16,9 +16,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Order). Every new 604 project gets one; the amounts follow the Excel formulas: the batteries are
  * count × cells × the BAE price per cell, the rack count × the rack price, the other lines "incl.".
  * Once complete it is mailed to its supplier with a button (SendBaeOrder), never automatically.
+ * An order without a project is a simple order (extra cables, connectors… for the batteries, not the
+ * batteries themselves): a subject and free lines ("items"), with its own reference BAE-0001, BAE-0002…
  */
 #[Fillable([
-    'project_id', 'battery_supplier_id', 'order_number', 'order_date', 'contract', 'battery_model_id', 'mounting', 'capacity_ah', 'technology',
+    'project_id', 'sequence', 'subject', 'items', 'battery_supplier_id', 'order_number', 'order_date', 'contract', 'battery_model_id', 'mounting', 'capacity_ah', 'technology',
     'battery_count', 'cells_per_battery', 'volts_per_cell', 'cell_price', 'lines', 'delivery_date', 'delivery_address',
     'contact_name', 'contact_phone', 'contact_fax', 'contact_mobile', 'contact_email', 'billing_block', 'remarks',
     'exported_at', 'sent_at', 'sent_by', 'sent_to', 'created_by',
@@ -52,11 +54,60 @@ class BaeOrder extends Model
      */
     public const MAX_BATTERIES = 12;
 
+    /** Most free lines on an order without a project. */
+    public const MAX_ITEMS = 50;
+
+    /**
+     * Not linked to a project: the simple order with free lines.
+     */
+    public function isStandalone(): bool
+    {
+        return $this->project_id === null;
+    }
+
+    /**
+     * The next free reference number for an order without a project (call inside a transaction).
+     */
+    public static function nextSequence(): int
+    {
+        return (int) self::query()->lockForUpdate()->max('sequence') + 1;
+    }
+
+    /**
+     * The free lines, cleaned: code, description, quantity and price per unit, with their total.
+     *
+     * @return list<array{code: ?string, description: string, quantity: float, unit_price: float, total: float}>
+     */
+    public function itemList(): array
+    {
+        return collect((array) $this->items)
+            ->filter(fn (mixed $item): bool => is_array($item) && filled($item['description'] ?? null))
+            ->map(function (array $item): array {
+                $quantity = is_numeric($item['quantity'] ?? null) ? (float) $item['quantity'] : 0.0;
+                $price = is_numeric($item['unit_price'] ?? null) ? (float) $item['unit_price'] : 0.0;
+
+                return [
+                    'code' => filled($item['code'] ?? null) ? (string) $item['code'] : null,
+                    'description' => (string) $item['description'],
+                    'quantity' => $quantity,
+                    'unit_price' => $price,
+                    'total' => round($quantity * $price, 2),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public function itemsTotal(): float
+    {
+        return round(array_sum(array_column($this->itemList(), 'total')), 2);
+    }
+
     protected static function booted(): void
     {
         // Without a battery dossier, the new batteries of the order are in the project's Outlook events.
         static::saved(function (self $order): void {
-            if ($order->wasChanged(['battery_model_id', 'battery_count', 'capacity_ah', 'technology'])) {
+            if ($order->project_id !== null && $order->wasChanged(['battery_model_id', 'battery_count', 'capacity_ah', 'technology'])) {
                 app(OutlookCalendar::class)->syncProject($order->project_id);
             }
         });
@@ -107,7 +158,8 @@ class BaeOrder extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        $query->whereHas('project', fn (Builder $query) => $query->visibleTo($user, 'batteries'));
+        // An order without a project is for everyone with the BAE order right.
+        $query->where(fn (Builder $query) => $query->whereNull('project_id')->orWhereHas('project', fn (Builder $query) => $query->visibleTo($user, 'batteries')));
     }
 
     /**
@@ -188,7 +240,7 @@ class BaeOrder extends Model
 
     public function total(): float
     {
-        return round($this->batteriesTotal() + $this->rackTotal(), 2);
+        return $this->isStandalone() ? $this->itemsTotal() : round($this->batteriesTotal() + $this->rackTotal(), 2);
     }
 
     public function mountingEnum(): ?BatteryMounting
@@ -233,6 +285,10 @@ class BaeOrder extends Model
      */
     public function subject(): string
     {
+        if ($this->isStandalone()) {
+            return filled($this->subject) ? (string) $this->subject : 'Order';
+        }
+
         return 'Batterie: '.$this->batteryCount().' x '.($this->batteryModel?->name ?? '—');
     }
 
@@ -241,6 +297,11 @@ class BaeOrder extends Model
      */
     public function dossierNumber(): string
     {
+        // Without a project: its own running reference.
+        if ($this->isStandalone()) {
+            return 'BAE-'.str_pad((string) (int) $this->sequence, 4, '0', STR_PAD_LEFT);
+        }
+
         $project = $this->project;
 
         return trim(($project?->category?->code ?? '').'/'.($project?->category ? $project->category->numbering->formatNumber((int) $project->number) : $project?->number), '/');
@@ -287,6 +348,10 @@ class BaeOrder extends Model
      */
     public function isComplete(): bool
     {
+        if ($this->isStandalone()) {
+            return filled($this->order_number) && $this->order_date !== null && $this->itemList() !== [];
+        }
+
         return filled($this->order_number) && $this->order_date !== null && $this->battery_model_id !== null && $this->mounting !== null
             && $this->batteryCount() > 0 && (int) $this->cells_per_battery > 0 && $this->cell_price !== null;
     }
@@ -315,6 +380,8 @@ class BaeOrder extends Model
             'volts_per_cell' => 'decimal:2',
             'cell_price' => 'decimal:2',
             'lines' => 'array',
+            'items' => 'array',
+            'sequence' => 'integer',
             'exported_at' => 'datetime',
             'sent_at' => 'datetime',
         ];

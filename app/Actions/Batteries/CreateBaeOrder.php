@@ -9,6 +9,7 @@ use App\Models\BatteryModel;
 use App\Models\BatterySupplier;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Starts the BAE order of a 604 project (one per project) with the defaults of Settings > Batteries
@@ -59,6 +60,40 @@ class CreateBaeOrder
         $order->save();
 
         return $order;
+    }
+
+    /**
+     * An order without a project (extra cables, connectors… for the batteries): the defaults of Settings >
+     * Batteries, the next free reference (BAE-0001) and an order number from it.
+     */
+    public function standalone(?string $subject, ?User $by = null): BaeOrder
+    {
+        return DB::transaction(function () use ($subject, $by): BaeOrder {
+            $settings = (array) settings()->get('batteries');
+            $order = new BaeOrder([
+                'project_id' => null,
+                'sequence' => BaeOrder::nextSequence(),
+                'subject' => filled($subject) ? trim($subject) : null,
+                'battery_supplier_id' => BatterySupplier::defaultSupplier()?->id,
+                'order_date' => today(),
+                'contract' => $settings['bae_contract'] ?? null,
+                'delivery_date' => $settings['bae_delivery_date'] ?? null,
+                'delivery_address' => $settings['bae_delivery_address'] ?? null,
+                'contact_name' => $settings['bae_contact_name'] ?? null,
+                'contact_phone' => $settings['bae_contact_phone'] ?? null,
+                'contact_fax' => $settings['bae_contact_fax'] ?? null,
+                'contact_mobile' => $settings['bae_contact_mobile'] ?? null,
+                'contact_email' => $settings['bae_contact_email'] ?? null,
+                'billing_block' => $settings['bae_billing_block'] ?? null,
+                'remarks' => $settings['bae_remarks'] ?? null,
+                'items' => [],
+                'created_by' => $by?->id,
+            ]);
+            $order->order_number = BaeOrder::defaultOrderNumber($order, $by);
+            $order->save();
+
+            return $order;
+        });
     }
 
     /**

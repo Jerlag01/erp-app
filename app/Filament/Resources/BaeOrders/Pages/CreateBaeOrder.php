@@ -12,7 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * For 604 projects made before the module (new ones get their order by themselves): only the project
- * is asked, the order starts with the defaults and is then filled in on the edit page.
+ * is asked, the order starts with the defaults and is then filled in on the edit page. Or an order
+ * without a project (extra cables, connectors…): only its subject, with the next free reference.
  */
 class CreateBaeOrder extends CreateRecord
 {
@@ -32,6 +33,11 @@ class CreateBaeOrder extends CreateRecord
      */
     protected function handleRecordCreation(array $data): Model
     {
+        // Without a project: a simple order (extra cables…) with the next free reference.
+        if (in_array($data['standalone'] ?? null, [true, 1, '1'], true)) {
+            return app(StartBaeOrder::class)->standalone($data['subject'] ?? null, auth()->user());
+        }
+
         $project = array_key_exists((int) ($data['project_id'] ?? 0), BaeOrderForm::projectOptions()) ? Project::query()->find($data['project_id']) : null;
         $order = $project ? app(StartBaeOrder::class)->handle($project, auth()->user()) : null;
 

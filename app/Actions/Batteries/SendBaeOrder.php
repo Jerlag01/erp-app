@@ -92,7 +92,9 @@ class SendBaeOrder
             'exported_at' => $order->exported_at ?? now(),
         ])->saveQuietly();
 
-        // The project: ordered, the PDF in its offers, and its line in the battery deliveries.
-        $this->register->handle($order, $by);
+        // The project: ordered, the PDF in its offers, and its line in the battery deliveries (not for an order without a project).
+        if ($order->project !== null) {
+            $this->register->handle($order, $by);
+        }
     }
 }

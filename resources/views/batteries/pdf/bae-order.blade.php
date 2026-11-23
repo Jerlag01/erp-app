@@ -43,10 +43,41 @@
         <tr><td class="label">Contract</td><td>{{ $order->contract }}</td></tr>
         <tr><td colspan="2" style="height: 6px;"></td></tr>
         <tr><td class="label">Subject :</td><td>{{ $order->subject() }}</td></tr>
-        <tr><td class="label">COW Code:</td><td>{{ $order->cowLine() }}</td></tr>
+        @unless ($order->isStandalone())
+            <tr><td class="label">COW Code:</td><td>{{ $order->cowLine() }}</td></tr>
+        @endunless
         <tr><td class="label">Our reference:</td><td>{{ $order->ourReference() }}</td></tr>
     </table>
 
+    @if ($order->isStandalone())
+        {{-- An order without a project (extra cables, connectors…): its free lines. --}}
+        <table class="w grid" style="margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th class="num">Quantity</th>
+                    <th class="num">Price per<br>unit</th>
+                    <th class="num">Price<br>total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($order->itemList() as $item)
+                    <tr>
+                        <td>{{ $item['code'] }}</td>
+                        <td>{{ $item['description'] }}</td>
+                        <td class="num">{{ rtrim(rtrim(number_format($item['quantity'], 2, ',', '.'), '0'), ',') }}</td>
+                        <td class="num">{{ $money($item['unit_price']) }}</td>
+                        <td class="num">{{ $money($item['total']) }}</td>
+                    </tr>
+                @endforeach
+                <tr class="total">
+                    <td colspan="4" class="num">Total price without VAT (Euro):</td>
+                    <td class="num">{{ $money($order->total()) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    @else
     <table class="w grid" style="margin-top: 10px;">
         <thead>
             <tr>
@@ -99,6 +130,7 @@
             </tr>
         </tbody>
     </table>
+    @endif
 
     <table class="w block" style="margin-top: 10px;">
         <tr><td class="label">Delivery date:</td><td>{{ $order->delivery_date }}</td></tr>

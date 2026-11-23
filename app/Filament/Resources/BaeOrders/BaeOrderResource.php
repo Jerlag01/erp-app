@@ -67,15 +67,21 @@ class BaeOrderResource extends Resource
             ->columns([
                 TextColumn::make('project.reference')
                     ->label(__('erp.projects.reference'))
+                    ->state(fn (BaeOrder $record): string => $record->project?->reference ?? $record->dossierNumber())
                     ->fontFamily(FontFamily::Mono)
                     ->weight(FontWeight::Bold)
-                    ->description(fn (BaeOrder $record): string => $record->cowLine())
-                    ->searchable(),
+                    ->description(fn (BaeOrder $record): string => $record->isStandalone() ? $record->subject() : $record->cowLine())
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(fn (Builder $query) => $query
+                        ->whereHas('project', fn (Builder $query) => $query->where('reference', 'like', "%{$search}%"))
+                        ->orWhere('subject', 'like', "%{$search}%"))),
                 TextColumn::make('order_number')->label(__('erp.batteries.bae_order.fields.order_number'))->fontFamily(FontFamily::Mono)->searchable()->placeholder('—'),
                 TextColumn::make('order_date')->label(__('erp.batteries.bae_order.fields.order_date'))->date('d/m/Y')->sortable(),
                 TextColumn::make('batteryModel.name')
                     ->label(__('erp.batteries.bae_order.fields.battery_model'))
-                    ->description(fn (BaeOrder $record): string => $record->batteryCount().' × '.$record->cells_per_battery.' '.__('erp.batteries.cells'))
+                    ->state(fn (BaeOrder $record): ?string => $record->isStandalone() ? __('erp.batteries.bae_order.kinds.standalone') : $record->batteryModel?->name)
+                    ->description(fn (BaeOrder $record): string => $record->isStandalone()
+                        ? trans_choice('erp.batteries.bae_order.item_count', count($record->itemList()), ['count' => count($record->itemList())])
+                        : $record->batteryCount().' × '.$record->cells_per_battery.' '.__('erp.batteries.cells'))
                     ->placeholder('—'),
                 TextColumn::make('total')
                     ->label(__('erp.batteries.bae_order.fields.total'))
@@ -101,6 +107,11 @@ class BaeOrderResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                TernaryFilter::make('project_id')
+                    ->label(__('erp.batteries.bae_order.fields.kind'))
+                    ->nullable()
+                    ->trueLabel(__('erp.batteries.bae_order.kinds.project'))
+                    ->falseLabel(__('erp.batteries.bae_order.kinds.standalone')),
                 TernaryFilter::make('sent_at')->label(__('erp.batteries.bae_order.fields.sent_at'))->nullable(),
                 TernaryFilter::make('exported_at')->label(__('erp.batteries.bae_order.fields.exported_at'))->nullable(),
             ])

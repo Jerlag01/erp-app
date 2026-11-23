@@ -11,6 +11,7 @@ use App\Enums\MailTemplateKey;
 use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\BaeOrders\BaeOrderResource;
+use App\Filament\Resources\BaeOrders\Pages\CreateBaeOrder as CreateBaeOrderPage;
 use App\Filament\Resources\BaeOrders\Pages\EditBaeOrder;
 use App\Filament\Resources\BatterySuppliers\BatterySupplierResource;
 use App\Filament\Resources\BatterySuppliers\Pages\ManageBatterySuppliers;
@@ -375,5 +376,61 @@ class BaeOrderTest extends TestCase
         $this->assertSame('2026-11-20', RegisterSentBaeOrder::parseDate('2026-11-20')?->toDateString());
         $this->assertSame('2026-11-20', RegisterSentBaeOrder::parseDate('20.11.26')?->toDateString());
         $this->assertNull(RegisterSentBaeOrder::parseDate('31/02/2026'));
+    }
+
+    #[Test]
+    public function an_order_without_a_project_gets_the_next_free_reference_and_free_lines(): void
+    {
+        Mail::fake();
+        BatterySupplier::factory()->create(['email' => 'orders@bae.example', 'is_default' => true]);
+        $user = $this->user();
+        $this->actingAs($user);
+
+        // A subject is needed instead of a project.
+        Livewire::test(CreateBaeOrderPage::class)
+            ->fillForm(['standalone' => '1'])
+            ->call('create')
+            ->assertHasFormErrors(['subject' => 'required']);
+
+        Livewire::test(CreateBaeOrderPage::class)
+            ->fillForm(['standalone' => '1', 'subject' => 'Extra kabels 70mm²'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $order = BaeOrder::query()->whereNull('project_id')->sole();
+        $this->assertSame([1, 'BAE-0001', 'Prox Batt BAE BAE-0001'], [$order->sequence, $order->dossierNumber(), $order->ourReference()]);
+        $this->assertSame('BAE-0001/'.now()->format('my').'/JL', $order->order_number);
+        $this->assertFalse($order->isComplete(), 'No lines yet.');
+
+        // The next one takes the next free reference.
+        $this->assertSame('BAE-0002', app(CreateBaeOrder::class)->standalone('Connectoren', $user)->dossierNumber());
+
+        Livewire::test(EditBaeOrder::class, ['record' => $order->getRouteKey()])
+            ->assertSee(__('erp.batteries.bae_order.sections.items'))
+            ->assertDontSee(__('erp.batteries.bae_order.sections.batteries'))
+            ->fillForm(['items' => [
+                ['code' => 'K70', 'description' => 'Kabel 70mm² rood', 'quantity' => 4, 'unit_price' => 12.5],
+                ['code' => null, 'description' => 'Kabelschoenen M10', 'quantity' => 20, 'unit_price' => 0.85],
+            ]])
+            ->callAction('send')
+            ->assertHasNoActionErrors();
+
+        $order->refresh();
+        $this->assertSame(67.0, $order->total());
+        $this->assertTrue($order->isSent());
+        Mail::assertSent(SystemMail::class, fn (SystemMail $mail): bool => str_contains($mail->rendered['subject'], 'Prox Batt BAE BAE-0001'));
+        // No project: no delivery line or offer is made.
+        $this->assertSame(0, BatteryDelivery::query()->count());
+
+        $html = app(BaeOrderDocument::class)->html($order);
+        $this->assertStringContainsString('Kabel 70mm² rood', $html);
+        $this->assertStringContainsString('Extra kabels 70mm²', $html);
+        $this->assertStringNotContainsString('COW Code', $html);
+        $this->assertStringContainsString('67,00', $html);
+
+        // Not tied to a team: everyone with the BAE order right sees it.
+        $other = User::factory()->withPermissions(['batteries' => ['view', 'bae_orders']])->inTeam()->create();
+        $this->assertTrue($other->can('view', $order));
+        $this->assertContains($order->id, BaeOrder::query()->visibleTo($other)->pluck('id')->all());
     }
 }
