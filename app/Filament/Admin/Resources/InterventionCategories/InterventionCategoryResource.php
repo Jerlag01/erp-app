@@ -83,6 +83,11 @@ class InterventionCategoryResource extends Resource
                     ->helperText(__('erp.interventions.frees_material_help'))
                     ->hidden($isSubcategory)
                     ->columnSpanFull(),
+                Toggle::make('measures_cells')
+                    ->label(__('erp.interventions.measures_cells'))
+                    ->helperText(__('erp.interventions.measures_cells_help'))
+                    ->hidden($isSubcategory)
+                    ->columnSpanFull(),
                 TagsInput::make('phases')
                     ->label(__('erp.interventions.phases'))
                     ->helperText(__('erp.interventions.list_help'))
@@ -115,6 +120,7 @@ class InterventionCategoryResource extends Resource
                     ->color('gray')
                     ->placeholder('—'),
                 IconColumn::make('frees_material')->label(__('erp.interventions.frees_material'))->boolean(),
+                IconColumn::make('measures_cells')->label(__('erp.interventions.measures_cells'))->boolean(),
                 TextColumn::make('projects_count')->label(__('erp.interventions.title'))->badge(),
                 IconColumn::make('is_active')->label(__('erp.fields.active'))->boolean(),
             ])
@@ -140,6 +146,7 @@ class InterventionCategoryResource extends Resource
         return [
             ...$data,
             'frees_material' => $kind === InterventionCategoryKind::Category && ($data['frees_material'] ?? false),
+            'measures_cells' => $kind === InterventionCategoryKind::Category && ($data['measures_cells'] ?? false),
             'phases' => $kind === InterventionCategoryKind::Subcategory ? $list($data['phases'] ?? []) : null,
             'tags' => $kind === InterventionCategoryKind::Subcategory ? $list($data['tags'] ?? []) : null,
         ];

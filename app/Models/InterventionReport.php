@@ -16,10 +16,11 @@ use Illuminate\Support\Facades\Storage;
 /**
  * What the employee filled in when closing an intervention, reviewed by an administrator. One
  * per intervention: closing again after a rejection replaces it. The execution date is set by
- * the system when closing; the PDF is made for approval and invoicing.
+ * the system when closing; the PDF is made for approval and invoicing. A battery cell replacement also
+ * keeps the measurement of the replaced cells and of the full battery (cellMeasurement()).
  */
 #[Fillable([
-    'project_id', 'status', 'work_site_id', 'cow_code', 'room', 'hours_worked', 'remarks', 'categories', 'modified_boards',
+    'project_id', 'status', 'work_site_id', 'cow_code', 'room', 'hours_worked', 'remarks', 'categories', 'modified_boards', 'cell_measurement',
     'executed_at', 'closed_by', 'reviewed_by', 'reviewed_at', 'review_note', 'po_number', 'pdf_path',
 ])]
 class InterventionReport extends Model
@@ -28,6 +29,33 @@ class InterventionReport extends Model
     use HasFactory;
 
     public const DISK = 'local';
+
+    /** Cells of the full battery measured after a cell replacement. */
+    public const FULL_BATTERY_CELLS = 24;
+
+    /** Highest voltage accepted for one cell (a 2V cell; a margin for a 12V block). */
+    public const MAX_CELL_VOLTAGE = 20;
+
+    /**
+     * The measurement of a battery cell replacement, or null: the replaced cells (number, voltage and acid
+     * density) and the full battery (FULL_BATTERY_CELLS voltages and the total).
+     *
+     * @return array{replaced: list<array{cell: int, voltage: ?float, density: ?float}>, cells: list<?float>, total_voltage: ?float}|null
+     */
+    public function cellMeasurement(): ?array
+    {
+        $data = $this->cell_measurement;
+
+        if (! is_array($data) || ($data['replaced'] ?? []) === []) {
+            return null;
+        }
+
+        return [
+            'replaced' => array_values((array) $data['replaced']),
+            'cells' => array_values(array_pad(array_slice((array) ($data['cells'] ?? []), 0, self::FULL_BATTERY_CELLS), self::FULL_BATTERY_CELLS, null)),
+            'total_voltage' => isset($data['total_voltage']) ? (float) $data['total_voltage'] : null,
+        ];
+    }
 
     /**
      * @return BelongsTo<Project, $this>
@@ -152,6 +180,7 @@ class InterventionReport extends Model
             'hours_worked' => 'decimal:2',
             'categories' => 'array',
             'modified_boards' => 'array',
+            'cell_measurement' => 'array',
             'executed_at' => 'datetime',
             'reviewed_at' => 'datetime',
         ];

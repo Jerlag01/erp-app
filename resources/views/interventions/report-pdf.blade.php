@@ -93,6 +93,34 @@
         <p class="muted">{{ __('erp.interventions.pdf.no_materials') }}</p>
     @endif
 
+    @if ($cells = $report->cellMeasurement())
+        {{-- A battery replacement for bad cells: the replaced cells, then the full battery. --}}
+        <h2>{{ __('erp.interventions.cells.title') }}</h2>
+        <table class="list">
+            <thead><tr><th>{{ __('erp.interventions.cells.replaced') }}</th><th class="num">{{ __('erp.interventions.cells.voltage') }}</th><th class="num">{{ __('erp.interventions.cells.density') }}</th></tr></thead>
+            <tbody>
+                @foreach ($cells['replaced'] as $cell)
+                    <tr>
+                        <td>{{ __('erp.interventions.cells.cell') }} {{ $cell['cell'] }}</td>
+                        <td class="num">{{ number_format((float) $cell['voltage'], 3, ',', '') }} V</td>
+                        <td class="num">{{ $cell['density'] !== null ? number_format((float) $cell['density'], 3, ',', '').' kg/l' : '—' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 3px;"><strong>{{ __('erp.interventions.cells.full', ['count' => \App\Models\InterventionReport::FULL_BATTERY_CELLS]) }}</strong></p>
+        <table class="list">
+            @foreach (array_chunk($cells['cells'], 6, true) as $row)
+                <tr>
+                    @foreach ($row as $index => $voltage)
+                        <td><span class="muted">{{ $index + 1 }}</span> {{ $voltage !== null ? number_format((float) $voltage, 3, ',', '') : '—' }}</td>
+                    @endforeach
+                </tr>
+            @endforeach
+            <tr><td colspan="6"><strong>{{ __('erp.interventions.cells.total') }}: {{ number_format((float) $cells['total_voltage'], 2, ',', '') }} V</strong></td></tr>
+        </table>
+    @endif
+
     <h2>{{ __('erp.interventions.positions') }}</h2>
     @if ($report->positions->isNotEmpty())
         <table class="list">

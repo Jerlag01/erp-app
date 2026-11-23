@@ -10,6 +10,7 @@ use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\RelationManagers\PartsRelationManager;
 use App\Http\Controllers\Controller;
 use App\Models\InterventionCategory;
+use App\Models\InterventionReport;
 use App\Models\Project;
 use App\Models\StockItem;
 use App\Models\Unit;
@@ -97,7 +98,7 @@ class InterventionController extends Controller
                     ->ofKind(InterventionCategoryKind::Category)
                     ->where(fn ($query) => $query->where('is_active', true)->orWhereIn('id', $current ?: [0]))
                     ->get()
-                    ->map(fn (InterventionCategory $category): array => ['value' => $category->id, 'label' => $category->name, 'frees_material' => (bool) $category->frees_material])
+                    ->map(fn (InterventionCategory $category): array => ['value' => $category->id, 'label' => $category->name, 'frees_material' => (bool) $category->frees_material, 'measures_cells' => (bool) $category->measures_cells])
                     ->values(),
                 'units' => Unit::query()->orderBy('name')->get()->map(fn (Unit $unit): array => ['value' => $unit->id, 'label' => $unit->abbreviation ?: $unit->name])->values(),
                 'co_workers' => User::query()->active()->whereKeyNot($user->id)->orderBy('name')->get(['id', 'name'])->map(fn (User $colleague): array => ['value' => $colleague->id, 'label' => $colleague->name])->values(),
@@ -141,6 +142,15 @@ class InterventionController extends Controller
             'positions.*.device' => ['required', 'in:F,Q'],
             'positions.*.number' => ['required', 'string', 'max:20'],
             'positions.*.supply' => ['required', 'in:A,B'],
+            // A battery replacement for bad cells (checked in CloseIntervention).
+            'replaced_count' => ['nullable', 'integer', 'min:1', 'max:'.InterventionReport::FULL_BATTERY_CELLS],
+            'replaced_cells' => ['array', 'max:'.InterventionReport::FULL_BATTERY_CELLS],
+            'replaced_cells.*.cell' => ['required', 'integer'],
+            'replaced_cells.*.voltage' => ['required', 'numeric'],
+            'replaced_cells.*.density' => ['nullable', 'numeric'],
+            'full_cells' => ['array', 'max:'.InterventionReport::FULL_BATTERY_CELLS],
+            'full_cells.*' => ['nullable', 'numeric'],
+            'full_total_voltage' => ['nullable', 'numeric'],
         ]);
 
         $close->handle($project, $data, $user);
@@ -250,6 +260,7 @@ class InterventionController extends Controller
         return [
             ...collect($keys)->mapWithKeys(fn (string $key): array => [$key => __("erp.interventions.{$key}")])->all(),
             'what' => __('erp.interventions.sections.what'),
+            'cells' => __('erp.interventions.cells'),
             'boards_remarks' => __('erp.interventions.sections.boards_remarks'),
             'device_F' => __('erp.interventions.devices.F'),
             'device_Q' => __('erp.interventions.devices.Q'),

@@ -13,9 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * An intervention category (PREPARE, CONNECT, DECONNECT, …) or subcategory (COLIBRI with its
  * phases and tags). Administrators add, change and remove them freely; closed reports keep the
- * names they had.
+ * names they had. A category that "measures cells" (battery replacement for bad cells) asks, when
+ * closing, for the measurement of the replaced cells and of the full battery (InterventionReport).
  */
-#[Fillable(['kind', 'name', 'frees_material', 'phases', 'tags', 'sort', 'is_active'])]
+#[Fillable(['kind', 'name', 'frees_material', 'measures_cells', 'phases', 'tags', 'sort', 'is_active'])]
 class InterventionCategory extends Model
 {
     /** @use HasFactory<InterventionCategoryFactory> */
@@ -76,6 +77,7 @@ class InterventionCategory extends Model
         return [
             'kind' => InterventionCategoryKind::class,
             'frees_material' => 'boolean',
+            'measures_cells' => 'boolean',
             'phases' => 'array',
             'tags' => 'array',
             'sort' => 'integer',

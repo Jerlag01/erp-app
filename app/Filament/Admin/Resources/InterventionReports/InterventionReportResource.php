@@ -108,6 +108,29 @@ class InterventionReportResource extends Resource
                     ->listWithLineBreaks()
                     ->bulleted()
                     ->placeholder('—'), MaterialDirection::cases())),
+            // A battery replacement for bad cells: the replaced cells and the full battery.
+            Section::make(__('erp.interventions.cells.title'))
+                ->columnSpanFull()
+                ->columns(2)
+                ->visible(fn (InterventionReport $record): bool => $record->cellMeasurement() !== null)
+                ->schema([
+                    TextEntry::make('replaced_cells')
+                        ->label(__('erp.interventions.cells.replaced'))
+                        ->state(fn (InterventionReport $record): array => array_map(
+                            fn (array $cell): string => __('erp.interventions.cells.cell').' '.$cell['cell'].': '.number_format((float) $cell['voltage'], 3, ',', '').' V'.($cell['density'] !== null ? ' · '.number_format((float) $cell['density'], 3, ',', '').' kg/l' : ''),
+                            $record->cellMeasurement()['replaced'] ?? [],
+                        ))
+                        ->listWithLineBreaks()
+                        ->fontFamily(FontFamily::Mono),
+                    TextEntry::make('full_battery')
+                        ->label(__('erp.interventions.cells.full', ['count' => InterventionReport::FULL_BATTERY_CELLS]))
+                        ->state(fn (InterventionReport $record): array => [
+                            ...collect($record->cellMeasurement()['cells'] ?? [])->map(fn (?float $voltage, int $index): string => str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT).': '.($voltage !== null ? number_format($voltage, 3, ',', '').' V' : '—'))->chunk(6)->map->implode('   ')->all(),
+                            __('erp.interventions.cells.total').': '.number_format((float) ($record->cellMeasurement()['total_voltage'] ?? 0), 2, ',', '').' V',
+                        ])
+                        ->listWithLineBreaks()
+                        ->fontFamily(FontFamily::Mono),
+                ]),
             Section::make(__('erp.interventions.positions'))
                 ->columnSpanFull()
                 ->columns(2)

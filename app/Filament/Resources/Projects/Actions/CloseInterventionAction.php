@@ -7,6 +7,7 @@ use App\Enums\InterventionCategoryKind;
 use App\Enums\MaterialDirection;
 use App\Filament\Resources\Projects\RelationManagers\PartsRelationManager;
 use App\Models\InterventionCategory;
+use App\Models\InterventionReport;
 use App\Models\InterventionReportPosition;
 use App\Models\Project;
 use App\Models\StockItem;
@@ -99,7 +100,86 @@ class CloseInterventionAction
                 ? $report->materials->map(fn ($material): array => ['stock_item_id' => $material->stock_item_id, 'description' => $material->description, 'quantity' => (float) $material->quantity, 'unit_id' => $material->unit_id, 'direction' => $material->direction->value])->all()
                 : $project->parts()->get()->map(fn ($part): array => ['stock_item_id' => $part->stock_item_id, 'description' => $part->description, 'quantity' => (float) $part->quantity, 'unit_id' => $part->unit_id, 'direction' => MaterialDirection::Used->value])->all(),
             'positions' => $report?->positions->map(fn (InterventionReportPosition $position): array => $position->only(['board_name', 'current', 'device', 'number', 'supply']))->all() ?? [],
+            ...self::cellDefaults($report),
         ];
+    }
+
+    /**
+     * The cell measurement as it was sent back (after a rejection), or empty.
+     *
+     * @return array<string, mixed>
+     */
+    public static function cellDefaults(?InterventionReport $report): array
+    {
+        $measurement = $report?->cellMeasurement();
+
+        return [
+            'replaced_count' => $measurement ? count($measurement['replaced']) : null,
+            'replaced_cells' => $measurement['replaced'] ?? [],
+            'full_cells' => $measurement['cells'] ?? array_fill(0, InterventionReport::FULL_BATTERY_CELLS, null),
+            'full_total_voltage' => $measurement['total_voltage'] ?? null,
+        ];
+    }
+
+    /**
+     * Whether one of the chosen categories is a battery cell replacement.
+     */
+    public static function measuresCells(array $categoryIds): bool
+    {
+        return $categoryIds !== [] && InterventionCategory::query()->whereKey($categoryIds)->where('measures_cells', true)->exists();
+    }
+
+    /**
+     * The section for a battery replacement for bad cells: how many cells were replaced and their
+     * measurement, then the full battery (24 cells).
+     */
+    public static function cellSection(): Section
+    {
+        $cells = InterventionReport::FULL_BATTERY_CELLS;
+        $volt = fn (string $name): TextInput => TextInput::make($name)->numeric()->minValue(0)->maxValue(InterventionReport::MAX_CELL_VOLTAGE)->step('any')->suffix('V');
+
+        return Section::make(__('erp.interventions.cells.title'))
+            ->description(__('erp.interventions.cells.help'))
+            ->visible(fn (Get $get): bool => self::measuresCells(array_map('intval', (array) $get('categories'))))
+            ->schema([
+                TextInput::make('replaced_count')
+                    ->label(__('erp.interventions.cells.replaced_count'))
+                    ->integer()
+                    ->minValue(1)
+                    ->maxValue($cells)
+                    ->required()
+                    ->live(onBlur: true)
+                    // As many rows as cells replaced; what was already measured stays.
+                    ->afterStateUpdated(function (mixed $state, Get $get, Set $set) use ($cells): void {
+                        $count = max(0, min($cells, (int) $state));
+                        $rows = array_values((array) $get('replaced_cells'));
+                        $set('replaced_cells', array_slice(array_pad($rows, $count, ['cell' => null, 'voltage' => null, 'density' => null]), 0, $count));
+                    }),
+                Repeater::make('replaced_cells')
+                    ->label(__('erp.interventions.cells.replaced'))
+                    ->columns(3)
+                    ->addable(false)
+                    ->deletable(false)
+                    ->reorderable(false)
+                    ->defaultItems(0)
+                    ->schema([
+                        TextInput::make('cell')->label(__('erp.interventions.cells.cell'))->integer()->minValue(1)->maxValue($cells)->required()->distinct(),
+                        $volt('voltage')->label(__('erp.interventions.cells.voltage'))->required(),
+                        TextInput::make('density')->label(__('erp.interventions.cells.density'))->helperText(__('erp.interventions.cells.density_help'))->numeric()->minValue(1)->maxValue(1.4)->step('any'),
+                    ]),
+                Section::make(__('erp.interventions.cells.full', ['count' => $cells]))
+                    ->description(__('erp.interventions.cells.full_help'))
+                    ->compact()
+                    ->columns(['default' => 3, 'md' => 6])
+                    ->schema([
+                        ...array_map(fn (int $index): TextInput => $volt("full_cells.{$index}")->label(__('erp.interventions.cells.cell').' '.($index + 1))->required(), range(0, $cells - 1)),
+                        $volt('full_total_voltage')
+                            ->label(__('erp.interventions.cells.total'))
+                            ->helperText(__('erp.interventions.cells.total_help'))
+                            ->maxValue(9999)
+                            ->columnSpan(['default' => 3, 'md' => 2]),
+                    ]),
+            ]);
     }
 
     /**
@@ -178,6 +258,7 @@ class CloseInterventionAction
                         ->searchable()
                         ->columnSpanFull(),
                 ]),
+            self::cellSection(),
             Section::make(__('erp.interventions.materials'))
                 ->description(fn (Get $get): string => __('erp.interventions.materials_help.'.(count($directions($get)) > 1 ? 'both' : ($directions($get)[0] ?? MaterialDirection::Used)->value)))
                 ->schema([

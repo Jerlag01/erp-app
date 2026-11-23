@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Interventions\CloseIntervention;
 use App\Actions\Interventions\ReviewIntervention;
 use App\Enums\InterventionCategoryKind;
 use App\Enums\InterventionReportStatus;
@@ -26,6 +27,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -435,5 +437,61 @@ class InterventionTest extends TestCase
         $this->assertTrue(WasteReportsRelationManager::canViewForRecord($this->intervention(['intervention_subcategory_id' => $colibri->id, 'intervention_phase' => 'PHASE 2']), ViewProject::class));
         $this->assertFalse(WasteReportsRelationManager::canViewForRecord($this->intervention(['intervention_subcategory_id' => $colibri->id, 'intervention_phase' => 'PHASE 1']), ViewProject::class));
         $this->assertFalse(WasteReportsRelationManager::canViewForRecord($this->intervention(), ViewProject::class));
+    }
+
+    #[Test]
+    public function a_battery_cell_replacement_asks_the_replaced_cells_and_the_full_battery(): void
+    {
+        Repeater::fake();
+        $cells = InterventionCategory::factory()->create(['kind' => InterventionCategoryKind::Category, 'name' => 'CELVERVANGING', 'measures_cells' => true]);
+        $team = Team::factory()->create();
+        $employee = User::factory()->withPermissions(['projects' => ['view']])->inTeam($team)->create();
+        $project = $this->intervention(team: $team);
+        $this->actingAs($employee);
+        $full = array_map(fn (int $cell): float => 2.2 + $cell / 1000, range(1, 24));
+        $measurement = [
+            'replaced_count' => 2,
+            'replaced_cells' => [['cell' => 17, 'voltage' => '2.231', 'density' => '1.240'], ['cell' => 3, 'voltage' => 2.228, 'density' => null]],
+            'full_cells' => $full,
+        ];
+
+        // An ordinary category does not ask it.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->mountAction('closeIntervention')
+            ->assertSchemaComponentHidden('replaced_count', 'mountedActionSchema0');
+
+        // The cell replacement does: without the measurement it can not be closed.
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('closeIntervention', $this->closeData($project, ['categories' => [$cells->id]]))
+            ->assertHasActionErrors(['replaced_count' => 'required']);
+
+        try {
+            app(CloseIntervention::class)->handle($project, $this->closeData($project, ['categories' => [$cells->id], ...$measurement, 'replaced_count' => 3]), $employee);
+            $this->fail('The number of replaced cells and the rows must match.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('replaced_cells', $exception->errors());
+        }
+
+        try {
+            app(CloseIntervention::class)->handle($project, $this->closeData($project, ['categories' => [$cells->id], ...$measurement, 'full_cells' => array_slice($full, 0, 23)]), $employee);
+            $this->fail('The full battery needs 24 cells.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('full_cells.23', $exception->errors());
+        }
+
+        $report = app(CloseIntervention::class)->handle($project, $this->closeData($project, ['categories' => [$cells->id], ...$measurement]), $employee);
+
+        $measured = $report->fresh()->cellMeasurement();
+        $this->assertSame([['cell' => 3, 'voltage' => 2.228, 'density' => null], ['cell' => 17, 'voltage' => 2.231, 'density' => 1.24]], $measured['replaced']);
+        $this->assertCount(24, $measured['cells']);
+        $this->assertSame(round(array_sum($full), 2), $measured['total_voltage'], 'Without a total the sum of the cells.');
+
+        // In the PDF for review, and the rest of the report as usual.
+        $fresh = $report->fresh();
+        $html = view('interventions.report-pdf', ['report' => $fresh, 'project' => $fresh->project])->render();
+        $this->assertStringContainsString(__('erp.interventions.cells.title'), $html);
+        $this->assertStringContainsString('2,231 V', $html);
+        $this->assertSame(['CELVERVANGING'], $report->categoryNames());
+        $this->assertSame('XVB 3G2.5', $report->materials->sole()->description);
     }
 }
