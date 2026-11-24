@@ -3,14 +3,17 @@
 namespace Tests\Feature;
 
 use App\Enums\InterventionReportStatus;
+use App\Enums\ProjectFileSection;
 use App\Enums\ProjectStatus;
 use App\Models\InterventionCategory;
 use App\Models\InterventionReport;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkSite;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -156,5 +159,34 @@ class MobileInterventionApiTest extends TestCase
         $measurement = InterventionReport::sole()->cellMeasurement();
         $this->assertSame([['cell' => 5, 'voltage' => 2.24, 'density' => null]], $measurement['replaced']);
         $this->assertSame(53.52, $measurement['total_voltage']);
+    }
+
+    #[Test]
+    public function the_app_shows_the_photos_and_files_of_an_intervention_and_its_due_date(): void
+    {
+        $this->travelTo('2026-11-24');
+        $team = Team::factory()->create();
+        $employee = User::factory()->withPermissions(['projects' => ['view']])->inTeam($team)->create();
+        $auth = $this->mobileAuth($employee);
+        $project = $this->intervention($team);
+        $project->update(['intervention_due_on' => '2026-11-21']);
+        $photo = ProjectFile::store($project, ProjectFileSection::Images, UploadedFile::fake()->image('kast.jpg'));
+        $plan = ProjectFile::store($project, ProjectFileSection::Documents, UploadedFile::fake()->create('schema.pdf', 20, 'application/pdf'));
+        ProjectFile::store($project, ProjectFileSection::Extra, UploadedFile::fake()->create('notities.txt', 1, 'text/plain'));
+        $offer = ProjectFile::store($project, ProjectFileSection::Offers, UploadedFile::fake()->create('offerte.pdf', 20, 'application/pdf'));
+
+        $sections = $this->getJson("/api/v1/interventions/{$project->id}", $auth)->assertOk()
+            ->assertJsonPath('data.due_on', '21/11/2026')
+            ->assertJsonPath('data.overdue', true)
+            ->json('data.file_sections');
+        $this->assertSame(['images', 'documents', 'extra'], array_column($sections, 'section'));
+        $this->assertTrue($sections[0]['files'][0]['image']);
+        $this->getJson('/api/v1/interventions', $auth)->assertJsonPath('data.0.overdue', true);
+
+        // Opened through a short-lived signed link; financial files never.
+        $url = $this->getJson("/api/v1/interventions/{$project->id}/files/{$plan->id}", $auth)->assertOk()->json('url');
+        $this->get($url)->assertOk();
+        $this->getJson("/api/v1/interventions/{$project->id}/files/{$photo->id}", $auth)->assertOk();
+        $this->getJson("/api/v1/interventions/{$project->id}/files/{$offer->id}", $auth)->assertNotFound();
     }
 }

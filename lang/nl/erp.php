@@ -2905,6 +2905,10 @@ return [
         'sort' => 'Volgorde',
         'frees_material' => 'Maakt materiaal vrij',
         'frees_material_help' => 'Materiaal bij interventies met deze categorie is "vrijgekomen" in plaats van "gebruikt" (bv. DECONNECT).',
+        'due_on' => 'Uiterste uitvoeringsdatum',
+        'due_on_help' => 'Verplicht: de datum waarop de interventie ten laatste uitgevoerd moet zijn. Is ze dan nog niet uitgevoerd, dan kleurt het project rood.',
+        'overdue' => 'Te laat: de uiterste uitvoeringsdatum is verstreken',
+        'overdue_filter' => 'Enkel te laat',
         'measures_cells' => 'Celmeting (batterijvervanging slechte cellen)',
         'measures_cells_help' => 'Bij het afsluiten wordt de meting gevraagd van de vervangen cellen en van de volledige batterij (24 cellen).',
         'cells' => [

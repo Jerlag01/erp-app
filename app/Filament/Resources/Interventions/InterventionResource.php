@@ -16,6 +16,7 @@ use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -103,6 +104,8 @@ class InterventionResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'interventionCategories', 'interventionSubcategory', 'interventionReport', 'interventionReports.workSite', 'interventionWorkSites']))
             ->defaultSort('created_at', 'desc')
             ->recordUrl(fn (Project $record): string => ProjectResource::getUrl('view', ['record' => $record]))
+            // Past its due date and not executed yet: the row is red.
+            ->recordClasses(fn (Project $record): ?string => $record->isInterventionOverdue() ? 'erp-row-overdue' : null)
             ->searchPlaceholder(__('erp.interventions.search'))
             ->columns([
                 TextColumn::make('work_order_number')
@@ -129,6 +132,15 @@ class InterventionResource extends Resource
                     ->badge()
                     ->description(fn (Project $record): ?string => $record->interventionSubcategoryLabel())
                     ->placeholder('—'),
+                TextColumn::make('intervention_due_on')
+                    ->label(__('erp.interventions.due_on'))
+                    ->date('d/m/Y')
+                    ->color(fn (Project $record): ?string => $record->isInterventionOverdue() ? 'danger' : null)
+                    ->weight(fn (Project $record): ?FontWeight => $record->isInterventionOverdue() ? FontWeight::Bold : null)
+                    ->icon(fn (Project $record): ?Heroicon => $record->isInterventionOverdue() ? Heroicon::OutlinedExclamationTriangle : null)
+                    ->tooltip(fn (Project $record): ?string => $record->isInterventionOverdue() ? __('erp.interventions.overdue') : null)
+                    ->placeholder('—')
+                    ->sortable(),
                 TextColumn::make('status')
                     ->label(__('erp.fields.status'))
                     ->badge()
@@ -154,6 +166,10 @@ class InterventionResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                Filter::make('overdue')
+                    ->label(__('erp.interventions.overdue_filter'))
+                    ->query(fn (Builder $query): Builder => $query->interventionOverdue())
+                    ->toggle(),
                 SelectFilter::make('status')
                     ->label(__('erp.fields.status'))
                     ->options(ProjectStatus::class)

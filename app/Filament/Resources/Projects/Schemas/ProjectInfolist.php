@@ -120,6 +120,15 @@ class ProjectInfolist
                                     ->copyable()
                                     ->placeholder('—')
                                     ->visible(fn (Project $record): bool => $record->isIntervention()),
+                                TextEntry::make('intervention_due_on')
+                                    ->label(__('erp.interventions.due_on'))
+                                    ->date('d/m/Y')
+                                    ->color(fn (Project $record): ?string => $record->isInterventionOverdue() ? 'danger' : null)
+                                    ->weight(fn (Project $record): ?FontWeight => $record->isInterventionOverdue() ? FontWeight::Bold : null)
+                                    ->icon(fn (Project $record): ?Heroicon => $record->isInterventionOverdue() ? Heroicon::OutlinedExclamationTriangle : null)
+                                    ->helperText(fn (Project $record): ?string => $record->isInterventionOverdue() ? __('erp.interventions.overdue') : null)
+                                    ->placeholder('—')
+                                    ->visible(fn (Project $record): bool => $record->isIntervention()),
                                 TextEntry::make('short_description')
                                     ->label(__('erp.projects.short_description'))
                                     ->visible(fn (Project $record): bool => $record->category->has_short_description)

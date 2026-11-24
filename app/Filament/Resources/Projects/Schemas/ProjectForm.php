@@ -97,6 +97,14 @@ class ProjectForm
                                     ->dehydrateStateUsing(fn (?string $state): ?string => self::workOrderNumber($state))
                                     ->visible($isIntervention)
                                     ->extraInputAttributes(['style' => 'font-family: var(--erp-mono);']),
+                                // Required: the latest date the intervention must be executed by; past it (and not executed) it shows in red.
+                                DatePicker::make('intervention_due_on')
+                                    ->label(__('erp.interventions.due_on'))
+                                    ->helperText(__('erp.interventions.due_on_help'))
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->required($isIntervention)
+                                    ->visible($isIntervention),
                                 // Empty on a new project: the next in line. On an existing one it can be corrected;
                                 // the reference follows.
                                 TextInput::make('number')

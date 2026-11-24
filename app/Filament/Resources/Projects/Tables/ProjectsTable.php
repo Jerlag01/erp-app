@@ -29,6 +29,8 @@ class ProjectsTable
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'leaders', 'poNumbers', 'latestGpwRequest.sites'])->withCount('steps')
                 ->when(ProjectWorkdays::canView(auth()->user()), fn (Builder $query) => ProjectWorkdays::withWorkedDays($query)))
             ->defaultSort('created_at', 'desc')
+            // An intervention past its due date and not executed yet: the row is red.
+            ->recordClasses(fn (Project $record): ?string => $record->isInterventionOverdue() ? 'erp-row-overdue' : null)
             ->searchPlaceholder(__('erp.projects.search'))
             ->columns([
                 TextColumn::make('reference')

@@ -54,6 +54,7 @@ class InterventionTest extends TestCase
         $site = WorkSite::query()->where('cow_code', '02GAM')->first() ?? WorkSite::factory()->create(['cow_code' => '02GAM']);
         $project = Project::factory()->inCategory('600')->for($site)->create([
             'work_order_number' => 'WO'.fake()->unique()->numerify('######'),
+            'intervention_due_on' => today()->addWeeks(2)->toDateString(),
             'status' => ProjectStatus::ToBeExecuted,
             ...$attributes,
         ]);
@@ -112,7 +113,8 @@ class InterventionTest extends TestCase
         Livewire::test(CreateProject::class)
             ->fillForm(['project_category_id' => $category, 'work_site_id' => $site->id])
             ->call('create')
-            ->assertHasFormErrors(['work_order_number' => 'required']);
+            // The WO number and the due date are both required.
+            ->assertHasFormErrors(['work_order_number' => 'required', 'intervention_due_on' => 'required']);
 
         Livewire::test(CreateProject::class)
             ->fillForm(['project_category_id' => $category, 'work_site_id' => $site->id, 'work_order_number' => 'WO 123456'])
@@ -124,6 +126,7 @@ class InterventionTest extends TestCase
                 'project_category_id' => $category,
                 'work_site_id' => $site->id,
                 'work_order_number' => 'wo 654321',
+                'intervention_due_on' => '2026-12-31',
                 'short_description' => 'Storing gelijkrichter',
                 'interventionCategories' => [$this->category('PREPARE')->id, $this->category('CONNECT')->id],
                 'intervention_subcategory_id' => $colibri->id,
@@ -134,6 +137,7 @@ class InterventionTest extends TestCase
 
         $project = Project::query()->where('work_order_number', '654321')->sole();
         $this->assertSame(ProjectStatus::ToBeExecuted, $project->status);
+        $this->assertSame('2026-12-31', $project->intervention_due_on->toDateString());
         $this->assertSame(['PREPARE', 'CONNECT'], $project->interventionCategories->pluck('name')->all());
         $this->assertSame('COLIBRI · PHASE 2 · FRM220 FIRE', $project->interventionSubcategoryLabel());
         $this->assertSame(0, $project->poNumbers()->count(), 'Interventions get their PO number when approved.');
@@ -364,6 +368,7 @@ class InterventionTest extends TestCase
             'project_category_id' => $category,
             'work_site_id' => $site->id,
             'work_order_number' => $wo,
+            'intervention_due_on' => today()->addWeek()->toDateString(),
             'short_description' => 'Storing gelijkrichter',
             'interventionCategories' => [$this->category('PREPARE')->id],
             'intervention_subcategory_id' => $this->category('COLIBRI')->id,
@@ -493,5 +498,32 @@ class InterventionTest extends TestCase
         $this->assertStringContainsString('2,231 V', $html);
         $this->assertSame(['CELVERVANGING'], $report->categoryNames());
         $this->assertSame('XVB 3G2.5', $report->materials->sole()->description);
+    }
+
+    #[Test]
+    public function an_intervention_past_its_due_date_and_not_executed_turns_red(): void
+    {
+        $this->travelTo('2026-11-24');
+        $team = Team::factory()->create();
+        $member = User::factory()->withPermissions(['projects' => ['view']])->inTeam($team)->create();
+        $late = $this->intervention(['intervention_due_on' => '2026-11-20'], $team);
+        $today = $this->intervention(['intervention_due_on' => '2026-11-24'], $team);
+        $done = $this->intervention(['intervention_due_on' => '2026-11-20', 'status' => ProjectStatus::Executed], $team);
+        $none = $this->intervention(['intervention_due_on' => null], $team);
+
+        $this->assertSame([true, false, false, false], [$late->isInterventionOverdue(), $today->isInterventionOverdue(), $done->isInterventionOverdue(), $none->isInterventionOverdue()]);
+        $this->assertSame([$late->id], Project::query()->interventionOverdue()->pluck('id')->all());
+
+        $this->actingAs($member);
+        Livewire::test(ListInterventions::class)
+            ->set('activeTab', 'all')
+            ->assertSeeHtml('erp-row-overdue')
+            ->filterTable('overdue', true)
+            ->assertCanSeeTableRecords([$late])
+            ->assertCanNotSeeTableRecords([$today, $done, $none]);
+
+        // Not executed yet: still red after a status change that is not "executed".
+        $late->update(['status' => ProjectStatus::InProgress]);
+        $this->assertTrue($late->fresh()->isInterventionOverdue());
     }
 }

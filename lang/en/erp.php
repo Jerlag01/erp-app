@@ -2905,6 +2905,10 @@ return [
         'sort' => 'Order',
         'frees_material' => 'Frees material',
         'frees_material_help' => 'Material on interventions with this category is "freed" instead of "used" (e.g. DECONNECT).',
+        'due_on' => 'Due date',
+        'due_on_help' => 'Required: the date the intervention must be executed by at the latest. If it is not executed by then, the project turns red.',
+        'overdue' => 'Overdue: the due date has passed',
+        'overdue_filter' => 'Only overdue',
         'measures_cells' => 'Cell measurement (battery replacement for bad cells)',
         'measures_cells_help' => 'When closing, the measurement of the replaced cells and of the full battery (24 cells) is asked.',
         'cells' => [

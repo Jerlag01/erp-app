@@ -103,6 +103,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('/work-sites', [InterventionController::class, 'workSites'])->name('work-sites');
             Route::get('/{id}', [InterventionController::class, 'show'])->whereNumber('id')->name('show');
             Route::post('/{id}/close', [InterventionController::class, 'close'])->whereNumber('id')->name('close');
+            Route::get('/{id}/files/{file}', [InterventionController::class, 'file'])->whereNumber(['id', 'file'])->name('file');
         });
 
         // Cable stripping: for employees planned in the warehouse; add lines and see their own.

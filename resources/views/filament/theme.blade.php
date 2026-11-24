@@ -67,4 +67,7 @@
     .fi-simple-main { border-top: 4px solid var(--erp-accent); }
     .fi-simple-header .fi-logo { color: var(--erp-navy); }
     .dark .fi-simple-header .fi-logo { color: #fff; }
+    /* An intervention past its due date and not executed yet. */
+    .fi-ta-row.erp-row-overdue { background: rgb(220 38 38 / .08); box-shadow: inset 4px 0 0 rgb(220 38 38); }
+    .dark .fi-ta-row.erp-row-overdue { background: rgb(248 113 113 / .12); box-shadow: inset 4px 0 0 rgb(248 113 113); }
 </style>

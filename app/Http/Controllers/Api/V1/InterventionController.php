@@ -6,12 +6,14 @@ use App\Actions\Interventions\CloseIntervention;
 use App\Enums\InterventionCategoryKind;
 use App\Enums\InterventionReportStatus;
 use App\Enums\MaterialDirection;
+use App\Enums\ProjectFileSection;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\RelationManagers\PartsRelationManager;
 use App\Http\Controllers\Controller;
 use App\Models\InterventionCategory;
 use App\Models\InterventionReport;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\StockItem;
 use App\Models\Unit;
 use App\Models\User;
@@ -19,6 +21,7 @@ use App\Models\WorkSite;
 use App\Support\Interventions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Interventions in the mobile app: the ones the employee sees (as under Interventions on the
@@ -28,6 +31,12 @@ use Illuminate\Http\Request;
  */
 class InterventionController extends Controller
 {
+    /** The files the team sees on an intervention in the app: photos, files and extra files. */
+    public const FILE_SECTIONS = [ProjectFileSection::Images, ProjectFileSection::Documents, ProjectFileSection::Extra];
+
+    /** How long the link to open a file in the phone's browser works. */
+    public const LINK_MINUTES = 10;
+
     protected const RELATIONS = ['category', 'workSite', 'interventionReport', 'interventionReports.workSite', 'interventionWorkSites', 'interventionCategories'];
 
     public function __construct(protected Interventions $interventions) {}
@@ -65,6 +74,7 @@ class InterventionController extends Controller
             ...$this->summary($project, $user),
             'overview' => array_values(array_filter([
                 ['label' => __('erp.interventions.wo_number'), 'value' => $project->work_order_number],
+                ['label' => __('erp.interventions.due_on'), 'value' => $project->intervention_due_on?->format('d/m/Y')],
                 ['label' => __('erp.interventions.cow_code'), 'value' => $site['work_site']?->cow_code ?? $project->cow_code],
                 ['label' => __('erp.batteries.overview.address'), 'value' => $project->addressLine() ?? $project->workSite?->addressLine()],
                 ['label' => __('erp.interventions.subcategory'), 'value' => $project->interventionSubcategoryLabel()],
@@ -73,6 +83,8 @@ class InterventionController extends Controller
                 ['label' => __('erp.interventions.executed_at'), 'value' => $report?->executed_at?->format('d/m/Y H:i')],
             ], fn (array $row): bool => filled($row['value']))),
             'maps_url' => ($site['work_site'] ?? $project->workSite)?->googleMapsUrl(),
+            // Photos, files and extra files of the intervention, opened through a short-lived link.
+            'file_sections' => $this->fileSections($project),
             // The COW codes of the intervention, each with its own form; site_id is the one shown.
             'several_sites' => $several,
             'site_id' => $site['work_site_id'],
@@ -241,7 +253,55 @@ class InterventionController extends Controller
             'report_status_label' => $label,
             'review_note' => $note,
             'can_close' => $this->interventions->canClose($user, $project),
+            // Past the date it had to be executed by and not executed yet: shown in red.
+            'due_on' => $project->intervention_due_on?->format('d/m/Y'),
+            'overdue' => $project->isInterventionOverdue(),
         ];
+    }
+
+    /**
+     * A short-lived link to open one of the intervention's photos or files in the phone's browser (it has no session).
+     */
+    public function file(Request $request, int $id, int $file): JsonResponse
+    {
+        $project = $this->find($request->user(), $id);
+        $found = $project->files()->whereKey($file)->whereIn('section', array_map(fn (ProjectFileSection $section): string => $section->value, self::FILE_SECTIONS))->firstOrFail();
+
+        return response()->json([
+            'url' => URL::temporarySignedRoute('mobile.project-file', now()->addMinutes(self::LINK_MINUTES), ['project' => $project->id, 'file' => $found->id]),
+        ]);
+    }
+
+    /**
+     * @return list<array{section: string, label: string, files: list<array<string, mixed>>}>
+     */
+    protected function fileSections(Project $project): array
+    {
+        $files = $project->files()
+            ->whereIn('section', array_map(fn (ProjectFileSection $section): string => $section->value, self::FILE_SECTIONS))
+            ->with('latestVersion')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (ProjectFile $file): bool => $file->latestVersion !== null)
+            ->groupBy('section');
+
+        return collect(self::FILE_SECTIONS)
+            ->filter(fn (ProjectFileSection $section): bool => $files->has($section->value))
+            ->map(fn (ProjectFileSection $section): array => [
+                'section' => $section->value,
+                'label' => $section->getLabel(),
+                'files' => $files[$section->value]->map(fn (ProjectFile $file): array => [
+                    'id' => $file->id,
+                    'name' => $file->name,
+                    'version' => $file->version,
+                    'size' => $file->latestVersion->humanSize(),
+                    'uploaded_at' => $file->latestVersion->created_at?->format('d/m/Y'),
+                    // A picture can be shown as a picture in the app.
+                    'image' => $file->latestVersion->isPreviewableImage(),
+                ])->values()->all(),
+            ])
+            ->values()
+            ->all();
     }
 
     /**

@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[Fillable([
     'project_category_id', 'number', 'work_order_number', 'work_site_id', 'location_type', 'short_description', 'estimated_workdays', 'status', 'invoice_requested_at',
-    'intervention_subcategory_id', 'intervention_phase', 'intervention_tags',
+    'intervention_subcategory_id', 'intervention_phase', 'intervention_tags', 'intervention_due_on',
     'client_name', 'client_company', 'client_email', 'client_phone',
     'street', 'house_number', 'addition', 'postal_code', 'city', 'country_id', 'notes', 'created_by', 'source_project_id',
 ])]
@@ -296,6 +296,27 @@ class Project extends Model
     public function isArchived(): bool
     {
         return $this->archived_at !== null;
+    }
+
+    /**
+     * An intervention past the date it had to be executed by, and not executed yet: shown in red.
+     */
+    public function isInterventionOverdue(): bool
+    {
+        return $this->intervention_due_on !== null
+            && $this->intervention_due_on->lt(today())
+            && in_array($this->status, ProjectStatus::beforeExecution(), true)
+            && $this->isIntervention();
+    }
+
+    /**
+     * @param  Builder<Project>  $query
+     */
+    public function scopeInterventionOverdue(Builder $query): void
+    {
+        $query->whereNotNull('intervention_due_on')
+            ->whereDate('intervention_due_on', '<', today())
+            ->whereIn('status', array_map(fn (ProjectStatus $status): string => $status->value, ProjectStatus::beforeExecution()));
     }
 
     public function isIntervention(): bool
@@ -672,6 +693,7 @@ class Project extends Model
             'location_type' => SiteLocationType::class,
             'intervention_tags' => 'array',
             'archived_at' => 'datetime',
+            'intervention_due_on' => 'date',
             'executed_at' => 'datetime',
             'invoice_requested_at' => 'date',
         ];

@@ -65,6 +65,16 @@ enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
     }
 
     /**
+     * Not executed yet (an intervention past its due date then shows in red).
+     *
+     * @return list<self>
+     */
+    public static function beforeExecution(): array
+    {
+        return [self::Offer, self::WaitingForPo, self::Ordered, self::ToBePlanned, self::Planned, self::ToBeExecuted, self::InProgress];
+    }
+
+    /**
      * @return list<self>
      */
     public static function open(): array
