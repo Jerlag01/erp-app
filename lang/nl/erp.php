@@ -2905,6 +2905,8 @@ return [
         'sort' => 'Volgorde',
         'frees_material' => 'Maakt materiaal vrij',
         'frees_material_help' => 'Materiaal bij interventies met deze categorie is "vrijgekomen" in plaats van "gebruikt" (bv. DECONNECT).',
+        'planned_on' => 'Gepland',
+        'not_planned' => 'Nog niet gepland',
         'due_on' => 'Uiterste uitvoeringsdatum',
         'due_on_help' => 'Verplicht: de datum waarop de interventie ten laatste uitgevoerd moet zijn. Is ze dan nog niet uitgevoerd, dan kleurt het project rood.',
         'overdue' => 'Te laat: de uiterste uitvoeringsdatum is verstreken',

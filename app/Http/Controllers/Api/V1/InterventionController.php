@@ -7,6 +7,7 @@ use App\Enums\InterventionCategoryKind;
 use App\Enums\InterventionReportStatus;
 use App\Enums\MaterialDirection;
 use App\Enums\ProjectFileSection;
+use App\Filament\Resources\Interventions\InterventionResource;
 use App\Filament\Resources\Projects\Actions\CloseInterventionAction;
 use App\Filament\Resources\Projects\RelationManagers\PartsRelationManager;
 use App\Http\Controllers\Controller;
@@ -75,6 +76,7 @@ class InterventionController extends Controller
             'overview' => array_values(array_filter([
                 ['label' => __('erp.interventions.wo_number'), 'value' => $project->work_order_number],
                 ['label' => __('erp.interventions.due_on'), 'value' => $project->intervention_due_on?->format('d/m/Y')],
+                ['label' => __('erp.interventions.planned_on'), 'value' => InterventionResource::plannedLabel($project->planningItems()->min('date'), $project->planningItems()->max('date')) ?? __('erp.interventions.not_planned')],
                 ['label' => __('erp.interventions.cow_code'), 'value' => $site['work_site']?->cow_code ?? $project->cow_code],
                 ['label' => __('erp.batteries.overview.address'), 'value' => $project->addressLine() ?? $project->workSite?->addressLine()],
                 ['label' => __('erp.interventions.subcategory'), 'value' => $project->interventionSubcategoryLabel()],

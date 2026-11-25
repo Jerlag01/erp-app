@@ -2905,6 +2905,8 @@ return [
         'sort' => 'Ordre',
         'frees_material' => 'Libère du matériel',
         'frees_material_help' => 'Le matériel des interventions avec cette catégorie est « libéré » au lieu d\'« utilisé » (p. ex. DECONNECT).',
+        'planned_on' => 'Planifié',
+        'not_planned' => 'Pas encore planifié',
         'due_on' => 'Date d\'exécution limite',
         'due_on_help' => 'Obligatoire : la date à laquelle l\'intervention doit être exécutée au plus tard. Si elle n\'est pas encore exécutée, le projet devient rouge.',
         'overdue' => 'En retard : la date d\'exécution limite est dépassée',

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Actions\Gpw\SyncGpwStatus;
+use App\Actions\Projects\SyncPlanningStatus;
 use App\Enums\BatteryTechnology;
 use App\Enums\PlanningKind;
 use App\Support\Interventions;
@@ -377,15 +378,28 @@ class PlanningItem extends Model
                 return;
             }
 
+            // An intervention planned for someone: their team(s) are assigned to it (never taken off again here).
+            if (($item->wasRecentlyCreated || $item->wasChanged(['is_draft', 'project_id', 'user_id'])) && $item->project_id !== null && $item->user_id !== null) {
+                $project = Project::query()->with('category')->find($item->project_id);
+                $teams = $project?->isIntervention() ? User::query()->find($item->user_id)?->teams()->pluck('teams.id')->all() : [];
+
+                if ($teams !== []) {
+                    $project->teams()->syncWithoutDetaching($teams);
+                }
+            }
+
             if ($item->wasRecentlyCreated || $item->wasChanged(['is_draft', 'project_id', 'date', 'kind'])) {
                 foreach (array_unique(array_filter([$item->project_id, $item->getOriginal('project_id')])) as $projectId) {
                     app(SyncGpwStatus::class)->forProject((int) $projectId);
+                    // A 604 or an intervention follows its planning (planned, in progress, executed).
+                    app(SyncPlanningStatus::class)->forProject((int) $projectId);
                 }
             }
         });
         static::deleted(function (self $item): void {
             if ($item->project_id !== null && ! $item->is_draft) {
                 app(SyncGpwStatus::class)->forProject($item->project_id);
+                app(SyncPlanningStatus::class)->forProject($item->project_id);
             }
         });
 

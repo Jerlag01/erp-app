@@ -43,6 +43,8 @@ class PlanningTest extends TestCase
 
         Filament::setCurrentPanel('app');
         Mail::fake();
+        // The tests plan around 12/10/2026: a 604 or intervention planned in the past is executed at once (SyncPlanningStatus).
+        $this->travelTo('2026-10-01 08:00');
     }
 
     /**

@@ -2905,6 +2905,8 @@ return [
         'sort' => 'Order',
         'frees_material' => 'Frees material',
         'frees_material_help' => 'Material on interventions with this category is "freed" instead of "used" (e.g. DECONNECT).',
+        'planned_on' => 'Planned',
+        'not_planned' => 'Not planned yet',
         'due_on' => 'Due date',
         'due_on_help' => 'Required: the date the intervention must be executed by at the latest. If it is not executed by then, the project turns red.',
         'overdue' => 'Overdue: the due date has passed',

@@ -21,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
@@ -98,10 +99,28 @@ class InterventionResource extends Resource
         return app(Interventions::class)->visibleTo(auth()->user());
     }
 
+    /**
+     * "12/12/2026", or "12/12/2026 – 14/12/2026" when it is planned on several days.
+     */
+    public static function plannedLabel(mixed $from, mixed $until): ?string
+    {
+        if (blank($from)) {
+            return null;
+        }
+
+        $from = Carbon::parse($from)->format('d/m/Y');
+        $until = filled($until) ? Carbon::parse($until)->format('d/m/Y') : $from;
+
+        return $from === $until ? $from : $from.' – '.$until;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'interventionCategories', 'interventionSubcategory', 'interventionReport', 'interventionReports.workSite', 'interventionWorkSites']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['category', 'workSite', 'interventionCategories', 'interventionSubcategory', 'interventionReport', 'interventionReports.workSite', 'interventionWorkSites'])
+                // When it is planned (confirmed planning only): the first and last planned day.
+                ->withMin('planningItems as planned_from', 'date')
+                ->withMax('planningItems as planned_until', 'date'))
             ->defaultSort('created_at', 'desc')
             ->recordUrl(fn (Project $record): string => ProjectResource::getUrl('view', ['record' => $record]))
             // Past its due date and not executed yet: the row is red.
@@ -140,6 +159,11 @@ class InterventionResource extends Resource
                     ->icon(fn (Project $record): ?Heroicon => $record->isInterventionOverdue() ? Heroicon::OutlinedExclamationTriangle : null)
                     ->tooltip(fn (Project $record): ?string => $record->isInterventionOverdue() ? __('erp.interventions.overdue') : null)
                     ->placeholder('—')
+                    ->sortable(),
+                TextColumn::make('planned_from')
+                    ->label(__('erp.interventions.planned_on'))
+                    ->state(fn (Project $record): ?string => self::plannedLabel($record->planned_from, $record->planned_until))
+                    ->placeholder(__('erp.interventions.not_planned'))
                     ->sortable(),
                 TextColumn::make('status')
                     ->label(__('erp.fields.status'))

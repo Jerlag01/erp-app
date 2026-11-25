@@ -25,6 +25,9 @@ Schedule::command('distributors:sync-orders')->hourly()->withoutOverlapping();
 // System backups to the backup targets that are due (Systeem → Back-ups); each target has its own time and frequency.
 Schedule::command('backups:run')->everyFifteenMinutes()->withoutOverlapping();
 
+// 604 projects and interventions follow their planning as the days go by (in progress, executed); before the GPW requests, which follow the project.
+Schedule::command('projects:sync-planning-statuses')->dailyAt('00:10')->withoutOverlapping();
+
 // GPW requests follow their project as the days go by: "in progress" once a planned day of the period has come.
 Schedule::command('gpw:sync-statuses')->dailyAt('00:15')->withoutOverlapping();
 

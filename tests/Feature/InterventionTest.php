@@ -15,6 +15,7 @@ use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\Projects\RelationManagers\WasteReportsRelationManager;
+use App\Models\BatteryDossier;
 use App\Models\InterventionCategory;
 use App\Models\InterventionReport;
 use App\Models\PlanningItem;
@@ -525,5 +526,108 @@ class InterventionTest extends TestCase
         // Not executed yet: still red after a status change that is not "executed".
         $late->update(['status' => ProjectStatus::InProgress]);
         $this->assertTrue($late->fresh()->isInterventionOverdue());
+    }
+
+    #[Test]
+    public function an_intervention_follows_its_planning_and_closes_once_invoiced(): void
+    {
+        $this->travelTo('2026-11-25');
+        $team = Team::factory()->create();
+        $member = User::factory()->withPermissions(['projects' => ['view']])->inTeam($team)->create();
+        $project = $this->intervention([], $team);
+        $employee = User::factory()->inTeam($team)->create();
+
+        // A draft is not the planning yet.
+        PlanningItem::factory()->draft()->for($employee)->forProject($project)->create(['date' => '2026-12-02']);
+        $this->assertSame(ProjectStatus::ToBeExecuted, $project->fresh()->status);
+
+        // Confirmed: planned, with its planned days in the list.
+        $first = PlanningItem::factory()->for($employee)->forProject($project)->create(['date' => '2026-12-02']);
+        $second = PlanningItem::factory()->for($employee)->forProject($project)->create(['date' => '2026-12-03']);
+        $this->assertSame(ProjectStatus::Planned, $project->fresh()->status);
+
+        $this->actingAs($member);
+        Livewire::test(ListInterventions::class)
+            ->set('activeTab', 'all')
+            ->assertSee('02/12/2026 – 03/12/2026');
+
+        // Taken out of the planning again: back to "to be executed".
+        $first->delete();
+        $this->assertSame(ProjectStatus::Planned, $project->fresh()->status);
+        $second->delete();
+        $this->assertSame(ProjectStatus::ToBeExecuted, $project->fresh()->status);
+
+        // An ordinary project is not touched.
+        $other = Project::factory()->inCategory('610')->create(['status' => ProjectStatus::ToBeExecuted]);
+        PlanningItem::factory()->for($employee)->forProject($other)->create(['date' => '2026-12-02']);
+        $this->assertSame(ProjectStatus::ToBeExecuted, $other->fresh()->status);
+
+        // Invoiced: closed and archived by itself.
+        $project->fresh()->update(['status' => ProjectStatus::Invoiced]);
+        $project->refresh();
+        $this->assertSame(ProjectStatus::Closed, $project->status);
+        $this->assertNotNull($project->archived_at);
+        Storage::disk('local')->assertExists($project->archive_path);
+    }
+
+    #[Test]
+    public function an_intervention_and_a_604_are_in_progress_on_their_planned_day_and_executed_once_it_has_passed(): void
+    {
+        $this->travelTo('2026-11-25');
+        $employee = User::factory()->inTeam()->create();
+        $intervention = $this->intervention();
+        $battery = Project::factory()->inCategory('604')->create(['status' => ProjectStatus::Ordered]);
+        $ordinary = Project::factory()->inCategory('610')->create(['status' => ProjectStatus::Planned]);
+
+        foreach ([$intervention, $battery, $ordinary] as $project) {
+            PlanningItem::factory()->for($employee)->forProject($project)->create(['date' => '2026-11-26']);
+            PlanningItem::factory()->for($employee)->forProject($project)->create(['date' => '2026-11-27']);
+        }
+
+        $this->assertSame([ProjectStatus::Planned, ProjectStatus::Planned], [$intervention->fresh()->status, $battery->fresh()->status]);
+
+        // The first planned day: in progress (the nightly run).
+        $this->travelTo('2026-11-26 00:10');
+        $this->artisan('projects:sync-planning-statuses')->assertSuccessful();
+        $this->assertSame([ProjectStatus::InProgress, ProjectStatus::InProgress, ProjectStatus::Planned], [$intervention->fresh()->status, $battery->fresh()->status, $ordinary->fresh()->status]);
+
+        // The last planned day has passed: the intervention is executed; the 604 stays in progress until its
+        // battery dossier is finished, which makes it "invoicing to do" (executed from then on).
+        $this->travelTo('2026-11-28 00:10');
+        $this->artisan('projects:sync-planning-statuses')->assertSuccessful();
+        $this->assertSame([ProjectStatus::Executed, ProjectStatus::InProgress, ProjectStatus::Planned], [$intervention->fresh()->status, $battery->fresh()->status, $ordinary->fresh()->status]);
+
+        $dossier = BatteryDossier::factory()->create(['project_id' => $battery->id, 'photos' => ['batteries/1/photos/a.jpg']]);
+        $dossier->finish($employee);
+        $battery->refresh();
+        $this->assertSame(ProjectStatus::InvoicingToDo, $battery->status);
+        $this->assertNotNull($battery->executed_at);
+
+        // From "executed" on nothing moves back, also when the planning changes.
+        PlanningItem::query()->where('project_id', $intervention->id)->get()->each->delete();
+        $this->assertSame(ProjectStatus::Executed, $intervention->fresh()->status);
+    }
+
+    #[Test]
+    public function planning_someone_on_an_intervention_assigns_their_team_to_it(): void
+    {
+        $team = Team::factory()->create();
+        $employee = User::factory()->inTeam($team)->create();
+        $intervention = $this->intervention();
+        $ordinary = Project::factory()->inCategory('610')->create(['status' => ProjectStatus::ToBeExecuted]);
+
+        // A draft is not the planning yet.
+        PlanningItem::factory()->draft()->for($employee)->forProject($intervention)->create(['date' => today()->addWeek()]);
+        $this->assertSame([], $intervention->teams()->pluck('teams.id')->all());
+
+        PlanningItem::factory()->for($employee)->forProject($intervention)->create(['date' => today()->addWeek()]);
+        PlanningItem::factory()->for($employee)->forProject($ordinary)->create(['date' => today()->addWeek()]);
+
+        $this->assertSame([$team->id], $intervention->teams()->pluck('teams.id')->all());
+        $this->assertSame([], $ordinary->teams()->pluck('teams.id')->all(), 'Only interventions.');
+
+        // Planned again: the team is not added twice.
+        PlanningItem::factory()->for($employee)->forProject($intervention)->create(['date' => today()->addWeeks(2)]);
+        $this->assertSame(1, $intervention->teams()->count());
     }
 }
