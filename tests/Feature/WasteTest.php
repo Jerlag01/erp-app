@@ -432,4 +432,29 @@ class WasteTest extends TestCase
 
         return Cache::get("waste-pdf:{$match[1]}")['ids'];
     }
+
+    #[Test]
+    public function a_long_list_is_printed_in_parts_with_more_memory_for_that_request(): void
+    {
+        $entries = WasteEntry::factory()->count(150)->create();
+        $entries->each(fn (WasteEntry $entry) => WasteEntryLine::factory()->for($entry, 'entry')->create());
+        $entries = WasteEntry::query()->with(['category.parent', 'processor', 'lines'])->get();
+
+        // 150 rows: two tables of at most 100 rows (dompdf holds one table at a time), then the total.
+        $html = view('waste.list-pdf', ['entries' => $entries, 'rows' => collect(), 'title' => 'Afvalregister', 'region' => null, 'period' => '2026'])->render();
+        $this->assertSame(3, substr_count($html, '<table>'));
+        // Every entry printed once (its weight cell), plus the total.
+        $this->assertSame(151, substr_count($html, '<td class="num mono">'));
+        $this->assertStringNotContainsString('nth-child', $html);
+
+        $previous = ini_get('memory_limit');
+        ini_set('memory_limit', '512M');
+
+        try {
+            WastePdfController::allowLargePdf();
+            $this->assertSame(WastePdfController::MEMORY_LIMIT, ini_get('memory_limit'));
+        } finally {
+            ini_set('memory_limit', $previous);
+        }
+    }
 }

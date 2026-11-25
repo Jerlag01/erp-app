@@ -26,6 +26,32 @@ use ZipArchive;
 class WastePdfController
 {
     /**
+     * dompdf keeps every page of the document in memory until the end: a list of a thousand entries needs
+     * some 300 MB, far above the usual 128 MB per request, so these PDFs may use more (this request only).
+     */
+    public const MEMORY_LIMIT = '2048M';
+
+    /**
+     * More memory and time for a long list, never less than the server already allows.
+     */
+    public static function allowLargePdf(): void
+    {
+        $current = ini_get('memory_limit');
+        $bytes = fn (string $value): int => $value === '-1' ? PHP_INT_MAX : (int) $value * match (strtoupper(substr($value, -1))) {
+            'G' => 1024 ** 3,
+            'M' => 1024 ** 2,
+            'K' => 1024,
+            default => 1,
+        };
+
+        if ($current !== false && $bytes($current) < $bytes(self::MEMORY_LIMIT)) {
+            ini_set('memory_limit', self::MEMORY_LIMIT);
+        }
+
+        set_time_limit(300);
+    }
+
+    /**
      * @param  list<int>  $ids
      * @param  array<string, mixed>  $period
      */
@@ -51,6 +77,7 @@ class WastePdfController
         $export = Cache::get("waste-pdf:{$token}");
         abort_if($export === null || $export['user'] !== $request->user()->id, 404);
 
+        self::allowLargePdf();
         $order = array_flip($export['ids']);
         $entries = WasteEntry::query()->whereKey($export['ids'])->with(['category.parent', 'processor', 'lines'])->get()
             ->sortBy(fn (WasteEntry $entry): int => $order[$entry->id] ?? 0)
@@ -72,6 +99,7 @@ class WastePdfController
             'period' => WasteTotals::periodLabel($export['from'], $export['until']),
         ])
             ->setPaper('a4', 'landscape')
+            ->setOption('isFontSubsettingEnabled', true)
             ->download(Str::slug($title).'-'.now()->format('Y-m-d').'.pdf');
     }
 
@@ -122,6 +150,7 @@ class WastePdfController
         ]);
         $region = WasteRegion::from($data['region']);
         $year = (int) $data['year'];
+        self::allowLargePdf();
 
         $lines = WasteEntryLine::query()
             ->join('waste_entries', 'waste_entries.id', '=', 'waste_entry_lines.waste_entry_id')

@@ -8,7 +8,8 @@
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; background: {{ settings()->color('primary') }}; color: #fff; padding: 5px 6px; font-size: 8pt; }
     td { padding: 4px 6px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-    tr:nth-child(even) td { background: #f8fafc; }
+    {{-- A class instead of :nth-child: dompdf matches that selector very slowly on long lists. --}}
+    tr.even td { background: #f8fafc; }
     .num { text-align: right; white-space: nowrap; }
     .mono { font-family: DejaVu Sans Mono, monospace; }
     .muted { color: #64748b; font-size: 8pt; }
