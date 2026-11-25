@@ -76,6 +76,19 @@ class EnersysDossier extends BatteryDossier
         return BatteryInspection::enersysSections();
     }
 
+    public function inspectionGroups(): array
+    {
+        return BatteryInspection::groups(BatteryInspection::ENERSYS_SECTIONS);
+    }
+
+    /**
+     * Enersys: no part can be marked not applicable.
+     */
+    public function notApplicableSections(): array
+    {
+        return [];
+    }
+
     public function typeName(): ?string
     {
         return $this->battery_type;

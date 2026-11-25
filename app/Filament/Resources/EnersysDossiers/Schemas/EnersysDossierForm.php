@@ -38,6 +38,16 @@ class EnersysDossierForm extends BatteryDossierForm
         return BatteryInspection::enersysSections();
     }
 
+    protected static function inspectionGroups(): array
+    {
+        return BatteryInspection::groups(BatteryInspection::ENERSYS_SECTIONS);
+    }
+
+    protected static function notApplicableSections(): array
+    {
+        return [];
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([

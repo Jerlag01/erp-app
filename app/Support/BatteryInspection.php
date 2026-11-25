@@ -38,6 +38,27 @@ class BatteryInspection
     ];
 
     /**
+     * Parts that can be marked not applicable (NVT) as a whole, for battery dossiers and moves: their
+     * questions are then not answered, and the report only says NVT behind the title.
+     */
+    public const NOT_APPLICABLE = ['cabinet', 'acid_trays'];
+
+    /**
+     * The sections with their key, in the current language: [key, title, questions (key => question)].
+     *
+     * @param  array<string, list<string>>  $sections
+     * @return list<array{key: string, title: string, questions: array<string, string>}>
+     */
+    public static function groups(array $sections): array
+    {
+        return array_map(fn (string $section): array => [
+            'key' => $section,
+            'title' => __('battery_documents.inspection.sections.'.$section),
+            'questions' => collect($sections[$section])->mapWithKeys(fn (string $key): array => [$key => __('battery_documents.inspection.questions.'.$key)])->all(),
+        ], array_keys($sections));
+    }
+
+    /**
      * Section title => [key => question], in the current language.
      *
      * @return array<string, array<string, string>>

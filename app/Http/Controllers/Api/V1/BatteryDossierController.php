@@ -113,6 +113,10 @@ class BatteryDossierController extends Controller
             $values['inspection'] = array_filter([...(array) $dossier->inspection, ...(array) $values['inspection']], fn (mixed $answer): bool => $answer !== null);
         }
 
+        if (array_key_exists('inspection_na', $values)) {
+            $values['inspection_na'] = [...(array) $dossier->inspection_na, ...array_map(fn (mixed $value): bool => (bool) $value, (array) $values['inspection_na'])];
+        }
+
         $save->handle($dossier, $values, (array) ($data['batteries'] ?? []), $user);
 
         return response()->json(['message' => __('erp.mobile.saved'), 'data' => $this->payload($this->find($user, $kind, $id), $user)]);
@@ -309,6 +313,9 @@ class BatteryDossierController extends Controller
             'values.average_temperature' => ['nullable', 'numeric', 'min:-50', 'max:100'],
             'values.inspection' => ['nullable', 'array'],
             'values.inspection.*' => ['nullable', Rule::in(['yes', 'no'])],
+            // "Acid trays" and "only in a cabinet" can be marked not applicable (NVT).
+            'values.inspection_na' => ['nullable', 'array'],
+            'values.inspection_na.*' => ['boolean'],
             'values.inspection_remarks' => ['nullable', 'string', 'max:5000'],
             'values.photos_remark' => ['nullable', 'string', 'max:5000'],
         ];
@@ -354,10 +361,13 @@ class BatteryDossierController extends Controller
             ]],
             ['key' => 'inspection', 'title' => __('erp.batteries.tabs.inspection'), 'document' => 'inspection', 'fields' => [
                 $this->field('inspection_remarks', 'textarea', __('erp.batteries.inspection_remarks')),
-            ], 'groups' => collect($dossier->inspectionSections())->map(fn (array $questions, string $title): array => [
-                'title' => $title,
-                'questions' => collect($questions)->map(fn (string $label, string $key): array => ['key' => $key, 'label' => $label])->values()->all(),
-            ])->values()->all()],
+            ], 'groups' => collect($dossier->inspectionGroups())->map(fn (array $group): array => [
+                'key' => $group['key'],
+                'title' => $group['title'],
+                // Can be switched to not applicable (NVT): then its questions are not asked.
+                'can_be_na' => in_array($group['key'], $dossier->notApplicableSections(), true),
+                'questions' => collect($group['questions'])->map(fn (string $label, string $key): array => ['key' => $key, 'label' => $label])->values()->all(),
+            ])->values()->all(), 'na_label' => __('erp.batteries.not_applicable'), 'na_help' => __('erp.batteries.not_applicable_help')],
             ...($enersys ? [] : [['key' => 'single_line', 'title' => __('erp.batteries.tabs.single_line'), 'document' => null, 'fields' => []]]),
             // A move has its own shipping note, and the one of the old batteries only when they are taken away.
             ...($move ? [['key' => 'shipping_move', 'title' => __('erp.batteries.documents.shipping_move'), 'document' => null, 'fields' => [
@@ -377,6 +387,7 @@ class BatteryDossierController extends Controller
 
         $values['measured_on'] = $dossier->measured_on?->toDateString();
         $values['inspection'] = (object) array_filter((array) $dossier->inspection, fn (mixed $answer): bool => in_array($answer, ['yes', 'no'], true));
+        $values['inspection_na'] = (object) collect($dossier->notApplicableSections())->mapWithKeys(fn (string $section): array => [$section => $dossier->isInspectionNotApplicable($section)])->all();
 
         $series = fn (mixed $values): array => array_map(fn (int $index): ?float => is_numeric(((array) $values)[$index] ?? null) ? (float) ((array) $values)[$index] : null, range(0, $cells - 1));
         $technology = $dossier->new_technology;

@@ -4375,6 +4375,8 @@ return [
         'no_suppliers' => 'Voeg eerst een bordleverancier toe.',
     ],
     'batteries' => [
+        'not_applicable' => 'Niet van toepassing (NVT)',
+        'not_applicable_help' => 'Aan: deze vragen worden niet beantwoord; op het verslag staat NVT achter de titel.',
         'download_photos' => 'Foto\'s downloaden (:count)',
         'photos_zip' => 'fotos',
         'supplier' => [

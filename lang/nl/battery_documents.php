@@ -84,6 +84,7 @@ return [
         'rack' => 'Gestel:',
         'elements' => 'Aantal elementen per batterij:',
         'production_date' => 'Productiedatum batterij:',
+        'not_applicable' => 'NVT',
         'yes' => 'Ja',
         'no' => 'Nee',
         'remarks' => 'Opmerkingen en commentaar:',

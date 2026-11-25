@@ -218,4 +218,28 @@ class MobileBatteryDossierApiTest extends TestCase
         $enersys = EnersysDossier::factory()->create(['project_id' => $enersysProject->id]);
         $this->getJson("/api/v1/dossiers/enersys/{$enersys->id}", $this->technician('enersys'))->assertOk()->assertJsonPath('data.floor_plan', null);
     }
+
+    #[Test]
+    public function the_app_marks_acid_trays_and_the_cabinet_part_not_applicable(): void
+    {
+        $auth = $this->technician();
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id, 'inspection' => ['door_voltage' => 'yes']]);
+
+        $inspection = collect($this->getJson("/api/v1/dossiers/bae/{$dossier->id}", $auth)->assertOk()->json('data.sections'))->firstWhere('key', 'inspection');
+        $groups = collect($inspection['groups'])->keyBy('key');
+        $this->assertTrue($groups['cabinet']['can_be_na']);
+        $this->assertTrue($groups['acid_trays']['can_be_na']);
+        $this->assertFalse($groups['cells']['can_be_na']);
+        $this->assertSame(__('erp.batteries.not_applicable', [], 'nl'), $inspection['na_label']);
+
+        $this->putJson("/api/v1/dossiers/bae/{$dossier->id}", ['values' => ['inspection_na' => ['cabinet' => true], 'inspection' => ['cells_identical' => 'yes']]], $auth)
+            ->assertOk()
+            ->assertJsonPath('data.values.inspection_na.cabinet', true)
+            ->assertJsonPath('data.values.inspection_na.acid_trays', false);
+
+        $dossier->refresh();
+        $this->assertTrue($dossier->isInspectionNotApplicable('cabinet'));
+        $this->assertNull($dossier->inspectionAnswer('door_voltage'), 'The answers of a part that is NVT are not kept.');
+        $this->assertSame('yes', $dossier->inspectionAnswer('cells_identical'));
+    }
 }

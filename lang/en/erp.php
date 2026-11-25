@@ -4374,6 +4374,8 @@ return [
         'no_suppliers' => 'First add a board supplier.',
     ],
     'batteries' => [
+        'not_applicable' => 'Not applicable (NA)',
+        'not_applicable_help' => 'On: these questions are not answered; the report shows NA after the title.',
         'download_photos' => 'Download photos (:count)',
         'photos_zip' => 'photos',
         'supplier' => [

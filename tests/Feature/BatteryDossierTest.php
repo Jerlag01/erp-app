@@ -14,6 +14,7 @@ use App\Filament\Resources\BatteryModels\Pages\ManageBatteryModels;
 use App\Models\BatteryCable;
 use App\Models\BatteryDossier;
 use App\Models\BatteryModel;
+use App\Models\EnersysDossier;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
@@ -536,5 +537,43 @@ class BatteryDossierTest extends TestCase
         $this->actingAs(User::factory()->withPermissions(['projects' => ['view'], 'batteries' => ['view']])->inTeam()->create())
             ->get(route('batteries.document', [$dossier, 'photos']))
             ->assertForbidden();
+    }
+
+    #[Test]
+    public function acid_trays_and_the_cabinet_part_can_be_not_applicable_and_say_nvt_on_the_report(): void
+    {
+        $this->actingAs($this->technician());
+        $dossier = BatteryDossier::factory()->create(['project_id' => $this->project()->id, 'inspection' => ['acid_trays' => 'yes', 'doors_open' => 'no']]);
+
+        // Switched on: the questions of that part are hidden and not kept; the other part stays as it was.
+        Livewire::test(EditBatteryDossier::class, ['record' => $dossier->getRouteKey()])
+            ->assertFormFieldVisible('inspection.acid_trays_welded')
+            ->fillForm(['inspection_na' => ['acid_trays' => true]])
+            ->assertFormFieldHidden('inspection.acid_trays_welded')
+            ->assertFormFieldVisible('inspection.doors_open')
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $dossier->refresh();
+        $this->assertTrue($dossier->isInspectionNotApplicable('acid_trays'));
+        $this->assertFalse($dossier->isInspectionNotApplicable('cabinet'));
+        $this->assertNull($dossier->inspectionAnswer('acid_trays'));
+        $this->assertSame('no', $dossier->inspectionAnswer('doors_open'));
+
+        // The report (Dutch for a Flemish site): "NVT" behind the title, without its questions.
+        $html = app(BatteryDocument::class)->html($dossier, 'inspection');
+        $this->assertStringContainsString(__('battery_documents.inspection.sections.acid_trays', [], 'nl').' NVT', $html);
+        $this->assertStringNotContainsString(__('battery_documents.inspection.questions.acid_trays_welded', [], 'nl'), $html);
+        $this->assertStringContainsString(__('battery_documents.inspection.questions.doors_open', [], 'nl'), $html);
+
+        // Only these two parts can be NVT; an Enersys dossier has none.
+        $dossier->update(['inspection_na' => ['acid_trays' => true, 'cells' => true]]);
+        $this->assertSame(['acid_trays' => true], $dossier->fresh()->inspection_na);
+        $this->assertSame([], EnersysDossier::factory()->make()->notApplicableSections());
+
+        // Switched off again: the questions are asked again.
+        $dossier->update(['inspection_na' => ['acid_trays' => false]]);
+        $this->assertNull($dossier->fresh()->inspection_na);
+        $this->assertFalse($dossier->fresh()->isInspectionNotApplicable('acid_trays'));
     }
 }

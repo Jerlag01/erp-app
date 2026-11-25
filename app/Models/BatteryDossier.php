@@ -35,7 +35,7 @@ use Illuminate\Support\Str;
     'powerflex_length_m', 'powerflex_section', 'battery_cable_id', 'frotek_count', 'lug_count', 'lug_section',
     'fuse_count', 'fuse_amperage', 'fuse_type', 'tray_length_m', 'tray_type', 'picto_plates', 'doc_holders',
     'battery_total_price', 'hourly_rate', 'fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price',
-    'invoice_kind', 'invoice_percentage', 'measured_on', 'average_temperature', 'inspection', 'inspection_remarks',
+    'invoice_kind', 'invoice_percentage', 'measured_on', 'average_temperature', 'inspection', 'inspection_na', 'inspection_remarks',
     'floor_plan', 'floor_plan_png', 'photos', 'photos_remark', 'finished_at', 'finished_by', 'acid_boxes',
     'kind', 'document_locale', 'battery_type', 'new_capacity_label', 'leak_trays', 'order_amounts', 'empty_boxes_returned', 'packages', 'weight_kg', 'created_by',
     'move_from_work_site_id', 'move_to_work_site_id', 'vertical_pickup_m', 'move_packages', 'move_weight_kg', 'decommission_source', 'decommissioned_at',
@@ -112,7 +112,7 @@ class BatteryDossier extends Model
             'fuse_price', 'powerflex_price', 'lug_price', 'tray_price', 'doc_holder_price', 'picto_price',
         ],
         'measurement' => ['measured_on', 'average_temperature'],
-        'inspection' => ['inspection', 'inspection_remarks'],
+        'inspection' => ['inspection', 'inspection_na', 'inspection_remarks'],
     ];
 
     /**
@@ -570,6 +570,35 @@ class BatteryDossier extends Model
         return round($this->invoiceTotal() * (float) $this->invoice_percentage / 100, 2);
     }
 
+    /**
+     * The sections of the visual inspection with their keys: [key, title, questions].
+     *
+     * @return list<array{key: string, title: string, questions: array<string, string>}>
+     */
+    public function inspectionGroups(): array
+    {
+        return BatteryInspection::groups(BatteryInspection::SECTIONS);
+    }
+
+    /**
+     * The parts of the inspection that can be marked not applicable (NVT): "acid trays" and "only for
+     * installation in a cabinet" for battery dossiers and moves.
+     *
+     * @return list<string>
+     */
+    public function notApplicableSections(): array
+    {
+        return BatteryInspection::NOT_APPLICABLE;
+    }
+
+    /**
+     * Whether a part of the inspection was marked not applicable (NVT).
+     */
+    public function isInspectionNotApplicable(string $section): bool
+    {
+        return in_array($section, $this->notApplicableSections(), true) && (bool) (((array) $this->inspection_na)[$section] ?? false);
+    }
+
     public function inspectionAnswer(string $key): ?string
     {
         return ($this->inspection ?? [])[$key] ?? null;
@@ -593,6 +622,21 @@ class BatteryDossier extends Model
     {
         static::addGlobalScope('kind', fn (Builder $query) => $query->where('battery_dossiers.kind', static::KIND));
         static::creating(fn (self $dossier) => $dossier->kind = static::KIND);
+
+        // A part marked not applicable (NVT) has no answers; only the parts that can be NVT are kept.
+        static::saving(function (self $dossier): void {
+            if ($dossier->inspection_na === null) {
+                return;
+            }
+
+            $na = array_filter(array_intersect_key((array) $dossier->inspection_na, array_flip($dossier->notApplicableSections())), fn (mixed $value): bool => (bool) $value);
+            $dossier->inspection_na = $na !== [] ? array_map(fn (): bool => true, $na) : null;
+
+            if ($na !== []) {
+                $keys = collect($dossier->inspectionGroups())->whereIn('key', array_keys($na))->flatMap(fn (array $group): array => array_keys($group['questions']))->all();
+                $dossier->inspection = array_diff_key((array) $dossier->inspection, array_flip($keys)) ?: null;
+            }
+        });
 
         static::saved(fn (self $dossier) => $dossier->wasChanged(['new_count', 'first_id_number']) || $dossier->wasRecentlyCreated ? $dossier->syncBatteries() : null);
         // The batteries out and in are in the title of the project's Outlook events.
@@ -645,6 +689,7 @@ class BatteryDossier extends Model
             'cells_per_battery' => 'integer',
             'volts_per_cell' => 'decimal:2',
             'inspection' => 'array',
+            'inspection_na' => 'array',
             'floor_plan' => 'array',
             'photos' => 'array',
             'order_amounts' => 'array',

@@ -4374,6 +4374,8 @@ return [
         'no_suppliers' => 'Ajoutez d\'abord un fournisseur de tableaux.',
     ],
     'batteries' => [
+        'not_applicable' => 'Sans objet (S.O.)',
+        'not_applicable_help' => 'Activé : ces questions ne sont pas posées ; le rapport indique S.O. après le titre.',
         'download_photos' => 'Télécharger les photos (:count)',
         'photos_zip' => 'photos',
         'supplier' => [

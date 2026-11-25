@@ -84,6 +84,7 @@ return [
         'rack' => 'Châssis :',
         'elements' => 'Nombre d\'éléments par batterie :',
         'production_date' => 'Date de production de la batterie :',
+        'not_applicable' => 'S.O.',
         'yes' => 'Oui',
         'no' => 'Non',
         'remarks' => 'Remarques et commentaires :',

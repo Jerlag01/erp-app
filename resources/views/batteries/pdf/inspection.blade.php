@@ -49,9 +49,14 @@
     </table>
 
     <table class="w check" style="margin-top: 8px;">
-        @foreach ($dossier->inspectionSections() as $section => $questions)
-            <tr class="section"><td>{{ $section }}</td><td class="yn">{{ __('battery_documents.inspection.yes') }}</td><td class="yn">{{ __('battery_documents.inspection.no') }}</td></tr>
-            @foreach ($questions as $key => $question)
+        @foreach ($dossier->inspectionGroups() as $group)
+            {{-- A part marked not applicable: only its title, with NVT behind it. --}}
+            @if ($dossier->isInspectionNotApplicable($group['key']))
+                <tr class="section"><td>{{ $group['title'] }} {{ __('battery_documents.inspection.not_applicable') }}</td><td class="yn"></td><td class="yn"></td></tr>
+                @continue
+            @endif
+            <tr class="section"><td>{{ $group['title'] }}</td><td class="yn">{{ __('battery_documents.inspection.yes') }}</td><td class="yn">{{ __('battery_documents.inspection.no') }}</td></tr>
+            @foreach ($group['questions'] as $key => $question)
                 <tr>
                     <td>{{ $question }}</td>
                     <td class="yn">{{ $mark($dossier->inspectionAnswer($key), 'yes') }}</td>

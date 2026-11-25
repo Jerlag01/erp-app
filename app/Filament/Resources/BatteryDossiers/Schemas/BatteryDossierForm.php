@@ -66,6 +66,24 @@ class BatteryDossierForm
         return BatteryInspection::sections();
     }
 
+    /**
+     * @return list<array{key: string, title: string, questions: array<string, string>}>
+     */
+    protected static function inspectionGroups(): array
+    {
+        return BatteryInspection::groups(BatteryInspection::SECTIONS);
+    }
+
+    /**
+     * The parts of the inspection that can be marked not applicable (NVT).
+     *
+     * @return list<string>
+     */
+    protected static function notApplicableSections(): array
+    {
+        return BatteryInspection::NOT_APPLICABLE;
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -433,17 +451,31 @@ class BatteryDossierForm
     {
         $sections = [];
 
-        foreach (static::inspectionSections() as $title => $questions) {
-            $sections[] = Section::make($title)
+        foreach (static::inspectionGroups() as $group) {
+            // "Acid trays" and "only in a cabinet" can be not applicable (NVT): then nothing is asked.
+            $canBeNa = in_array($group['key'], static::notApplicableSections(), true);
+            $applies = fn (Get $get): bool => ! $canBeNa || ! $get("inspection_na.{$group['key']}");
+
+            $sections[] = Section::make($group['title'])
                 ->compact()
                 ->collapsible()
                 ->columns(['default' => 1, 'lg' => 2])
-                ->schema(array_map(fn (string $key, string $question): ToggleButtons => ToggleButtons::make("inspection.{$key}")
-                    ->label($question)
-                    ->options(['yes' => __('erp.batteries.yes'), 'no' => __('erp.batteries.no')])
-                    ->colors(['yes' => 'success', 'no' => 'danger'])
-                    ->inline()
-                    ->grouped(), array_keys($questions), $questions));
+                ->schema([
+                    ...($canBeNa ? [
+                        Toggle::make("inspection_na.{$group['key']}")
+                            ->label(__('erp.batteries.not_applicable'))
+                            ->helperText(__('erp.batteries.not_applicable_help'))
+                            ->live()
+                            ->columnSpanFull(),
+                    ] : []),
+                    ...array_map(fn (string $key, string $question): ToggleButtons => ToggleButtons::make("inspection.{$key}")
+                        ->label($question)
+                        ->options(['yes' => __('erp.batteries.yes'), 'no' => __('erp.batteries.no')])
+                        ->colors(['yes' => 'success', 'no' => 'danger'])
+                        ->inline()
+                        ->grouped()
+                        ->visible($applies), array_keys($group['questions']), $group['questions']),
+                ]);
         }
 
         return [
