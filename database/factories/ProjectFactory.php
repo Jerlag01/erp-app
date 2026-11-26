@@ -22,6 +22,8 @@ class ProjectFactory extends Factory
             'project_category_id' => fn (): int => ProjectCategory::query()->where('code', '604')->value('id') ?? ProjectCategory::factory()->create()->id,
             'work_site_id' => WorkSite::factory(),
             'status' => ProjectStatus::Offer,
+            // Required on the form for every project.
+            'estimated_workdays' => 2,
         ];
     }
 

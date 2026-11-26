@@ -114,17 +114,18 @@ class InterventionTest extends TestCase
         Livewire::test(CreateProject::class)
             ->fillForm(['project_category_id' => $category, 'work_site_id' => $site->id])
             ->call('create')
-            // The WO number and the due date are both required.
-            ->assertHasFormErrors(['work_order_number' => 'required', 'intervention_due_on' => 'required']);
+            // The WO number, the due date and the estimated workdays are required.
+            ->assertHasFormErrors(['work_order_number' => 'required', 'intervention_due_on' => 'required', 'estimated_workdays' => 'required']);
 
         Livewire::test(CreateProject::class)
-            ->fillForm(['project_category_id' => $category, 'work_site_id' => $site->id, 'work_order_number' => 'WO 123456'])
+            ->fillForm(['estimated_workdays' => 2, 'project_category_id' => $category, 'work_site_id' => $site->id, 'work_order_number' => 'WO 123456'])
             ->call('create')
             ->assertHasFormErrors(['work_order_number']);
 
         Livewire::test(CreateProject::class)
             ->fillForm([
                 'project_category_id' => $category,
+                'estimated_workdays' => 2,
                 'work_site_id' => $site->id,
                 'work_order_number' => 'wo 654321',
                 'intervention_due_on' => '2026-12-31',
@@ -367,6 +368,7 @@ class InterventionTest extends TestCase
         $category = ProjectCategory::query()->where('code', '600')->value('id');
         $data = fn (string $wo): array => [
             'project_category_id' => $category,
+            'estimated_workdays' => 1,
             'work_site_id' => $site->id,
             'work_order_number' => $wo,
             'intervention_due_on' => today()->addWeek()->toDateString(),

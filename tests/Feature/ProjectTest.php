@@ -91,6 +91,7 @@ class ProjectTest extends TestCase
         Livewire::test(CreateProject::class)
             ->fillForm([
                 'project_category_id' => ProjectCategory::where('code', '608')->value('id'),
+                'estimated_workdays' => 3,
                 'work_site_id' => $site->id,
                 'short_description' => 'Laadpalen parking',
                 'status' => ProjectStatus::Planned->value,
@@ -116,6 +117,7 @@ class ProjectTest extends TestCase
         Livewire::test(CreateProject::class)
             ->fillForm([
                 'project_category_id' => ProjectCategory::where('code', '604')->value('id'),
+                'estimated_workdays' => 2,
                 'poNumbers' => [['number' => '123456789']],
             ])
             ->call('create')
@@ -136,6 +138,7 @@ class ProjectTest extends TestCase
             ->assertFormFieldHidden('poNumbers')
             ->fillForm([
                 'client_name' => 'Jan Peeters',
+                'estimated_workdays' => 1,
                 'short_description' => 'Laadpaal thuis',
                 'client_phone' => '0470 12 34 56',
                 'street' => 'Kerkstraat',
@@ -370,12 +373,12 @@ class ProjectTest extends TestCase
         Filament::setCurrentPanel('app');
 
         Livewire::test(CreateProject::class)
-            ->fillForm(['project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id, 'short_description' => ''])
+            ->fillForm(['estimated_workdays' => 1, 'project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id, 'short_description' => ''])
             ->call('create')
             ->assertHasFormErrors(['short_description' => 'required']);
 
         Livewire::test(CreateProject::class)
-            ->fillForm(['project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id, 'short_description' => 'Batterijen vervangen'])
+            ->fillForm(['estimated_workdays' => 1, 'project_category_id' => ProjectCategory::where('code', '604')->value('id'), 'number' => 42, 'work_site_id' => $site->id, 'short_description' => 'Batterijen vervangen'])
             ->call('create')
             ->assertHasNoFormErrors();
 

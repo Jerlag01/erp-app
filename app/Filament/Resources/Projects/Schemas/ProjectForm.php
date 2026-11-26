@@ -158,6 +158,8 @@ class ProjectForm
                                     ->minValue(0)
                                     ->maxValue(9999)
                                     ->step(0.5)
+                                    // Required for every project: the planning compares the days worked with it.
+                                    ->required()
                                     ->suffix(__('erp.projects.days_suffix')),
                                 Select::make('status')
                                     ->label(__('erp.fields.status'))
