@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Actions\Batteries\BatteryDocument;
+use App\Actions\Notifications\ProjectNotifications;
 use App\Enums\BatteryDeliveryMode;
 use App\Enums\BatteryInvoiceKind;
 use App\Enums\BatteryMounting;
@@ -195,6 +196,9 @@ class BatteryDossier extends Model
             $this->update(['finished_at' => now(), 'finished_by' => $by->id]);
             $this->project?->update(['status' => ProjectStatus::InvoicingToDo]);
         });
+
+        // The administrators: the battery project is closed and ready for invoicing.
+        app(ProjectNotifications::class)->batteryFinished($this, $by);
     }
 
     /**

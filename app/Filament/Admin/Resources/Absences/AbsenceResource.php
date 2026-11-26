@@ -23,7 +23,6 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Text;
@@ -132,12 +131,8 @@ class AbsenceResource extends Resource
                     ->required()
                     ->live()
                     ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation)),
-                Toggle::make('half_day')
-                    ->label(__('erp.fields.half_day'))
-                    ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation) && filled($get('start_date')) && $get('start_date') === $get('end_date'))
-                    ->live()
-                    ->columnSpanFull(),
-                Text::make(fn (Get $get): string => __('erp.absences.days_preview', ['days' => WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'))]))
+                // Whole days only: half days can no longer be set (existing ones keep counting as they were).
+                Text::make(fn (Get $get, ?Absence $record): string => __('erp.absences.days_preview', ['days' => WorkingDays::count($get('start_date'), $get('end_date'), (bool) $record?->half_day)]))
                     ->visible(fn (Get $get, string $operation): bool => ! self::severalPeriods($get('type'), $operation))
                     ->columnSpanFull(),
                 // Justified absences: several loose periods at once, each its own absence.
@@ -158,10 +153,6 @@ class AbsenceResource extends Resource
                             ->afterOrEqual('start_date')
                             ->required()
                             ->live(),
-                        Toggle::make('half_day')
-                            ->label(__('erp.fields.half_day'))
-                            ->visible(fn (Get $get): bool => filled($get('start_date')) && $get('start_date') === $get('end_date'))
-                            ->columnSpanFull(),
                     ])
                     ->columns(2)
                     ->defaultItems(1)
@@ -169,7 +160,7 @@ class AbsenceResource extends Resource
                     ->maxItems(50)
                     ->addActionLabel(__('erp.absences.add_period'))
                     ->itemLabel(fn (array $state): ?string => filled($state['start_date'] ?? null)
-                        ? __('erp.absences.days_preview', ['days' => WorkingDays::count($state['start_date'], $state['end_date'] ?? $state['start_date'], (bool) ($state['half_day'] ?? false))])
+                        ? __('erp.absences.days_preview', ['days' => WorkingDays::count($state['start_date'], $state['end_date'] ?? $state['start_date'])])
                         : null)
                     ->visible(fn (Get $get, string $operation): bool => self::severalPeriods($get('type'), $operation))
                     ->columnSpanFull(),
@@ -182,7 +173,7 @@ class AbsenceResource extends Resource
                     ->visible(fn (Get $get): bool => self::type($get('type')) === AbsenceType::ShortLeave)
                     ->rule(fn (Get $get) => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
                         $max = ShortLeaveReasons::maxDays((string) $value);
-                        $days = WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'));
+                        $days = WorkingDays::count($get('start_date'), $get('end_date'));
 
                         if ($max !== null && $days > $max) {
                             $fail(__('erp.short_leave.too_many', ['max' => $max]));
@@ -339,7 +330,7 @@ class AbsenceResource extends Resource
                     ...$data,
                     'start_date' => $period['start_date'],
                     'end_date' => $period['end_date'] ?? $period['start_date'],
-                    'half_day' => ($period['start_date'] === ($period['end_date'] ?? $period['start_date'])) && (bool) ($period['half_day'] ?? false),
+                    'half_day' => false,
                     'document' => $document,
                 ]);
             }

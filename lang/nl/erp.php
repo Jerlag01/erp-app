@@ -1231,6 +1231,7 @@ return [
             'timesheet_week' => 'Prestatiefiches van de week',
             'timesheet_interim_verify' => 'Te verifiëren prestaties interims (aan verificateurs)',
             'timesheet_employee' => 'Eigen prestatiefiche (werknemer)',
+            'monthly_project_report' => 'Maandoverzicht projecten (open projecten en te late interventies)',
             'gpw_request' => 'GPW-aanvraag (aan contactpersoon)',
             'gpw_approved' => 'GPW goedgekeurd (aan aanvrager)',
             'gpw_rejected' => 'GPW geweigerd (aan aanvrager)',
@@ -1767,6 +1768,16 @@ return [
         'notification_title' => 'Nieuwe inzending in de ideeënbus: :type',
     ],
     'projects' => [
+        'monthly_report' => [
+            'all' => 'alle projecten',
+            'own' => 'de projecten waarvan u projectleider bent',
+            'none' => 'Geen.',
+        ],
+        'notifications' => [
+            'status_title' => 'Project :project: nieuwe status',
+            'status_body' => 'De status is nu: :status.',
+            'open' => 'Project openen',
+        ],
         'estimated_workdays' => 'Geschatte werkdagen',
         'invoice_requested_at' => 'Factuur aangevraagd op',
         'estimated_workdays_help' => 'Hoeveel werkdagen het project naar schatting nodig heeft.',
@@ -2248,6 +2259,7 @@ return [
         'report' => 'Ziekte melden',
         'report_help' => 'Je ziekte wordt meteen geregistreerd en de administratie wordt verwittigd. Voeg het attest toe als je het al hebt; het kan ook later.',
         'reported' => 'Ziekte gemeld',
+        'registered_title' => 'Nieuwe afwezigheid voor :name geregistreerd',
         'reported_title' => ':name heeft zich ziek gemeld',
         'errors' => [
             'overlap' => 'Er is al een afwezigheid geregistreerd voor (een deel van) deze periode.',
@@ -4375,6 +4387,10 @@ return [
         'no_suppliers' => 'Voeg eerst een bordleverancier toe.',
     ],
     'batteries' => [
+        'notifications' => [
+            'finished_title' => 'Batterijproject :project afgesloten',
+            'finished_body' => 'Het batterijdossier is afgesloten door :name; het project staat op facturatie te doen.',
+        ],
         'not_applicable' => 'Niet van toepassing (NVT)',
         'not_applicable_help' => 'Aan: deze vragen worden niet beantwoord; op het verslag staat NVT achter de titel.',
         'download_photos' => 'Foto\'s downloaden (:count)',
@@ -5312,6 +5328,9 @@ return [
         'inbound_url_help' => 'Geef dit adres aan Cebeo (e-business) om de orderbevestigingen en leverbonnen in cebeoXML via HTTPS POST te sturen: dan komen alle bestellingen, ook die uit de e-shop of via een medewerker van Cebeo, vanzelf bij Aankoop → Bestellingen.',
     ],
     'distributors' => [
+        'nussbaumer' => [
+            'login_help' => 'De login van de Nussbaumer-webshop (best een aparte gebruiker voor het ERP). Het ERP haalt er uw eigen prijs (zonder btw), foto en naam mee op, eerst op fabrikantreferentie, anders op het Nussbaumer-artikelnummer.',
+        ],
         'digikey' => [
             'client_id' => 'Client ID',
             'client_secret' => 'Client Secret',

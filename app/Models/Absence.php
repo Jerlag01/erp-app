@@ -228,6 +228,11 @@ class Absence extends Model
                 $absence->custom_absence_type_id = null;
             }
 
+            // Whole days only: a new absence is never a half day (existing ones keep what they had).
+            if (! $absence->exists) {
+                $absence->half_day = false;
+            }
+
             if ($absence->isDirty(['start_date', 'end_date', 'half_day']) || ! $absence->exists) {
                 $absence->days = WorkingDays::count($absence->start_date, $absence->end_date, (bool) $absence->half_day, $absence->user_id);
             }

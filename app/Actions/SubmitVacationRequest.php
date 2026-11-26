@@ -29,7 +29,8 @@ class SubmitVacationRequest
     {
         $start = Carbon::parse($data['start_date']);
         $end = Carbon::parse($data['end_date']);
-        $halfDay = (bool) ($data['half_day'] ?? false) && $start->isSameDay($end);
+        // Whole days only: half days can no longer be requested.
+        $halfDay = false;
         $type = $data['type'] ?? null;
         $type = $type instanceof VacationType ? $type : (VacationType::tryFrom((string) $type) ?? VacationType::Vacation);
 

@@ -20,9 +20,9 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -113,10 +113,8 @@ class VacationRequestResource extends Resource
                     ->afterOrEqual('start_date')
                     ->required()
                     ->live(),
-                Toggle::make('half_day')
-                    ->label(__('erp.fields.half_day'))
-                    ->helperText(fn (Get $get): string => __('erp.vacations.counted', ['days' => WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'))]))
-                    ->live(),
+                // Whole days only: half days can no longer be set (an existing one keeps counting as it was).
+                Text::make(fn (Get $get, ?VacationRequest $record): string => __('erp.vacations.counted', ['days' => WorkingDays::count($get('start_date'), $get('end_date'), (bool) $record?->half_day)])),
                 Select::make('status')
                     ->label(__('erp.fields.status'))
                     ->options(VacationStatus::class)

@@ -424,7 +424,7 @@ class TimesheetTest extends TestCase
 
         // Times and kilometres that might be in a day do not count; a half day of leave leaves 4 h worked.
         $this->day($bediende, self::MONDAY);
-        VacationRequest::factory()->for($bediende)->create(['start_date' => '2026-10-13', 'end_date' => '2026-10-13', 'half_day' => true, 'status' => VacationStatus::Approved]);
+        VacationRequest::factory()->for($bediende)->legacyHalfDay()->create(['start_date' => '2026-10-13', 'end_date' => '2026-10-13', 'status' => VacationStatus::Approved]);
         Absence::factory()->for($bediende)->ofType(AbsenceType::Family)->create(['start_date' => '2026-10-14', 'end_date' => '2026-10-14']);
 
         $days = $timesheets->days($bediende, CarbonImmutable::parse(self::MONDAY), CarbonImmutable::parse('2026-10-16'));

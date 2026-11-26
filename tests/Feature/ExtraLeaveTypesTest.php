@@ -141,7 +141,6 @@ class ExtraLeaveTypesTest extends TestCase
         $this->submit($user, VacationType::JobSearch, '2026-11-05');
         $this->assertRefused(fn () => $this->submit($user, VacationType::JobSearch, '2026-11-06'), 'start_date');
         $this->assertRefused(fn () => $this->submit($user, VacationType::JobSearch, '2026-11-09', '2026-11-10'), 'end_date');
-        $this->assertRefused(fn () => $this->submit($user, VacationType::JobSearch, '2026-11-12', halfDay: true), 'end_date');
         $this->assertRefused(fn () => $this->submit($user, VacationType::JobSearch, '2026-11-30'), 'start_date');
         $this->submit($user, VacationType::JobSearch, '2026-11-12');
         $this->assertSame(2, VacationRequest::query()->where('type', VacationType::JobSearch)->count());
@@ -184,7 +183,7 @@ class ExtraLeaveTypesTest extends TestCase
             $this->day($user, $date);
         }
         Absence::factory()->for($user)->ofType(AbsenceType::Unpaid)->create(['start_date' => '2026-11-12', 'end_date' => '2026-11-12']);
-        Absence::factory()->for($user)->ofType(AbsenceType::Unpaid)->create(['start_date' => '2026-11-13', 'end_date' => '2026-11-13', 'half_day' => true]);
+        Absence::factory()->for($user)->ofType(AbsenceType::Unpaid)->legacyHalfDay()->create(['start_date' => '2026-11-13', 'end_date' => '2026-11-13']);
 
         $week = app(Timesheets::class)->week($user, '2026-11-09');
         $this->assertSame([24.0, 28.0, -4.0], [$week['hours'], $week['expected'], $week['overtime_now']]);

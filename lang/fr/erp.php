@@ -1231,6 +1231,7 @@ return [
             'timesheet_week' => 'Fiches de prestations de la semaine',
             'timesheet_interim_verify' => 'Prestations des intérimaires à vérifier (aux vérificateurs)',
             'timesheet_employee' => 'Propre fiche de prestations (employé)',
+            'monthly_project_report' => 'Aperçu mensuel des projets (projets ouverts et interventions en retard)',
             'gpw_request' => 'Demande de GPW (au contact)',
             'gpw_approved' => 'GPW approuvé (au demandeur)',
             'gpw_rejected' => 'GPW refusé (au demandeur)',
@@ -1767,6 +1768,16 @@ return [
         'notification_title' => 'Nouvelle contribution dans la boîte à idées : :type',
     ],
     'projects' => [
+        'monthly_report' => [
+            'all' => 'tous les projets',
+            'own' => 'les projets dont vous êtes chef de projet',
+            'none' => 'Aucun.',
+        ],
+        'notifications' => [
+            'status_title' => 'Projet :project : nouveau statut',
+            'status_body' => 'Le statut est maintenant : :status.',
+            'open' => 'Ouvrir le projet',
+        ],
         'estimated_workdays' => 'Jours de travail estimés',
         'invoice_requested_at' => 'Facture demandée le',
         'estimated_workdays_help' => 'Combien de jours de travail le projet demande selon l\'estimation.',
@@ -2248,6 +2259,7 @@ return [
         'report' => 'Déclarer une maladie',
         'report_help' => 'Votre maladie est enregistrée immédiatement et l’administration est prévenue. Ajoutez le certificat si vous l’avez déjà ; c’est aussi possible plus tard.',
         'reported' => 'Maladie déclarée',
+        'registered_title' => 'Nouvelle absence enregistrée pour :name',
         'reported_title' => ':name s’est déclaré(e) malade',
         'errors' => [
             'overlap' => 'Une absence est déjà enregistrée pour (une partie de) cette période.',
@@ -4374,6 +4386,10 @@ return [
         'no_suppliers' => 'Ajoutez d\'abord un fournisseur de tableaux.',
     ],
     'batteries' => [
+        'notifications' => [
+            'finished_title' => 'Projet batteries :project clôturé',
+            'finished_body' => 'Le dossier batteries a été clôturé par :name ; le projet est à facturer.',
+        ],
         'not_applicable' => 'Sans objet (S.O.)',
         'not_applicable_help' => 'Activé : ces questions ne sont pas posées ; le rapport indique S.O. après le titre.',
         'download_photos' => 'Télécharger les photos (:count)',
@@ -5311,6 +5327,9 @@ return [
         'inbound_url_help' => 'Communiquez cette adresse à Cebeo (e-business) pour recevoir les confirmations de commande et bons de livraison en cebeoXML via HTTPS POST : toutes les commandes, aussi celles de l\'e-shop ou passées via un collaborateur de Cebeo, arrivent alors d\'elles-mêmes dans Achats → Commandes.',
     ],
     'distributors' => [
+        'nussbaumer' => [
+            'login_help' => 'Le login du webshop Nussbaumer (de préférence un utilisateur séparé pour l\'ERP). L\'ERP y récupère votre propre prix (hors TVA), la photo et le nom, d\'abord par référence fabricant, sinon par numéro d\'article Nussbaumer.',
+        ],
         'digikey' => [
             'client_id' => 'Client ID',
             'client_secret' => 'Client Secret',

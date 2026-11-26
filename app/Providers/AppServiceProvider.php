@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Models\ClientUser;
 use App\Support\Modules;
 use App\Support\Nas\NasTriggers;
+use App\Support\Notifications\ErpNotification;
 use App\Support\Settings;
 use App\Support\VatCodes;
+use Filament\Notifications\Notification;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // The bell's notifications are stored at once (Filament queues them; the ERP has no queue worker).
+        $this->app->bind(Notification::class, ErpNotification::class);
         $this->app->singleton(Settings::class);
         $this->app->singleton(Modules::class);
         $this->app->scoped(VatCodes::class);

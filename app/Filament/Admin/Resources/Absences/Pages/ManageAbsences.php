@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Absences\Pages;
 
+use App\Actions\NotifyAbsenceAdministrators;
 use App\Enums\AbsenceType;
 use App\Filament\Admin\Resources\Absences\AbsenceResource;
 use App\Models\Absence;
@@ -21,7 +22,9 @@ class ManageAbsences extends ManageRecords
                 // A new absence starts with the type of the open tab.
                 ->fillForm(fn (): array => ['type' => AbsenceType::tryFrom((string) $this->activeTab)?->value ?? AbsenceType::Medical->value])
                 ->mutateDataUsing(fn (array $data): array => [...AbsenceResource::withDocumentSource($data), 'created_by' => auth()->id()])
-                ->using(fn (array $data): Absence => AbsenceResource::createAbsences($data)),
+                ->using(fn (array $data): Absence => AbsenceResource::createAbsences($data))
+                // The others who manage leave see it in the bell.
+                ->after(fn (Absence $record) => app(NotifyAbsenceAdministrators::class)->handle($record->loadMissing('user'), NotifyAbsenceAdministrators::REGISTERED)),
         ];
     }
 

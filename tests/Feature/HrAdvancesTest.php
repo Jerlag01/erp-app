@@ -33,7 +33,7 @@ class HrAdvancesTest extends TestCase
 
     protected function vacation(Employee $employee, string $from, string $until, bool $halfDay = false): void
     {
-        VacationRequest::factory()->create(['user_id' => $employee->user_id, 'type' => VacationType::Vacation, 'start_date' => $from, 'end_date' => $until, 'half_day' => $halfDay, 'status' => VacationStatus::Approved]);
+        VacationRequest::factory()->when($halfDay, fn ($factory) => $factory->legacyHalfDay())->create(['user_id' => $employee->user_id, 'type' => VacationType::Vacation, 'start_date' => $from, 'end_date' => $until, 'status' => VacationStatus::Approved]);
     }
 
     protected function calculate(Employee $employee, float $base = 620): array
@@ -61,7 +61,7 @@ class HrAdvancesTest extends TestCase
 
         // Family leave and (half a day of) unpaid leave do not count; medical leave does.
         Absence::factory()->create(['user_id' => $employee->user_id, 'type' => AbsenceType::Family, 'start_date' => '2026-10-08', 'end_date' => '2026-10-08', 'half_day' => false, 'days' => 1]);
-        Absence::factory()->create(['user_id' => $employee->user_id, 'type' => AbsenceType::Unpaid, 'start_date' => '2026-10-09', 'end_date' => '2026-10-09', 'half_day' => true, 'days' => 0.5]);
+        Absence::factory()->legacyHalfDay()->create(['user_id' => $employee->user_id, 'type' => AbsenceType::Unpaid, 'start_date' => '2026-10-09', 'end_date' => '2026-10-09', 'days' => 0.5]);
         Absence::factory()->create(['user_id' => $employee->user_id, 'type' => AbsenceType::Medical, 'start_date' => '2026-10-12', 'end_date' => '2026-10-14', 'half_day' => false, 'days' => 3]);
         $result = $this->calculate($employee, 1000);
         $this->assertSame([1.0, 0.5, 9.5, 863.64], [$result['family'], $result['unpaid'], $result['worked'], $result['advance']]);

@@ -30,4 +30,13 @@ class VacationRequestFactory extends Factory
     {
         return $this->state(fn (array $attributes) => ['status' => VacationStatus::Approved]);
     }
+
+    /**
+     * A half day as recorded before half days were removed (new ones are always whole days): made a half
+     * day after it is created, as an existing record may still be.
+     */
+    public function legacyHalfDay(): static
+    {
+        return $this->afterCreating(fn ($model) => $model->update(['half_day' => true]));
+    }
 }

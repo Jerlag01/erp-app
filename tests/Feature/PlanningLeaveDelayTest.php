@@ -105,7 +105,7 @@ class PlanningLeaveDelayTest extends TestCase
         $holiday->delete();
 
         // A half day of leave or a leave that is not approved yet does not count.
-        VacationRequest::factory()->approved()->for($this->employee)->create(['start_date' => '2026-10-07', 'end_date' => '2026-10-07', 'half_day' => true]);
+        VacationRequest::factory()->approved()->for($this->employee)->legacyHalfDay()->create(['start_date' => '2026-10-07', 'end_date' => '2026-10-07']);
         VacationRequest::factory()->for($this->employee)->create(['start_date' => '2026-10-07', 'end_date' => '2026-10-09']);
         $this->assertNull($delay->until($this->employee));
 

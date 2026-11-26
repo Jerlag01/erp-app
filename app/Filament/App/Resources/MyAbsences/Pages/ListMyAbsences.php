@@ -10,10 +10,8 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -36,9 +34,6 @@ class ListMyAbsences extends ListRecords
                 ->schema([
                     DatePicker::make('start_date')->label(__('erp.fields.start_date'))->native(false)->displayFormat('d/m/Y')->default(today())->required()->live(),
                     DatePicker::make('end_date')->label(__('erp.fields.end_date'))->native(false)->displayFormat('d/m/Y')->afterOrEqual('start_date')->default(today())->required()->live(),
-                    Toggle::make('half_day')
-                        ->label(__('erp.fields.half_day'))
-                        ->visible(fn (Get $get): bool => filled($get('start_date')) && $get('start_date') === $get('end_date')),
                     Textarea::make('note')->label(__('erp.fields.notes'))->rows(2)->maxLength(1000),
                     FileUpload::make('document')
                         ->label(__('erp.absences.certificate'))

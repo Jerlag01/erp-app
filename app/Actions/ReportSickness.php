@@ -24,7 +24,8 @@ class ReportSickness
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end = Carbon::parse($data['end_date'])->startOfDay();
-        $halfDay = (bool) ($data['half_day'] ?? false) && $start->isSameDay($end);
+        // Whole days only: half days can no longer be reported.
+        $halfDay = false;
 
         if ($end->lt($start)) {
             throw ValidationException::withMessages(['end_date' => __('erp.vacations.errors.end_before_start')]);

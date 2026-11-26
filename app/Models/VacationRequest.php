@@ -134,6 +134,11 @@ class VacationRequest extends Model
     protected static function booted(): void
     {
         static::saving(function (self $request): void {
+            // Whole days only: a new request is never a half day (existing ones keep what they had).
+            if (! $request->exists) {
+                $request->half_day = false;
+            }
+
             if ($request->isDirty(['start_date', 'end_date', 'half_day']) || $request->days === null) {
                 $request->days = WorkingDays::count($request->start_date, $request->end_date, (bool) $request->half_day, $request->user_id);
             }

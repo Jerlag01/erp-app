@@ -2,6 +2,7 @@
 
 namespace App\Actions\Gpw;
 
+use App\Actions\Notifications\ProjectNotifications;
 use App\Enums\GpwStatus;
 use App\Enums\MailTemplateKey;
 use App\Enums\ProjectStatus;
@@ -86,6 +87,11 @@ class DecideGpw
         $request->refresh();
         // Told what was decided: an approval may already have moved on to planned or in progress.
         $this->notifyRequester($request, $status === GpwStatus::Approved);
+
+        // Approved: the project leaders too (in the platform).
+        if ($status === GpwStatus::Approved) {
+            app(ProjectNotifications::class)->gpwApproved($request);
+        }
 
         return $request;
     }

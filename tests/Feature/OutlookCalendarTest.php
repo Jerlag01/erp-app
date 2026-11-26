@@ -164,8 +164,9 @@ class OutlookCalendarTest extends TestCase
         $this->assertSame(0, OutlookEvent::query()->count());
 
         // Overtime as leave is not private, half a day is in the title.
-        Absence::factory()->for($employee)->ofType(AbsenceType::Overtime)->create(['start_date' => '2026-11-20', 'end_date' => '2026-11-20', 'half_day' => true]);
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && str_contains($request->url(), '/events') && $request['subject'] === 'Recup (halve dag)' && $request['sensitivity'] === 'normal');
+        Absence::factory()->for($employee)->ofType(AbsenceType::Overtime)->legacyHalfDay()->create(['start_date' => '2026-11-20', 'end_date' => '2026-11-20']);
+        // (A half day is only an existing one now: it is made a half day after it was created, so the event is updated.)
+        Http::assertSent(fn (Request $request): bool => in_array($request->method(), ['POST', 'PATCH'], true) && str_contains($request->url(), '/events') && $request['subject'] === 'Recup (halve dag)' && $request['sensitivity'] === 'normal');
     }
 
     #[Test]

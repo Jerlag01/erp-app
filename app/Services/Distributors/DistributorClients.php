@@ -17,6 +17,7 @@ class DistributorClients
         'rexel' => RexelClient::class,
         'wurth' => WurthClient::class,
         'digikey' => DigiKeyClient::class,
+        'nussbaumer' => NussbaumerClient::class,
     ];
 
     public function for(Distributor $distributor): ?DistributorClient
@@ -53,6 +54,6 @@ class DistributorClients
      */
     public static function options(): array
     {
-        return ['cebeo' => 'Cebeo', 'rexel' => 'Rexel', 'wurth' => 'Würth', 'digikey' => 'DigiKey'];
+        return ['cebeo' => 'Cebeo', 'rexel' => 'Rexel', 'wurth' => 'Würth', 'digikey' => 'DigiKey', 'nussbaumer' => 'Nussbaumer'];
     }
 }

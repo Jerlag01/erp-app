@@ -53,6 +53,9 @@ enum MailTemplateKey: string implements HasLabel
     /** The documents of a period for the accountant (ZIP attached). */
     case AccountingExport = 'accounting_export';
 
+    /** Every month: the open projects and the interventions past their due date (all, or a project leader's own). */
+    case MonthlyProjectReport = 'monthly_project_report';
+
     public function getLabel(): string
     {
         return __('erp.enums.mail_template.'.$this->value);
@@ -83,6 +86,7 @@ enum MailTemplateKey: string implements HasLabel
             self::BaeOrder => [...$company, 'supplier', 'contact_name', 'order_number', 'order_subject', 'cow_code', 'reference', 'delivery_date', 'delivery_address', 'total', 'message', 'sender', 'sender_email'],
             self::SuggestionResponse => [...$company, 'name', 'author', 'type', 'submitted_on', 'message', 'url'],
             self::GpwApproved, self::GpwRejected => [...$company, 'name', 'project', 'cow_code', 'period', 'decided_by', 'note', 'project_url'],
+            self::MonthlyProjectReport => [...$company, 'name', 'month', 'scope', 'open_count', 'overdue_count', 'projects', 'overdue', 'url'],
             self::ClientPasswordReset => [...$company, 'name', 'email', 'portal_name', 'portal_url', 'reset_link', 'minutes'],
         };
     }

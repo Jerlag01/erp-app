@@ -20,18 +20,30 @@ class NotifyAbsenceAdministrators
 
     public const UPLOADED = 'uploaded';
 
+    /** Registered on the platform (by an administrator or Administratie). */
+    public const REGISTERED = 'registered';
+
     public function handle(Absence $absence, string $event): void
     {
         // Administrators and those who manage all leave (e.g. Administratie).
-        $admins = User::query()->where('is_active', true)->with('role')->get()->filter(fn (User $user): bool => $user->managesLeave());
+        // Not the one who registered it themselves.
+        $admins = User::query()->where('is_active', true)->with('role')->get()->filter(fn (User $user): bool => $user->managesLeave() && $user->id !== auth()->id());
 
         foreach ($admins as $admin) {
             $locale = $admin->preferredLocale() ?? config('app.locale');
 
             Notification::make()
-                ->title(__($event === self::REPORTED ? 'erp.absences.reported_title' : 'erp.absences.notification_title', ['name' => $absence->user->name], $locale))
+                ->title(__(match ($event) {
+                    self::REPORTED => 'erp.absences.reported_title',
+                    self::REGISTERED => 'erp.absences.registered_title',
+                    default => 'erp.absences.notification_title',
+                }, ['name' => $absence->user->name], $locale))
                 ->body(trim(__('erp.enums.absence_type.'.$absence->type->value, [], $locale).' · '.VacationRequestResource::period($absence).' '.($absence->note ? '· '.$absence->note : '')))
-                ->icon($event === self::REPORTED ? Heroicon::OutlinedHeart : Heroicon::OutlinedDocumentArrowUp)
+                ->icon(match ($event) {
+                    self::REPORTED => Heroicon::OutlinedHeart,
+                    self::REGISTERED => Heroicon::OutlinedCalendarDays,
+                    default => Heroicon::OutlinedDocumentArrowUp,
+                })
                 ->actions(array_values(array_filter([
                     $absence->hasDocument() ? Action::make('open')
                         ->label(__('erp.absences.download', [], $locale))

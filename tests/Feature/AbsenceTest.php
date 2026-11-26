@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Actions\SubmitVacationRequest;
 use App\Enums\AbsenceType;
 use App\Filament\Admin\Resources\Absences\Pages\ManageAbsences;
 use App\Filament\App\Resources\MyAbsences\Pages\ListMyAbsences;
 use App\Models\Absence;
+use App\Models\Employee;
 use App\Models\Team;
 use App\Models\User;
 use App\Support\TimesheetReport;
@@ -242,8 +244,9 @@ class AbsenceTest extends TestCase
                 'user_id' => $employee->id,
                 'type' => 'justified',
                 'periods' => [
+                    // A half day can no longer be set: sent anyway, it is a whole day.
                     ['start_date' => '2026-11-03', 'end_date' => '2026-11-03', 'half_day' => true],
-                    ['start_date' => '2026-11-16', 'end_date' => '2026-11-18', 'half_day' => false],
+                    ['start_date' => '2026-11-16', 'end_date' => '2026-11-18'],
                 ],
                 'document' => UploadedFile::fake()->create('oproeping.pdf', 40, 'application/pdf'),
             ])
@@ -251,7 +254,8 @@ class AbsenceTest extends TestCase
 
         $absences = Absence::query()->orderBy('start_date')->get();
         $this->assertCount(2, $absences);
-        $this->assertSame(['0.5', '3.0'], $absences->pluck('days')->all());
+        $this->assertSame(['1.0', '3.0'], $absences->pluck('days')->all());
+        $this->assertFalse($absences[0]->half_day);
         $this->assertTrue($absences->every(fn (Absence $absence): bool => $absence->type === AbsenceType::Justified && $absence->document_name === 'oproeping.pdf'));
         // Each period has its own copy of the file.
         $this->assertNotSame($absences[0]->document, $absences[1]->document);
@@ -267,5 +271,19 @@ class AbsenceTest extends TestCase
         // The employee can download it but not upload one.
         $this->assertFalse($employee->can('uploadDocument', $absences[1]));
         $this->actingAs($employee)->get(route('absences.document', $absences[1]))->assertOk();
+    }
+
+    #[Test]
+    public function half_days_can_no_longer_be_requested_or_reported(): void
+    {
+        $user = User::factory()->create();
+        Employee::factory()->create(['user_id' => $user->id]);
+
+        $request = app(SubmitVacationRequest::class)->handle($user, ['type' => 'vacation', 'start_date' => '2026-12-08', 'end_date' => '2026-12-08', 'half_day' => true]);
+        $this->assertFalse($request->half_day);
+        $this->assertSame(1.0, (float) $request->days);
+
+        $absence = Absence::factory()->for($user)->create(['start_date' => '2026-12-09', 'end_date' => '2026-12-09', 'half_day' => true]);
+        $this->assertFalse($absence->fresh()->half_day);
     }
 }

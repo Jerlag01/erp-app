@@ -57,6 +57,8 @@ class DistributorResource extends Resource
     {
         $hasProvider = fn (Get $get): bool => filled($get('price_provider'));
         $isDigiKey = fn (Get $get): bool => $get('price_provider') === 'digikey';
+        // Nussbaumer: the webshop login only (no customer number).
+        $isNussbaumer = fn (Get $get): bool => $get('price_provider') === 'nussbaumer';
 
         return $schema->components([
             ...CompanyFields::make('distributors', [
@@ -95,9 +97,10 @@ class DistributorResource extends Resource
                         ->label(fn (Get $get): string => $isDigiKey($get) ? __('erp.distributors.digikey.account_id') : __('erp.fields.api_customer_number'))
                         ->helperText(fn (Get $get): ?string => $isDigiKey($get) ? __('erp.distributors.digikey.account_help') : null)
                         ->maxLength(50)
-                        ->visible($hasProvider),
+                        ->visible(fn (Get $get): bool => $hasProvider($get) && ! $isNussbaumer($get)),
                     TextInput::make('api_username')
                         ->label(fn (Get $get): string => $isDigiKey($get) ? __('erp.distributors.digikey.client_id') : __('erp.settings.fields.username'))
+                        ->helperText(fn (Get $get): ?string => $isNussbaumer($get) ? __('erp.distributors.nussbaumer.login_help') : null)
                         ->autocomplete('off')
                         ->maxLength(255)
                         ->visible($hasProvider),

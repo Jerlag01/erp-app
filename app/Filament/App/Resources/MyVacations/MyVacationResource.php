@@ -15,7 +15,6 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Text;
@@ -138,19 +137,14 @@ class MyVacationResource extends Resource
                     ->default(fn (Get $get) => $get('start_date'))
                     ->required()
                     ->live(),
-                Toggle::make('half_day')
-                    ->label(__('erp.fields.half_day'))
-                    ->helperText(__('erp.vacations.half_day_help'))
-                    ->visible(fn (Get $get): bool => filled($get('start_date')) && $get('start_date') === $get('end_date'))
-                    ->live()
-                    ->columnSpanFull(),
                 Textarea::make('reason')
                     ->label(__('erp.fields.reason'))
                     ->placeholder(__('erp.vacations.reason_placeholder'))
                     ->rows(2)
                     ->columnSpanFull(),
                 Text::make(function (Get $get): string {
-                    $days = WorkingDays::count($get('start_date'), $get('end_date'), (bool) $get('half_day'), auth()->id());
+                    // Whole days only: half days can no longer be requested.
+                    $days = WorkingDays::count($get('start_date'), $get('end_date'), false, auth()->id());
 
                     if ($get('type') === VacationType::Overtime->value || $get('type') === VacationType::Overtime) {
                         $overtime = app(Timesheets::class)->overtimeBalance(auth()->user());

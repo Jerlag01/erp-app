@@ -36,3 +36,6 @@ Schedule::command('finance:fetch-incoming')->everyFifteenMinutes()->withoutOverl
 
 // Bank movements through Ponto (Ponto itself refreshes about four times a day) and matching with invoices.
 Schedule::command('banking:sync')->everyTwoHours()->withoutOverlapping();
+
+// The first of the month: the open projects and the overdue interventions, to the administrators and the project leaders.
+Schedule::command('projects:monthly-report')->monthlyOn(1, '07:00')->withoutOverlapping();

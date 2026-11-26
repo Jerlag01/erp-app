@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Actions\Batteries\CreateBaeOrder;
 use App\Actions\Batteries\CreateBatteryRoomDossier;
+use App\Actions\Notifications\ProjectNotifications;
 use App\Actions\Projects\CloseProject;
 use App\Actions\Projects\CreateFollowUpProject;
 use App\Enums\GpwStatus;
@@ -661,6 +662,9 @@ class Project extends Model
             if (! $project->wasChanged('status')) {
                 return;
             }
+
+            // The project leaders are told in the platform (the bell).
+            app(ProjectNotifications::class)->statusChanged($project);
 
             if (in_array($project->status, [ProjectStatus::Invoiced, ProjectStatus::Closed], true)) {
                 app(CloseProject::class)->handle($project);

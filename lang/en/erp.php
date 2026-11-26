@@ -1231,6 +1231,7 @@ return [
             'timesheet_week' => 'Prestation sheets of the week',
             'timesheet_interim_verify' => 'Interim prestations to verify (to verifiers)',
             'timesheet_employee' => 'Own timesheet (employee)',
+            'monthly_project_report' => 'Monthly project overview (open projects and overdue interventions)',
             'gpw_request' => 'GPW request (to contact person)',
             'gpw_approved' => 'GPW approved (to requester)',
             'gpw_rejected' => 'GPW refused (to requester)',
@@ -1767,6 +1768,16 @@ return [
         'notification_title' => 'New entry in the idea box: :type',
     ],
     'projects' => [
+        'monthly_report' => [
+            'all' => 'all projects',
+            'own' => 'the projects you lead',
+            'none' => 'None.',
+        ],
+        'notifications' => [
+            'status_title' => 'Project :project: new status',
+            'status_body' => 'The status is now: :status.',
+            'open' => 'Open project',
+        ],
         'estimated_workdays' => 'Estimated workdays',
         'invoice_requested_at' => 'Invoice requested on',
         'estimated_workdays_help' => 'How many workdays the project is estimated to need.',
@@ -2248,6 +2259,7 @@ return [
         'report' => 'Report sickness',
         'report_help' => 'Your sickness is recorded straight away and the administration is told. Add the certificate if you already have it; you can also do so later.',
         'reported' => 'Sickness reported',
+        'registered_title' => 'New absence registered for :name',
         'reported_title' => ':name reported sick',
         'errors' => [
             'overlap' => 'There already is an absence for (part of) this period.',
@@ -4374,6 +4386,10 @@ return [
         'no_suppliers' => 'First add a board supplier.',
     ],
     'batteries' => [
+        'notifications' => [
+            'finished_title' => 'Battery project :project closed',
+            'finished_body' => 'The battery dossier was closed by :name; the project is ready for invoicing.',
+        ],
         'not_applicable' => 'Not applicable (NA)',
         'not_applicable_help' => 'On: these questions are not answered; the report shows NA after the title.',
         'download_photos' => 'Download photos (:count)',
@@ -5311,6 +5327,9 @@ return [
         'inbound_url_help' => 'Give this address to Cebeo (e-business) to send the order confirmations and delivery notes in cebeoXML by HTTPS POST: all orders, also those from the e-shop or placed through a Cebeo employee, then arrive in Purchasing → Orders by themselves.',
     ],
     'distributors' => [
+        'nussbaumer' => [
+            'login_help' => 'The Nussbaumer webshop login (preferably a separate user for the ERP). The ERP uses it to fetch your own price (excl. VAT), photo and name, first by manufacturer reference, else by Nussbaumer article number.',
+        ],
         'digikey' => [
             'client_id' => 'Client ID',
             'client_secret' => 'Client Secret',
